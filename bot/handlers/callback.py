@@ -525,6 +525,28 @@ Hoặc mô tả lại vấn đề, mình sẽ cố gắng giúp!
         )
     
     # ============================================
+    # VIP UNLOCK FLOW CALLBACKS
+    # ============================================
+    
+    elif callback_data == "vip_continue":
+        # Message 3B: Action menu after user sees benefits
+        await query.answer("✨ Xuất sắc!")
+        
+        keyboard_3b = [
+            [InlineKeyboardButton("✅ Tôi đã tạo xong", callback_data="webapp_ready")],
+            [InlineKeyboardButton("📖 Xem hướng dẫn 3 bước", callback_data="webapp_setup_guide")]
+        ]
+        reply_markup_3b = InlineKeyboardMarkup(keyboard_3b)
+        
+        await query.edit_message_text(
+            "🚀 **Để sử dụng Freedom Wallet,**\n"
+            "bạn cần tạo Web App (3–5 phút).\n\n"
+            "Bạn đã tạo xong chưa?",
+            parse_mode="Markdown",
+            reply_markup=reply_markup_3b
+        )
+    
+    # ============================================
     # WEB APP SETUP GUIDE CALLBACKS
     # ============================================
     

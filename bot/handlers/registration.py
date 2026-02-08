@@ -293,52 +293,49 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                                 import asyncio
                                 await asyncio.sleep(1)
                                 
-                                # Send VIP congratulations
+                                # Send VIP congratulations with identity anchor
                                 await context.bot.send_message(
                                     chat_id=referrer.id,
                                     text=f"━━━━━━━━━━━━━━━━━━━━━\n"
-                                         f"👑 **BẠN CHÍNH THỨC TRỞ THÀNH**\n"
+                                         f"👑 **CHÀO MỪNG BẠN TRỞ THÀNH**\n"
                                          f"**THÀNH VIÊN VIP – FREEDOM WALLET**\n"
-                                         f"━━━━━━━━━━━━━━━━━━━━━",
+                                         f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+                                         f"Bạn đã chính thức bước sang\n"
+                                         f"giai đoạn sử dụng sâu hơn và hiệu quả hơn.\n\n"
+                                         f"💡 Thành viên VIP là những người:\n"
+                                         f"• Đã chủ động hành động\n"
+                                         f"• Muốn quản lý tài chính nghiêm túc\n"
+                                         f"• Sẵn sàng đi sâu hơn thay vì chỉ xem",
                                     parse_mode="Markdown"
                                 )
                                 
-                                await asyncio.sleep(1)
+                                await asyncio.sleep(2)
                                 
-                                # Send setup guide with action buttons
-                                keyboard = [
-                                    [InlineKeyboardButton("✅ Đã tạo xong Web App", callback_data="webapp_ready")],
-                                    [InlineKeyboardButton("📖 Hướng dẫn 3 bước setup", callback_data="webapp_setup_guide")],
-                                    [InlineKeyboardButton("🌐 Xem hướng dẫn chi tiết", url="https://eliroxbot.notion.site/freedomwallet")],
-                                    [InlineKeyboardButton("🎁 Nhận Google Sheet 3.2", callback_data="gift_sheet")],
-                                    [InlineKeyboardButton("💬 Group VIP (Hỗ trợ)", url="https://t.me/freedomwalletapp")]
+                                # Message 3A: Benefits with single CTA
+                                keyboard_3a = [
+                                    [InlineKeyboardButton("➡️ Tiếp tục", callback_data="vip_continue")]
                                 ]
-                                reply_markup = InlineKeyboardMarkup(keyboard)
+                                reply_markup_3a = InlineKeyboardMarkup(keyboard_3a)
                                 
                                 await context.bot.send_message(
                                     chat_id=referrer.id,
-                                    text="🎉 **CHÀO MỪNG BẠN CHÍNH THỨC LÀ VIP!**\n\n"
-                                         "━━━━━━━━━━━━━━━━━━━━━\n\n"
-                                         "🎁 **QUÀ TẶNG CỦA BẠN:**\n\n"
-                                         "✅ **Full Google Sheet 3.2** - Công cụ quản lý tài chính\n"
-                                         "✅ **Full Apps Script** - Tự động hóa dữ liệu\n"
-                                         "✅ **Web App Personal** - Dashboard cá nhân\n"
-                                         "✅ **Hướng dẫn Notion** - Setup từng bước\n"
-                                         "✅ **Group VIP** - Hỗ trợ 1-1\n\n"
-                                         "━━━━━━━━━━━━━━━━━━━━━\n\n"
-                                         "🚀 **BƯỚC TIẾP THEO:**\n\n"
-                                         "Để sử dụng Freedom Wallet, bạn cần **tạo Web App** (3-5 phút).\n\n"
-                                         "➡️ Bạn đã tạo xong Web App chưa?\n"
-                                         "• **Rồi** → Click '✅ Đã tạo xong'\n"
-                                         "• **Chưa** → Click '📖 Hướng dẫn 3 bước'\n\n"
-                                         "💡 Quá trình rất đơn giản, chỉ copy-paste thôi!",
+                                    text="🎁 **QUYỀN LỢI DÀNH CHO BẠN:**\n\n"
+                                         "✅ Công cụ quản lý tài chính đầy đủ\n"
+                                         "✅ Web App cá nhân\n"
+                                         "✅ Hướng dẫn từng bước\n"
+                                         "✅ Group VIP hỗ trợ trực tiếp\n\n"
+                                         "👉 Bước tiếp theo rất đơn giản.",
                                     parse_mode="Markdown",
-                                    reply_markup=reply_markup
+                                    reply_markup=reply_markup_3a
                                 )
                                 
-                                # Start onboarding journey for referrer (Day 1 scheduled)
+                                # Store flag to send Message 3B when user clicks "Tiếp tục"
+                                # Message 3B will be sent via callback handler
+                                
+                                # Start onboarding journey with 10-minute delay (not immediate)
+                                # This allows user to process VIP status first
                                 from bot.handlers.onboarding import start_onboarding_journey
-                                await start_onboarding_journey(referrer.id, context)
+                                await start_onboarding_journey(referrer.id, context, initial_delay_minutes=10)
                                 
                             except Exception as e:
                                 logger.error(f"Failed to notify referrer {referrer.id}: {e}")

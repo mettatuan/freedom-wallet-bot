@@ -1,0 +1,597 @@
+# 📱 KỊCH BẢN VIP UNLOCK FLOW - FREEDOM WALLET BOT (v2 - Optimized)
+
+## 📊 SUMMARY: V1 → V2 CHANGES
+
+| Aspect | V1 (Before) | V2 (After - Feb 2026) | Expected Impact |
+|--------|-------------|----------------------|-----------------|
+| **Message 3** | 1 message, 5 buttons + 5 benefits + question | Split: 3A (benefits + 1 btn) + 3B (action + 2 btns) | -30% decision fatigue |
+| **Identity Anchor** | None | "VIP là người..." definition | -15% abandon rate |
+| **Day 1 Timing** | Immediate (0 delay) | 10 minutes after unlock | +20% engagement |
+| **Day 1 Tasks** | 3 tasks (copy, deploy, add data) | 1 task (add 1 transaction) | 50% → 70% completion |
+| **Day 1 CTA** | "Hoàn thành Day 1" | "Tôi đã thêm giao dịch đầu tiên" | More specific action |
+| **Overall Flow** | 4 messages instant | 4 messages staged (1s, 2s, 10m delays) | Better psychological pacing |
+
+**Core Philosophy:** 
+> "First success > Perfection" - Tạo momentum thay vì overwhelm
+
+---
+
+## 🧠 PSYCHOLOGY IMPROVEMENTS (Chi tiết)
+
+### 1. Information Overload → Staged Disclosure
+**Problem v1:** Message 3 showed 5 benefits + 5 buttons + question simultaneously  
+**Solution v2:** Split into 3A (just benefits) → 3B (just decision)  
+**Why it works:** Brain processes benefits first, THEN makes decision (not parallel)
+
+### 2. Missing Identity Anchor → "VIP là ai?"
+**Problem v1:** User got VIP status but didn't understand what it MEANS  
+**Solution v2:** Define explicitly: "chủ động, nghiêm túc, đi sâu"  
+**Why it works:** Self-selection filter - user commits to being "serious"
+
+### 3. Day 1 Spam → Breathing Room
+**Problem v1:** Day 1 sent immediately = feels like continuation of unlock flow  
+**Solution v2:** 10-minute delay = separate "chapter"  
+**Why it works:** Psychological reset - Day 1 feels intentional, not spam
+
+### 4. Perfection Pressure → One Small Win
+**Problem v1:** Day 1 had 3 tasks = perfectionism trap  
+**Solution v2:** Just add 1 transaction (any transaction)  
+**Why it works:** Lowers barrier, creates momentum, forms habit faster
+
+---
+
+## 🎯 TRIGGER: User hoàn thành giới thiệu 2 người
+
+**Context:** User A đã giới thiệu thành công 2 người (User B và User C đã đăng ký). Khi User C hoàn tất đăng ký, User A sẽ nhận chuỗi messages sau:
+
+**✨ CẢI TIẾN v2 (Feb 2026):**
+- ✅ Giảm information overload: Chia Message 3 thành 3A + 3B
+- ✅ Thêm identity anchor: Define rõ "VIP là ai"
+- ✅ Delay Day 1: 10 phút (không còn gửi ngay lập tức)
+- ✅ Rút gọn Day 1: Focus vào 1 giao dịch đầu tiên (không phải hoàn hảo)
+
+---
+
+## 📨 MESSAGE 1: HÌNH ẢNH CHÚC MỪNG
+
+**Type:** Photo với caption  
+**Image:** `media/images/chucmung.png`  
+**Timing:** Gửi ngay lập tức
+
+```
+🎉 CHÚC MỪNG! 🎉
+
+[Tên User C] vừa hoàn tất đăng ký!
+
+Bạn đã HOÀN THÀNH 2 / 2 LƯỢT GIỚI THIỆU
+```
+
+**Buttons:** Không có (pure celebration moment)
+
+**Psychology:** Dopamine spike - celebrate the win without distractions
+
+---
+
+## 📨 MESSAGE 2: ANNOUNCEMENT + IDENTITY ANCHOR ⭐ NEW
+
+**Type:** Text message  
+**Timing:** 1 giây sau Message 1
+
+```
+━━━━━━━━━━━━━━━━━━━━━
+👑 CHÀO MỪNG BẠN TRỞ THÀNH
+THÀNH VIÊN VIP – FREEDOM WALLET
+━━━━━━━━━━━━━━━━━━━━━
+
+Bạn đã chính thức bước sang
+giai đoạn sử dụng sâu hơn và hiệu quả hơn.
+
+💡 Thành viên VIP là những người:
+• Đã chủ động hành động
+• Muốn quản lý tài chính nghiêm túc
+• Sẵn sàng đi sâu hơn thay vì chỉ xem
+```
+
+**Buttons:** Không có
+
+**Psychology:** Identity anchor - user tự nhận diện với role "serious about financial management"
+
+**Impact:** Giảm abandon rate sau Day 1 (expected: -15%)
+
+---
+
+## 📨 MESSAGE 3A: QUYỀN LỢI (BENEFITS ONLY) ⭐ NEW
+
+**Type:** Text message với 1 CTA button  
+**Timing:** 2 giây sau Message 2
+
+### Text:
+
+```
+🎁 QUYỀN LỢI DÀNH CHO BẠN:
+
+✅ Công cụ quản lý tài chính đầy đủ
+✅ Web App cá nhân
+✅ Hướng dẫn từng bước
+✅ Group VIP hỗ trợ trực tiếp
+
+👉 Bước tiếp theo rất đơn giản.
+```
+
+### Button (Inline Keyboard):
+
+```
+┌───────────────────────────────────────┐
+│  ➡️ Tiếp tục                          │
+└───────────────────────────────────────┘
+```
+
+**Callback Data:** `vip_continue`
+
+**Psychology:** 
+- Chỉ SHOW quyền lợi (không hỏi gì cả)
+- 1 button duy nhất → zero decision fatigue
+- User "tiêu hóa" được việc mình là VIP trước khi hành động
+
+**Previous Issue:** Message 3 cũ có 5 quyền lợi + 5 buttons + câu hỏi → quá nhiều
+
+---
+
+## 📨 MESSAGE 3B: HÀNH ĐỘNG (ACTION ONLY) ⭐ NEW
+
+**Type:** Text message với 2 action buttons  
+**Timing:** Gửi khi user click "Tiếp tục" từ Message 3A
+
+### Text:
+
+```
+🚀 Để sử dụng Freedom Wallet,
+bạn cần tạo Web App (3–5 phút).
+
+Bạn đã tạo xong chưa?
+```
+
+### Buttons (Inline Keyboard):
+
+```
+┌───────────────────────────────────────┐
+│  ✅ Tôi đã tạo xong                   │
+├───────────────────────────────────────┤
+│  📖 Xem hướng dẫn 3 bước              │
+└───────────────────────────────────────┘
+```
+
+**Callback Data:**
+- Button 1: `webapp_ready`
+- Button 2: `webapp_setup_guide`
+
+**Psychology:**
+- Chỉ 2 lựa chọn (binary decision)
+- Rõ ràng: Fast movers vs Need guidance
+- Các buttons phụ (Group, Gift) để sau Day 1
+
+**Previous Issue:** 5 buttons cùng lúc → phân tâm
+
+---
+
+## 📨 MESSAGE 4: ONBOARDING DAY 1 (Simplified + Delayed) ⭐ NEW
+
+**Timing:** **10 phút** sau Message 3A (was: immediate)  
+**Change:** Delay giúp user "digest" VIP status trước
+
+### Text:
+
+```
+🎉 Day 1: Bắt đầu nào!
+
+🎉 Chào mừng đến với Freedom Wallet!
+
+Trong 7 ngày tới, bạn sẽ:
+✓ Làm chủ 6 Hũ Tiền
+✓ Hiểu rõ 5 Cấp Bậc Tài Chính
+✓ Xây dựng thói quen quản lý tiền
+
+━━━━━━━━━━━━━━━━━━━━━
+
+🎯 NHIỆM VỤ HÔM NAY - CHỈ 1 VIỆC:
+
+Thêm giao dịch đầu tiên vào Web App
+
+Đó là tất cả! Chỉ cần 1 giao dịch bất kỳ:
+• Ly cafe sáng nay: -35,000đ
+• Lương nhận được: +15,000,000đ
+• Mua sách: -120,000đ
+
+→ Bất cứ giao dịch nào cũng được!
+
+━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tại sao chỉ 1 giao dịch?
+
+Mình muốn bạn tập trung vào việc BẮT ĐẦU,
+không phải hoàn hảo ngay từ đầu.
+
+Một lần thành công nhỏ sẽ tạo động lực
+cho những bước tiếp theo!
+
+━━━━━━━━━━━━━━━━━━━━━
+
+🚀 HÀNH ĐỘNG:
+
+✅ Nếu đã setup Web App → Thêm giao dịch ngay
+📖 Nếu chưa setup → Xem hướng dẫn 3 bước
+💬 Cần giúp đỡ → Hỏi trong Group VIP
+
+🎯 Đã thêm giao dịch đầu tiên?
+Click "✅ Tôi đã thêm giao dịch" để tiếp tục!
+```
+
+### Buttons (Inline Keyboard):
+
+```
+┌───────────────────────────────────────┐
+│  ✅ Tôi đã thêm giao dịch đầu tiên    │
+├───────────────────────────────────────┤
+│  📖 Xem hướng dẫn setup               │
+├───────────────────────────────────────┤
+│  🌐 Hướng dẫn chi tiết (Notion)       │ → Opens Notion
+├───────────────────────────────────────┤
+│  💬 Group VIP                         │ → Opens group
+├───────────────────────────────────────┤
+│  ❓ Cần hỗ trợ                        │
+└───────────────────────────────────────┘
+```
+
+**Callback Data:**
+- Button 1: `onboard_complete_1`
+- Button 2: `webapp_setup_guide`
+- Button 3: URL link
+- Button 4: URL link
+- Button 5: `onboard_help_1`
+
+**Psychology Changes:**
+- ✅ **Rút gọn**: 3 tasks → 1 task (just add 1 transaction)
+- ✅ **Lower barrier**: "Bất cứ giao dịch nào cũng được"
+- ✅ **Explain why**: Giải thích tại sao chỉ 1 việc
+- ✅ **First success > Perfection**: Tạo momentum thay vì overwhelm
+
+**Previous Issue:** 
+- Day 1 cũ có 3 tasks (copy template, deploy, add data)
+- Gửi ngay sau unlock → user chưa kịp process
+- Expected completion: ~50% → Target v2: ~65-70%
+
+---
+
+## 🔀 INTERACTIVE FLOWS (Khi User Click Buttons)
+
+### **FLOW A: User Click "✅ Đã tạo xong Web App"**
+
+Bot sẽ gửi message mới:
+
+```
+🎉 XUẤT SẮC! BẠN ĐÃ HOÀN THÀNH SETUP!
+
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ Web App Freedom Wallet của bạn đã sẵn sàng!
+
+🚀 BƯỚC TIẾP THEO:
+
+1️⃣ Thêm giao dịch đầu tiên
+   • Mở Web App của bạn
+   • Click 'Thêm giao dịch'
+   • Nhập thu/chi hôm nay
+
+2️⃣ Khám phá 6 Hũ Tiền
+   • Xem phân bổ tự động
+   • Điều chỉnh % theo nhu cầu
+
+3️⃣ Theo dõi dashboard
+   • Biểu đồ thu chi
+   • ROI tracking
+   • Financial Level
+
+━━━━━━━━━━━━━━━━━━━━━
+
+💡 Lời khuyên:
+Track mỗi ngày trong 7 ngày đầu để hình thành thói quen!
+
+📚 Cần hỗ trợ? Hỏi trong Group VIP nhé!
+```
+
+**Buttons:**
+```
+┌───────────────────────────────────────┐
+│  📊 Xem hướng dẫn sử dụng             │
+├───────────────────────────────────────┤
+│  🎁 Nhận thêm quà VIP                 │
+├───────────────────────────────────────┤
+│  💬 Tham gia Group                    │ → Opens group
+├───────────────────────────────────────┤
+│  🏠 Dashboard                         │
+└───────────────────────────────────────┘
+```
+
+---
+
+### **FLOW B: User Click "📖 Hướng dẫn 3 bước setup"**
+
+Bot sẽ gửi **4 hình ảnh** tuần tự (mỗi ảnh cách nhau 2 giây):
+
+#### **Hình 1: BƯỚC 1 - Copy Template**
+```
+📋 BƯỚC 1: TẠO BẢN SAO
+
+1️⃣ Click link template: [v3.2] Freedom Wallet
+2️⃣ Vào File → Make a copy
+3️⃣ Đặt tên: 'My Freedom Wallet'
+4️⃣ Lưu vào Google Drive của bạn
+
+✅ Done? Chờ Bước 2...
+```
+**Image:** `buoc-1-copy.jpg.webp`
+
+---
+
+#### **Hình 2: BƯỚC 2 - Apps Script**
+```
+⚙️ BƯỚC 2: MỞ APPS SCRIPT
+
+1️⃣ Trong Google Sheet vừa copy
+2️⃣ Click Extensions (thanh menu trên)
+3️⃣ Chọn Apps Script
+4️⃣ Cửa sổ mới sẽ mở ra
+
+💡 Nếu không thấy Extensions, bấm vào 3 chấm (...) ở menu
+
+✅ Đã mở Apps Script? Chờ Bước 3...
+```
+**Image:** `buoc-2-appscript.jpg`
+
+---
+
+#### **Hình 3: BƯỚC 3 - Deploy**
+```
+🚀 BƯỚC 3: DEPLOY WEB APP
+
+1️⃣ Trong Apps Script editor
+2️⃣ Click nút Deploy (góc trên bên phải)
+3️⃣ Chọn New deployment
+4️⃣ Type: Web app
+5️⃣ Execute as: Me
+6️⃣ Who has access: Anyone
+7️⃣ Click Deploy
+8️⃣ Copy Web app URL → Save lại!
+
+⚠️ Lưu ý: Lần đầu sẽ cần authorize (cho phép quyền)
+
+✅ Đã deploy xong? Xem Bước 4...
+```
+**Image:** `buoc-3-deploy.jpg`
+
+---
+
+#### **Hình 4: HOÀN TẤT**
+```
+🎉 HOÀN TẤT! WEB APP CỦA BẠN SẴN SÀNG!
+
+━━━━━━━━━━━━━━━━━━━━━
+
+🌐 Web App URL đã được tạo!
+
+📱 Cách sử dụng:
+• Mở URL trên điện thoại/máy tính
+• Add to Home Screen (nếu dùng mobile)
+• Bắt đầu thêm giao dịch!
+
+━━━━━━━━━━━━━━━━━━━━━
+
+💡 Mẹo:
+• Bookmark URL để truy cập nhanh
+• Đồng bộ tự động mỗi khi bạn cập nhật
+• Dữ liệu lưu trong Google Sheet của bạn
+
+🎯 Bạn đã làm xong chưa?
+```
+
+**Buttons:**
+```
+┌───────────────────────────────────────┐
+│  ✅ Đã làm xong!                      │
+├───────────────────────────────────────┤
+│  🌐 Hướng dẫn chi tiết                │ → Opens Notion
+├───────────────────────────────────────┤
+│  ❓ Cần hỗ trợ                        │
+├───────────────────────────────────────┤
+│  🔙 Xem lại từ đầu                    │
+└───────────────────────────────────────┘
+```
+
+**Image:** `buoc-4-completed.jpg`
+
+---
+
+### **FLOW C: User Click "🎁 Nhận Google Sheet 3.2"**
+
+Bot sẽ gửi message mới với template link.
+
+---
+
+### **FLOW D: User Click "❓ Cần hỗ trợ"** (từ bất kỳ đâu)
+
+Bot sẽ gửi:
+
+```
+❓ CẦN HỖ TRỢ SETUP WEB APP?
+
+Mình sẵn sàng giúp bạn!
+
+━━━━━━━━━━━━━━━━━━━━━
+
+💬 CÁC CÁCH ĐƯỢC HỖ TRỢ:
+
+1️⃣ Xem lại hướng dẫn
+   • Click 'Xem lại hướng dẫn'
+   • Follow từng bước cẩn thận
+
+2️⃣ Đọc Notion chi tiết
+   • Hướng dẫn có ảnh chụp màn hình
+   • Video demo
+   • FAQ troubleshooting
+
+3️⃣ Hỏi Group VIP
+   • Response nhanh từ community
+   • Nhiều người đã setup thành công
+
+4️⃣ Liên hệ Admin trực tiếp
+   • 1-1 support
+   • Screen share nếu cần
+
+━━━━━━━━━━━━━━━━━━━━━
+
+⏰ Thời gian hỗ trợ:
+• Thứ 2-6: 9h-21h
+• Thứ 7-CN: 10h-18h
+
+Gặp vấn đề gì cụ thể?
+Gõ mô tả để mình hỗ trợ!
+```
+
+**Buttons:**
+```
+┌───────────────────────────────────────┐
+│  🔙 Xem lại hướng dẫn                 │
+├───────────────────────────────────────┤
+│  🌐 Notion chi tiết                   │ → Opens Notion
+├───────────────────────────────────────┤
+│  💬 Hỏi trong Group                   │ → Opens group
+├───────────────────────────────────────┤
+│  📞 Liên hệ Admin                     │ → Opens admin chat
+└───────────────────────────────────────┘
+```
+
+---
+
+## 📅 ONBOARDING JOURNEY (7 Days)
+
+Sau MESSAGE 4 (Day 1), user sẽ nhận thêm:
+
+- **Day 2** (sau 24h): 💰 6 Hũ Tiền + Buttons
+- **Day 3** (sau 48h): 🎯 5 Cấp Bậc Tài Chính + Quiz buttons
+- **Day 4** (sau 72h): ⚡ Thêm Giao Dịch + Tracking tips
+- **Day 5** (sau 96h): 📈 Tính Năng Nâng Cao
+- **Day 6** (sau 120h): 🔥 Challenge 30 Ngày
+- **Day 7** (sau 144h): 🎯 Wrap Up & Next Steps
+
+Mỗi message đều có inline keyboard buttons cho interaction.
+
+---
+
+## 💡 GỢI Ý ĐIỀU CHỈNH
+
+### **Message 3 (Menu VIP):**
+
+**Option 1: Rút gọn hơn**
+```
+🎉 CHÚC MỪNG! BẠN ĐÃ LÀ VIP!
+
+🎁 Quà của bạn:
+✅ Google Sheet 3.2
+✅ Web App cá nhân
+✅ Hướng dẫn chi tiết
+✅ Group VIP hỗ trợ
+
+🚀 Bạn đã tạo Web App chưa?
+```
+
+**Option 2: Thêm urgency**
+```
+🎉 CHÀO MỪNG VIP!
+
+⏰ BẬN RỘN? 
+Chỉ cần 3-5 phút để setup Web App!
+
+➡️ Đã tạo xong? → ✅
+➡️ Chưa tạo? → 📖 Xem 3 bước (siêu dễ!)
+```
+
+**Option 3: Thêm social proof**
+```
+🎉 CHÚC MỪNG LÀ VIP!
+
+👥 Hơn 500+ VIPs đã setup thành công!
+
+🚀 Bạn muốn:
+• Đã tạo xong → Nhận thêm quà
+• Chưa tạo → Xem hướng dẫn 3 phút
+```
+
+---
+
+### **Hình Ảnh:**
+
+✅ **Có sẵn:**
+- `chucmung.png` - Celebration image
+- `buoc-1-copy.jpg.webp` - Step 1
+- `buoc-2-appscript.jpg` - Step 2
+- `buoc-3-deploy.jpg` - Step 3
+- `buoc-4-completed.jpg` - Completion
+
+❓ **Gợi ý thêm:**
+- Badge/Certificate VIP
+- Dashboard preview screenshot
+- Sample 6 Jars chart
+- Success stories
+
+---
+
+## 🎯 CONVERSION FUNNEL
+
+```
+VIP Unlock (100%)
+    ↓
+View Message 3 (100%)
+    ↓
+┌────────────────────┬────────────────────┐
+│ Click "Đã xong"    │ Click "Hướng dẫn"  │
+│ (Fast movers 30%)  │ (Need help 70%)    │
+└─────────┬──────────┴──────────┬─────────┘
+          ↓                     ↓
+    Start using        View 4 images
+    immediately        (2-min delay)
+                            ↓
+                       Complete setup
+                            ↓
+                       Start using
+```
+
+**Expected Behavior:**
+- 30% đã tự tạo trước (click "Đã xong")
+- 70% cần hướng dẫn (xem 4 hình)
+- 50% complete trong 24h
+- 30% cần follow-up
+- 20% abandon (target with Day 2-3 messages)
+
+---
+
+## 🔧 TECHNICAL NOTES
+
+**Image Sending:**
+- Delay 2 seconds between images (avoid spam)
+- Check file exists before sending
+- Fallback to text if image missing
+
+**Button Callbacks:**
+- Track click events for analytics
+- Update user progress in database
+- Consider A/B testing button text
+
+**Message Timing:**
+- Message 1-3: Instant (celebration)
+- Message 4: Scheduled via ProgramManager
+- Follow-ups: Day 2-7 scheduled
+
+---
+
+**Bạn muốn điều chỉnh gì?** 
+Gửi feedback để tôi update flow cho phù hợp! ✍️

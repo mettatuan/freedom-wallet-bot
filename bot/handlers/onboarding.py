@@ -16,48 +16,55 @@ from bot.core.program_manager import ProgramManager, ProgramType
 # 7-Day Onboarding Content with Inline Keyboards
 ONBOARDING_MESSAGES = {
     1: {
-        "title": "🎉 Day 1: Welcome & Setup",
+        "title": "🎉 Day 1: Bắt đầu nào!",
         "content": """
 🎉 **Chào mừng đến với Freedom Wallet!**
 
-Trong 7 ngày tới, mình sẽ hướng dẫn bạn từng bước để:
-✓ Setup Web App hoàn chỉnh
-✓ Hiểu rõ 6 Hũ Tiền
-✓ Áp dụng 5 Cấp Bậc Tài Chính
-✓ Quản lý tài chính hiệu quả
+Trong 7 ngày tới, bạn sẽ:
+✓ Làm chủ 6 Hũ Tiền
+✓ Hiểu rõ 5 Cấp Bậc Tài Chính
+✓ Xây dựng thói quen quản lý tiền
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-📋 **NHIỆM VỤ HÔM NAY:**
+🎯 **NHIỆM VỤ HÔM NAY - CHỈ 1 VIỆC:**
 
-**1️⃣ Copy Template về Google Drive**
-• Click button "📑 Copy Template" bên dưới
-• File → "Make a copy"
-• Đặt tên: "My Freedom Wallet"
+**Thêm giao dịch đầu tiên vào Web App**
 
-**2️⃣ Tạo Web App (5 phút)**
-• Click "🌐 Hướng dẫn Web App"
-• Làm theo từng bước
-• Deploy Web App của bạn
+Đó là tất cả! Chỉ cần 1 giao dịch bất kỳ:
+• Ly cafe sáng nay: -35,000đ
+• Lương nhận được: +15,000,000đ
+• Mua sách: -120,000đ
 
-**3️⃣ Thêm dữ liệu đầu tiên**
-• Nhập số dư hiện tại
-• Thêm 1-2 giao dịch gần đây
+→ Bất cứ giao dịch nào cũng được!
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-🎯 **Xong rồi?**
-Click "✅ Hoàn thành Day 1" để chuyển sang bước tiếp theo!
+💡 **Tại sao chỉ 1 giao dịch?**
 
-💬 **Gặp khó khăn?**
-Click "❓ Cần hỗ trợ" để được giúp đỡ ngay!
+Mình muốn bạn tập trung vào việc BẮT ĐẦU,
+không phải hoàn hảo ngay từ đầu.
+
+Một lần thành công nhỏ sẽ tạo động lực
+cho những bước tiếp theo!
+
+━━━━━━━━━━━━━━━━━━━━━
+
+🚀 **HÀNH ĐỘNG:**
+
+✅ Nếu đã setup Web App → Thêm giao dịch ngay
+📖 Nếu chưa setup → Xem hướng dẫn 3 bước
+💬 Cần giúp đỡ → Hỏi trong Group VIP
+
+🎯 **Đã thêm giao dịch đầu tiên?**
+Click "✅ Tôi đã thêm giao dịch" để tiếp tục!
 """,
         "delay_hours": 0,
         "buttons": [
-            [{"text": "📑 Copy Template", "callback_data": "onboard_copy_template"}],
-            [{"text": "🌐 Hướng dẫn Web App", "url": "https://eliroxbot.notion.site/freedomwallet"}],
-            [{"text": "🎥 Xem Video (3 phút)", "callback_data": "onboard_video_day1"}],
-            [{"text": "✅ Hoàn thành Day 1", "callback_data": "onboard_complete_1"}],
+            [{"text": "✅ Tôi đã thêm giao dịch đầu tiên", "callback_data": "onboard_complete_1"}],
+            [{"text": "📖 Xem hướng dẫn setup", "callback_data": "webapp_setup_guide"}],
+            [{"text": "🌐 Hướng dẫn chi tiết (Notion)", "url": "https://eliroxbot.notion.site/freedomwallet"}],
+            [{"text": "💬 Group VIP", "url": "https://t.me/freedomwalletapp"}],
             [{"text": "❓ Cần hỗ trợ", "callback_data": "onboard_help_1"}]
         ]
     },
@@ -499,15 +506,20 @@ P/S: Nhớ track chi tiêu hôm nay nhé! 😉
 }
 
 
-async def start_onboarding_journey(user_id: int, context: ContextTypes.DEFAULT_TYPE):
+async def start_onboarding_journey(user_id: int, context: ContextTypes.DEFAULT_TYPE, initial_delay_minutes: int = 0):
     """
     Start 7-day onboarding journey for a user
+    
+    Args:
+        user_id: Telegram user ID
+        context: Telegram context
+        initial_delay_minutes: Delay before sending Day 1 (0 = immediate)
     
     Week 3: Now uses ProgramManager for enrollment
     Old scheduling logic kept for backward compatibility
     """
     try:
-        logger.info(f"Starting onboarding journey for user {user_id}")
+        logger.info(f"Starting onboarding journey for user {user_id} (delay: {initial_delay_minutes}m)")
         
         # Week 3: Use ProgramManager
         with ProgramManager() as pm:
@@ -515,7 +527,8 @@ async def start_onboarding_journey(user_id: int, context: ContextTypes.DEFAULT_T
                 user_id, 
                 ProgramType.ONBOARDING_7_DAY, 
                 context,
-                force=True  # Override nurture if exists (VIP takes priority)
+                force=True,  # Override nurture if exists (VIP takes priority)
+                initial_delay_minutes=initial_delay_minutes
             )
             
             if success:

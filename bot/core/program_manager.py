@@ -56,7 +56,8 @@ class ProgramManager:
         user_id: int, 
         program: ProgramType,
         context: ContextTypes.DEFAULT_TYPE,
-        force: bool = False
+        force: bool = False,
+        initial_delay_minutes: int = 0
     ) -> bool:
         """
         Enroll user in a program
@@ -66,6 +67,7 @@ class ProgramManager:
             program: Program to enroll in
             context: Telegram context for scheduling
             force: If True, override current program
+            initial_delay_minutes: Delay before sending Day 1 (0 = immediate)
         
         Returns:
             Success status
@@ -96,7 +98,13 @@ class ProgramManager:
         logger.info(f"✅ User {user_id} enrolled in {program.value}")
         
         # Schedule first day immediately or with delay
-        await self._schedule_program_day(user_id, program, day=1, context=context)
+        await self._schedule_program_day(
+            user_id, 
+            program, 
+            day=1, 
+            context=context,
+            extra_delay_minutes=initial_delay_minutes
+        )
         
         return True
     
@@ -195,10 +203,14 @@ class ProgramManager:
         user_id: int,
         program: ProgramType,
         day: int,
-        context: ContextTypes.DEFAULT_TYPE
+        context: ContextTypes.DEFAULT_TYPE,
+        extra_delay_minutes: int = 0
     ):
         """
         Schedule a specific program day message
+        
+        Args:
+            extra_delay_minutes: Additional delay for this specific day (e.g., Day 1 VIP unlock)
         """
         # Get program config
         config = self._get_program_config(program)
@@ -210,11 +222,13 @@ class ProgramManager:
         day_config = config[day]
         delay_hours = day_config.get("delay_hours", 0)
         
-        # Calculate send time
-        if delay_hours == 0:
+        # Calculate send time with extra delay if specified
+        total_delay_hours = delay_hours + (extra_delay_minutes / 60.0)
+        
+        if total_delay_hours == 0:
             send_time = datetime.utcnow()
         else:
-            send_time = datetime.utcnow() + timedelta(hours=delay_hours)
+            send_time = datetime.utcnow() + timedelta(hours=total_delay_hours)
         
         # Schedule job
         job_name = f"program_{user_id}_{program.value}_day_{day}"
