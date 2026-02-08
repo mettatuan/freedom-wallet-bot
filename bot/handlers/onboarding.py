@@ -58,7 +58,7 @@ Bạn sẽ:
         "delay_hours": 0,
         "buttons": [
             [{"text": "📑 Copy Template", "url": "https://docs.google.com/spreadsheets/d/1dV-KAVxxtbrmp79RPKSfEygFOdamcvlTj6adlHKAq78/copy"}],
-            [{"text": "📖 Hướng dẫn tạo Web App", "url": "https://eliroxbot.notion.site/freedomwallet"}],
+            [{"text": "🚀 Hướng dẫn tạo Web App", "callback_data": "webapp_step_0"}],
             [{"text": "� Hướng dẫn sử dụng chi tiết", "callback_data": "guide_step_0"}],
             [{"text": "�👥 Tham gia Group VIP", "url": "https://t.me/freedomwalletapp"}]
         ]
