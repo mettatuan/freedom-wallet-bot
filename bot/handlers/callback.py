@@ -469,6 +469,47 @@ Hoặc mô tả lại vấn đề, mình sẽ cố gắng giúp!
             reply_markup=reply_markup
         )
     
+    elif callback_data == "onboard_roadmap":
+        # Show 7-day roadmap overview
+        await query.answer("📋 Đang gửi lộ trình...")
+        
+        keyboard = [
+            [InlineKeyboardButton("🏠 Về Dashboard", callback_data="start")],
+            [InlineKeyboardButton("💬 Tham gia Group VIP", url="https://t.me/freedomwalletapp")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await query.edit_message_text(
+            "📋 **LỘ TRÌNH 7 NGÀY - FREEDOM WALLET**\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "🎁 **Bước đầu tiên:** Thiết lập Freedom Wallet\n"
+            "   • Copy template, tạo Web App, nhập dữ liệu đầu tiên\n"
+            "   • Thời gian: 10-15 phút\n\n"
+            "💰 **Ngày 2:** Hiểu về 6 Hũ Tiền\n"
+            "   • Chi tiêu thiết yếu, Hưởng thụ, Đầu tư...\n"
+            "   • Phân bổ % thu nhập hợp lý\n\n"
+            "🎯 **Ngày 3:** 5 Cấp Bậc Tài Chính\n"
+            "   • Từ Survival → Financial Freedom\n"
+            "   • Xác định vị trí hiện tại của bạn\n\n"
+            "⚡ **Ngày 4:** Thêm giao dịch & Tracking\n"
+            "   • Thói quen ghi chép hàng ngày\n"
+            "   • Tips để tracking hiệu quả\n\n"
+            "📈 **Ngày 5:** Tính năng nâng cao\n"
+            "   • Budget planning, ROI tracking\n"
+            "   • Automation với Apps Script\n\n"
+            "👥 **Ngày 6:** Tham gia cộng đồng\n"
+            "   • Kết nối với VIPs khác\n"
+            "   • Chia sẻ & học hỏi kinh nghiệm\n\n"
+            "🎊 **Ngày 7:** Ôn tập & Kế hoạch dài hạn\n"
+            "   • Review toàn bộ hệ thống\n"
+            "   • Lên kế hoạch 30-90 ngày tới\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "💡 Mỗi ngày chỉ mất 5-10 phút.\n"
+            "Bạn sẽ nhận tin nhắn vào 10h sáng mỗi ngày!",
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+    
     elif callback_data.startswith("onboard_complete_"):
         # User completed an onboarding day
         day = callback_data.split("_")[-1]

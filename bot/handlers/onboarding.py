@@ -16,51 +16,53 @@ from bot.core.program_manager import ProgramManager, ProgramType
 # 7-Day Onboarding Content with Inline Keyboards
 ONBOARDING_MESSAGES = {
     1: {
-        "title": "� BƯỚC ĐẦU TIÊN – BẮT ĐẦU TỪ ĐÂU?",
+        "title": "🎁 FREEDOM WALLET – BỘ KHỞI ĐỘNG & BƯỚC ĐẦU TIÊN",
         "content": """
-**Chào mừng đến với Freedom Wallet!**
+👋 **Chào mừng bạn đến với Freedom Wallet!**
 
-Trong 7 ngày tới, bạn sẽ:
-✓ Làm chủ 6 Hũ Tiền
-✓ Hiểu rõ 5 Cấp Bậc Tài Chính
-✓ Xây dựng thói quen quản lý tiền
+Mình sẽ đồng hành cùng bạn trong 7 ngày tới để:
+• Thiết lập hệ thống quản lý tài chính cá nhân
+• Hiểu rõ 6 Hũ Tiền & 5 Cấp Bậc Tài Chính
+• Bắt đầu quản lý tiền một cách rõ ràng, hiệu quả
 
-━━━━━━━━━━━━━━━━━━━━━
-
-🎯 **HÀNH ĐỘNG ĐẦU TIÊN - CHỈ 1 VIỆC:**
-
-**Thêm giao dịch đầu tiên vào Web App**
-
-Đó là tất cả! Chỉ cần 1 giao dịch bất kỳ:
-• Ly cafe sáng nay: -35,000đ
-• Lương nhận được: +15,000,000đ
-• Mua sách: -120,000đ
-
-→ Bất cứ giao dịch nào cũng được!
+🎯 Hôm nay, chúng ta chỉ cần làm **1 việc quan trọng nhất**.
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-💡 **Tại sao chỉ 1 giao dịch?**
+🧭 **BƯỚC ĐẦU TIÊN – THIẾT LẬP FREEDOM WALLET**
+⏱ Thời gian: 10–15 phút (làm 1 lần duy nhất)
 
-Mình muốn bạn tập trung vào việc **BẮT ĐẦU**,
-không phải hoàn hảo ngay từ đầu.
+Bạn sẽ:
+1️⃣ Copy Google Sheets Template
+2️⃣ Tạo Web App cá nhân (5 phút)
+3️⃣ Nhập dữ liệu đầu tiên (số dư + 1 giao dịch)
 
-Một lần thành công nhỏ sẽ tạo động lực
-cho những bước tiếp theo!
+👉 Không cần biết code.
+👉 Làm chậm cũng hoàn toàn ổn.
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-💬 **Nếu hôm nay bạn bận,**
-chỉ cần quay lại khi sẵn sàng – mình vẫn ở đây.
+🎁 **BẠN ĐƯỢC CUNG CẤP ĐẦY ĐỦ CÔNG CỤ**
 
-🎯 **Đã thêm giao dịch đầu tiên?**
-Click button bên dưới để tiếp tục!
+📄 Template quản lý tài chính (Google Sheets)
+📚 Hướng dẫn Web App từng bước
+🎥 Video hướng dẫn nhanh (3 phút)
+💬 Cộng đồng hỗ trợ Freedom Wallet
+
+(Tất cả đã sẵn sàng – bạn chỉ cần bắt đầu)
+
+━━━━━━━━━━━━━━━━━━━━━
+
+💡 Hoàn thành bước này là bạn đã đi được **50% chặng đường**.
 """,
         "delay_hours": 0,
         "buttons": [
-            [{"text": "✅ Tôi đã thêm giao dịch đầu tiên", "callback_data": "onboard_complete_1"}],
-            [{"text": "📖 Xem hướng dẫn setup", "callback_data": "webapp_setup_guide"}],
-            [{"text": "❓ Cần hỗ trợ", "callback_data": "onboard_help_1"}]
+            [{"text": "📑 Copy Template", "callback_data": "onboard_copy_template"}, 
+             {"text": "🌐 Hướng dẫn Web App", "url": "https://eliroxbot.notion.site/freedomwallet"}],
+            [{"text": "✅ Hoàn thành bước đầu tiên", "callback_data": "onboard_complete_1"}, 
+             {"text": "❓ Cần hỗ trợ", "callback_data": "onboard_help_1"}],
+            [{"text": "💬 Vào cộng đồng", "url": "https://t.me/freedomwalletapp"}, 
+             {"text": "📋 Xem lộ trình 7 ngày", "callback_data": "onboard_roadmap"}]
         ]
     },
     
