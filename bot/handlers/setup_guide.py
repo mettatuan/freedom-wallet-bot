@@ -11,27 +11,38 @@ from loguru import logger
 # Setup Guide Content - 8 Steps
 SETUP_GUIDE_STEPS = {
     0: {
-        "title": "📘 HƯỚNG DẪN SỬ DỤNG FREEDOM WALLET",
+        "title": "📘 BƯỚC 2: HƯỚNG DẪN SỬ DỤNG",
         "content": """
-👋 **Chào mừng đến với hướng dẫn sử dụng chi tiết!**
+🎉 **Tuyệt vời! Bạn đã hoàn thành Bước 1!**
 
-Hướng dẫn này sẽ đưa bạn qua **8 bước** để làm chủ Freedom Wallet:
+━━━━━━━━━━━━━━━━━━━━━
 
-🟦 **BƯỚC 1**: Cài đặt & làm sạch dữ liệu
-🟦 **BƯỚC 2**: Thêm tài khoản (Accounts)
-🟦 **BƯỚC 3**: Ghi chép giao dịch (Transactions)
-🟦 **BƯỚC 4**: Quản lý danh mục (Categories)
-🟦 **BƯỚC 5**: Quản lý khoản nợ (Debts)
-🟦 **BƯỚC 6**: Ghi nhận tài sản (Assets)
-🟦 **BƯỚC 7**: Theo dõi đầu tư (Investments)
-🟦 **BƯỚC 8**: 6 Hũ Tiền - Trái tim Freedom Wallet
+**📍 BẠN ĐANG Ở ĐÂU?**
+
+✅ Bước 1: Tạo Web App (hoàn thành)
+➡️ **BƯỚC 2: Học cách sử dụng** (bạn đang ở đây)
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**🎯 BƯỚC 2 - BẠN SẼ HỌC GÌ?**
+
+Trong **8 phần** sau, bạn sẽ làm chủ Freedom Wallet:
+
+1️⃣ Cài đặt & làm sạch dữ liệu
+2️⃣ Thêm tài khoản (Accounts)
+3️⃣ Ghi chép giao dịch (Transactions)
+4️⃣ Quản lý danh mục (Categories)
+5️⃣ Quản lý khoản nợ (Debts)
+6️⃣ Ghi nhận tài sản (Assets)
+7️⃣ Theo dõi đầu tư (Investments)
+8️⃣ 6 Hũ Tiền - Trái tim Freedom Wallet
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 ⏱ **Thời gian**: 15-20 phút
-🎯 **Mục tiêu**: Hiểu & sử dụng thành thạo mọi tính năng
+🎯 **Mục tiêu**: Hiểu & sử dụng thành thạo
 
-💡 *Bạn có thể quay lại bất kỳ bước nào bằng command /huongdan*
+💡 *Có thể xem lại bất kỳ lúc nào bằng /huongdan*
 """,
         "image": None
     },

@@ -11,15 +11,22 @@ from loguru import logger
 # Web App Setup Guide Content - 3 Steps
 WEBAPP_SETUP_STEPS = {
     0: {
-        "title": "🚀 HƯỚNG DẪN TẠO WEB APP",
+        "title": "🚀 BƯỚC 1: TẠO WEB APP",
         "content": """
-👋 **Chào mừng! Hãy bắt đầu tạo Freedom Wallet của bạn!**
+👋 **Chào mừng! Hãy bắt đầu thiết lập Freedom Wallet!**
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**🎯 BẠN SẼ LÀM GÌ?**
+**📍 BẠN ĐANG Ở ĐÂU?**
 
-Trong 10-15 phút tới, bạn sẽ:
+➡️ **BƯỚC 1: Tạo Web App** (bạn đang ở đây)
+    → Bước 2: Học cách sử dụng
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**🎯 BƯỚC 1 - BẠN SẼ LÀM GÌ?**
+
+Trong 10-15 phút tới:
 1️⃣ Tạo bản sao Google Sheets Template
 2️⃣ Mở Extensions → App Script
 3️⃣ Deploy Web App của riêng bạn
@@ -27,9 +34,9 @@ Trong 10-15 phút tới, bạn sẽ:
 ━━━━━━━━━━━━━━━━━━━━━
 
 **✅ SAU KHI HOÀN THÀNH:**
-• Bạn có Web App cá nhân
-• Chạy trên Google Sheets của bạn
+• Web App cá nhân (chạy trên Google Sheets của bạn)
 • Dữ liệu 100% riêng tư
+• Truy cập mọi lúc, mọi thiết bị
 • Không cần biết code
 
 ━━━━━━━━━━━━━━━━━━━━━
@@ -38,7 +45,7 @@ Trong 10-15 phút tới, bạn sẽ:
 **📱 THIẾT BỊ**: Desktop/Laptop (khuyến nghị)
 **🔗 CẦN**: Tài khoản Google
 
-💡 *Làm chậm cũng hoàn toàn ổn. Có Group VIP hỗ trợ nếu cần!*
+💡 *Làm chậm cũng ổn. Có Group VIP hỗ trợ nếu cần!*
 """,
         "image": None
     },
@@ -177,20 +184,20 @@ Bạn đã hoàn thành setup!
     },
     
     4: {
-        "title": "✅ HOÀN THÀNH SETUP!",
+        "title": "✅ HOÀN THÀNH BƯỚC 1: TẠO WEB APP!",
         "content": """
-🎉 **CHÚC MỪNG BẠN ĐÃ TẠO XONG WEB APP!**
+🎉 **XUẤT SẮC! Bạn đã tạo xong Freedom Wallet Web App!**
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**🎯 BẠN ĐÃ CÓ:**
-✅ Google Sheets Template riêng
-✅ Web App URL cá nhân
-✅ Quyền truy cập 100% của bạn
+**✅ BẠN VỪA HOÀN THÀNH:**
+• Tạo Google Sheets Template riêng
+• Deploy Web App cá nhân
+• Có URL để truy cập bất kỳ lúc nào
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**💡 MẸO SỬ DỤNG:**
+**💡 MẸO SỬ DỤNG (Tùy chọn):**
 
 📱 **Trên điện thoại:**
 • Thêm Web App URL vào Home Screen
@@ -198,28 +205,23 @@ Bạn đã hoàn thành setup!
 • Android: Chrome → Menu → Add to Home screen
 
 💻 **Trên máy tính:**
-• Bookmark Web App URL
-• Hoặc pin tab trong Chrome
+• Bookmark Web App URL (Ctrl+D)
+• Pin tab để truy cập nhanh
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**🔜 BƯỚC TIẾP THEO:**
+**🚀 TIẾP THEO: HỌC CÁCH SỬ DỤNG**
 
-1️⃣ **Xem hướng dẫn sử dụng** (8 bước chi tiết)
-   → Learn: Tài khoản, giao dịch, danh mục, 6 Hũ Tiền...
+Giờ bạn đã có Web App, hãy học cách dùng nó!
 
-2️⃣ **Bắt đầu ghi chép** 
-   → Mở Web App → Thêm tài khoản đầu tiên
-   → Ghi 1 giao dịch test
+Trong **Bước 2**, bạn sẽ học:
+• Quản lý tài khoản & giao dịch
+• Áp dụng 6 Hũ Tiền
+• Đạt tự do tài chính
 
-3️⃣ **Tham gia Group VIP**
-   → Hỏi đáp, chia sẻ kinh nghiệm
-   → Tips & tricks từ cộng đồng
+⏱ Thời gian: 15-20 phút
 
-━━━━━━━━━━━━━━━━━━━━━
-
-**🎁 BONUS:**
-Mời thêm bạn bè → Unlock tính năng Premium!
+👉 **Nhấn nút bên dưới để tiếp tục!**
 """,
         "image": None
     }
@@ -258,10 +260,10 @@ def get_webapp_setup_keyboard(current_step: int) -> InlineKeyboardMarkup:
     # Step 4 (completion) - add special buttons
     if current_step == 4:
         buttons.append([
-            InlineKeyboardButton("📘 Hướng dẫn sử dụng", callback_data="guide_step_0")
+            InlineKeyboardButton("📘 Tiếp theo: Hướng dẫn sử dụng ➡️", callback_data="guide_step_0")
         ])
         buttons.append([
-            InlineKeyboardButton("👥 Tham gia Group VIP", url="https://t.me/freedomwalletapp")
+            InlineKeyboardButton("💬 Cần trợ giúp?", url="https://t.me/freedomwalletapp")
         ])
     else:
         # Help row (for steps 0-3)

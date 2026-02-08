@@ -16,51 +16,35 @@ from bot.core.program_manager import ProgramManager, ProgramType
 # 7-Day Onboarding Content with Inline Keyboards
 ONBOARDING_MESSAGES = {
     1: {
-        "title": "🎁 FREEDOM WALLET – BỘ KHỞI ĐỘNG & BƯỚC ĐẦU TIÊN",
+        "title": "� CHÚC MỪNG! BẠN ĐÃ MỞ KHÓA VIP",
         "content": """
-👋 **Chào mừng bạn đến với Freedom Wallet!**
+👏 **Tuyệt vời! Bạn đã giới thiệu thành công 2 người!**
 
-Mình sẽ đồng hành cùng bạn trong 7 ngày tới để:
-• Thiết lập hệ thống quản lý tài chính cá nhân
-• Hiểu rõ 6 Hũ Tiền & 5 Cấp Bậc Tài Chính
-• Bắt đầu quản lý tiền một cách rõ ràng, hiệu quả
-
-🎯 Hôm nay, chúng ta chỉ cần làm **1 việc quan trọng nhất**.
+Giờ đây, bạn được truy cập **Freedom Wallet VIP** – công cụ quản lý tài chính cá nhân mạnh mẽ!
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-🧭 **BƯỚC ĐẦU TIÊN – THIẾT LẬP FREEDOM WALLET**
-⏱ Thời gian: 10–15 phút (làm 1 lần duy nhất)
+🎯 **HAI BƯỚC TIẾP THEO:**
 
-Bạn sẽ:
-1️⃣ Copy Google Sheets Template
-2️⃣ Tạo Web App cá nhân (5 phút)
-3️⃣ Nhập dữ liệu đầu tiên (số dư + 1 giao dịch)
+**BƯỚC 1: TẠO WEB APP** (10-15 phút)
+   • Copy Google Sheets Template
+   • Deploy Web App cá nhân
+   • 100% dữ liệu riêng tư
 
-👉 Không cần biết code.
-👉 Làm chậm cũng hoàn toàn ổn.
-
-━━━━━━━━━━━━━━━━━━━━━
-
-🎁 **BẠN ĐƯỢC CUNG CẤP ĐẦY ĐỦ CÔNG CỤ**
-
-📄 Template quản lý tài chính (Google Sheets)
-📚 Hướng dẫn Web App từng bước
-🎥 Video hướng dẫn nhanh (3 phút)
-💬 Cộng đồng hỗ trợ Freedom Wallet
-
-(Tất cả đã sẵn sàng – bạn chỉ cần bắt đầu)
+**BƯỚC 2: HỌC CÁCH DÙNG** (15-20 phút)
+   • Quản lý tài khoản & giao dịch
+   • Áp dụng 6 Hũ Tiền
+   • Đạt tự do tài chính
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-💡 Hoàn thành bước này là bạn đã đi được **50% chặng đường**.
+💡 **Đừng lo!** Mình sẽ hướng dẫn từng bước.
+
+👉 **Nhấn nút bên dưới để bắt đầu Bước 1!**
 """,
         "delay_hours": 0,
         "buttons": [
-            [{"text": "📑 Copy Template", "url": "https://docs.google.com/spreadsheets/d/1dV-KAVxxtbrmp79RPKSfEygFOdamcvlTj6adlHKAq78/copy"}],
-            [{"text": "🚀 Hướng dẫn tạo Web App", "callback_data": "webapp_step_0"}],
-            [{"text": "� Hướng dẫn sử dụng chi tiết", "callback_data": "guide_step_0"}],
-            [{"text": "�👥 Tham gia Group VIP", "url": "https://t.me/freedomwalletapp"}]
+            [{"text": "🚀 Bắt đầu thiết lập Freedom Wallet", "callback_data": "webapp_step_0"}]
         ]
     },
     
