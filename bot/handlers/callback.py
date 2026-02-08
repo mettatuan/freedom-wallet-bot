@@ -524,6 +524,201 @@ Hoặc mô tả lại vấn đề, mình sẽ cố gắng giúp!
             reply_markup=reply_markup
         )
     
+    # ============================================
+    # WEB APP SETUP GUIDE CALLBACKS
+    # ============================================
+    
+    elif callback_data == "webapp_ready":
+        # User confirmed they completed Web App setup
+        await query.answer("🎉 Tuyệt vời! Chúc mừng bạn!")
+        
+        keyboard = [
+            [InlineKeyboardButton("📊 Xem hướng dẫn sử dụng", callback_data="onboard_complete_1")],
+            [InlineKeyboardButton("🎁 Nhận thêm quà VIP", callback_data="vip_gifts")],
+            [InlineKeyboardButton("💬 Tham gia Group", url="https://t.me/freedomwalletapp")],
+            [InlineKeyboardButton("🏠 Dashboard", callback_data="start")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await query.edit_message_text(
+            "🎉 **XUẤT SẮC! BẠN ĐÃ HOÀN THÀNH SETUP!**\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "✅ Web App Freedom Wallet của bạn đã sẵn sàng!\n\n"
+            "🚀 **BƯỚC TIẾP THEO:**\n\n"
+            "1️⃣ **Thêm giao dịch đầu tiên**\n"
+            "   • Mở Web App của bạn\n"
+            "   • Click 'Thêm giao dịch'\n"
+            "   • Nhập thu/chi hôm nay\n\n"
+            "2️⃣ **Khám phá 6 Hũ Tiền**\n"
+            "   • Xem phân bổ tự động\n"
+            "   • Điều chỉnh % theo nhu cầu\n\n"
+            "3️⃣ **Theo dõi dashboard**\n"
+            "   • Biểu đồ thu chi\n"
+            "   • ROI tracking\n"
+            "   • Financial Level\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "💡 **Lời khuyên:**\n"
+            "Track mỗi ngày trong 7 ngày đầu để hình thành thói quen!\n\n"
+            "📚 Cần hỗ trợ? Hỏi trong Group VIP nhé!",
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+    
+    elif callback_data == "webapp_setup_guide":
+        # Send step-by-step setup guide with images
+        await query.answer("📖 Đang gửi hướng dẫn chi tiết...")
+        
+        from pathlib import Path
+        import asyncio
+        
+        # Step 1: Copy template
+        step1_image = Path("media/images/buoc-1-copy.jpg.webp")
+        if step1_image.exists():
+            with open(step1_image, 'rb') as photo:
+                await context.bot.send_photo(
+                    chat_id=query.from_user.id,
+                    photo=photo,
+                    caption="📋 **BƯỚC 1: TẠO BẢN SAO**\n\n"
+                            "1️⃣ Click link template: [v3.2] Freedom Wallet\n"
+                            "2️⃣ Vào **File** → **Make a copy**\n"
+                            "3️⃣ Đặt tên: 'My Freedom Wallet'\n"
+                            "4️⃣ Lưu vào Google Drive của bạn\n\n"
+                            "✅ Done? Chờ Bước 2...",
+                    parse_mode="Markdown"
+                )
+        
+        await asyncio.sleep(2)
+        
+        # Step 2: Apps Script
+        step2_image = Path("media/images/buoc-2-appscript.jpg")
+        if step2_image.exists():
+            with open(step2_image, 'rb') as photo:
+                await context.bot.send_photo(
+                    chat_id=query.from_user.id,
+                    photo=photo,
+                    caption="⚙️ **BƯỚC 2: MỞ APPS SCRIPT**\n\n"
+                            "1️⃣ Trong Google Sheet vừa copy\n"
+                            "2️⃣ Click **Extensions** (thanh menu trên)\n"
+                            "3️⃣ Chọn **Apps Script**\n"
+                            "4️⃣ Cửa sổ mới sẽ mở ra\n\n"
+                            "💡 Nếu không thấy Extensions, bấm vào 3 chấm (...) ở menu\n\n"
+                            "✅ Đã mở Apps Script? Chờ Bước 3...",
+                    parse_mode="Markdown"
+                )
+        
+        await asyncio.sleep(2)
+        
+        # Step 3: Deploy
+        step3_image = Path("media/images/buoc-3-deploy.jpg")
+        if step3_image.exists():
+            with open(step3_image, 'rb') as photo:
+                await context.bot.send_photo(
+                    chat_id=query.from_user.id,
+                    photo=photo,
+                    caption="🚀 **BƯỚC 3: DEPLOY WEB APP**\n\n"
+                            "1️⃣ Trong Apps Script editor\n"
+                            "2️⃣ Click nút **Deploy** (góc trên bên phải)\n"
+                            "3️⃣ Chọn **New deployment**\n"
+                            "4️⃣ Type: **Web app**\n"
+                            "5️⃣ Execute as: **Me**\n"
+                            "6️⃣ Who has access: **Anyone**\n"
+                            "7️⃣ Click **Deploy**\n"
+                            "8️⃣ Copy **Web app URL** → Save lại!\n\n"
+                            "⚠️ **Lưu ý:** Lần đầu sẽ cần authorize (cho phép quyền)\n\n"
+                            "✅ Đã deploy xong? Xem Bước 4...",
+                    parse_mode="Markdown"
+                )
+        
+        await asyncio.sleep(2)
+        
+        # Step 4: Completed
+        step4_image = Path("media/images/buoc-4-completed.jpg")
+        keyboard = [
+            [InlineKeyboardButton("✅ Đã làm xong!", callback_data="webapp_ready")],
+            [InlineKeyboardButton("🌐 Hướng dẫn chi tiết", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("❓ Cần hỗ trợ", callback_data="webapp_need_help")],
+            [InlineKeyboardButton("🔙 Xem lại từ đầu", callback_data="webapp_setup_guide")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        if step4_image.exists():
+            with open(step4_image, 'rb') as photo:
+                await context.bot.send_photo(
+                    chat_id=query.from_user.id,
+                    photo=photo,
+                    caption="🎉 **HOÀN TẤT! WEB APP CỦA BẠN SẴN SÀNG!**\n\n"
+                            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                            "🌐 **Web App URL** đã được tạo!\n\n"
+                            "📱 **Cách sử dụng:**\n"
+                            "• Mở URL trên điện thoại/máy tính\n"
+                            "• Add to Home Screen (nếu dùng mobile)\n"
+                            "• Bắt đầu thêm giao dịch!\n\n"
+                            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                            "💡 **Mẹo:**\n"
+                            "• Bookmark URL để truy cập nhanh\n"
+                            "• Đồng bộ tự động mỗi khi bạn cập nhật\n"
+                            "• Dữ liệu lưu trong Google Sheet của bạn\n\n"
+                            "🎯 **Bạn đã làm xong chưa?**",
+                    parse_mode="Markdown",
+                    reply_markup=reply_markup
+                )
+        else:
+            await context.bot.send_message(
+                chat_id=query.from_user.id,
+                text="🎉 **HOÀN TẤT! WEB APP CỦA BẠN SẴN SÀNG!**\n\n"
+                     "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                     "🌐 **Web App URL** đã được tạo!\n\n"
+                     "📱 **Cách sử dụng:**\n"
+                     "• Mở URL trên điện thoại/máy tính\n"
+                     "• Add to Home Screen (nếu dùng mobile)\n"
+                     "• Bắt đầu thêm giao dịch!\n\n"
+                     "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                     "💡 **Mẹo:**\n"
+                     "• Bookmark URL để truy cập nhanh\n"
+                     "• Đồng bộ tự động mỗi khi bạn cập nhật\n"
+                     "• Dữ liệu lưu trong Google Sheet của bạn\n\n"
+                     "🎯 **Bạn đã làm xong chưa?**",
+                parse_mode="Markdown",
+                reply_markup=reply_markup
+            )
+    
+    elif callback_data == "webapp_need_help":
+        # User needs help with Web App setup
+        keyboard = [
+            [InlineKeyboardButton("🔙 Xem lại hướng dẫn", callback_data="webapp_setup_guide")],
+            [InlineKeyboardButton("🌐 Notion chi tiết", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("💬 Hỏi trong Group", url="https://t.me/freedomwalletapp")],
+            [InlineKeyboardButton("📞 Liên hệ Admin", url=f"https://t.me/{settings.BOT_USERNAME.replace('Bot', '')}")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await query.edit_message_text(
+            "❓ **CẦN HỖ TRỢ SETUP WEB APP?**\n\n"
+            "Mình sẵn sàng giúp bạn!\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "**💬 CÁC CÁCH ĐƯỢC HỖ TRỢ:**\n\n"
+            "1️⃣ **Xem lại hướng dẫn**\n"
+            "   • Click 'Xem lại hướng dẫn'\n"
+            "   • Follow từng bước cẩn thận\n\n"
+            "2️⃣ **Đọc Notion chi tiết**\n"
+            "   • Hướng dẫn có ảnh chụp màn hình\n"
+            "   • Video demo\n"
+            "   • FAQ troubleshooting\n\n"
+            "3️⃣ **Hỏi Group VIP**\n"
+            "   • Response nhanh từ community\n"
+            "   • Nhiều người đã setup thành công\n\n"
+            "4️⃣ **Liên hệ Admin trực tiếp**\n"
+            "   • 1-1 support\n"
+            "   • Screen share nếu cần\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "⏰ **Thời gian hỗ trợ:**\n"
+            "• Thứ 2-6: 9h-21h\n"
+            "• Thứ 7-CN: 10h-18h\n\n"
+            "**Gặp vấn đề gì cụ thể?**\nGõ mô tả để mình hỗ trợ!",
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+    
     elif callback_data == "super_vip_benefits":
         # Show Super VIP benefits details
         keyboard = [

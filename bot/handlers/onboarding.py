@@ -569,18 +569,33 @@ async def _start_onboarding_journey_legacy(user_id: int, context: ContextTypes.D
         return False
 
 
-async def send_onboarding_message(context: ContextTypes.DEFAULT_TYPE):
+async def send_onboarding_message(context: ContextTypes.DEFAULT_TYPE, user_id: int = None, day: int = None):
     """
-    Callback to send onboarding message with inline keyboard
-    """
-    job = context.job
-    data = job.data
+    Send onboarding message with inline keyboard
     
-    user_id = data['user_id']
-    day = data['day']
-    title = data['title']
-    content = data['content']
-    buttons = data.get('buttons', [])  # Get buttons if available
+    Can be called in two ways:
+    1. From ProgramManager: send_onboarding_message(context, user_id, day)
+    2. From legacy scheduler: send_onboarding_message(context) with job.data
+    """
+    # If user_id and day not provided, get from job.data (legacy)
+    if user_id is None or day is None:
+        job = context.job
+        data = job.data
+        user_id = data['user_id']
+        day = data['day']
+        title = data['title']
+        content = data['content']
+        buttons = data.get('buttons', [])
+    else:
+        # Get from ONBOARDING_MESSAGES (modern ProgramManager way)
+        if day not in ONBOARDING_MESSAGES:
+            logger.error(f"Invalid onboarding day: {day}")
+            return
+        
+        message_data = ONBOARDING_MESSAGES[day]
+        title = message_data['title']
+        content = message_data['content']
+        buttons = message_data.get('buttons', [])
     
     try:
         # Build inline keyboard if buttons provided

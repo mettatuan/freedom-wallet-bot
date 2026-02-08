@@ -305,32 +305,33 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                                 
                                 await asyncio.sleep(1)
                                 
-                                # Send gift menu with buttons
+                                # Send setup guide with action buttons
                                 keyboard = [
+                                    [InlineKeyboardButton("✅ Đã tạo xong Web App", callback_data="webapp_ready")],
+                                    [InlineKeyboardButton("📖 Hướng dẫn 3 bước setup", callback_data="webapp_setup_guide")],
+                                    [InlineKeyboardButton("🌐 Xem hướng dẫn chi tiết", url="https://eliroxbot.notion.site/freedomwallet")],
                                     [InlineKeyboardButton("🎁 Nhận Google Sheet 3.2", callback_data="gift_sheet")],
-                                    [InlineKeyboardButton("⚙️ Nhận Google Apps Script", callback_data="gift_script")],
-                                    [InlineKeyboardButton("🌐 Hướng dẫn tạo Web App", url="https://eliroxbot.notion.site/freedomwallet")],
-                                    [InlineKeyboardButton("🎥 Xem video hướng dẫn", callback_data="gift_video")],
-                                    [InlineKeyboardButton("💬 Tham gia Group VIP", url="https://t.me/freedomwalletapp")],
-                                    [InlineKeyboardButton("🏠 Vào Dashboard", callback_data="start")]
+                                    [InlineKeyboardButton("💬 Group VIP (Hỗ trợ)", url="https://t.me/freedomwalletapp")]
                                 ]
                                 reply_markup = InlineKeyboardMarkup(keyboard)
                                 
                                 await context.bot.send_message(
                                     chat_id=referrer.id,
-                                    text="🎁 **MENU NHẬN QUÀ**\n\n"
-                                         "Chọn từng mục bên dưới để nhận quà của bạn:\n\n"
-                                         "✅ Full Google Sheet 3.2\n"
-                                         "✅ Full Apps Script\n"
-                                         "✅ Full Hướng dẫn Notion\n"
-                                         "✅ Video tutorials chi tiết\n"
-                                         "✅ Group hỗ trợ VIP\n\n"
-                                         "━━━━━━━━━━━━━━━━━━━━━\n"
-                                         "💎 **QUYỀN LỢI VIP TRỌN ĐỜI:**\n"
-                                         "✓ Toàn bộ tính năng Bot\n"
-                                         "✓ Cập nhật miễn phí mãi mãi\n"
-                                         "✓ Hỗ trợ ưu tiên 1-1\n"
-                                         "✓ Tham gia cộng đồng VIP",
+                                    text="🎉 **CHÀO MỪNG BẠN CHÍNH THỨC LÀ VIP!**\n\n"
+                                         "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                                         "🎁 **QUÀ TẶNG CỦA BẠN:**\n\n"
+                                         "✅ **Full Google Sheet 3.2** - Công cụ quản lý tài chính\n"
+                                         "✅ **Full Apps Script** - Tự động hóa dữ liệu\n"
+                                         "✅ **Web App Personal** - Dashboard cá nhân\n"
+                                         "✅ **Hướng dẫn Notion** - Setup từng bước\n"
+                                         "✅ **Group VIP** - Hỗ trợ 1-1\n\n"
+                                         "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                                         "🚀 **BƯỚC TIẾP THEO:**\n\n"
+                                         "Để sử dụng Freedom Wallet, bạn cần **tạo Web App** (3-5 phút).\n\n"
+                                         "➡️ Bạn đã tạo xong Web App chưa?\n"
+                                         "• **Rồi** → Click '✅ Đã tạo xong'\n"
+                                         "• **Chưa** → Click '📖 Hướng dẫn 3 bước'\n\n"
+                                         "💡 Quá trình rất đơn giản, chỉ copy-paste thôi!",
                                     parse_mode="Markdown",
                                     reply_markup=reply_markup
                                 )
