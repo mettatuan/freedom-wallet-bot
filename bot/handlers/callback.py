@@ -413,6 +413,117 @@ Hoặc mô tả lại vấn đề, mình sẽ cố gắng giúp!
             reply_markup=reply_markup
         )
     
+    # ============================================
+    # ONBOARDING CALLBACKS (7-Day Journey)
+    # ============================================
+    
+    elif callback_data == "onboard_copy_template":
+        # Send template link when user clicks Copy Template
+        await query.answer("📑 Đang gửi link template...")
+        
+        keyboard = [
+            [InlineKeyboardButton("🌐 Hướng dẫn Web App", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("✅ Đã copy xong", callback_data="onboard_complete_1")],
+            [InlineKeyboardButton("❓ Cần hỗ trợ", callback_data="onboard_help_1")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await context.bot.send_message(
+            chat_id=query.from_user.id,
+            text=f"📑 **FREEDOM WALLET TEMPLATE**\n\n"
+                 f"👉 **Link template:** [Click để mở]({settings.YOUR_TEMPLATE_ID})\n\n"
+                 f"**Cách sử dụng:**\n"
+                 f"1. Click link ở trên\n"
+                 f"2. File → Make a copy\n"
+                 f"3. Đặt tên: 'My Freedom Wallet'\n"
+                 f"4. Click '✅ Đã copy xong' bên dưới\n\n"
+                 f"💡 Template sẽ mở trong Google Drive của bạn!",
+            parse_mode="Markdown",
+            disable_web_page_preview=False,
+            reply_markup=reply_markup
+        )
+    
+    elif callback_data == "onboard_video_day1":
+        # Send Day 1 video tutorial
+        await query.answer("🎥 Đang gửi video tutorial...")
+        
+        keyboard = [
+            [InlineKeyboardButton("📑 Copy Template", callback_data="onboard_copy_template")],
+            [InlineKeyboardButton("🌐 Hướng dẫn Web App", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("✅ Đã xem xong", callback_data="onboard_complete_1")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await context.bot.send_message(
+            chat_id=query.from_user.id,
+            text="🎥 **VIDEO HƯỚNG DẪN SETUP (3 PHÚT)**\n\n"
+                 "📹 **Nội dung video:**\n"
+                 "• Cách copy template\n"
+                 "• Setup Google Apps Script\n"
+                 "• Deploy Web App\n"
+                 "• Thêm dữ liệu đầu tiên\n\n"
+                 "👉 **Link video:** [Xem trên YouTube](https://youtube.com/@freedomwallet)\n\n"
+                 "💬 Xem xong mà chưa hiểu? Click 'Cần hỗ trợ' nhé!",
+            parse_mode="Markdown",
+            disable_web_page_preview=False,
+            reply_markup=reply_markup
+        )
+    
+    elif callback_data.startswith("onboard_complete_"):
+        # User completed an onboarding day
+        day = callback_data.split("_")[-1]
+        
+        congratulations = {
+            "1": "🎉 **HOÀN THÀNH DAY 1!**\n\nXuất sắc! Bạn đã setup xong Foundation.\n\n📅 **Ngày mai:** Tìm hiểu về 6 Hũ Tiền\n💬 Mình sẽ nhắn bạn khoảng 10h sáng!",
+            "2": "💰 **HOÀN THÀNH DAY 2!**\n\nBạn đã hiểu về 6 Hũ Tiền rồi đấy!\n\n📅 **Ngày mai:** 5 Cấp Bậc Tài Chính",
+            "3": "🎯 **HOÀN THÀNH DAY 3!**\n\nĐã biết mình đang ở cấp nào chưa?\n\n📅 **Ngày mai:** Thêm giao dịch đầu tiên",
+            "4": "⚡ **HOÀN THÀNH DAY 4!**\n\nTracking tốt! Tiếp tục duy trì nhé.\n\n📅 **Ngày mai:** Tính năng nâng cao",
+            "5": "📈 **HOÀN THÀNH DAY 5!**\n\nBạn đã master Freedom Wallet rồi!\n\n📅 **Ngày mai:** Challenge 30 ngày",
+            "6": "💪 **HOÀN THÀNH DAY 6!**\n\nReady for challenge?\n\n📅 **Ngày mai:** Wrap up & next steps",
+            "7": "🏆 **HOÀN THÀNH 7-DAY JOURNEY!**\n\nChúc mừng! Bạn đã hoàn thành hành trình!\n\n🚀 Giờ là lúc áp dụng vào thực tế!"
+        }
+        
+        keyboard = [
+            [InlineKeyboardButton("💬 Tham gia Group VIP", url="https://t.me/freedomwalletapp")],
+            [InlineKeyboardButton("🏠 Về Dashboard", callback_data="start")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await query.edit_message_text(
+            congratulations.get(day, "✅ Hoàn thành!"),
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+        
+        # TODO: Update onboarding_progress in database
+        logger.info(f"User {query.from_user.id} completed onboarding day {day}")
+    
+    elif callback_data.startswith("onboard_help_"):
+        # User needs help with onboarding
+        day = callback_data.split("_")[-1]
+        
+        keyboard = [
+            [InlineKeyboardButton("📞 Liên hệ Admin", url=f"https://t.me/{settings.BOT_USERNAME.replace('Bot', '')}")],[InlineKeyboardButton("💬 Group VIP", url="https://t.me/freedomwalletapp")],
+            [InlineKeyboardButton("🔙 Quay lại Day " + day, callback_data=f"onboard_replay_{day}")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await query.edit_message_text(
+            f"❓ **CẦN HỖ TRỢ DAY {day}**\n\n"
+            f"Mình ở đây để giúp bạn!\n\n"
+            f"**Cách liên hệ:**\n"
+            f"1️⃣ Gửi tin nhắn mô tả vấn đề\n"
+            f"2️⃣ Hoặc click 'Liên hệ Admin' bên dưới\n"
+            f"3️⃣ Hoặc hỏi trong Group VIP\n\n"
+            f"⏰ **Thời gian hỗ trợ:**\n"
+            f"• Thứ 2-6: 9h-21h\n"
+            f"• Thứ 7-CN: 10h-18h\n\n"
+            f"💬 **Gặp vấn đề gì?**\n"
+            f"Gõ trực tiếp để mình trả lời nhé!",
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+    
     elif callback_data == "super_vip_benefits":
         # Show Super VIP benefits details
         keyboard = [

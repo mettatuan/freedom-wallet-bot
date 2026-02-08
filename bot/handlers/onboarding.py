@@ -4,7 +4,7 @@ Guides new users through Freedom Wallet features
 
 Week 3: Integrated with ProgramManager
 """
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from loguru import logger
 from datetime import datetime, timedelta
@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from bot.core.program_manager import ProgramManager, ProgramType
 
 
-# 7-Day Onboarding Content
+# 7-Day Onboarding Content with Inline Keyboards
 ONBOARDING_MESSAGES = {
     1: {
         "title": "🎉 Day 1: Welcome & Setup",
@@ -26,15 +26,17 @@ Trong 7 ngày tới, mình sẽ hướng dẫn bạn từng bước để:
 ✓ Áp dụng 5 Cấp Bậc Tài Chính
 ✓ Quản lý tài chính hiệu quả
 
+━━━━━━━━━━━━━━━━━━━━━
+
 📋 **NHIỆM VỤ HÔM NAY:**
 
 **1️⃣ Copy Template về Google Drive**
-• Mở link template đã gửi
-• Click "File" → "Make a copy"
+• Click button "📑 Copy Template" bên dưới
+• File → "Make a copy"
 • Đặt tên: "My Freedom Wallet"
 
 **2️⃣ Tạo Web App (5 phút)**
-• Xem hướng dẫn Notion
+• Click "🌐 Hướng dẫn Web App"
 • Làm theo từng bước
 • Deploy Web App của bạn
 
@@ -42,15 +44,22 @@ Trong 7 ngày tới, mình sẽ hướng dẫn bạn từng bước để:
 • Nhập số dư hiện tại
 • Thêm 1-2 giao dịch gần đây
 
-🎥 **Video hướng dẫn:** (3 phút)
-👉 [Xem video](https://eliroxbot.notion.site/freedomwallet)
+━━━━━━━━━━━━━━━━━━━━━
+
+🎯 **Xong rồi?**
+Click "✅ Hoàn thành Day 1" để chuyển sang bước tiếp theo!
 
 💬 **Gặp khó khăn?**
-Hỏi mình bất cứ lúc nào nhé!
-
-✅ Xong rồi? Nhắn "DONE" để mình biết!
+Click "❓ Cần hỗ trợ" để được giúp đỡ ngay!
 """,
-        "delay_hours": 0  # Send immediately after unlock
+        "delay_hours": 0,
+        "buttons": [
+            [{"text": "📑 Copy Template", "callback_data": "onboard_copy_template"}],
+            [{"text": "🌐 Hướng dẫn Web App", "url": "https://eliroxbot.notion.site/freedomwallet"}],
+            [{"text": "🎥 Xem Video (3 phút)", "callback_data": "onboard_video_day1"}],
+            [{"text": "✅ Hoàn thành Day 1", "callback_data": "onboard_complete_1"}],
+            [{"text": "❓ Cần hỗ trợ", "callback_data": "onboard_help_1"}]
+        ]
     },
     
     2: {
@@ -112,7 +121,13 @@ Vào Freedom Wallet → "6 Jars" → Xem phân bổ của bạn
 
 ❓ Có thắc mắc về hũ nào không? Hỏi mình nhé!
 """,
-        "delay_hours": 24
+        "delay_hours": 24,
+        "buttons": [
+            [{"text": "📊 Xem 6 Hũ trong App", "callback_data": "onboard_open_app"}],
+            [{"text": "💡 Ví dụ phân bổ", "callback_data": "onboard_example_day2"}],
+            [{"text": "✅ Đã hiểu rồi", "callback_data": "onboard_complete_2"}],
+            [{"text": "❓ Cần hỗ trợ", "callback_data": "onboard_help_2"}]
+        ]
     },
     
     3: {
@@ -162,7 +177,13 @@ Mình sẽ cho tips để lên cấp tiếp theo!
 📊 **Xem chi tiết trong app:**
 Freedom Wallet → "Financial Level"
 """,
-        "delay_hours": 48
+        "delay_hours": 48,
+        "buttons": [
+            [{"text": "🎯 Quiz: Tôi ở cấp mấy?", "callback_data": "onboard_quiz_level"}],
+            [{"text": "💡 Tips lên cấp", "callback_data": "onboard_level_tips"}],
+            [{"text": "✅ Đã xác định cấp", "callback_data": "onboard_complete_3"}],
+            [{"text": "❓ Cần hỗ trợ", "callback_data": "onboard_help_3"}]
+        ]
     },
     
     4: {
@@ -224,7 +245,13 @@ Hôm nay, thêm ít nhất **3 giao dịch** gần đây:
 
 Hỏi mình ngay!
 """,
-        "delay_hours": 72
+        "delay_hours": 72,
+        "buttons": [
+            [{"text": "📝 Mở App để thêm", "callback_data": "onboard_open_app"}],
+            [{"text": "💡 Tips phân loại", "callback_data": "onboard_tips_day4"}],
+            [{"text": "✅ Đã thêm xong", "callback_data": "onboard_complete_4"}],
+            [{"text": "❓ Cần hỗ trợ", "callback_data": "onboard_help_4"}]
+        ]
     },
     
     5: {
@@ -518,7 +545,7 @@ async def _start_onboarding_journey_legacy(user_id: int, context: ContextTypes.D
             # Calculate when to send
             send_time = datetime.now() + timedelta(hours=message_data['delay_hours'])
             
-            # Schedule message
+            # Schedule message with buttons
             context.job_queue.run_once(
                 send_onboarding_message,
                 when=send_time,
@@ -526,7 +553,8 @@ async def _start_onboarding_journey_legacy(user_id: int, context: ContextTypes.D
                     'user_id': user_id,
                     'day': day,
                     'title': message_data['title'],
-                    'content': message_data['content']
+                    'content': message_data['content'],
+                    'buttons': message_data.get('buttons', [])  # Include buttons if available
                 },
                 name=f"onboarding_day_{day}_user_{user_id}"
             )
@@ -543,7 +571,7 @@ async def _start_onboarding_journey_legacy(user_id: int, context: ContextTypes.D
 
 async def send_onboarding_message(context: ContextTypes.DEFAULT_TYPE):
     """
-    Callback to send onboarding message
+    Callback to send onboarding message with inline keyboard
     """
     job = context.job
     data = job.data
@@ -552,16 +580,32 @@ async def send_onboarding_message(context: ContextTypes.DEFAULT_TYPE):
     day = data['day']
     title = data['title']
     content = data['content']
+    buttons = data.get('buttons', [])  # Get buttons if available
     
     try:
+        # Build inline keyboard if buttons provided
+        reply_markup = None
+        if buttons:
+            keyboard = []
+            for row in buttons:
+                button_row = []
+                for btn in row:
+                    if 'url' in btn:
+                        button_row.append(InlineKeyboardButton(btn['text'], url=btn['url']))
+                    else:
+                        button_row.append(InlineKeyboardButton(btn['text'], callback_data=btn['callback_data']))
+                keyboard.append(button_row)
+            reply_markup = InlineKeyboardMarkup(keyboard)
+        
         await context.bot.send_message(
             chat_id=user_id,
             text=f"{title}\n{content}",
             parse_mode="Markdown",
-            disable_web_page_preview=True
+            disable_web_page_preview=True,
+            reply_markup=reply_markup
         )
         
-        logger.info(f"Sent onboarding Day {day} to user {user_id}")
+        logger.info(f"Sent onboarding Day {day} to user {user_id} with {len(buttons)} button rows")
         
         # TODO: Update onboarding_progress in database
         
