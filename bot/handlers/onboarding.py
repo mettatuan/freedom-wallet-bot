@@ -57,12 +57,7 @@ Bạn sẽ:
 """,
         "delay_hours": 0,
         "buttons": [
-            [{"text": "📑 Copy Template", "callback_data": "onboard_copy_template"}, 
-             {"text": "🌐 Hướng dẫn Web App", "url": "https://eliroxbot.notion.site/freedomwallet"}],
-            [{"text": "✅ Hoàn thành bước đầu tiên", "callback_data": "onboard_complete_1"}, 
-             {"text": "❓ Cần hỗ trợ", "callback_data": "onboard_help_1"}],
-            [{"text": "💬 Vào cộng đồng", "url": "https://t.me/freedomwalletapp"}, 
-             {"text": "📋 Xem lộ trình 7 ngày", "callback_data": "onboard_roadmap"}]
+            [{"text": "📑 Copy Template", "url": "https://docs.google.com/spreadsheets/d/1dV-KAVxxtbrmp79RPKSfEygFOdamcvlTj6adlHKAq78/copy"}]
         ]
     },
     

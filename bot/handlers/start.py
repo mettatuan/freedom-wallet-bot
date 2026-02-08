@@ -81,36 +81,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                 parse_mode="Markdown"
                             )
                     
-                    # Send detailed message
-                    await update.message.reply_text(
-                        f"🎁 **{tier}**\n\n"
-                        f"🎁 **NHẬN NGAY:**\n\n"
-                        f"📄 **1. Google Sheets Template:**\n"
-                        f"👉 [Nhấn để copy Template](https://docs.google.com/spreadsheets/d/{settings.YOUR_TEMPLATE_ID})\n\n"
-                        f"📚 **2. Hướng dẫn tạo Web App:**\n"
-                        f"👉 [Notion Guide chi tiết](https://eliroxbot.notion.site/freedomwallet)\n\n"
-                        f"🎥 **3. Video Tutorial (3 phút):**\n"
-                        f"• Cách copy template\n"
-                        f"• Tạo Web App trong 5 bước\n"
-                        f"• Tips sử dụng hiệu quả\n\n"
-                        f"💬 **4. Tham gia Group:**\n"
-                        f"👉 [Freedom Wallet Community](https://t.me/freedomwalletapp)\n"
-                        f"(Hỗ trợ 1-1, chia sẻ tips, cập nhật mới)\n\n"
-                        f"━━━━━━━━━━━━━━━━━━━━━\n"
-                        f"🚀 **BẮT ĐẦU HÀNH TRÌNH TÀI CHÍNH!**\n"
-                        f"━━━━━━━━━━━━━━━━━━━━━\n\n"
-                        f"Trong 7 ngày tới, mình sẽ hướng dẫn bạn:\n"
-                        f"• Ngày 1: Setup Web App ✓\n"
-                        f"• Ngày 2: Hiểu về 6 Hũ Tiền\n"
-                        f"• Ngày 3: 5 Cấp Bậc Tài Chính\n"
-                        f"• Ngày 4: Thêm giao dịch đầu tiên\n"
-                        f"• Ngày 5: Tính năng nâng cao\n"
-                        f"• Ngày 6-7: Chiến lược đầu tư\n\n"
-                        f"🤖 Sẵn sàng bắt đầu chưa?\n"
-                        f"Hỏi mình bất cứ điều gì nhé! Dùng /help để xem menu.",
-                        parse_mode="Markdown",
-                        disable_web_page_preview=False
-                    )
+
                     
                     # Start onboarding journey (Day 1 scheduled)
                     from bot.handlers.onboarding import start_onboarding_journey

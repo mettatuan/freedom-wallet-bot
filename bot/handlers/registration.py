@@ -290,47 +290,7 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                                             parse_mode="Markdown"
                                         )
                                 
-                                import asyncio
-                                await asyncio.sleep(1)
-                                
-                                # Send VIP congratulations with identity anchor
-                                await context.bot.send_message(
-                                    chat_id=referrer.id,
-                                    text=f"━━━━━━━━━━━━━━━━━━━━━\n"
-                                         f"👑 **CHÀO MỪNG BẠN TRỞ THÀNH**\n"
-                                         f"**THÀNH VIÊN VIP – FREEDOM WALLET**\n"
-                                         f"━━━━━━━━━━━━━━━━━━━━━\n\n"
-                                         f"Bạn đã chính thức bước sang\n"
-                                         f"giai đoạn sử dụng sâu hơn và hiệu quả hơn.\n\n"
-                                         f"💡 Thành viên VIP là những người:\n"
-                                         f"• Đã chủ động hành động\n"
-                                         f"• Muốn quản lý tài chính nghiêm túc\n"
-                                         f"• Sẵn sàng đi sâu hơn thay vì chỉ xem",
-                                    parse_mode="Markdown"
-                                )
-                                
-                                await asyncio.sleep(2)
-                                
-                                # Message 3A: Benefits with single CTA
-                                keyboard_3a = [
-                                    [InlineKeyboardButton("➡️ Tiếp tục", callback_data="vip_continue")]
-                                ]
-                                reply_markup_3a = InlineKeyboardMarkup(keyboard_3a)
-                                
-                                await context.bot.send_message(
-                                    chat_id=referrer.id,
-                                    text="🎁 **QUYỀN LỢI DÀNH CHO BẠN:**\n\n"
-                                         "✅ Công cụ quản lý tài chính đầy đủ\n"
-                                         "✅ Web App cá nhân\n"
-                                         "✅ Hướng dẫn từng bước\n"
-                                         "✅ Group VIP hỗ trợ trực tiếp\n\n"
-                                         "👉 Bước tiếp theo rất đơn giản.",
-                                    parse_mode="Markdown",
-                                    reply_markup=reply_markup_3a
-                                )
-                                
-                                # Store flag to send Message 3B when user clicks "Tiếp tục"
-                                # Message 3B will be sent via callback handler
+
                                 
                                 # Start onboarding journey with 10-minute delay (not immediate)
                                 # This allows user to process VIP status first
