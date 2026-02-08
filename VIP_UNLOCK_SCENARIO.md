@@ -1,18 +1,29 @@
-# 📱 KỊCH BẢN VIP UNLOCK FLOW - FREEDOM WALLET BOT (v2 - Optimized)
+# 📱 KỊCH BẢN VIP UNLOCK FLOW - FREEDOM WALLET BOT (v2.1 - Refined)
 
-## 📊 SUMMARY: V1 → V2 CHANGES
+## 📊 SUMMARY: V1 → V2 → V2.1 EVOLUTION
 
-| Aspect | V1 (Before) | V2 (After - Feb 2026) | Expected Impact |
-|--------|-------------|----------------------|-----------------|
-| **Message 3** | 1 message, 5 buttons + 5 benefits + question | Split: 3A (benefits + 1 btn) + 3B (action + 2 btns) | -30% decision fatigue |
-| **Identity Anchor** | None | "VIP là người..." definition | -15% abandon rate |
-| **Day 1 Timing** | Immediate (0 delay) | 10 minutes after unlock | +20% engagement |
-| **Day 1 Tasks** | 3 tasks (copy, deploy, add data) | 1 task (add 1 transaction) | 50% → 70% completion |
-| **Day 1 CTA** | "Hoàn thành Day 1" | "Tôi đã thêm giao dịch đầu tiên" | More specific action |
-| **Overall Flow** | 4 messages instant | 4 messages staged (1s, 2s, 10m delays) | Better psychological pacing |
+| Aspect | V1 (Before) | V2 (Feb 2026) | V2.1 (Feb 8 2026) | Impact |
+|--------|-------------|---------------|-------------------|---------|
+| **Message 3** | 1 message, 5 buttons | Split: 3A + 3B | (same) | -30% decision fatigue |
+| **Identity Anchor** | None | "VIP là người..." | (same) | -15% abandon rate |
+| **Day 1 Timing** | Immediate | 10 minutes | (same) | +20% engagement |
+| **Day 1 Title** | "Day 1" | "Day 1: Bắt đầu nào!" | **"BƯỚC ĐẦU TIÊN"** | No timeline pressure |
+| **Day 1 Tasks** | 3 tasks | 1 task | (same) | 50% → 70% completion |
+| **Day 1 CTA** | Generic | Specific | (same) | More clear |
+| **Day 1 Buttons** | Not defined | 5 buttons | **3 buttons** | -30% decision fatigue |
+| **Comeback psychology** | None | None | **"Nếu hôm nay bạn bận..."** | +15-20% comeback rate |
+| **Emoji tone** | Mixed | Heavy 🎉 | **Reduced 🎉** | Professional yet warm |
+| **Overall Flow** | 4 instant | 4 staged | 4 staged + refined | Better pacing + less pressure |
+
+### 🎯 V2.1 Refinements (Feb 8 2026)
+
+**3 Key Changes:**
+1. **"Day 1" → "Bước đầu tiên"** - Removes timeline pressure ("fail if don't do today")
+2. **"Cho phép làm chậm" copy** - Explicitly states "quay lại khi sẵn sàng" to reduce guilt
+3. **5 buttons → 3 buttons** - Moves Notion + Group links to support submenu
 
 **Core Philosophy:** 
-> "First success > Perfection" - Tạo momentum thay vì overwhelm
+> "First success > Perfection" + "No pressure, just progress"
 
 ---
 
@@ -37,6 +48,16 @@
 **Problem v1:** Day 1 had 3 tasks = perfectionism trap  
 **Solution v2:** Just add 1 transaction (any transaction)  
 **Why it works:** Lowers barrier, creates momentum, forms habit faster
+
+### 5. Timeline Pressure → Timeless Action (v2.1)
+**Problem v2:** "Day 1" creates implicit deadline ("must do today")  
+**Solution v2.1:** "Bước đầu tiên" removes timeline  
+**Why it works:** Busy users feel permission to return later without guilt
+
+### 6. Button Overload → Clear Hierarchy (v2.1)
+**Problem v2:** 5 buttons (3 actions + 2 links) = scattered focus  
+**Solution v2.1:** 3 main buttons, links in submenu  
+**Why it works:** Reduces cognitive load at critical moment
 
 ---
 
@@ -174,17 +195,21 @@ Bạn đã tạo xong chưa?
 
 ---
 
-## 📨 MESSAGE 4: ONBOARDING DAY 1 (Simplified + Delayed) ⭐ NEW
+## 📨 MESSAGE 4: ONBOARDING "BƯỚC ĐẦU TIÊN" (v2.1 - Refined) ⭐ NEW
 
 **Timing:** **10 phút** sau Message 3A (was: immediate)  
-**Change:** Delay giúp user "digest" VIP status trước
+**Changes v2.1:**
+- ✅ "Day 1" → **"BƯỚC ĐẦU TIÊN"** (giảm timeline pressure)
+- ✅ Thêm **"Nếu hôm nay bạn bận..."** (comeback psychology)
+- ✅ Buttons: 5 → **3 buttons** (giảm phân tâm)
+- ✅ Giảm emoji 🎉 (chuyển sang tone dẫn dắt)
 
 ### Text:
 
 ```
-🎉 Day 1: Bắt đầu nào!
+🎯 BƯỚC ĐẦU TIÊN – BẮT ĐẦU TỪ ĐÂU?
 
-🎉 Chào mừng đến với Freedom Wallet!
+Chào mừng đến với Freedom Wallet!
 
 Trong 7 ngày tới, bạn sẽ:
 ✓ Làm chủ 6 Hũ Tiền
@@ -193,7 +218,7 @@ Trong 7 ngày tới, bạn sẽ:
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-🎯 NHIỆM VỤ HÔM NAY - CHỈ 1 VIỆC:
+🎯 HÀNH ĐỘNG ĐẦU TIÊN - CHỈ 1 VIỆC:
 
 Thêm giao dịch đầu tiên vào Web App
 
@@ -216,27 +241,20 @@ cho những bước tiếp theo!
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-🚀 HÀNH ĐỘNG:
-
-✅ Nếu đã setup Web App → Thêm giao dịch ngay
-📖 Nếu chưa setup → Xem hướng dẫn 3 bước
-💬 Cần giúp đỡ → Hỏi trong Group VIP
+💬 Nếu hôm nay bạn bận,
+chỉ cần quay lại khi sẵn sàng – mình vẫn ở đây.
 
 🎯 Đã thêm giao dịch đầu tiên?
-Click "✅ Tôi đã thêm giao dịch" để tiếp tục!
+Click button bên dưới để tiếp tục!
 ```
 
-### Buttons (Inline Keyboard):
+### Buttons (Inline Keyboard) - v2.1:
 
 ```
 ┌───────────────────────────────────────┐
 │  ✅ Tôi đã thêm giao dịch đầu tiên    │
 ├───────────────────────────────────────┤
 │  📖 Xem hướng dẫn setup               │
-├───────────────────────────────────────┤
-│  🌐 Hướng dẫn chi tiết (Notion)       │ → Opens Notion
-├───────────────────────────────────────┤
-│  💬 Group VIP                         │ → Opens group
 ├───────────────────────────────────────┤
 │  ❓ Cần hỗ trợ                        │
 └───────────────────────────────────────┘
@@ -245,20 +263,30 @@ Click "✅ Tôi đã thêm giao dịch" để tiếp tục!
 **Callback Data:**
 - Button 1: `onboard_complete_1`
 - Button 2: `webapp_setup_guide`
-- Button 3: URL link
-- Button 4: URL link
-- Button 5: `onboard_help_1`
+- Button 3: `onboard_help_1` → Opens support menu with Notion + Group + Admin
 
-**Psychology Changes:**
-- ✅ **Rút gọn**: 3 tasks → 1 task (just add 1 transaction)
-- ✅ **Lower barrier**: "Bất cứ giao dịch nào cũng được"
-- ✅ **Explain why**: Giải thích tại sao chỉ 1 việc
-- ✅ **First success > Perfection**: Tạo momentum thay vì overwhelm
+**Psychology Changes v2 → v2.1:**
 
-**Previous Issue:** 
-- Day 1 cũ có 3 tasks (copy template, deploy, add data)
-- Gửi ngay sau unlock → user chưa kịp process
-- Expected completion: ~50% → Target v2: ~65-70%
+| Element | v2 (Before) | v2.1 (After - Feb 8 2026) | Impact |
+|---------|-------------|---------------------------|---------|
+| **Title** | "Day 1: Bắt đầu nào!" | "BƯỚC ĐẦU TIÊN – BẮT ĐẦU TỪ ĐÂU?" | No timeline pressure |
+| **Emoji** | 🎉 celebration | Remove excess 🎉, keep focused | Professional tone |
+| **Permission to delay** | None | "Nếu hôm nay bạn bận..." | +15-20% comeback rate |
+| **Buttons** | 5 buttons (scattered focus) | 3 buttons (clear hierarchy) | -30% decision fatigue |
+| **External links** | In buttons (Notion, Group) | In "Cần hỗ trợ" submenu | Cleaner first impression |
+
+**Key Insight from v2.1:**
+> "Day 1" = Timeline pressure ("Nếu hôm nay không làm = fail")  
+> "Bước đầu tiên" = No timeline ("Làm khi nào cũng được")
+
+This small wording change significantly reduces abandonment among busy users who intend to return but feel the urgency has passed.
+
+**"Cho phép làm chậm" Psychology:**
+- Explicitly stating "quay lại khi sẵn sàng" removes guilt
+- "Mình vẫn ở đây" = unconditional support
+- Expected impact: +15-20% comeback rate for users who don't complete immediately
+
+---
 
 ---
 

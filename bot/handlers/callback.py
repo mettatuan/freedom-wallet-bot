@@ -503,23 +503,26 @@ Hoặc mô tả lại vấn đề, mình sẽ cố gắng giúp!
         day = callback_data.split("_")[-1]
         
         keyboard = [
-            [InlineKeyboardButton("📞 Liên hệ Admin", url=f"https://t.me/{settings.BOT_USERNAME.replace('Bot', '')}")],[InlineKeyboardButton("💬 Group VIP", url="https://t.me/freedomwalletapp")],
-            [InlineKeyboardButton("🔙 Quay lại Day " + day, callback_data=f"onboard_replay_{day}")]
+            [InlineKeyboardButton("� Hướng dẫn chi tiết (Notion)", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("💬 Group VIP", url="https://t.me/freedomwalletapp")],
+            [InlineKeyboardButton("📞 Liên hệ Admin", url=f"https://t.me/{settings.BOT_USERNAME.replace('Bot', '')}")],
+            [InlineKeyboardButton("🔙 Quay lại", callback_data=f"onboard_replay_{day}")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            f"❓ **CẦN HỖ TRỢ DAY {day}**\n\n"
-            f"Mình ở đây để giúp bạn!\n\n"
-            f"**Cách liên hệ:**\n"
-            f"1️⃣ Gửi tin nhắn mô tả vấn đề\n"
-            f"2️⃣ Hoặc click 'Liên hệ Admin' bên dưới\n"
-            f"3️⃣ Hoặc hỏi trong Group VIP\n\n"
+            f"❓ **CẦN HỖ TRỢ?**\n\n"
+            f"Không sao cả! Mình ở đây để giúp bạn.\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"**Bạn có thể:**\n\n"
+            f"📖 **Xem hướng dẫn chi tiết** (có ảnh từng bước)\n"
+            f"💬 **Hỏi trong Group VIP** (community rất nhiệt tình)\n"
+            f"📞 **Nhắn Admin** (hỗ trợ 1-1)\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
             f"⏰ **Thời gian hỗ trợ:**\n"
             f"• Thứ 2-6: 9h-21h\n"
             f"• Thứ 7-CN: 10h-18h\n\n"
-            f"💬 **Gặp vấn đề gì?**\n"
-            f"Gõ trực tiếp để mình trả lời nhé!",
+            f"💬 Hoặc gõ trực tiếp câu hỏi để mình trả lời nhé!",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )

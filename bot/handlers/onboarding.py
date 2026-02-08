@@ -16,9 +16,9 @@ from bot.core.program_manager import ProgramManager, ProgramType
 # 7-Day Onboarding Content with Inline Keyboards
 ONBOARDING_MESSAGES = {
     1: {
-        "title": "🎉 Day 1: Bắt đầu nào!",
+        "title": "� BƯỚC ĐẦU TIÊN – BẮT ĐẦU TỪ ĐÂU?",
         "content": """
-🎉 **Chào mừng đến với Freedom Wallet!**
+**Chào mừng đến với Freedom Wallet!**
 
 Trong 7 ngày tới, bạn sẽ:
 ✓ Làm chủ 6 Hũ Tiền
@@ -27,7 +27,7 @@ Trong 7 ngày tới, bạn sẽ:
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-🎯 **NHIỆM VỤ HÔM NAY - CHỈ 1 VIỆC:**
+🎯 **HÀNH ĐỘNG ĐẦU TIÊN - CHỈ 1 VIỆC:**
 
 **Thêm giao dịch đầu tiên vào Web App**
 
@@ -42,7 +42,7 @@ Trong 7 ngày tới, bạn sẽ:
 
 💡 **Tại sao chỉ 1 giao dịch?**
 
-Mình muốn bạn tập trung vào việc BẮT ĐẦU,
+Mình muốn bạn tập trung vào việc **BẮT ĐẦU**,
 không phải hoàn hảo ngay từ đầu.
 
 Một lần thành công nhỏ sẽ tạo động lực
@@ -50,21 +50,16 @@ cho những bước tiếp theo!
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-🚀 **HÀNH ĐỘNG:**
-
-✅ Nếu đã setup Web App → Thêm giao dịch ngay
-📖 Nếu chưa setup → Xem hướng dẫn 3 bước
-💬 Cần giúp đỡ → Hỏi trong Group VIP
+💬 **Nếu hôm nay bạn bận,**
+chỉ cần quay lại khi sẵn sàng – mình vẫn ở đây.
 
 🎯 **Đã thêm giao dịch đầu tiên?**
-Click "✅ Tôi đã thêm giao dịch" để tiếp tục!
+Click button bên dưới để tiếp tục!
 """,
         "delay_hours": 0,
         "buttons": [
             [{"text": "✅ Tôi đã thêm giao dịch đầu tiên", "callback_data": "onboard_complete_1"}],
             [{"text": "📖 Xem hướng dẫn setup", "callback_data": "webapp_setup_guide"}],
-            [{"text": "🌐 Hướng dẫn chi tiết (Notion)", "url": "https://eliroxbot.notion.site/freedomwallet"}],
-            [{"text": "💬 Group VIP", "url": "https://t.me/freedomwalletapp"}],
             [{"text": "❓ Cần hỗ trợ", "callback_data": "onboard_help_1"}]
         ]
     },
