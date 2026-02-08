@@ -1,0 +1,714 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>📘 BROCHURE HƯỚNG DẪN SỬ DỤNG</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="3006c829-b418-80b0-8383-e6c9ea147e0c" class="page sans"><header><img class="page-cover-image" src="web_apps.jpg" style="object-position:center 10.509999999999998%"/><div class="page-header-icon page-header-icon-with-cover"><span class="icon">🧑‍🎓</span></div><h1 class="page-title" dir="auto">📘 BROCHURE HƯỚNG DẪN SỬ DỤNG</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="auto"><ul id="3006c829-b418-80d0-834b-e6e600aeb463" class="toggle"><li><details open=""><summary><strong>FREEDOM WALLET – BẮT ĐẦU HÀNH TRÌNH TỰ DO TÀI CHÍNH</strong></summary></details></li></ul></div><div style="display:contents" dir="auto"><hr id="3006c829-b418-800c-a526-cac1cf56e8b1"/></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80ba-850c-facccad5d753" class="toggle"><li><details open=""><summary>🟦 TRANG 1 – BẮT ĐẦU (SETUP BAN ĐẦU)</summary><div style="display:contents" dir="auto"><h3 id="3006c829-b418-805d-bda3-fffd478e26a2" class=""><strong>Bước 1: Cài đặt &amp; làm sạch dữ liệu</strong></h3></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80b1-80d2-e589e320c98b" class="">👉 Mục tiêu: Chuẩn bị app “trắng”, đúng với tài chính thực tế của bạn.</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-806f-b0f4-db3a73fac617" class=""><strong>Thao tác:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-80c8-b2bf-f8063cda8555" class="numbered-list" start="1"><li>Vào <strong>Cài đặt</strong></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-80e5-9da8-d2f583466601" class="numbered-list" start="2"><li>Chọn <strong>Xóa dữ liệu mẫu</strong> (nếu là lần đầu dùng)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-8072-b6ef-f80b3e047a8a" class="numbered-list" start="3"><li>Đổi <strong>mật khẩu</strong> (nếu cần) để bảo mật</li></ol></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8034-b2c1-e4d900740c9c" class="">✅ <strong>Kết quả:</strong></p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80fd-a9c6-cae49be9940a" class="">– App sẵn sàng cho dữ liệu thật</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8042-9d74-ec0aa61022c6" class="">– An toàn &amp; cá nhân hóa</p></div><div style="display:contents" dir="auto"><blockquote id="3006c829-b418-80f1-b8fb-d708fd0a54a9" class="">💡 <em>Nguyên tắc: Dữ liệu càng thật → Quyết định tài chính càng đúng.</em></blockquote></div><div style="display:contents" dir="auto"><ul id="3016c829-b418-80aa-85ab-f6e7ead71162" class="toggle"><li><details open=""><summary>Xóa dữ liệu mẫu</summary><div style="display:contents" dir="auto"><p id="3016c829-b418-809e-855f-d2da6d6b6003" class="">
+</p></div><div style="display:contents" dir="ltr"><figure id="3006c829-b418-8021-892d-dee5c1551744" class="image"><a href="image.png"><img style="width:1063.987548828125px" src="image.png"/></a></figure></div></details></li></ul></div><div style="display:contents" dir="auto"><ul id="3016c829-b418-8038-a042-ea0fae1d2b2b" class="toggle"><li><details open=""><summary>Thiết lập kế hoạch xài tiền có ý nghĩa</summary><div style="display:contents" dir="ltr"><figure id="3016c829-b418-80b6-be4a-c63b96c0187d" class="image"><a href="image%201.png"><img style="width:1061.987548828125px" src="image%201.png"/></a></figure></div></details></li></ul></div><div style="display:contents" dir="auto"><ul id="3016c829-b418-805f-b8bf-e144aa8e7866" class="toggle"><li><details open=""><summary>Thiết lập công thức 5 cấp bậc tài chính</summary><div style="display:contents" dir="ltr"><figure id="3016c829-b418-80cb-95b1-f1959e662aed" class="image"><a href="image%202.png"><img style="width:1033.987548828125px" src="image%202.png"/></a></figure></div></details></li></ul></div></details></li></ul></div><div style="display:contents" dir="auto"><hr id="3006c829-b418-8006-898c-ed516110ef59"/></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8060-ad9a-ede5ce28de90" class="toggle"><li><details open=""><summary>🟦 TRANG 2 – TÀI KHOẢN (ACCOUNTS)</summary><div style="display:contents" dir="auto"><h3 id="3006c829-b418-809d-b511-edb339d41015" class=""><strong>Bước 2: Thêm / Xóa tài khoản</strong></h3></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8067-bd65-c4454458f2ee" class="">👉 Mục tiêu: Biết <strong>tiền của bạn đang nằm ở đâu</strong>.</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8096-b8d5-f4c1da4f46d9" class=""><strong>Ví dụ tài khoản:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80d7-88dc-df2fb4e10841" class="bulleted-list"><li style="list-style-type:disc">Tiền mặt</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-805c-9d8a-f65c930cdd3b" class="bulleted-list"><li style="list-style-type:disc">Tài khoản ngân hàng</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80cb-a6b4-e731d4927f67" class="bulleted-list"><li style="list-style-type:disc">Ví điện tử</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80c3-a7fa-da253bd78199" class=""><strong>Thao tác:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80e9-95bc-c74a266490b6" class="bulleted-list"><li style="list-style-type:disc">➕ Thêm tài khoản mới</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8065-821d-ea3bf5314bf2" class="bulleted-list"><li style="list-style-type:disc">✏️ Sửa số dư ban đầu</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8003-8a55-e1639eb0a511" class="bulleted-list"><li style="list-style-type:disc">🗑️ Xóa tài khoản không dùng</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80e1-9cd4-d5f25033293a" class="">✅ <strong>Kết quả:</strong></p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80af-8954-fbd3d911625b" class="">– Tổng tiền hiển thị chính xác</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-806f-901c-d716b007784d" class="">– Là nền tảng cho mọi báo cáo sau này</p></div><div style="display:contents" dir="ltr"><figure id="3006c829-b418-80e4-b040-d8e0a85a822d" class="image"><a href="image%203.png"><img style="width:1917px" src="image%203.png"/></a></figure></div></details></li></ul></div><div style="display:contents" dir="auto"><hr id="3006c829-b418-8049-bcef-c41b44a62397"/></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80b9-9162-d3919d8896b0" class="toggle"><li><details open=""><summary>🟦 TRANG 3 – GIAO DỊCH (TRANSACTIONS)</summary><div style="display:contents" dir="auto"><h3 id="3006c829-b418-807a-9d12-c8a63bc010ce" class=""><strong>Bước 3: Ghi chép giao dịch</strong></h3></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80e6-aa60-fb5c3c2045a0" class="">👉 Mục tiêu: Kiểm soát <strong>dòng tiền vào – ra mỗi ngày</strong>.</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-805a-beda-d526260394d9" class=""><strong>3 loại giao dịch:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8090-b580-e8bcee8bb338" class="bulleted-list"><li style="list-style-type:disc">💰 Thu nhập</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-802c-a2da-fb09786b111a" class="bulleted-list"><li style="list-style-type:disc">💸 Chi tiêu</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8037-ab99-f4a65011f946" class="bulleted-list"><li style="list-style-type:disc">🔁 Chuyển tiền nội bộ</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80de-806d-d35d0f37890d" class=""><strong>Mỗi giao dịch gồm:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80ee-9957-dfd67ce20537" class="bulleted-list"><li style="list-style-type:disc">Ngày</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80a9-baca-e576af4b8dfd" class="bulleted-list"><li style="list-style-type:disc">Số tiền</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80dd-a0e0-e7e1ad55bbb2" class="bulleted-list"><li style="list-style-type:disc">Tài khoản</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80e2-81f7-e51c8c3cb9a3" class="bulleted-list"><li style="list-style-type:disc">Danh mục</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80bc-8603-c6e518d7d815" class="bulleted-list"><li style="list-style-type:disc">Ghi chú</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8049-a942-c7b68587ebb7" class="">✅ <strong>Kết quả:</strong></p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80c7-a2e6-e6a380196ac4" class="">– Biết tiền đi đâu, về đâu</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80fb-b951-fee6811e30c7" class="">– Chấm dứt “không hiểu vì sao hết tiền”</p></div><div style="display:contents" dir="ltr"><figure id="3006c829-b418-8019-8419-f1749d51e09b" class="image"><a href="image%204.png"><img style="width:1908px" src="image%204.png"/></a></figure></div></details></li></ul></div><div style="display:contents" dir="auto"><hr id="3006c829-b418-8029-9bcd-df1bb3cd0b0d"/></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8049-930a-f4dd7b929cc0" class="toggle"><li><details open=""><summary>🟦 TRANG 4 – DANH MỤC (CATEGORIES)</summary><div style="display:contents" dir="auto"><h3 id="3006c829-b418-801c-8273-c2530d1c6d19" class=""><strong>Bước 4: Quản lý danh mục</strong></h3></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8050-839e-c70a2fb23c26" class="">👉 Mục tiêu: Hiểu <strong>thói quen chi tiêu</strong> của bạn.</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80d9-8c62-da38119e8c31" class=""><strong>Ví dụ danh mục:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80e7-861b-e1587b81bff0" class="bulleted-list"><li style="list-style-type:disc">Ăn uống</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8007-a659-d7da79518688" class="bulleted-list"><li style="list-style-type:disc">Nhà ở</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80d5-98b1-fc94fa79e1e9" class="bulleted-list"><li style="list-style-type:disc">Giáo dục</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80da-853e-e0c333ad1669" class="bulleted-list"><li style="list-style-type:disc">Giải trí</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80aa-847a-ee2f49d31a4c" class="bulleted-list"><li style="list-style-type:disc">Đầu tư</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-808e-b161-ee575bd1008b" class=""><strong>Thao tác:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8087-badd-eb6cd000e454" class="bulleted-list"><li style="list-style-type:disc">Thêm / sửa / xóa danh mục</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80ef-9c65-c44edfe00cda" class="bulleted-list"><li style="list-style-type:disc">Gán danh mục cho giao dịch</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-800c-87c2-c630de4ec1d9" class="">✅ <strong>Kết quả:</strong></p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80f9-99fb-c7a33d12ea62" class="">– Báo cáo chi tiêu rõ ràng</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80a9-9c27-f0ffe2aa9c38" class="">– Nhận diện “lỗ hổng tài chính”</p></div><div style="display:contents" dir="ltr"><figure id="3006c829-b418-8031-ba5d-e7b6a7f0996a" class="image"><a href="image%205.png"><img style="width:1877px" src="image%205.png"/></a></figure></div></details></li></ul></div><div style="display:contents" dir="auto"><hr id="3006c829-b418-808f-9c59-e18b18ac88db"/></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8040-9996-f030dfe50bb2" class="toggle"><li><details open=""><summary>🟦 TRANG 5 – KHOẢN NỢ (DEBTS)</summary><div style="display:contents" dir="auto"><h3 id="3006c829-b418-804f-a9be-d142d16e3c37" class=""><strong>Bước 5: Quản lý khoản nợ</strong></h3></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8043-904f-f6ddcb1f6c1c" class="">👉 Mục tiêu: Không né tránh – <strong>chủ động làm chủ nợ</strong>.</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-802d-9c89-f4714ceb3029" class=""><strong>Có thể quản lý:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-802d-a728-df5e2a4edaf2" class="bulleted-list"><li style="list-style-type:disc">Nợ vay</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8020-a17d-cf62d70ef100" class="bulleted-list"><li style="list-style-type:disc">Trả góp</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80d5-a771-ce629ae98802" class="bulleted-list"><li style="list-style-type:disc">Nợ cá nhân</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-803f-b5ec-e582b8c7b589" class=""><strong>Theo dõi:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80cd-a94e-dfebd2e888ee" class="bulleted-list"><li style="list-style-type:disc">Số tiền gốc</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80d0-a0b6-ce1f3eea6d26" class="bulleted-list"><li style="list-style-type:disc">Lãi suất</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80ba-9308-dc7a9b883900" class="bulleted-list"><li style="list-style-type:disc">Tiến độ trả nợ</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80b3-bdf5-fc290f1a9b4e" class="">✅ <strong>Kết quả:</strong></p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8093-92db-da4dbcbc829a" class="">– Biết chính xác mình đang nợ bao nhiêu</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8091-b32d-c97ba8a366fc" class="">– Có chiến lược thoát nợ rõ ràng</p></div><div style="display:contents" dir="ltr"><figure id="3006c829-b418-80c2-9615-c25aa5bf2b44" class="image"><a href="image%206.png"><img style="width:1912px" src="image%206.png"/></a></figure></div></details></li></ul></div><div style="display:contents" dir="auto"><hr id="3006c829-b418-805f-86a7-d8d12981d2b9"/></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80ba-ad8e-d656e572bbc3" class="toggle"><li><details open=""><summary>🟦 TRANG 6 – TÀI SẢN (ASSETS)</summary><div style="display:contents" dir="auto"><h3 id="3006c829-b418-806c-8278-f50a9b9640f3" class=""><strong>Bước 6: Ghi nhận tài sản</strong></h3></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8089-a998-d805d92324d8" class="">👉 Mục tiêu: Nhìn thấy <strong>giá trị ròng thực sự</strong> của bạn.</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8070-b156-e4f657f6c846" class=""><strong>Ví dụ tài sản:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8044-9f75-ed911d2dfb0e" class="bulleted-list"><li style="list-style-type:disc">Nhà đất</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80d6-81b0-f491b36a22e3" class="bulleted-list"><li style="list-style-type:disc">Xe</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8076-ad7b-ea236c5fd7b8" class="bulleted-list"><li style="list-style-type:disc">Tài sản giá trị</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-806b-84b6-f2eb3c55d137" class=""><strong>Theo dõi:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8058-925f-c11fecb415a0" class="bulleted-list"><li style="list-style-type:disc">Giá trị mua</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8030-9842-e554314676d6" class="bulleted-list"><li style="list-style-type:disc">Giá trị hiện tại</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-802e-aca6-e7b5b9188bdb" class="bulleted-list"><li style="list-style-type:disc">Tăng / giảm theo thời gian</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80f1-b556-d25067a72874" class="">✅ <strong>Kết quả:</strong></p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80b6-888c-e8c4b4c5a509" class="">– Biết bạn “giàu” hay “nghèo” thật sự</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80f1-b1a8-d35307cff67d" class="">– Không nhầm lẫn giữa thu nhập và tài sản</p></div><div style="display:contents" dir="ltr"><figure id="3006c829-b418-8069-9d4c-e51a5d11d23f" class="image"><a href="image%207.png"><img style="width:1063.9749755859375px" src="image%207.png"/></a></figure></div></details></li></ul></div><div style="display:contents" dir="auto"><hr id="3006c829-b418-800f-8b27-eb58c99139e8"/></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-801d-a2c8-ccf0472daae2" class="toggle"><li><details open=""><summary>🟦 TRANG 7 – ĐẦU TƯ (INVESTMENTS)</summary><div style="display:contents" dir="auto"><h3 id="3006c829-b418-80ed-82ad-e9818bc426fa" class=""><strong>Bước 7: Theo dõi đầu tư</strong></h3></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8015-ad61-e07b8a4af9a6" class="">👉 Mục tiêu: Để tiền <strong>làm việc cho bạn</strong>.</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8019-ace4-f4f6ef0f086e" class=""><strong>Có thể theo dõi:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80b9-9b0c-d60df4bfd718" class="bulleted-list"><li style="list-style-type:disc">Chứng khoán</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80e0-8d7e-d42f36b1ce2a" class="bulleted-list"><li style="list-style-type:disc">Vàng</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8043-83f4-fafd3c97867e" class="bulleted-list"><li style="list-style-type:disc">Kinh doanh</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8004-ba1d-ebea4fa70fa7" class="bulleted-list"><li style="list-style-type:disc">Các khoản đầu tư khác</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8011-bf5c-e156cb595302" class=""><strong>Xem được:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80ef-990e-efc68ba9ab32" class="bulleted-list"><li style="list-style-type:disc">Lãi / lỗ</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80c4-ade7-c0938a739399" class="bulleted-list"><li style="list-style-type:disc">Tỷ suất sinh lời</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8008-9890-ec4c4240d47d" class="">✅ <strong>Kết quả:</strong></p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-804f-96b4-f452673a6335" class="">– Đầu tư có kỷ luật</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8056-aea8-d35ea9920c7b" class="">– Quyết định dựa trên số liệu, không cảm xúc</p></div><div style="display:contents" dir="ltr"><figure id="3006c829-b418-8006-a359-fc0630161ebd" class="image"><a href="image%208.png"><img style="width:1919px" src="image%208.png"/></a></figure></div></details></li></ul></div><div style="display:contents" dir="auto"><hr id="3006c829-b418-8088-8b2c-e76e7e9eda89"/></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8045-9ddb-fbed24f248f2" class="toggle"><li><details open=""><summary>🟦 TRANG 8 – 6 HŨ TIỀN (6 JARS)</summary><div style="display:contents" dir="auto"><h3 id="3006c829-b418-80b6-a64f-e5d353fffd07" class=""><strong>Bước 8: 6 hũ tiền – trái tim của Freedom Wallet</strong></h3></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80db-9f1c-efaccfae0eff" class="">👉 Mục tiêu: Phân bổ tiền <strong>cân bằng – bền vững – tự do</strong>.</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-80e0-bfea-e7950f2b7f6f" class=""><strong>6 hũ tiêu chuẩn:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-80bd-9b00-e56b9a5fbea1" class="numbered-list" start="1"><li>🏠 Chi tiêu cần thiết</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-802a-bf15-d5d062ccfc5c" class="numbered-list" start="2"><li>🎓 Giáo dục – phát triển</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-8083-a24f-d766a2273299" class="numbered-list" start="3"><li>💼 Đầu tư</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-8052-954f-c0dcd4f179c5" class="numbered-list" start="4"><li>🎁 Hưởng thụ</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-80b1-ab57-f70717225455" class="numbered-list" start="5"><li>🛡️ Dự phòng</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-8015-b415-f0593293f44e" class="numbered-list" start="6"><li>❤️ Cho đi</li></ol></div><div style="display:contents" dir="auto"><p id="3006c829-b418-803f-ba44-e4cc0e0a49c8" class=""><strong>Cách dùng:</strong></p></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-80ca-ab28-d4c5d3246107" class="bulleted-list"><li style="list-style-type:disc">Mỗi khoản thu → tự động phân bổ</li></ul></div><div style="display:contents" dir="auto"><ul id="3006c829-b418-8029-85fb-dcbfa1dd8c20" class="bulleted-list"><li style="list-style-type:disc">Theo dõi số dư từng hũ</li></ul></div><div style="display:contents" dir="auto"><p id="3006c829-b418-809c-926d-dc0ade3780d5" class="">✅ <strong>Kết quả:</strong></p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-809a-a446-c26f5c0f5cfe" class="">– Tiêu tiền không tội lỗi</p></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8027-8d7e-e95f5647b2e3" class="">– Vừa sống tốt – vừa giàu lên</p></div><div style="display:contents" dir="ltr"><figure id="3006c829-b418-8034-9a7a-c666488a5831" class="image"><a href="image%209.png"><img style="width:1063.987548828125px" src="image%209.png"/></a></figure></div></details></li></ul></div><div style="display:contents" dir="auto"><hr id="3006c829-b418-802c-a296-d21f18a45a31"/></div><div style="display:contents" dir="ltr"><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="3006c829-b418-80f6-af2d-d71a450e2903"><div style="font-size:1.5em"><span class="icon">💡</span></div><div style="width:100%"><div style="display:contents" dir="auto"><h2 id="3006c829-b418-80ce-aee9-e3e8fa843652" class="">🎯 KẾT LUẬN – CÁCH DÙNG TỐI ƯU</h2></div><div style="display:contents" dir="auto"><p id="3006c829-b418-8037-b109-f60af9d24f55" class=""><strong>Nguyên tắc vàng khi dùng Freedom Wallet:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-8062-9efe-e624b5879300" class="numbered-list" start="1"><li>Ghi chép <strong>hàng ngày</strong></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-80b0-926a-c706bdfd37c1" class="numbered-list" start="2"><li>Xem báo cáo <strong>hàng tuần</strong></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-8098-8e65-fffe8a3d0a96" class="numbered-list" start="3"><li>Đánh giá tài chính <strong>mỗi tháng</strong></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-8080-a3f1-cb10233d4e54" class="numbered-list" start="4"><li>Điều chỉnh mục tiêu <strong>mỗi quý</strong></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="3006c829-b418-8075-9b09-d440d73885a0" class="numbered-list" start="5"><li>Kiên trì <strong>ít nhất 90 ngày</strong></li></ol></div><div style="display:contents" dir="auto"><blockquote id="3006c829-b418-8068-b0e9-ebcd5fffc4c4" class="">🌱 <em>Tự do tài chính không đến từ may mắn – mà đến từ hệ thống.</em></blockquote></div></div></figure></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

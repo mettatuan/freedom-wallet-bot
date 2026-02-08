@@ -31,6 +31,7 @@ from bot.handlers.registration import (
     confirm_registration, cancel_registration,
     AWAITING_EMAIL, AWAITING_PHONE, AWAITING_NAME, CONFIRM
 )
+from bot.handlers.setup_guide import register_setup_guide_handlers
 
 # Configure logging
 logging.basicConfig(
@@ -118,6 +119,9 @@ def main() -> None:
     application.add_handler(registration_handler)
     # application.add_handler(CommandHandler("tutorial", tutorial_command))
     # application.add_handler(CommandHandler("tips", tips_command))
+    
+    # Register setup guide handlers (Week 5+)
+    register_setup_guide_handlers(application)
     
     # Week 5: Admin fraud review commands
     from bot.handlers.admin_fraud import (
