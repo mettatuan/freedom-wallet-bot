@@ -1,0 +1,148 @@
+{
+  "categories": [
+    {
+      "id": "transactions",
+      "name": "Giao dịch",
+      "icon": "💰",
+      "questions": [
+        {
+          "keywords": ["thêm giao dịch", "tạo giao dịch", "add transaction", "làm sao thêm"],
+          "answer": "📝 **Cách Thêm Giao Dịch**\n\n**Các bước:**\n1️⃣ Mở Freedom Wallet\n2️⃣ Click nút **+ Thêm** (góc dưới bên phải)\n3️⃣ Chọn **Giao dịch**\n4️⃣ Điền thông tin:\n   • 💵 Loại: Thu / Chi\n   • 📅 Ngày thực hiện\n   • 💰 Số tiền (VD: 200000)\n   • 🏷️ Danh mục (Ăn uống, Di chuyển...)\n   • 🏦 Tài khoản nguồn\n   • 🏺 Hũ tiền (tự động hoặc chọn)\n   • 📝 Ghi chú (optional)\n5️⃣ Click **Lưu**\n\n✅ Giao dịch được lưu ngay, balance tự động cập nhật!\n\n💡 *Tip: Nếu chọn danh mục có Auto Allocate, tiền sẽ tự động phân bổ vào 6 hũ theo tỷ lệ!*"
+        },
+        {
+          "keywords": ["xóa giao dịch", "delete transaction", "hủy giao dịch"],
+          "answer": "🗑️ **Xóa Giao Dịch**\n\n1️⃣ Vào trang **Giao dịch**\n2️⃣ Tìm và click vào giao dịch cần xóa\n3️⃣ Click biểu tượng 🗑️ **Xóa**\n4️⃣ Xác nhận xóa\n\n✅ Xong! Balance sẽ tự động cập nhật.\n\n⚠️ *Lưu ý: Xóa giao dịch sẽ ảnh hưởng đến số dư hũ và tài khoản!*"
+        },
+        {
+          "keywords": ["sửa giao dịch", "edit transaction", "chỉnh sửa"],
+          "answer": "✏️ **Sửa Giao Dịch**\n\n1️⃣ Vào trang **Giao dịch**\n2️⃣ Click vào giao dịch muốn sửa\n3️⃣ Thay đổi thông tin cần thiết\n4️⃣ Click **Lưu**\n\n✅ Thay đổi được cập nhật ngay!\n\n💡 *App sử dụng Optimistic UI - bạn sẽ thấy thay đổi ngay lập tức, đồng bộ backend chạy ở background!*"
+        }
+      ]
+    },
+    {
+      "id": "jars",
+      "name": "6 Hũ Tiền",
+      "icon": "🏺",
+      "questions": [
+        {
+          "keywords": ["6 hũ", "jars", "hũ tiền", "6 jars", "là gì"],
+          "answer": "🏺 **Phương Pháp 6 Hũ Tiền (6 Jars)**\n\nChia thu nhập thành 6 phần:\n\n1️⃣ **NEC (55%)** - Nhu cầu thiết yếu\n   • Ăn uống, nhà ở, di chuyển, hóa đơn\n\n2️⃣ **LTS (10%)** - Tiết kiệm dài hạn\n   • Mục tiêu lớn: Mua nhà, xe, về hưu\n\n3️⃣ **EDU (10%)** - Giáo dục\n   • Sách, khóa học, phát triển bản thân\n\n4️⃣ **PLAY (10%)** - Giải trí\n   • Du lịch, ăn nhà hàng, shopping\n\n5️⃣ **FFA (10%)** - Tự do tài chính\n   • Đầu tư sinh lời: Cổ phiếu, bất động sản\n\n6️⃣ **GIVE (5%)** - Cho đi\n   • Từ thiện, quà tặng, giúp đỡ người khác\n\n💡 **Lợi ích:** Cân bằng giữa sống tốt hôm nay và tương lai tài chính!"
+        },
+        {
+          "keywords": ["chuyển hũ", "transfer jar", "chuyển tiền hũ", "chuyển khoản hũ"],
+          "answer": "↔️ **Chuyển Tiền Giữa Các Hũ**\n\n**Các bước:**\n1️⃣ Vào trang **6 Hũ Tiền**\n2️⃣ Click nút **💸 Chuyển tiền**\n3️⃣ Chọn:\n   • **Hũ nguồn:** Hũ trừ tiền\n   • **Hũ đích:** Hũ nhận tiền\n   • **Số tiền:** VD: 1000000\n4️⃣ Click **Chuyển tiền**\n\n✅ Số dư cập nhật **NGAY LẬP TỨC** (Optimistic UI)!\n\n⚡ *App cập nhật initialBalance (cột D) thay vì balance (cột E) để balance tự động tính lại từ transactions!*"
+        },
+        {
+          "keywords": ["số dư hũ sai", "balance wrong", "sai số dư", "hũ không đúng"],
+          "answer": "🔍 **Số Dư Hũ Không Chính Xác?**\n\n**Kiểm tra 3 điều sau:**\n\n1️⃣ **Cache chưa refresh**\n   ➡️ Click nút 🔄 (góc trên) để reload\n\n2️⃣ **Giao dịch chưa phân bổ đúng hũ**\n   ➡️ Vào **Danh mục** → Kiểm tra mỗi danh mục gắn với hũ nào\n   ➡️ Đảm bảo \"Auto Allocate\" được bật cho Thu nhập\n\n3️⃣ **Chuyển khoản giữa hũ chưa đồng bộ**\n   ➡️ Đợi 1-2 giây để background sync hoàn tất\n\n💡 **Nếu vẫn sai:**\n• Dùng /support để mình kiểm tra chi tiết\n• Gửi screenshot số dư hiện tại\n• Nêu rõ giao dịch nào bị sai"
+        }
+      ]
+    },
+    {
+      "id": "investments",
+      "name": "Đầu tư",
+      "icon": "📈",
+      "questions": [
+        {
+          "keywords": ["thêm đầu tư", "add investment", "đầu tư", "tạo khoản đầu tư"],
+          "answer": "📈 **Thêm Khoản Đầu Tư**\n\n**Các bước:**\n1️⃣ Click **+ Thêm** → **Đầu tư**\n2️⃣ Điền thông tin:\n   • 📝 Tên: VD \"Cổ phiếu VNM\"\n   • 💰 Giá mua: 80000 (giá 1 đơn vị)\n   • 🔢 Số lượng: 100 (cổ phiếu)\n   • 💵 Vốn tự có: 8000000\n   • 🏺 Từ hũ: FFA (Tự do tài chính)\n   • 🏦 Tài khoản: Chọn tài khoản trả tiền\n   • 📅 Ngày mua: Chọn ngày\n3️⃣ Click **Lưu**\n\n✅ App tự động:\n• Trừ tiền từ hũ FFA\n• Trừ tiền từ tài khoản\n• Tạo giao dịch \"Mua đầu tư\"\n• Tính ROI khi bạn cập nhật giá hiện tại!\n\n💡 **Tip:** Nhập giá hiện tại thường xuyên để theo dõi lợi nhuận!"
+        },
+        {
+          "keywords": ["roi", "lợi nhuận", "profit", "tính roi"],
+          "answer": "📊 **ROI và Lợi Nhuận Đầu Tư**\n\n**Cách tính:**\n\n📈 **ROI (Return on Investment):**\n```\nROI = (Giá hiện tại - Giá mua) / Giá mua × 100%\n```\n\n💰 **Lợi nhuận:**\n```\nProfit = (Giá hiện tại - Giá mua) × Số lượng - Phí giao dịch\n```\n\n**Ví dụ:**\n• Mua: 100 CP × 80,000 = 8,000,000\n• Giá hiện tại: 100,000\n• ROI = (100k - 80k) / 80k = **25%**\n• Profit = 20k × 100 = **2,000,000**\n\n✅ App tự động tính khi bạn nhập \"Giá hiện tại\"!"
+        },
+        {
+          "keywords": ["bán đầu tư", "sell investment", "thoái vốn"],
+          "answer": "💸 **Bán Khoản Đầu Tư**\n\n**Các bước:**\n1️⃣ Vào trang **Đầu tư**\n2️⃣ Click vào khoản đầu tư muốn bán\n3️⃣ Click **💰 Bán** hoặc **Sửa**\n4️⃣ Thay đổi:\n   • ❌ Trạng thái: **Đã bán**\n   • 📅 Ngày bán: Chọn ngày\n   • 💵 Giá bán: Nhập giá bán thực tế\n5️⃣ Click **Lưu**\n\n✅ App tự động:\n• Cộng tiền vào hũ FFA\n• Cộng tiền vào tài khoản\n• Tạo giao dịch \"Thu đầu tư\"\n• Lock khoản đầu tư (không edit được)\n\n💰 **Profit cuối cùng** sẽ được tính chính xác!"
+        }
+      ]
+    },
+    {
+      "id": "assets",
+      "name": "Tài sản",
+      "icon": "🏠",
+      "questions": [
+        {
+          "keywords": ["thêm tài sản", "add asset", "tài sản", "bất động sản", "xe"],
+          "answer": "🏠 **Thêm Tài Sản**\n\n**Các bước:**\n1️⃣ Click **+ Thêm** → **Tài sản**\n2️⃣ Điền thông tin:\n   • 📝 Tên: VD \"Căn hộ Vinhomes\"\n   • 🏷️ Phân loại: Bất động sản / Xe cộ / Khác\n   • 🏠 Loại chi tiết: Chung cư, Đất, Ô tô...\n   • 📍 Địa chỉ\n   • 📏 Diện tích (m²)\n   • 💰 Giá mua\n   • 📅 Ngày mua\n   • 🏺 Từ hũ: FFA\n   • 🏦 Tài khoản\n   • 📸 Hình ảnh: Upload ảnh (tối đa 5MB)\n3️⃣ Click **Lưu**\n\n✅ Tài sản được lưu và tính vào tổng giá trị!\n\n💡 **Tip:** Cập nhật \"Giá hiện tại\" định kỳ để theo dõi giá trị tài sản!"
+        },
+        {
+          "keywords": ["upload ảnh", "hình ảnh", "image", "ảnh tài sản"],
+          "answer": "📸 **Upload Hình Ảnh Tài Sản**\n\n**Yêu cầu:**\n• 📁 Format: JPG, PNG, GIF\n• 📦 Kích thước: < 5MB\n• 🔢 Số lượng: Tối đa 5 ảnh\n\n**Các bước:**\n1️⃣ Trong form tài sản\n2️⃣ Click **📷 Chọn ảnh**\n3️⃣ Chọn file từ máy\n4️⃣ Đợi upload (hiện progress bar)\n5️⃣ Click **Lưu**\n\n✅ Ảnh được lưu trên Google Drive!\n\n⚠️ **Nếu lỗi upload:**\n• Kiểm tra kích thước file\n• Kiểm tra kết nối internet\n• Thử format khác (JPG thay vì PNG)\n• Dùng /support nếu vẫn lỗi"
+        }
+      ]
+    },
+    {
+      "id": "debts",
+      "name": "Khoản nợ",
+      "icon": "💳",
+      "questions": [
+        {
+          "keywords": ["thêm nợ", "add debt", "vay", "cho vay", "khoản nợ"],
+          "answer": "💳 **Thêm Khoản Nợ**\n\n**2 loại:**\n• 🔴 **Vay:** Bạn vay người khác\n• 🔵 **Cho vay:** Bạn cho người khác vay\n\n**Các bước:**\n1️⃣ Click **+ Thêm** → **Nợ**\n2️⃣ Điền thông tin:\n   • 📝 Tên: VD \"Vay ngân hàng mua nhà\"\n   • 🏷️ Loại: Vay / Cho vay\n   • 👤 Người cho vay / vay\n   • 💰 Số tiền\n   • 📈 Lãi suất (%/năm)\n   • 📅 Ngày vay\n   • 📅 Hạn trả\n   • 🏺 Từ hũ\n   • 🏦 Tài khoản\n3️⃣ Click **Lưu**\n\n✅ App tự động tính:\n• Còn nợ = Tổng nợ - Đã trả\n• Lãi suất tích lũy\n\n💡 **Tip:** Dùng \"Trả nợ\" để ghi nhận thanh toán!"
+        },
+        {
+          "keywords": ["trả nợ", "pay debt", "thanh toán nợ"],
+          "answer": "💵 **Trả Khoản Nợ**\n\n**Các bước:**\n1️⃣ Vào trang **Nợ**\n2️⃣ Click vào khoản nợ\n3️⃣ Click **💰 Trả nợ**\n4️⃣ Nhập:\n   • 💵 Số tiền trả\n   • 📅 Ngày trả\n   • 🏦 Tài khoản thanh toán\n5️⃣ Click **Lưu**\n\n✅ App tự động:\n• Trừ tiền từ tài khoản\n• Cập nhật \"Còn nợ\"\n• Tạo giao dịch \"Trả nợ\"\n\n🎉 **Nếu trả hết:** Status đổi thành \"Đã trả\"!"
+        }
+      ]
+    },
+    {
+      "id": "reports",
+      "name": "Báo cáo",
+      "icon": "📊",
+      "questions": [
+        {
+          "keywords": ["báo cáo", "report", "biểu đồ", "chart", "dashboard"],
+          "answer": "📊 **Báo Cáo & Dashboard**\n\nFreedom Wallet có 5 dashboard:\n\n1️⃣ **Dashboard Tổng Quan**\n   • 5 thẻ thống kê\n   • Charts thu chi theo thời gian\n   • Pie chart phân bổ theo danh mục\n\n2️⃣ **Giao Dịch**\n   • Tổng thu, chi, tiết kiệm\n   • Thu nhập thụ động\n   • Average transaction\n\n3️⃣ **6 Hũ Tiền**\n   • Doughnut chart phân bổ\n   • Progress bars từng hũ\n   • Line chart variance\n\n4️⃣ **Đầu Tư**\n   • Portfolio allocation\n   • ROI chart\n   • Profit/Loss summary\n\n5️⃣ **Tài Sản**\n   • Tổng giá trị tài sản\n   • Phân loại theo type\n   • Capital gain\n\n✅ **Tất cả real-time, cập nhật ngay!**"
+        },
+        {
+          "keywords": ["lọc", "filter", "tìm kiếm", "search", "thời gian"],
+          "answer": "🔍 **Lọc & Tìm Kiếm**\n\n**Time Filters:**\n• Hôm nay\n• Tuần này\n• Tháng này\n• Năm nay\n• Tất cả thời gian\n• 📅 Tùy chỉnh (chọn From-To)\n\n**Category Filters:**\n• Loại giao dịch: Thu / Chi\n• Danh mục: Ăn uống, Di chuyển...\n• Hũ tiền: NEC, LTS, EDU...\n• Tài khoản\n\n**Search Box:**\n• Tìm theo tên\n• Tìm theo note\n• Tìm theo số tiền\n\n💡 **Quick Tips:**\n• Combine filters để tìm chính xác\n• Export dữ liệu để phân tích Excel\n• Dùng charts để visualize trends"
+        }
+      ]
+    },
+    {
+      "id": "troubleshooting",
+      "name": "Khắc phục lỗi",
+      "icon": "🔧",
+      "questions": [
+        {
+          "keywords": ["không load", "không tải", "trắng", "blank", "chậm"],
+          "answer": "🔧 **App Không Load Dữ Liệu**\n\n**Giải pháp:**\n\n1️⃣ **Refresh cache**\n   ➡️ Click nút 🔄 ở góc trên\n   ➡️ Hoặc dùng Ctrl+F5 (hard refresh)\n\n2️⃣ **Kiểm tra internet**\n   ➡️ Mở trang khác xem có load không\n   ➡️ Thử chuyển mạng (4G ↔ WiFi)\n\n3️⃣ **Clear browser cache**\n   ➡️ Ctrl+Shift+Delete\n   ➡️ Chọn \"Cached images and files\"\n   ➡️ Clear & reload\n\n4️⃣ **Thử browser khác**\n   ➡️ Chrome / Edge / Firefox\n\n5️⃣ **Check console errors**\n   ➡️ F12 → Console tab\n   ➡️ Screenshot lỗi đỏ\n   ➡️ Gửi cho support\n\n⚠️ **Nếu vẫn lỗi:** Dùng /support kèm screenshot!"
+        },
+        {
+          "keywords": ["đăng nhập", "login", "không vào được", "password"],
+          "answer": "🔐 **Vấn Đề Đăng Nhập**\n\n**Kiểm tra:**\n\n1️⃣ **Email & Password đúng chưa?**\n   ➡️ Email đã đăng ký\n   ➡️ Password đúng (phân biệt HOA/thường)\n\n2️⃣ **Caps Lock có đang bật?**\n   ➡️ Tắt Caps Lock\n\n3️⃣ **Quên password?**\n   ➡️ Click \"Quên mật khẩu\"\n   ➡️ Làm theo hướng dẫn reset\n\n4️⃣ **Chưa có tài khoản?**\n   ➡️ Click \"Đăng ký\"\n   ➡️ Điền thông tin\n   ➡️ Verify email\n\n5️⃣ **Vẫn không được?**\n   ➡️ Clear cookies\n   ➡️ Thử Incognito mode\n   ➡️ Liên hệ /support\n\n⚠️ **Bảo mật:** KHÔNG share password với ai!"
+        },
+        {
+          "keywords": ["sync", "đồng bộ", "không đồng bộ", "lag", "chậm"],
+          "answer": "🔄 **Vấn Đề Đồng Bộ Dữ Liệu**\n\n**Hiện tượng:**\n• Thêm/sửa/xóa nhưng không thấy thay đổi\n• Số dư không đúng ngay\n• UI lag khi thao tác\n\n**Nguyên nhân & Giải pháp:**\n\n1️⃣ **Background sync đang chạy**\n   ➡️ BÌNH THƯỜNG! App dùng Optimistic UI\n   ➡️ Thay đổi hiện ngay, sync backend sau\n   ➡️ Đợi 1-2 giây để hoàn tất\n\n2️⃣ **Cache chưa clear**\n   ➡️ Click 🔄 để force reload\n\n3️⃣ **Backend quá tải**\n   ➡️ Đợi 5-10 giây\n   ➡️ Retry\n\n4️⃣ **Network chậm**\n   ➡️ Kiểm tra internet speed\n   ➡️ Thử mạng khác\n\n✅ **Sau update:**\n• App tự động sync trong 0.5-2s\n• Không cần refresh trang\n• Nếu fail, tự động rollback\n\n💡 **App đã được tối ưu:** Optimistic UI làm UX mượt mà như Momo!"
+        }
+      ]
+    },
+    {
+      "id": "general",
+      "name": "Chung",
+      "icon": "ℹ️",
+      "questions": [
+        {
+          "keywords": ["freedom wallet", "app", "là gì", "giới thiệu"],
+          "answer": "🕊️ **Freedom Wallet - Tự Do Tài Chính**\n\nApp quản lý tài chính cá nhân toàn diện:\n\n**Tính năng chính:**\n✅ Giao dịch thu chi\n✅ 6 Hũ tiền (Jars method)\n✅ Đầu tư (stocks, crypto...)\n✅ Tài sản (bất động sản, xe...)\n✅ Khoản nợ\n✅ Báo cáo & Dashboard\n✅ Financial Journey\n\n**Công nghệ:**\n• Google Apps Script (backend)\n• Vanilla JS (frontend)\n• Google Sheets (database)\n• Optimistic UI (UX siêu mượt)\n\n**Mục tiêu:**\nGiúp bạn kiểm soát tài chính, đạt được tự do tài chính! 💰\n\n🌐 **Web:** https://script.google.com/..."
+        },
+        {
+          "keywords": ["liên hệ", "contact", "support", "hỗ trợ", "admin"],
+          "answer": "📞 **Liên Hệ Hỗ Trợ**\n\n**Telegram Bot:** @FreedomWalletBot (bạn đang chat đây!)\n\n**Cách nhận hỗ trợ:**\n1️⃣ Dùng lệnh /support\n2️⃣ Mô tả vấn đề chi tiết\n3️⃣ Kèm screenshot nếu có\n4️⃣ Support team phản hồi trong 24h\n\n**Hoặc:**\n• 📧 Email: support@freedomwallet.com\n• 💬 Telegram: @FreedomWalletSupport\n• 🌐 Website: https://freedomwallet.com\n\n**Thời gian hỗ trợ:**\n• Bot AI: 24/7\n• Human support: 8h-22h (GMT+7)\n\n✅ **Ticket ID:** Mỗi request được ghi nhận và tracking!"
+        }
+      ]
+    }
+  ],
+  "default_responses": {
+    "greeting": ["xin chào", "hi", "hello", "chào"],
+    "greeting_response": "👋 Xin chào! Mình là Freedom Wallet Bot. Mình có thể giúp gì cho bạn?\n\n💡 Bạn có thể hỏi:\n• \"Làm sao thêm giao dịch?\"\n• \"6 hũ tiền là gì?\"\n• \"Cách tính ROI đầu tư?\"\n\nHoặc dùng /help để xem menu!",
+    "thanks": ["cảm ơn", "thank", "thanks", "cám ơn"],
+    "thanks_response": "😊 Không có gì! Rất vui được giúp đỡ!\n\nNếu cần gì thêm, cứ hỏi mình nhé! 💬",
+    "goodbye": ["bye", "tạm biệt", "goodbye", "see you"],
+    "goodbye_response": "👋 Tạm biệt! Chúc bạn quản lý tài chính hiệu quả! 💰\n\nHẹn gặp lại! 🕊️"
+  }
+}
