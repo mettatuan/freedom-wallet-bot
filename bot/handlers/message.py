@@ -5,7 +5,11 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from loguru import logger
 import json
+import html
 from pathlib import Path
+from datetime import datetime
+from bot.middleware.usage_tracker import check_message_limit
+from config.settings import settings
 
 
 # Load FAQ data
@@ -76,6 +80,28 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     message_text = update.message.text
     logger.info(f"User {user.id} ({user.username}): {message_text}")
+    
+    # CRITICAL: Skip if user is in a ConversationHandler flow
+    # Check for any active conversation state in context
+    conversation_state = context.user_data.get('conversation_state')
+    if conversation_state is not None:
+        logger.info(f"  → Skipping AI handler - user in conversation (state: {conversation_state})")
+        return
+    
+    # Check if user is sending payment proof
+    if context.user_data.get('awaiting_payment_proof'):
+        await handle_payment_proof_text(update, context)
+        return
+    
+    # Check if admin is sending rejection reason
+    if context.user_data.get('rejecting_payment'):
+        await handle_admin_rejection_reason(update, context)
+        return
+    
+    # Check message limit (FREE tier = 5 msg/day)
+    can_send = await check_message_limit(update, context)
+    if not can_send:
+        return  # Middleware already sent upgrade prompt
     
     # Phase 1: Simple FAQ keyword matching
     faq_result = search_faq(message_text)
@@ -177,3 +203,384 @@ async def handle_message_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Fallback to not found message
         ...
 """
+
+
+async def handle_payment_proof_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle payment proof submitted as text"""
+    user_id = update.effective_user.id
+    transaction_info = update.message.text
+    
+    # Clear the awaiting flag
+    context.user_data['awaiting_payment_proof'] = False
+    amount = context.user_data.get('payment_amount', 999000)
+    
+    # Create verification request
+    from bot.services.payment_service import PaymentVerificationService
+    
+    try:
+        verification_id = await PaymentVerificationService.create_verification_request(
+            user_id=user_id,
+            amount=amount,
+            transaction_info=transaction_info,
+            submitted_by=user_id
+        )
+        
+        message = f"""
+✅ **ĐÃ NHẬN THÔNG TIN**
+
+Mã xác nhận: `{verification_id}`
+
+━━━━━━━━━━━━━━━━━━━━━
+📋 **THÔNG TIN NHẬN ĐƯỢC:**
+━━━━━━━━━━━━━━━━━━━━━
+
+{transaction_info}
+
+━━━━━━━━━━━━━━━━━━━━━
+⏱️ **TIẾP THEO:**
+━━━━━━━━━━━━━━━━━━━━━
+
+• Hệ thống đang kiểm tra thanh toán
+• Nếu đúng nội dung CK → Tự động kích hoạt (5-10 phút)
+• Nếu sai nội dung → Admin xác nhận thủ công (15-30 phút)
+
+━━━━━━━━━━━━━━━━━━━━━
+🔔 **THÔNG BÁO:**
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ Bạn sẽ nhận thông báo khi Premium được kích hoạt
+💬 Mọi thắc mắc, liên hệ Admin
+
+Cảm ơn bạn đã tin tưởng Freedom Wallet! 💎
+"""
+        
+        keyboard = [
+            [InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")],
+            [InlineKeyboardButton("🏠 Về trang chủ", callback_data="start")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(
+            message,
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+        
+        logger.info(f"Payment verification created: {verification_id} for user {user_id}")
+        
+        # Notify admin about new payment verification
+        if settings.ADMIN_USER_ID:
+            try:
+                # Use HTML for safer parsing
+                import html
+                safe_username = html.escape(update.effective_user.username or 'N/A')
+                safe_fullname = html.escape(update.effective_user.full_name or 'N/A')
+                safe_transaction = html.escape(transaction_info)
+                
+                admin_message = f"""
+🔔 <b>YÊU CẦU XÁC NHẬN THANH TOÁN MỚI</b>
+
+Mã: <code>{verification_id}</code>
+User ID: <code>{user_id}</code>
+Username: @{safe_username}
+Tên: {safe_fullname}
+Số tiền: {amount:,.0f} VND
+
+📋 <b>Thông tin:</b>
+{safe_transaction}
+
+⏱️ Thời gian: {update.message.date.strftime('%d/%m/%Y %H:%M:%S')}
+
+━━━━━━━━━━━━━━━━━━━━━
+💡 <b>Hành động:</b>
+
+• Xem pending: /payment_pending
+• Duyệt: /payment_approve {verification_id}
+• Từ chối: /payment_reject {verification_id} [lý do]
+"""
+                
+                # Add inline buttons for quick action
+                keyboard = [
+                    [
+                        InlineKeyboardButton("✅ Duyệt", callback_data=f"admin_approve_{verification_id}"),
+                        InlineKeyboardButton("❌ Từ chối", callback_data=f"admin_reject_{verification_id}")
+                    ],
+                    [InlineKeyboardButton("📋 Xem tất cả pending", callback_data="admin_list_pending")]
+                ]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                
+                await context.bot.send_message(
+                    chat_id=settings.ADMIN_USER_ID,
+                    text=admin_message,
+                    parse_mode="HTML",
+                    reply_markup=reply_markup
+                )
+                logger.info(f"Admin notification sent for {verification_id}")
+            except Exception as notify_error:
+                logger.error(f"Failed to notify admin: {notify_error}")
+        
+    except Exception as e:
+        logger.error(f"Error creating payment verification: {e}")
+        await update.message.reply_text(
+            "❌ Có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ Admin.",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")
+            ]])
+        )
+
+
+async def handle_payment_proof_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle payment proof submitted as photo"""
+    user_id = update.effective_user.id
+    
+    # Check if user is submitting payment proof
+    if not context.user_data.get('awaiting_payment_proof'):
+        # Not expecting payment proof, ignore
+        return
+    
+    # Clear the awaiting flag
+    context.user_data['awaiting_payment_proof'] = False
+    amount = context.user_data.get('payment_amount', 999000)
+    
+    # Get photo file
+    photo = update.message.photo[-1]  # Get highest resolution
+    file = await photo.get_file()
+    
+    # Get caption if provided
+    caption = update.message.caption or "Payment proof image"
+    transaction_info = f"Photo: {file.file_id}\nCaption: {caption}"
+    
+    # Create verification request
+    from bot.services.payment_service import PaymentVerificationService
+    
+    try:
+        verification_id = await PaymentVerificationService.create_verification_request(
+            user_id=user_id,
+            amount=amount,
+            transaction_info=transaction_info,
+            submitted_by=user_id
+        )
+        
+        message = f"""
+✅ **ĐÃ NHẬN ẢNH XÁC NHẬN**
+
+Mã xác nhận: `{verification_id}`
+
+━━━━━━━━━━━━━━━━━━━━━
+📸 **ẢNH NHẬN ĐƯỢC:**
+━━━━━━━━━━━━━━━━━━━━━
+
+Đã lưu ảnh chuyển khoản của bạn
+
+━━━━━━━━━━━━━━━━━━━━━
+⏱️ **TIẾP THEO:**
+━━━━━━━━━━━━━━━━━━━━━
+
+• Admin đang xác nhận thanh toán
+• Thời gian xử lý: 15-30 phút (giờ hành chính)
+• Ngoài giờ: Trong 2 giờ
+
+━━━━━━━━━━━━━━━━━━━━━
+🔔 **THÔNG BÁO:**
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ Bạn sẽ nhận thông báo khi Premium được kích hoạt
+💬 Mọi thắc mắc, liên hệ Admin
+
+Cảm ơn bạn đã tin tưởng Freedom Wallet! 💎
+"""
+        
+        keyboard = [
+            [InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")],
+            [InlineKeyboardButton("🏠 Về trang chủ", callback_data="start")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(
+            message,
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+        
+        logger.info(f"Payment verification (photo) created: {verification_id} for user {user_id}")
+        
+        # Notify admin about new payment verification (with photo)
+        if settings.ADMIN_USER_ID:
+            try:
+                # Use HTML for safer parsing
+                import html
+                safe_username = html.escape(update.effective_user.username or 'N/A')
+                safe_fullname = html.escape(update.effective_user.full_name or 'N/A')
+                safe_caption = html.escape(caption)
+                
+                admin_message = f"""
+🔔 <b>YÊU CẦU XÁC NHẬN THANH TOÁN MỚI</b> 📸
+
+Mã: <code>{verification_id}</code>
+User ID: <code>{user_id}</code>
+Username: @{safe_username}
+Tên: {safe_fullname}
+Số tiền: {amount:,.0f} VND
+
+📸 <b>Ảnh xác nhận:</b>
+Đã gửi ảnh chuyển khoản
+Caption: {safe_caption}
+
+⏱️ Thời gian: {update.message.date.strftime('%d/%m/%Y %H:%M:%S')}
+
+━━━━━━━━━━━━━━━━━━━━━
+💡 <b>Hành động:</b>
+
+• Xem pending: /payment_pending
+• Duyệt: /payment_approve {verification_id}
+• Từ chối: /payment_reject {verification_id} [lý do]
+"""
+                
+                # Add inline buttons for quick action
+                keyboard = [
+                    [
+                        InlineKeyboardButton("✅ Duyệt", callback_data=f"admin_approve_{verification_id}"),
+                        InlineKeyboardButton("❌ Từ chối", callback_data=f"admin_reject_{verification_id}")
+                    ],
+                    [InlineKeyboardButton("📋 Xem tất cả pending", callback_data="admin_list_pending")]
+                ]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                
+                # Send admin message with photo
+                await context.bot.send_photo(
+                    chat_id=settings.ADMIN_USER_ID,
+                    photo=file.file_id,
+                    caption=admin_message,
+                    parse_mode="HTML",
+                    reply_markup=reply_markup
+                )
+                logger.info(f"Admin notification (with photo) sent for {verification_id}")
+            except Exception as notify_error:
+                logger.error(f"Failed to notify admin: {notify_error}")
+        
+    except Exception as e:
+        logger.error(f"Error creating payment verification from photo: {e}")
+        await update.message.reply_text(
+            "❌ Có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ Admin.",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")
+            ]])
+        )
+
+
+async def handle_admin_rejection_reason(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle rejection reason from admin"""
+    from bot.services.payment_service import PaymentVerificationService
+    from bot.utils.database import get_db, PaymentVerification
+    from bot.handlers.admin_payment import is_admin
+    
+    user_id = update.effective_user.id
+    
+    # Check if user is admin
+    if not is_admin(user_id):
+        return
+    
+    verification_id = context.user_data.get('rejecting_payment')
+    reason = update.message.text
+    
+    if not verification_id:
+        return
+    
+    # Clear the flag
+    context.user_data['rejecting_payment'] = None
+    
+    try:
+        # Reject payment
+        success = await PaymentVerificationService.reject_payment(
+            verification_id=verification_id,
+            rejected_by=user_id,
+            reason=reason
+        )
+        
+        if success:
+            # Get verification details
+            db = next(get_db())
+            ver_id = int(verification_id.replace("VER", ""))
+            verification = db.query(PaymentVerification).filter(
+                PaymentVerification.id == ver_id
+            ).first()
+            
+            if verification:
+                # Log to Google Sheets
+                from bot.handlers.admin_callbacks import log_payment_to_sheets
+                from bot.utils.database import User
+                user = db.query(User).filter(User.id == verification.user_id).first()
+                
+                if user:
+                    await log_payment_to_sheets(
+                        verification_id=verification_id,
+                        user_id=user.id,
+                        username=user.username,
+                        full_name=user.full_name,
+                        amount=verification.amount,
+                        status="REJECTED",
+                        approved_by=user_id,
+                        approved_at=verification.approved_at or datetime.now(),
+                        notes=reason  # Pass rejection reason
+                    )
+                
+                # Notify user
+                safe_reason = html.escape(reason)
+                try:
+                    await context.bot.send_message(
+                        chat_id=verification.user_id,
+                        text=f"""
+❌ <b>THANH TOÁN BỊ TỪ CHỐI</b>
+
+Mã xác nhận: <code>{verification_id}</code>
+
+━━━━━━━━━━━━━━━━━━━━━
+📋 <b>LÝ DO:</b>
+━━━━━━━━━━━━━━━━━━━━━
+
+{safe_reason}
+
+━━━━━━━━━━━━━━━━━━━━━
+💡 <b>HƯỚNG DẪN:</b>
+━━━━━━━━━━━━━━━━━━━━━
+
+• Kiểm tra lại thông tin thanh toán
+• Đảm bảo chuyển khoản đúng:
+  - Số tiền: 999,000 VND
+  - Nội dung: FW{verification.user_id} PREMIUM
+• Gửi lại ảnh/thông tin xác nhận
+
+💬 Cần hỗ trợ? Dùng /support để liên hệ Admin
+""",
+                        parse_mode="HTML"
+                    )
+                except Exception as notify_error:
+                    logger.error(f"Failed to notify user {verification.user_id}: {notify_error}")
+            
+            db.close()
+            
+            # Confirm to admin
+            safe_reason_admin = html.escape(reason)
+            await update.message.reply_text(
+                f"""
+✅ <b>ĐÃ TỪ CHỐI</b>
+
+Mã: <code>{verification_id}</code>
+Lý do: {safe_reason_admin}
+
+User đã nhận thông báo.
+""",
+                parse_mode="HTML"
+            )
+        else:
+            await update.message.reply_text(
+                f"❌ Lỗi khi từ chối {verification_id}",
+                parse_mode="HTML"
+            )
+            
+    except Exception as e:
+        logger.error(f"Error in handle_admin_rejection_reason: {e}", exc_info=True)
+        await update.message.reply_text(
+            "❌ Có lỗi xảy ra. Vui lòng thử lại!",
+            parse_mode="HTML"
+        )

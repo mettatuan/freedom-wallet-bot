@@ -1,0 +1,187 @@
+name: Architecture Dependency Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'app/**/*.py'
+      - 'bot/**/*.py'
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'app/**/*.py'
+      - 'bot/**/*.py'
+
+jobs:
+  check-dependencies:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Run Architecture Dependency Check
+      run: |
+        echo "🔍 Checking architecture dependencies..."
+        python scripts/check_dependencies.py
+    
+    - name: Architecture Check Passed
+      if: success()
+      run: |
+        echo "✅ Architecture rules enforced successfully!"
+        echo "✅ No dependency violations detected."
+    
+    - name: Architecture Check Failed
+      if: failure()
+      run: |
+        echo "❌ Architecture dependency violations detected!"
+        echo "❌ PR cannot be merged until violations are fixed."
+        echo ""
+        echo "📚 Review violations above and fix them."
+        echo "📖 See ARCHITECTURE_RULES.md for guidelines."
+        exit 1
+
+  check-naming:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Check for versioned files
+      run: |
+        echo "🔍 Checking for versioned files..."
+        
+        # Check for versioned files (*_v1, *_v2, *_final, etc.)
+        VERSIONED=$(find app bot -type f -name "*_v[0-9]*.py" -o -name "*_final*.py" -o -name "*_new*.py" -o -name "*_old*.py" 2>/dev/null || true)
+        
+        if [ -n "$VERSIONED" ]; then
+          echo "❌ ERROR: Versioned files detected!"
+          echo ""
+          echo "$VERSIONED"
+          echo ""
+          echo "🔒 LAW #2: No versioned files allowed"
+          echo "   - Remove version suffixes: *_v1, *_v2, *_final, *_new"
+          echo "   - Use Git to track versions"
+          echo ""
+          echo "📖 See ARCHITECTURE_RULES.md"
+          exit 1
+        fi
+        
+        echo "✅ No versioned files found."
+    
+    - name: Check for backup files
+      run: |
+        echo "🔍 Checking for backup files..."
+        
+        # Check for backup files
+        BACKUPS=$(find app bot -type f \( -name "*.backup" -o -name "*.bak" -o -name "*.old" \) 2>/dev/null || true)
+        
+        if [ -n "$BACKUPS" ]; then
+          echo "❌ ERROR: Backup files detected!"
+          echo ""
+          echo "$BACKUPS"
+          echo ""
+          echo "⛔ Backup files should not be committed"
+          echo "   - Use Git for version control"
+          echo "   - Delete backup files"
+          echo ""
+          exit 1
+        fi
+        
+        echo "✅ No backup files found."
+    
+    - name: Check for forbidden root folders
+      run: |
+        echo "🔍 Checking for forbidden root folders..."
+        
+        # Check for forbidden folders
+        FORBIDDEN_FOLDERS="helpers common shared lib misc temp backup"
+        FOUND=""
+        
+        for folder in $FORBIDDEN_FOLDERS; do
+          if [ -d "$folder" ]; then
+            FOUND="${FOUND}${folder}/ "
+          fi
+        done
+        
+        if [ -n "$FOUND" ]; then
+          echo "❌ ERROR: Forbidden root folders detected!"
+          echo ""
+          echo "   $FOUND"
+          echo ""
+          echo "🔒 LAW #3: No unauthorized root folders"
+          echo "   - Allowed: app/, config/, tests/, docs/, migrations/, scripts/, data/, media/"
+          echo "   - Use app/utils/ instead of helpers/common/misc/"
+          echo ""
+          echo "📖 See ARCHITECTURE_RULES.md"
+          exit 1
+        fi
+        
+        echo "✅ No forbidden folders found."
+
+  check-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Check for planning docs in main docs/
+      run: |
+        echo "🔍 Checking for planning documents in docs/..."
+        
+        # Check for planning docs (excluding archive/)
+        PLANNING=$(find docs -maxdepth 2 -type f \( \
+          -name "*DAY*" -o \
+          -name "*WEEK*" -o \
+          -name "*SPRINT*" -o \
+          -name "*MVP*" -o \
+          -name "*PHASE*" -o \
+          -name "*SUMMARY*.md" \
+        \) ! -path "*/archive/*" 2>/dev/null || true)
+        
+        if [ -n "$PLANNING" ]; then
+          echo "❌ ERROR: Planning documents in main docs/ folder!"
+          echo ""
+          echo "$PLANNING"
+          echo ""
+          echo "📚 Planning docs must be in docs/archive/"
+          echo "   - Move to docs/archive/"
+          echo "   - Or use project management tool (Jira/Notion)"
+          echo ""
+          echo "📖 See ARCHITECTURE_RULES.md - Docs Rules"
+          exit 1
+        fi
+        
+        echo "✅ No planning docs in main docs/ folder."
+    
+    - name: Check for multiple flow versions
+      run: |
+        echo "🔍 Checking for duplicate flow documents..."
+        
+        # Check for versioned flow docs
+        VERSIONED_FLOWS=$(find docs -type f \( \
+          -name "*_v[0-9]*.md" -o \
+          -name "*_FINAL*.md" -o \
+          -name "*_NEW*.md" \
+        \) ! -path "*/archive/*" 2>/dev/null || true)
+        
+        if [ -n "$VERSIONED_FLOWS" ]; then
+          echo "❌ ERROR: Versioned flow documents detected!"
+          echo ""
+          echo "$VERSIONED_FLOWS"
+          echo ""
+          echo "📚 One topic = One file (Git tracks versions)"
+          echo "   - Keep only latest version"
+          echo "   - Move old versions to docs/archive/"
+          echo ""
+          exit 1
+        fi
+        
+        echo "✅ No duplicate flow documents found."

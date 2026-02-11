@@ -12,7 +12,27 @@ import secrets
 
 Base = declarative_base()
 engine = create_engine(settings.DATABASE_URL)
-SessionLocal = sessionmaker(bind=engine)
+# Configure session to not expire objects after commit
+# This allows objects to be used after session.close() without DetachedInstanceError
+SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
+
+
+def get_db():
+    """
+    Get database session
+    Usage:
+        db = next(get_db())
+        try:
+            # Use db
+            db.commit()
+        finally:
+            db.close()
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 class User(Base):
@@ -34,9 +54,28 @@ class User(Base):
     referral_count = Column(Integer, default=0)  # How many people this user referred
     is_free_unlocked = Column(Boolean, default=False)  # FREE tier unlocked (2+ refs)
     
+    # VIP Identity Tier (10/50/100 refs)
+    vip_tier = Column(String(20), nullable=True)  # RISING_STAR, SUPER_VIP, LEGEND
+    vip_unlocked_at = Column(DateTime, nullable=True)  # When VIP tier was unlocked
+    vip_benefits = Column(Text, default='[]')  # JSON list of benefits
+    
     # Subscription
     subscription_tier = Column(String(20), default="TRIAL")  # TRIAL, FREE, PREMIUM
     subscription_expires = Column(DateTime, nullable=True)
+    
+    # Week 1 Sprint: Usage tracking columns
+    bot_chat_count = Column(Integer, default=0)  # Daily message counter
+    bot_chat_limit_date = Column(DateTime, nullable=True)  # Last reset date
+    premium_started_at = Column(DateTime, nullable=True)  # When premium/trial started
+    premium_expires_at = Column(DateTime, nullable=True)  # When premium expires
+    trial_ends_at = Column(DateTime, nullable=True)  # When trial ends
+    premium_features_used = Column(Text, default='{}')  # JSON track feature usage
+    
+    # Week 1 Sprint: Fraud tracking (for future use)
+    ip_address = Column(String(45), nullable=True)
+    device_fingerprint = Column(String(255), nullable=True)
+    last_referral_at = Column(DateTime, nullable=True)
+    referral_velocity = Column(Integer, default=0)
     
     # Registration info (collected via bot)
     email = Column(String(255), nullable=True)
@@ -56,8 +95,31 @@ class User(Base):
     super_vip_decay_warned = Column(Boolean, default=False)  # Warned at day 10
     show_on_leaderboard = Column(Boolean, default=True)  # Spotlight status
     
+    # TRANSACTION TRACKING & STREAKS (Daily Reminder System)
+    last_transaction_date = Column(DateTime, nullable=True)  # Last transaction date
+    streak_count = Column(Integer, default=0)  # Current streak (consecutive days)
+    longest_streak = Column(Integer, default=0)  # Longest streak achieved
+    total_transactions = Column(Integer, default=0)  # Total transactions recorded
+    milestone_7day_achieved = Column(Boolean, default=False)  # 7-day milestone
+    
+    # GOOGLE SHEETS INTEGRATION (Premium Features)
+    spreadsheet_id = Column(String(100), nullable=True)  # User's Google Sheets ID (44 chars)
+    sheets_connected_at = Column(DateTime, nullable=True)  # When sheets connected
+    sheets_last_sync = Column(DateTime, nullable=True)  # Last data sync timestamp
+    webhook_url = Column(String(500), nullable=True)  # Apps Script webhook URL for Quick Record
+    web_app_url = Column(String(500), nullable=True)  # Freedom Wallet Web App URL for manual entry
+    milestone_30day_achieved = Column(Boolean, default=False)  # 30-day milestone
+    milestone_90day_achieved = Column(Boolean, default=False)  # 90-day milestone
+    last_reminder_sent = Column(DateTime, nullable=True)  # Last reminder timestamp
+    reminder_enabled = Column(Boolean, default=True)  # User preference for reminders
+    
+    # UNLOCK FLOW TRACKING (Feb 2026)
+    unlock_offered = Column(Boolean, default=False)  # Whether UNLOCKoffer was sent
+    unlock_offered_at = Column(DateTime, nullable=True)  # When UNLOCK offer was sent
+    last_checkin = Column(DateTime, nullable=True)  # Last check-in message sent
+    
     def __repr__(self):
-        return f"<User {self.id} ({self.username}) state={self.user_state}>"
+        return f"<User {self.id} ({self.username}) state={self.user_state} streak={self.streak_count}>"
 
 
 class ConversationContext(Base):
@@ -150,6 +212,26 @@ class Subscription(Base):
         return f"<Subscription user={self.user_id} tier={self.tier}>"
 
 
+class PaymentVerification(Base):
+    """Track payment verification requests"""
+    __tablename__ = "payment_verifications"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, index=True)  # User who made payment
+    amount = Column(Float)  # Amount in VND
+    transaction_info = Column(Text, nullable=True)  # Transaction details from user
+    transfer_code = Column(String(50), nullable=True)  # FW{user_id}
+    status = Column(String(20), default="PENDING")  # PENDING, APPROVED, REJECTED
+    submitted_by = Column(Integer)  # User ID who submitted
+    approved_by = Column(Integer, nullable=True)  # Admin who approved
+    created_at = Column(DateTime, default=datetime.utcnow)
+    approved_at = Column(DateTime, nullable=True)
+    notes = Column(Text, nullable=True)  # Admin notes
+    
+    def __repr__(self):
+        return f"<PaymentVerification user={self.user_id} status={self.status}>"
+
+
 # Create tables
 Base.metadata.create_all(engine)
 
@@ -181,8 +263,8 @@ async def save_user_to_db(user):
             session.add(db_user)
         session.commit()
         session.refresh(db_user)  # Ensure all attributes are loaded
-        # Detach from session so it can be used after session.close()
-        session.expunge(db_user)
+        # Don't expunge - causes DetachedInstanceError when accessing attributes
+        # session.expunge(db_user)
         return db_user
     finally:
         session.close()
@@ -249,8 +331,8 @@ async def get_user_by_id(user_id: int):
     session = SessionLocal()
     try:
         user = session.query(User).filter(User.id == user_id).first()
-        if user:
-            session.expunge(user)
+        # Don't expunge - keep user attached to avoid DetachedInstanceError
+        # Session will be closed but object remains usable for basic attribute access
         return user
     finally:
         session.close()
@@ -261,8 +343,7 @@ async def get_user_by_referral_code(code: str):
     session = SessionLocal()
     try:
         user = session.query(User).filter(User.referral_code == code).first()
-        if user:
-            session.expunge(user)
+        # Don't expunge - keep user attached to avoid DetachedInstanceError
         return user
     finally:
         session.close()

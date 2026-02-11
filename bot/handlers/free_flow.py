@@ -1,0 +1,505 @@
+"""
+FREE Flow - Step-by-step guided setup
+No FOMO, no pressure, clear value proposition
+"""
+
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
+from loguru import logger
+from bot.utils.database import SessionLocal, User
+
+
+async def free_check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Check if user has registration info"""
+    query = update.callback_query
+    await query.answer()
+    
+    user = update.effective_user
+    
+    # Check if user has complete info
+    db = SessionLocal()
+    try:
+        db_user = db.query(User).filter(User.id == user.id).first()
+        
+        if db_user and db_user.email and db_user.full_name:
+            # Has info, go to step 2
+            logger.info(f"User {user.id} has registration info, proceeding to step 2")
+            await free_step2_show_value(update, context)
+        else:
+            # No info yet, ask to register first
+            logger.info(f"User {user.id} missing registration info")
+            
+            from pathlib import Path
+            
+            message = """
+Chào bạn,
+
+Freedom Wallet không phải một app để bạn tải về.
+Đây là một hệ thống bạn tự sở hữu.
+
+Mỗi người dùng có:
+• Google Sheet riêng
+• Apps Script riêng
+• Web App riêng
+
+Dữ liệu nằm trên Drive của bạn.
+Không phụ thuộc vào ai.
+
+Để bắt đầu, vui lòng nhập lệnh /register 
+để điền thông tin đăng ký.
+"""
+            
+            image_path = Path("media/images/web_apps.jpg")
+            
+            try:
+                # Delete the original message
+                await query.message.delete()
+                
+                # Send photo with caption
+                await query.message.reply_photo(
+                    photo=open(image_path, 'rb'),
+                    caption=message,
+                    parse_mode="Markdown"
+                )
+                
+            except Exception as e:
+                logger.error(f"Error sending photo: {e}")
+                await query.edit_message_text(
+                    message,
+                    parse_mode="Markdown"
+                )
+                
+    finally:
+        db.close()
+
+
+async def free_step2_show_value(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """STEP 2 - Show value before any technical setup"""
+    query = update.callback_query
+    await query.answer()
+    
+    message = """
+Trước khi làm bất cứ bước kỹ thuật nào,
+bạn cần biết mình sẽ nhận được điều gì.
+
+Khi hệ thống hoàn tất, bạn sẽ thấy:
+
+• Tổng tài sản hiện có
+• Dòng tiền thu – chi theo tháng
+• 6 Hũ tiền phân bổ tự động
+• Cấp độ tài chính hiện tại của bạn
+• Tình trạng đầu tư, nợ và tài sản
+
+Không phải để xem cho vui.
+Mà để bạn biết rõ tiền của mình đang ở đâu.
+
+Bạn sẵn sàng tạo hệ thống của riêng mình chưa?
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("Tạo hệ thống", callback_data="free_step3_copy_template")],
+        [InlineKeyboardButton("Hỏi thêm", callback_data="free_ask_question")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        text=message,
+        reply_markup=reply_markup
+    )
+
+
+async def free_step3_copy_template(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """STEP 3 - Copy Google Sheet template"""
+    query = update.callback_query
+    await query.answer()
+    
+    message = """
+**Bước 1: Tạo Google Sheet của riêng bạn.**
+
+Nhấn nút bên dưới.
+Chọn "Tạo bản sao".
+Đặt tên theo ý bạn.
+
+Từ đây trở đi,
+đây là hệ thống tài chính cá nhân của bạn.
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("📋 Copy Template", url="https://docs.google.com/spreadsheets/d/YOUR_TEMPLATE_ID/copy")],
+        [InlineKeyboardButton("✅ Tôi đã copy xong", callback_data="free_step4_deploy_script")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        text=message,
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
+
+
+async def free_step4_deploy_script(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """STEP 4 - Deploy Apps Script"""
+    query = update.callback_query
+    await query.answer()
+    
+    message = """
+**Bước 2: Kích hoạt Web App.**
+
+Apps Script giúp Sheet của bạn trở thành một ứng dụng thực thụ.
+
+Chỉ cần làm theo hướng dẫn,
+khoảng 3–5 phút.
+
+Đừng lo nếu chưa quen kỹ thuật.
+Làm chậm từng bước là được.
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("📖 Xem hướng dẫn", callback_data="show_deploy_guide")],
+        [InlineKeyboardButton("✅ Tôi đã deploy xong", callback_data="free_step5_open_webapp")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        text=message,
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
+
+
+async def free_step5_open_webapp(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """STEP 5 - Open Web App first time"""
+    query = update.callback_query
+    await query.answer()
+    
+    message = """
+Bây giờ bạn có thể mở Web App của mình.
+
+Lần đầu mở, bạn sẽ thấy:
+• Tổng tài sản
+• Dòng tiền
+• Biểu đồ chi tiêu
+• Cấp độ tài chính
+
+Đây là lần đầu bạn nhìn toàn cảnh tiền của mình ở một nơi.
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("🌐 Mở Web App", callback_data="get_webapp_url")],
+        [InlineKeyboardButton("✅ Tôi đã xem", callback_data="free_step6_first_action")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        text=message,
+        reply_markup=reply_markup
+    )
+
+
+async def free_step6_first_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """STEP 6 - First important action"""
+    query = update.callback_query
+    await query.answer()
+    
+    message = """
+Việc quan trọng nhất hôm nay:
+
+Nhập:
+• Số dư hiện tại
+• 1–2 giao dịch gần đây
+
+Không cần nhiều.
+Chỉ cần bắt đầu.
+
+Tự do tài chính không đến từ kế hoạch lớn.
+Nó đến từ việc bạn biết tiền mình đang ở đâu.
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("✅ Tôi đã nhập", callback_data="free_step7_reinforce")],
+        [InlineKeyboardButton("❓ Cần hỗ trợ", callback_data="ask_support")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        text=message,
+        reply_markup=reply_markup
+    )
+
+
+async def free_step7_reinforce(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """STEP 7 - Reinforce awareness behavior"""
+    query = update.callback_query
+    await query.answer()
+    
+    message = """
+Từ hôm nay,
+bạn không còn mơ hồ về tiền nữa.
+
+Mỗi khoản thu – chi đều có nơi ghi lại.
+Mỗi quyết định đều có dữ liệu phía sau.
+
+Tuần đầu, chỉ cần:
+**Ghi lại mọi khoản phát sinh.**
+
+Đừng cố tối ưu.
+Chỉ cần trung thực với con số.
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("Tiếp tục", callback_data="free_step8_optional_sharing")],
+        [InlineKeyboardButton("Nhắc tôi sau", callback_data="schedule_reminder")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        text=message,
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
+
+
+async def free_step8_optional_sharing(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """STEP 8 - Optional sharing (natural, no pressure)"""
+    query = update.callback_query
+    await query.answer()
+    
+    user = update.effective_user
+    from bot.utils.database import get_user_by_id
+    db_user = await get_user_by_id(user.id)
+    
+    ref_code = db_user.referral_code if db_user else "unknown"
+    ref_link = f"https://t.me/FreedomWalletVNBot?start={ref_code}"
+    
+    message = f"""
+Nếu bạn thấy hệ thống này có ích,
+bạn có thể chia sẻ với 2 người bạn
+cũng đang muốn quản lý tiền rõ ràng hơn.
+
+Khi bạn giới thiệu 2 người thật sự dùng,
+bên mình sẽ hỗ trợ bạn cấu hình thêm Telegram,
+để bạn ghi thu chi ngay trong chat này.
+
+Không bắt buộc.
+Chỉ khi bạn thấy phù hợp.
+
+🔗 Link của bạn: `{ref_link}`
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("Chia sẻ với bạn bè", callback_data="show_share_guide")],
+        [InlineKeyboardButton("Tìm hiểu Telegram", callback_data="explain_telegram_unlock")],
+        [InlineKeyboardButton("Để sau", callback_data="skip_sharing")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        text=message,
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
+
+
+async def learn_more(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show more details about Freedom Wallet"""
+    query = update.callback_query
+    await query.answer()
+    
+    user = update.effective_user
+    
+    # Check if user is registered
+    db = SessionLocal()
+    try:
+        db_user = db.query(User).filter(User.id == user.id).first()
+        has_registration = db_user and db_user.email and db_user.full_name
+    finally:
+        db.close()
+    
+    message = """
+**Freedom Wallet là gì?**
+
+Hệ thống quản lý tài chính cá nhân dựa trên:
+• Google Sheets (dữ liệu của bạn)
+• Apps Script (logic tự động)
+• Web App (giao diện thân thiện)
+
+**Khác gì app khác?**
+
+• Bạn sở hữu 100% dữ liệu
+• Không phụ thuộc vào dịch vụ nào
+• Miễn phí, không giới hạn thời gian
+• Tùy biến theo nhu cầu riêng
+
+**Phù hợp với ai?**
+
+• Người muốn kiểm soát tiền rõ ràng
+• Không thích app thu phí hàng tháng
+• Muốn hiểu sâu về dòng tiền của mình
+• Coi trọng quyền riêng tư dữ liệu
+
+Bạn muốn bắt đầu chứ?
+"""
+    
+    if has_registration:
+        # Already registered, can start setup
+        keyboard = [
+            [InlineKeyboardButton("🚀 Bắt đầu setup", callback_data="free_start_step2")],
+            [InlineKeyboardButton("« Quay lại", callback_data="back_to_start")]
+        ]
+    else:
+        # Not registered yet, need to register first
+        keyboard = [
+            [InlineKeyboardButton("📝 Đăng ký ngay", callback_data="start_free_registration")],
+            [InlineKeyboardButton("« Quay lại", callback_data="back_to_start")]
+        ]
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    # Delete the photo message and send new text message
+    try:
+        await query.message.delete()
+        await query.message.reply_text(
+            text=message,
+            reply_markup=reply_markup,
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        logger.error(f"Error in learn_more: {e}")
+        await query.message.reply_text(
+            text=message,
+            reply_markup=reply_markup,
+            parse_mode="Markdown"
+        )
+
+
+async def back_to_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Go back to start menu"""
+    query = update.callback_query
+    await query.answer()
+    
+    # Import start function and call it
+    from bot.handlers.start import start
+    
+    # Simulate /start command
+    await query.message.delete()
+    
+    # Create a fake message for start command
+    class FakeMessage:
+        def __init__(self, original_message):
+            self.reply_text = original_message.reply_text
+            self.reply_photo = original_message.reply_photo
+            self.chat = original_message.chat
+            
+    class FakeUpdate:
+        def __init__(self, original_update):
+            self.effective_user = original_update.effective_user
+            self.message = FakeMessage(original_update.callback_query.message)
+    
+    fake_update = FakeUpdate(update)
+    await start(fake_update, context)
+
+
+async def skip_sharing(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """User chose to skip sharing"""
+    query = update.callback_query
+    await query.answer()
+    
+    message = """
+Không sao cả.
+
+Bạn đã có hệ thống riêng rồi.
+Điều quan trọng nhất là bạn dùng nó mỗi ngày.
+
+Nếu cần trợ giúp bất cứ lúc nào,
+gõ /help hoặc hỏi tôi trực tiếp.
+
+Chúc bạn quản lý tiền tốt! 💪
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("🏠 Về trang chủ", callback_data="start")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        text=message,
+        reply_markup=reply_markup
+    )
+
+
+async def show_deploy_guide(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show detailed deploy guide"""
+    query = update.callback_query
+    await query.answer()
+    
+    message = """
+**🚀 HƯỚNG DẪN DEPLOY WEB APP**
+
+**1️⃣ Mở Apps Script Editor**
+• Trong Sheet → Extensions → Apps Script
+
+**2️⃣ Click Deploy**
+• Click nút "Deploy" (góc trên bên phải)
+• Chọn "New deployment"
+
+**3️⃣ Chọn type: Web app**
+• Click icon ⚙️ 
+• Chọn "Web app"
+
+**4️⃣ Cấu hình**
+• **Execute as**: Chọn "Me"
+• **Who has access**: Chọn "Anyone"
+
+**5️⃣ Deploy**
+• Click "Deploy"
+• Click "Authorize access"
+• Chọn tài khoản Google của bạn
+
+**6️⃣ Authorize**
+• Click "Advanced"
+• Click "Go to [project name] (unsafe)"
+• Click "Allow"
+
+**7️⃣ Lưu Web App URL**
+• Copy URL hiện ra
+• Lưu lại để dùng sau
+
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ **Xong!** Bạn đã có Web App riêng.
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("✅ Tôi đã deploy xong", callback_data="free_step5_open_webapp")],
+        [InlineKeyboardButton("« Quay lại", callback_data="free_step4_deploy_script")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        text=message,
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
+
+
+# Register all handlers
+def register_free_flow_handlers(application):
+    """Register all FREE flow handlers"""
+    from telegram.ext import CallbackQueryHandler
+    
+    # Note: start_free_registration is handled by registration ConversationHandler in main.py
+    
+    application.add_handler(CallbackQueryHandler(free_check_registration, pattern="^free_check_registration$"))
+    application.add_handler(CallbackQueryHandler(free_step2_show_value, pattern="^free_start_step2$"))
+    application.add_handler(CallbackQueryHandler(free_step3_copy_template, pattern="^free_step3_copy_template$"))
+    application.add_handler(CallbackQueryHandler(free_step4_deploy_script, pattern="^free_step4_deploy_script$"))
+    application.add_handler(CallbackQueryHandler(show_deploy_guide, pattern="^show_deploy_guide$"))
+    application.add_handler(CallbackQueryHandler(free_step5_open_webapp, pattern="^free_step5_open_webapp$"))
+    application.add_handler(CallbackQueryHandler(free_step6_first_action, pattern="^free_step6_first_action$"))
+    application.add_handler(CallbackQueryHandler(free_step7_reinforce, pattern="^free_step7_reinforce$"))
+    application.add_handler(CallbackQueryHandler(free_step8_optional_sharing, pattern="^free_step8_optional_sharing$"))
+    application.add_handler(CallbackQueryHandler(learn_more, pattern="^learn_more$"))
+    application.add_handler(CallbackQueryHandler(back_to_start, pattern="^back_to_start$"))
+    application.add_handler(CallbackQueryHandler(skip_sharing, pattern="^skip_sharing$"))
+    
+    logger.info("✅ FREE flow handlers registered")

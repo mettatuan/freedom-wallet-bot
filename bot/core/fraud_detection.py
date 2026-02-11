@@ -363,7 +363,7 @@ class FraudDetector:
         )
         
         await bot.send_message(
-            chat_id=referrer.telegram_id,
+            chat_id=referrer.id,
             text=message,
             parse_mode="Markdown"
         )
@@ -430,7 +430,7 @@ class FraudAdminTools:
         referrer = self.db.get_user(referrer_id)
         
         await bot.send_message(
-            chat_id=referrer.telegram_id,
+            chat_id=referrer.id,
             text=(
                 "✅ **Xác minh thành công!**\n\n"
                 "Lượt giới thiệu đã được xác nhận.\n"
@@ -449,7 +449,7 @@ class FraudAdminTools:
         referrer = self.db.get_user(referrer_id)
         
         await bot.send_message(
-            chat_id=referrer.telegram_id,
+            chat_id=referrer.id,
             text=(
                 "❌ **Không hợp lệ**\n\n"
                 "Lượt giới thiệu không đạt yêu cầu xác minh.\n\n"

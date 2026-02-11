@@ -149,6 +149,7 @@ def setup_daily_jobs(application):
         setup_daily_jobs(application)
     """
     from telegram.ext import JobQueue
+    from bot.core.reminder_scheduler import get_reminder_scheduler
     
     job_queue = application.job_queue
     
@@ -163,8 +164,17 @@ def setup_daily_jobs(application):
         name="super_vip_decay_check"
     )
     
+    # Initialize daily reminder scheduler (Week 6)
+    reminder_scheduler = get_reminder_scheduler(job_queue.scheduler)
+    if reminder_scheduler:
+        reminder_scheduler.start_daily_reminders(application)
+        logger.info("✅ Daily reminder system initialized")
+    
     logger.info("✅ Daily jobs scheduled:")
     logger.info("   - Super VIP decay check: 10:00 AM UTC")
+    logger.info("   - Morning reminders: 8:00 AM daily")
+    logger.info("   - Evening reminders: 8:00 PM daily")
+    logger.info("   - Missed days check: 9:00 PM daily")
     
     # Future jobs can be added here:
     # - Analytics reports

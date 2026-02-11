@@ -1,0 +1,123 @@
+{"timestamp": "2026-02-08T21:52:25.711365", "user_id": 999999, "event": "test_event", "properties": {"test": true, "value": 123}}
+{"timestamp": "2026-02-08T21:52:25.729981", "user_id": 999999, "event": "mystatus_viewed", "properties": {"tier": "FREE"}}
+{"timestamp": "2026-02-08T21:52:25.730983", "user_id": 999999, "event": "roi_detail_viewed", "properties": {}}
+{"timestamp": "2026-02-08T21:52:25.731826", "user_id": 888888, "event": "mystatus_viewed", "properties": {"tier": "TRIAL"}}
+{"timestamp": "2026-02-08T21:52:25.747400", "user_id": 0, "event": "chat_limit_hit", "properties": {}}
+{"timestamp": "2026-02-08T21:52:25.748624", "user_id": 1, "event": "chat_limit_hit", "properties": {}}
+{"timestamp": "2026-02-08T21:52:25.757801", "user_id": 2, "event": "chat_limit_hit", "properties": {}}
+{"timestamp": "2026-02-08T21:52:25.758672", "user_id": 3, "event": "chat_limit_hit", "properties": {}}
+{"timestamp": "2026-02-08T21:52:25.759493", "user_id": 4, "event": "chat_limit_hit", "properties": {}}
+{"timestamp": "2026-02-08T21:52:25.760315", "user_id": 0, "event": "trial_started", "properties": {}}
+{"timestamp": "2026-02-08T21:52:25.761130", "user_id": 1, "event": "trial_started", "properties": {}}
+{"timestamp": "2026-02-08T21:52:25.761954", "user_id": 2, "event": "trial_started", "properties": {}}
+{"timestamp": "2026-02-08T22:00:32.361340", "user_id": 1299465308, "event": "free_chat_clicked", "properties": {}}
+{"timestamp": "2026-02-08T22:04:49.027200", "user_id": 1299465308, "event": "free_chat_clicked", "properties": {}}
+{"timestamp": "2026-02-08T22:07:08.088135", "user_id": 1299465308, "event": "free_chat_clicked", "properties": {}}
+{"timestamp": "2026-02-08T22:07:15.172785", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:08:04.595379", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:08:25.226782", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:08:49.019686", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:09:19.184519", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:10:06.994597", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:10:36.400214", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:19:14.747160", "user_id": 1299465308, "event": "free_chat_clicked", "properties": {}}
+{"timestamp": "2026-02-08T22:25:24.100469", "user_id": 1299465308, "event": "free_chat_clicked", "properties": {}}
+{"timestamp": "2026-02-08T22:25:29.384004", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:25:37.529320", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:25:48.223263", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:26:04.518717", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:26:16.501309", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:26:50.959475", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:27:30.109521", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 4}}
+{"timestamp": "2026-02-08T22:31:55.938225", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 5}}
+{"timestamp": "2026-02-08T22:32:25.255340", "user_id": 1299465308, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-09T04:32:19.017231", "user_id": 1299465308, "event": "trial_started", "properties": {"source": "chat_limit_hit"}}
+{"timestamp": "2026-02-09T04:34:00.948574", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T05:05:10.239018", "user_id": 1299465308, "event": "webhook_setup_guide_viewed", "properties": {}}
+{"timestamp": "2026-02-09T05:55:16.844108", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T06:00:12.264468", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T06:08:24.364763", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T07:55:24.083094", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T12:06:47.038403", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T12:07:02.341727", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T12:28:28.524710", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T12:35:04.120176", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T12:54:11.140668", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T19:22:34.310455", "user_id": 1299465308, "event": "change_sheet_requested", "properties": {}}
+{"timestamp": "2026-02-09T19:24:47.682872", "user_id": 1299465308, "event": "sheets_connection_failed", "properties": {"spreadsheet_id": "1er6t9JQHL...", "error": "permission_denied"}}
+{"timestamp": "2026-02-09T19:25:48.805325", "user_id": 1299465308, "event": "sheets_disconnected", "properties": {"old_id": "1dV-KAVxxt..."}}
+{"timestamp": "2026-02-09T19:26:06.891845", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T19:26:29.940279", "user_id": 1299465308, "event": "sheets_connection_failed", "properties": {"spreadsheet_id": "1er6t9JQHL...", "error": "permission_denied"}}
+{"timestamp": "2026-02-09T19:34:50.778795", "user_id": 1299465308, "event": "sheets_connection_failed", "properties": {"spreadsheet_id": "1er6t9JQHL...", "error": "permission_denied"}}
+{"timestamp": "2026-02-09T19:42:35.425508", "user_id": 1299465308, "event": "sheets_connection_failed", "properties": {"spreadsheet_id": "1Vlq3MAplg...", "error": "permission_denied"}}
+{"timestamp": "2026-02-09T19:43:36.699624", "user_id": 1299465308, "event": "sheets_connection_failed", "properties": {"spreadsheet_id": "1Vlq3MAplg...", "error": "permission_denied"}}
+{"timestamp": "2026-02-09T19:57:31.909199", "user_id": 1299465308, "event": "sheets_connection_failed", "properties": {"spreadsheet_id": "1Vlq3MAplg...", "error": "permission_denied"}}
+{"timestamp": "2026-02-09T19:58:05.742041", "user_id": 1299465308, "event": "sheets_connection_failed", "properties": {"spreadsheet_id": "1Vlq3MAplg...", "error": "permission_denied"}}
+{"timestamp": "2026-02-09T19:59:10.489837", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T19:59:30.874151", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T20:07:20.574056", "user_id": 1299465308, "event": "sheets_connection_failed", "properties": {"spreadsheet_id": "1Vlq3MAplg...", "error": "permission_denied"}}
+{"timestamp": "2026-02-09T20:10:58.828597", "user_id": 1299465308, "event": "sheets_connection_failed", "properties": {"spreadsheet_id": "1otyFIHFs9...", "error": "permission_denied"}}
+{"timestamp": "2026-02-09T20:16:14.724178", "user_id": 1299465308, "event": "sheets_connected", "properties": {"spreadsheet_id": "1Vlq3MAplg...", "has_balance": false, "total_balance": 0}}
+{"timestamp": "2026-02-09T20:25:35.848353", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T21:48:49.682373", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T22:13:28.442560", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T22:25:16.668654", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-09T22:34:03.034098", "user_id": 1299465308, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-09T22:34:10.148670", "user_id": 1299465308, "event": "mystatus_viewed", "properties": {"tier": "TRIAL", "messages_today": 1}}
+{"timestamp": "2026-02-09T22:34:32.664067", "user_id": 1299465308, "event": "upgrade_from_status_clicked", "properties": {}}
+{"timestamp": "2026-02-09T23:14:06.941459", "user_id": 1299465308, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-09T23:14:18.841946", "user_id": 1299465308, "event": "mystatus_viewed", "properties": {"tier": "TRIAL", "messages_today": 1}}
+{"timestamp": "2026-02-09T23:14:39.333402", "user_id": 1299465308, "event": "upgrade_from_status_clicked", "properties": {}}
+{"timestamp": "2026-02-09T23:15:41.060124", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-10T08:02:07.841266", "user_id": 1299465308, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-10T08:02:25.378685", "user_id": 1299465308, "event": "mystatus_viewed", "properties": {"tier": "TRIAL", "messages_today": 1}}
+{"timestamp": "2026-02-10T08:02:45.189931", "user_id": 1299465308, "event": "upgrade_from_status_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:03:44.035187", "user_id": 1299465308, "event": "payment_confirmation_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:03:57.570365", "user_id": 1299465308, "event": "payment_confirmation_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:04:56.126402", "user_id": 1299465308, "event": "payment_confirmation_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:06:22.775437", "user_id": 1299465308, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-10T08:06:38.607197", "user_id": 1299465308, "event": "payment_confirmation_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:25:25.669054", "user_id": 1299465308, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-10T08:27:12.091690", "user_id": 1299465308, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-10T08:27:25.824361", "user_id": 1299465308, "event": "mystatus_viewed", "properties": {"tier": "TRIAL", "messages_today": 1}}
+{"timestamp": "2026-02-10T08:27:29.314303", "user_id": 1299465308, "event": "upgrade_from_status_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:27:33.001261", "user_id": 1299465308, "event": "payment_confirmation_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:30:32.605434", "user_id": 1299465308, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-10T08:30:57.974327", "user_id": 1299465308, "event": "mystatus_viewed", "properties": {"tier": "TRIAL", "messages_today": 1}}
+{"timestamp": "2026-02-10T08:31:03.260511", "user_id": 1299465308, "event": "upgrade_from_status_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:31:06.515623", "user_id": 1299465308, "event": "payment_confirmation_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:33:10.802216", "user_id": 1299465308, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-10T08:33:15.829916", "user_id": 1299465308, "event": "mystatus_viewed", "properties": {"tier": "TRIAL", "messages_today": 1}}
+{"timestamp": "2026-02-10T08:33:19.282233", "user_id": 1299465308, "event": "upgrade_from_status_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:33:22.297416", "user_id": 1299465308, "event": "payment_confirmation_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:35:00.861905", "user_id": 1299465308, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-10T08:35:06.021076", "user_id": 1299465308, "event": "mystatus_viewed", "properties": {"tier": "TRIAL", "messages_today": 1}}
+{"timestamp": "2026-02-10T08:35:08.993405", "user_id": 1299465308, "event": "upgrade_from_status_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:35:11.659457", "user_id": 1299465308, "event": "payment_confirmation_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:47:03.624310", "user_id": 1299465308, "event": "mystatus_viewed", "properties": {"tier": "TRIAL", "messages_today": 1}}
+{"timestamp": "2026-02-10T08:47:06.694890", "user_id": 1299465308, "event": "upgrade_from_status_clicked", "properties": {}}
+{"timestamp": "2026-02-10T08:47:09.177288", "user_id": 1299465308, "event": "payment_confirmation_clicked", "properties": {}}
+{"timestamp": "2026-02-10T09:04:10.449618", "user_id": 1299465308, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-10T09:04:29.859852", "user_id": 1299465308, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-10T09:04:34.355575", "user_id": 1299465308, "event": "mystatus_viewed", "properties": {"tier": "TRIAL", "messages_today": 1}}
+{"timestamp": "2026-02-10T09:04:37.132168", "user_id": 1299465308, "event": "upgrade_from_status_clicked", "properties": {}}
+{"timestamp": "2026-02-10T09:04:40.875487", "user_id": 1299465308, "event": "payment_confirmation_clicked", "properties": {}}
+{"timestamp": "2026-02-10T09:22:53.286209", "user_id": 6194449688, "event": "upgrade_premium_clicked_from_start", "properties": {}}
+{"timestamp": "2026-02-10T09:22:57.356732", "user_id": 6194449688, "event": "trial_started", "properties": {"source": "chat_limit_hit"}}
+{"timestamp": "2026-02-10T11:40:37.089062", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "PREMIUM", "remaining": 999999}}
+{"timestamp": "2026-02-10T11:41:35.138122", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "PREMIUM", "remaining": 999999}}
+{"timestamp": "2026-02-10T11:42:22.740954", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "PREMIUM", "remaining": 999999}}
+{"timestamp": "2026-02-10T15:54:55.094203", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "PREMIUM", "remaining": 999999}}
+{"timestamp": "2026-02-10T15:58:51.759769", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "PREMIUM", "remaining": 999999}}
+{"timestamp": "2026-02-10T19:54:45.012057", "user_id": 6194449688, "event": "free_chat_clicked", "properties": {}}
+{"timestamp": "2026-02-10T22:50:29.236227", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "PREMIUM", "remaining": 999999}}
+{"timestamp": "2026-02-10T23:10:35.706208", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-11T04:26:44.614098", "user_id": 6194449688, "event": "free_chat_clicked", "properties": {}}
+{"timestamp": "2026-02-11T06:32:27.934995", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-11T11:42:31.294039", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-11T14:58:18.573504", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-11T15:04:11.545281", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-11T15:09:24.899694", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-11T15:17:55.393346", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-11T16:13:13.431901", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-11T16:14:19.782054", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}

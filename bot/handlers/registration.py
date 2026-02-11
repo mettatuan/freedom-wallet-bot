@@ -22,31 +22,67 @@ AWAITING_EMAIL, AWAITING_PHONE, AWAITING_NAME, CONFIRM = range(4)
 async def start_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Start registration process"""
     user = update.effective_user
+    logger.info(f"🎯 start_registration called for user {user.id} ({user.username})")
+    
+    # Handle both callback query (from button) and command (from /register)
+    is_callback = bool(update.callback_query)
+    logger.info(f"  → is_callback: {is_callback}")
     
     # Check if already registered
     db_user = await get_user_by_id(user.id)
     if db_user and hasattr(db_user, 'email') and db_user.email:
-        await update.message.reply_text(
+        message_text = (
             "✅ Bạn đã đăng ký rồi!\n\n"
-            "Dùng /help để xem các tính năng.",
-            reply_markup=ReplyKeyboardRemove()
+            "Dùng /help để xem các tính năng."
         )
+        
+        if is_callback:
+            await update.callback_query.answer()
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=message_text,
+                reply_markup=ReplyKeyboardRemove()
+            )
+        else:
+            await update.message.reply_text(
+                message_text,
+                reply_markup=ReplyKeyboardRemove()
+            )
         return ConversationHandler.END
     
-    await update.message.reply_text(
-        "📝 **ĐĂNG KÝ TẢI FREEDOM WALLET MIỄN PHÍ**\n\n"
+    registration_text = (
+        "📝 **ĐĂNG KÝ SỞ HỮU FREEDOM WALLET**\n\n"
         "Để nhận Template Google Sheet và hướng dẫn setup,\n"
         "vui lòng điền thông tin sau:\n\n"
         "👉 **Bước 1/3:** Nhập **Email** của bạn\n"
-        "(Chúng tôi sẽ gửi link Template qua email này)",
-        parse_mode="Markdown"
+        "(Chúng tôi sẽ gửi link Template qua email này)"
     )
     
+    if is_callback:
+        await update.callback_query.answer()
+        # Don't delete - just edit or send new message
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=registration_text,
+            parse_mode="Markdown"
+        )
+    else:
+        await update.message.reply_text(
+            registration_text,
+            parse_mode="Markdown"
+        )
+    
+    # Set conversation state flag to prevent AI chat handler interference
+    context.user_data['conversation_state'] = 'registration'
+    logger.info(f"  → Returning AWAITING_EMAIL state (value: {AWAITING_EMAIL})")
     return AWAITING_EMAIL
 
 
 async def receive_email(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Receive and validate email"""
+    logger.info(f"🔍 receive_email called for user {update.effective_user.id}")
+    # Maintain conversation state
+    context.user_data['conversation_state'] = 'registration'
     email = update.message.text.strip()
     
     # Basic email validation
@@ -60,6 +96,7 @@ async def receive_email(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Save to context
     context.user_data['email'] = email
+    logger.info(f"✅ Email saved: {email}")
     
     # Request phone
     keyboard = [["/skip"]]
@@ -77,6 +114,8 @@ async def receive_email(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def receive_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Receive phone number"""
+    # Maintain conversation state
+    context.user_data['conversation_state'] = 'registration'
     phone = update.message.text.strip()
     
     # Allow skip
@@ -111,6 +150,8 @@ async def receive_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def receive_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Receive full name and confirm"""
+    # Maintain conversation state
+    context.user_data['conversation_state'] = 'registration'
     name = update.message.text.strip()
     
     # Allow skip
@@ -124,10 +165,14 @@ async def receive_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     phone = context.user_data.get('phone', 'Không cung cấp')
     full_name = context.user_data['full_name']
     
+    # Use InlineKeyboardButton instead of ReplyKeyboardMarkup
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+    
     keyboard = [
-        ["✅ Xác nhận"],
-        ["✏️ Nhập lại email"]
+        [InlineKeyboardButton("✅ Xác nhận", callback_data="confirm_registration_yes")],
+        [InlineKeyboardButton("✏️ Nhập lại email", callback_data="confirm_registration_retry")]
     ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
         "📋 **XÁC NHẬN THÔNG TIN**\n\n"
@@ -136,7 +181,7 @@ async def receive_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"📱 SĐT: **{phone}**\n\n"
         f"Thông tin có chính xác không?",
         parse_mode="Markdown",
-        reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
+        reply_markup=reply_markup
     )
     
     return CONFIRM
@@ -144,18 +189,21 @@ async def receive_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Confirm and save registration"""
-    response = update.message.text.strip()
+    # Handle CallbackQuery instead of text message
+    query = update.callback_query
+    await query.answer()
     
-    if response == "✏️ Nhập lại email":
-        await update.message.reply_text(
+    callback_data = query.data
+    
+    if callback_data == "confirm_registration_retry":
+        await query.message.edit_text(
             "👉 Nhập lại **Email** của bạn:",
-            parse_mode="Markdown",
-            reply_markup=ReplyKeyboardRemove()
+            parse_mode="Markdown"
         )
         return AWAITING_EMAIL
     
-    if response != "✅ Xác nhận":
-        await update.message.reply_text(
+    if callback_data != "confirm_registration_yes":
+        await query.message.reply_text(
             "❌ Vui lòng chọn '✅ Xác nhận' hoặc '✏️ Nhập lại email'",
             parse_mode="Markdown"
         )
@@ -238,6 +286,13 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                     if referrer:
                         referrer.referral_count += 1
                         
+                        # Check VIP milestones (10/50/100 refs) - Identity Layer
+                        try:
+                            from bot.handlers.vip import check_vip_milestone
+                            await check_vip_milestone(referrer.id, context)
+                        except Exception as e:
+                            logger.error(f"Failed to check VIP milestone for {referrer.id}: {e}")
+                        
                         # Week 4: Update Super VIP activity (getting referral is activity)
                         with StateManager() as state_mgr:
                             state_mgr.update_super_vip_activity(referrer.id)
@@ -268,37 +323,20 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                                 )
                                 logger.info(f"🎯 Referrer {referrer.id} → VIP: {msg}")
                             
-                            # GIAI ĐOẠN 4: VINH DANH + KÍCH HOẠT VIP
+                            # UNLOCK FLOW v3.0 (Feb 2026) - Ownership-first, Identity-driven
                             try:
-                                from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-                                from pathlib import Path
-                                
                                 # Cancel remaining daily nurture messages
                                 from bot.handlers.daily_nurture import cancel_remaining_nurture
                                 await cancel_remaining_nurture(referrer.id, 0, context)
                                 
-                                # Send congratulation image first
-                                image_path = Path("media/images/chucmung.png")
-                                if image_path.exists():
-                                    with open(image_path, 'rb') as photo:
-                                        await context.bot.send_photo(
-                                            chat_id=referrer.id,
-                                            photo=photo,
-                                            caption=f"🎉 **CHÚC MỪNG!** 🎉\n\n"
-                                                    f"**{full_name}** vừa hoàn tất đăng ký!\n\n"
-                                                    f"Bạn đã **HOÀN THÀNH 2 / 2 LƯỢT GIỚI THIỆU**",
-                                            parse_mode="Markdown"
-                                        )
+                                # Send optimized unlock flow Message 1
+                                from bot.handlers.unlock_flow_v3 import send_unlock_message_1
+                                await send_unlock_message_1(referrer.id, context)
                                 
-
-                                
-                                # Start onboarding journey with 10-minute delay (not immediate)
-                                # This allows user to process VIP status first
-                                from bot.handlers.onboarding import start_onboarding_journey
-                                await start_onboarding_journey(referrer.id, context, initial_delay_minutes=10)
+                                logger.info(f"✅ Sent unlock flow v3.0 Message 1 to user {referrer.id}")
                                 
                             except Exception as e:
-                                logger.error(f"Failed to notify referrer {referrer.id}: {e}")
+                                logger.error(f"Failed to send unlock flow to {referrer.id}: {e}")
                         else:
                             # GIAI ĐOẠN 3: CẬP NHẬT KHI CÓ NGƯỜI ĐĂNG KÝ (1/2)
                             remaining = 2 - referrer.referral_count
@@ -376,112 +414,108 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
         from bot.utils.sheets import sync_user_to_sheet
         await sync_user_to_sheet(user.id, email, phone, full_name)
         
+        # Also save to FreedomWallet_Registrations sheet
+        try:
+            from bot.utils.sheets_registration import save_user_to_registration_sheet
+            from bot.utils.database import generate_referral_code
+            
+            referral_code = generate_referral_code(user.id)
+            bot_username = (await context.bot.get_me()).username
+            referral_link = f"https://t.me/{bot_username}?start=REF{referral_code}"
+            
+            await save_user_to_registration_sheet(
+                user_id=user.id,
+                username=user.username or "",
+                full_name=full_name,
+                email=email,
+                phone=phone or "",
+                plan="FREE",
+                referral_link=referral_link,
+                referral_count=db_user.referral_count or 0,
+                source="BOT_REGISTRATION",
+                status="ACTIVE",
+                referred_by=None
+            )
+            logger.info(f"✅ Saved user {user.id} to FreedomWallet_Registrations sheet")
+        except Exception as e:
+            logger.error(f"Failed to save to registration sheet: {e}")
+        
         # Generate referral link for sharing
         from bot.utils.database import generate_referral_code
         referral_code = generate_referral_code(user.id)
         bot_username = context.bot.username
         referral_link = f"https://t.me/{bot_username}?start=REF{referral_code}"
         
-        # Success message with REFERRAL FIRST approach
-        await update.message.reply_text(
-            "🎉 **ĐĂNG KÝ THÀNH CÔNG!**\n\n"
-            "✅ Bạn đã hoàn tất đăng ký!\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━\n"
-            "🎁 **NHẬN TEMPLATE + HƯỚNG DẪN**\n"
-            "━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "**Cho trước, nhận sau!**\n"
-            "Giới thiệu **2 bạn bè** để mở khóa:\n\n"
-            "✓ Google Sheets Template\n"
-            "✓ Hướng dẫn tạo Web App chi tiết\n"
-            "✓ Video tutorials 3 phút\n"
-            "✓ Truy cập đầy đủ tính năng Bot\n"
-            "✓ Cập nhật miễn phí mãi mãi\n\n"
-            f"📊 **Tiến độ hiện tại:** 0/2 người\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━\n"
-            "🔗 **LINK GIỚI THIỆU CỦA BẠN:**\n"
-            "━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"`{referral_link}`\n\n"
-            "👆 Copy link trên và chia sẻ qua:\n"
-            "• Telegram\n"
-            "• Facebook\n"
-            "• Zalo\n"
-            "• WhatsApp\n"
-            "• TikTok\n"
-            "• X (Twitter)\n\n"
-            "💡 **Mẹo:** Khi bạn bè đăng ký xong,\n"
-            "bot sẽ tự động thông báo cho bạn!\n\n"
-            "🚀 Dùng /help để xem thêm lệnh",
-            parse_mode="Markdown",
-            reply_markup=ReplyKeyboardRemove()
+        # Success message - Calm, no FOMO
+        await query.message.reply_text(
+            "✅ **Cảm ơn bạn!**\n\n"
+            "Thông tin đã được lưu lại.",
+            parse_mode="Markdown"
         )
         
         # Clear context
         context.user_data.clear()
         
-        # Send 3 welcome messages according to new flow
-        # MESSAGE 1: Chào mừng + Gợi mở giá trị
-        await update.message.reply_text(
-            "🎉 **Chúc mừng bạn đã đăng ký thành công Freedom Wallet!**\n\n"
-            "Bạn vừa bước vào hành trình quản lý tài chính thông minh – "
-            "hướng tới tự do tài chính 💙\n\n"
-            "👉 Chỉ cần **giới thiệu 2 người hoàn thành đăng ký**, "
-            "bạn sẽ nhận **BỘ QUÀ ĐẶC BIỆT TRỌN ĐỜI** 🎁",
-            parse_mode="Markdown",
-            reply_markup=ReplyKeyboardRemove()
-        )
-        
+        # Wait a moment then show what they'll receive
         import asyncio
-        await asyncio.sleep(2)
+        await asyncio.sleep(1.5)
         
-        # MESSAGE 2: Nhắc rõ món quà
-        await update.message.reply_text(
-            "🎁 **ĐÂY LÀ NHỮNG GÌ BẠN SẼ NHẬN ĐƯỢC SAU KHI CHIA SẺ 2 NGƯỜI:**\n\n"
-            "✅ **Full Google Sheet** Quản lý tài chính cá nhân 3.2\n"
-            "✅ **Full Google Apps Script** tích hợp sẵn\n"
-            "✅ **Full Hướng dẫn** tạo Web App trên Notion\n"
-            "✅ **Video hướng dẫn** chi tiết từng bước\n"
-            "✅ **Toàn bộ tính năng** – sử dụng trọn đời\n\n"
-            "💎 **Giá trị thực tế:** Hệ thống – Không phải lý thuyết",
-            parse_mode="Markdown"
-        )
+        # Show new message with hu_tien.jpg image
+        import os
+        image_path = os.path.join(os.path.dirname(__file__), '..', '..', 'media', 'images', 'hu_tien.jpg')
         
-        await asyncio.sleep(2)
+        message = """Khi bạn cài đặt và sử dụng Freedom Wallet,
+bạn không chỉ dùng một ứng dụng.
+
+Bạn đang tạo một hệ thống tài chính cá nhân
+thuộc về riêng bạn.
+
+Sau khi hoàn tất cài đặt, bạn sẽ có:
+
+• Một Google Sheet nằm trên Drive của bạn  
+• Một Web App riêng, chạy từ chính dữ liệu của bạn  
+• Hệ thống 6 Hũ tiền phân bổ tự động  
+• Báo cáo thu – chi theo tháng  
+• Theo dõi tài sản, đầu tư, nợ và dòng tiền  
+• Cấp độ tài chính hiện tại của bạn
+
+Bạn sẵn sàng tạo hệ thống của riêng mình chưa?"""
         
-        # MESSAGE 3: Tiến độ + CTA với buttons
         from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        
         keyboard = [
-            [InlineKeyboardButton("🔗 Chia sẻ ngay", callback_data="share_link")],
-            [InlineKeyboardButton("📘 Tìm hiểu thêm", url="https://freedomwallet.app")],
-            [InlineKeyboardButton("📊 Xem tiến độ của tôi", callback_data="check_progress")]
+            [InlineKeyboardButton("📋 Tạo Google Sheet", callback_data="free_step3_copy_template")],
+            [InlineKeyboardButton("❓ Hỏi thêm", callback_data="learn_more")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
-        await update.message.reply_text(
-            "📊 **Tiến độ giới thiệu của bạn:**\n"
-            f"**0 / 2 người**\n\n"
-            "👉 Mỗi người chỉ cần đăng ký hoàn tất là được tính\n\n"
-            "⏩ **Bắt đầu ngay để mở khóa quà** 🎁\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━\n"
-            "🔗 **LINK CỦA BẠN:**\n"
-            f"`{referral_link}`\n\n"
-            "Copy link và chia sẻ ngay! 👆",
-            parse_mode="Markdown",
-            reply_markup=reply_markup
-        )
+        try:
+            with open(image_path, 'rb') as photo:
+                await query.message.reply_photo(
+                    photo=photo,
+                    caption=message,
+                    reply_markup=reply_markup
+                )
+        except Exception as e:
+            logger.error(f"Error sending photo: {e}")
+            # Fallback: send text only
+            await query.message.reply_text(
+                text=message,
+                reply_markup=reply_markup
+            )
         
-        # Start daily nurture journey (Day 1-5 until they reach 2 refs)
-        from bot.handlers.daily_nurture import start_daily_nurture
-        await start_daily_nurture(user.id, context)
-        
+        # Clear conversation state flag before ending
+        context.user_data.pop('conversation_state', None)
         return ConversationHandler.END
         
     except Exception as e:
         session.rollback()
-        await update.message.reply_text(
+        await query.message.reply_text(
             f"❌ Lỗi khi lưu thông tin: {str(e)}\n\n"
-            f"Vui lòng thử lại sau hoặc dùng /support",
-            reply_markup=ReplyKeyboardRemove()
+            f"Vui lòng thử lại sau hoặc dùng /support"
         )
+        # Clear conversation state flag
+        context.user_data.pop('conversation_state', None)
         return ConversationHandler.END
     finally:
         session.close()

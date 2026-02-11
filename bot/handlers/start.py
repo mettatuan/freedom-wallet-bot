@@ -5,6 +5,7 @@ Week 2: Soft-integrated with State Machine
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from loguru import logger
+from datetime import datetime
 from bot.utils.database import save_user_to_db, get_user_by_id, update_user_registration
 from bot.handlers.referral import handle_referral_start
 from bot.utils.sheets import sync_web_registration
@@ -67,25 +68,35 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 tier = "💎 PREMIUM" if web_data.get('plan') == 'premium' else "🎁 FREE"
                 
                 if is_unlocked:
-                    # UNLOCKED: Send congratulation image + template + start onboarding
+                    # UNLOCKED: Start onboarding calmly
                     from pathlib import Path
                     
-                    # Send congratulation image
-                    image_path = Path("media/images/chucmung.png")
-                    if image_path.exists():
-                        with open(image_path, 'rb') as photo:
-                            await update.message.reply_photo(
-                                photo=photo,
-                                caption=f"🎉 **CHÚC MỪNG {web_data.get('full_name', user.first_name).upper()}!** 🎉\n\n"
-                                        f"✅ Bạn đã mở khóa thành công sau khi giới thiệu 2 người!",
-                                parse_mode="Markdown"
-                            )
+                    # Send calm affirmation (not celebration)
+                    await update.message.reply_text(
+                        f"Chào {web_data.get('full_name', user.first_name)},\n\n"
+                        f"Bạn vừa kết nối Sheet với Bot thành công.\n\n"
+                        f"Bây giờ bạn có thể ghi chi tiêu ngay trong chat này.\n"
+                        f"5 giây. Không cần mở Sheet.\n\n"
+                        f"Sheet vẫn là của bạn.\n"
+                        f"Bot chỉ là cầu nối để bạn ghi nhanh hơn.\n\n"
+                        f"Thử ghi khoản chi tiêu đầu tiên nhé.",
+                        parse_mode="Markdown"
+                    )
                     
 
                     
                     # Start onboarding journey (Day 1 scheduled)
                     from bot.handlers.onboarding import start_onboarding_journey
                     await start_onboarding_journey(user.id, context)
+                    
+                    # Enable daily reminders for new VIP user
+                    from bot.utils.database import SessionLocal
+                    db = SessionLocal()
+                    db_user = db.merge(db_user)  # Merge into new session
+                    db_user.reminder_enabled = True
+                    db.commit()
+                    db.close()
+                    logger.info(f"✅ Enabled daily reminders for new VIP user {user.id}")
                     
                     logger.info(f"✅ Web user {user.id} unlocked VIP and started onboarding")
                     return
@@ -106,28 +117,33 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     remaining = 2 - referral_count
                     
                     keyboard = [
-                        [InlineKeyboardButton("🔗 Chia sẻ ngay", callback_data="share_link")],
-                        [InlineKeyboardButton("📘 Tìm hiểu thêm", url="https://freedomwallet.app")],
-                        [InlineKeyboardButton("📊 Xem tiến độ", callback_data="check_progress")]
+                        [InlineKeyboardButton("🔗 Kết nối Sheet", callback_data="sheets_setup")],
+                        [InlineKeyboardButton("❓ Cần hỗ trợ setup", callback_data="help_unlock")]
                     ]
                     reply_markup = InlineKeyboardMarkup(keyboard)
                     
                     await update.message.reply_text(
-                        f"👋 **Chào mừng trở lại {web_data.get('full_name', user.first_name)}!**\n\n"
-                        f"{tier}\n\n"
-                        f"📊 **Tiến độ giới thiệu:** {referral_count} / 2 người\n"
-                        f"🎯 **Còn {remaining} người nữa!**\n\n"
+                        f"Chào {web_data.get('full_name', user.first_name)},\n\n"
+                        f"Bạn đã setup Sheet thành công!\n"
+                        f"Hệ thống quản lý tài chính riêng đã sẵn sàng.\n\n"
                         f"━━━━━━━━━━━━━━━━━━━━━\n"
-                        f"🎁 **Bạn sẽ nhận được sau khi đủ 2 người:**\n"
+                        f"💡 **Bây giờ bạn có thể:**\n"
                         f"━━━━━━━━━━━━━━━━━━━━━\n\n"
-                        f"✅ Full Google Sheet Quản lý tài chính 3.2\n"
-                        f"✅ Full Google Apps Script\n"
-                        f"✅ Full Hướng dẫn tạo Web App\n"
-                        f"✅ Video tutorials chi tiết\n"
-                        f"✅ Toàn bộ tính năng trọn đời\n\n"
-                        f"━━━━━━━━━━━━━━━━━━━━━\n"
-                        f"🔗 **LINK CỦA BẠN:**\n"
-                        f"`{referral_link}`",
+                        f"✅ Mở Sheet và bắt đầu ghi thu chi\n"
+                        f"✅ Xem phân bổ 6 hũ tiền\n"
+                        f"✅ Kiểm tra cấp độ tài chính\n"
+                        f"✅ Xem báo cáo chi tiết\n\n"
+                        f"Tuần đầu, thử ghi tay vào Sheet.\n"
+                        f"Dù chậm, nhưng đây là lúc bạn \"nhìn rõ tiền\".\n\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+                        f"🤝 **Muốn ghi nhanh hơn qua Telegram?**\n\n"
+                        f"Kết nối Telegram với Sheet cần cấu hình API,\n"
+                        f"hơi kỹ thuật và dễ sai.\n\n"
+                        f"Nếu bạn giới thiệu 2 người bạn\n"
+                        f"cũng thật sự muốn quản lý tài chính,\n"
+                        f"tôi sẽ hỗ trợ bạn setup 1-1,\n"
+                        f"đảm bảo kết nối thành công.\n\n"
+                        f"🔗 Link giới thiệu: `{referral_link}`",
                         parse_mode="Markdown",
                         reply_markup=reply_markup
                     )
@@ -164,71 +180,125 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await asyncio.sleep(2)
     
     # Get user subscription status
-    subscription_tier = db_user.subscription_tier if db_user else "TRIAL"
+    subscription_tier = db_user.subscription_tier if db_user else "FREE"
     referral_count = db_user.referral_count if db_user else 0
     is_free_unlocked = db_user.is_free_unlocked if db_user else False
     
-    # Build status badge
+    # Determine user stage (not "tier")
+    user_stage = "PREMIUM" if subscription_tier == "PREMIUM" else ("UNLOCKED" if is_free_unlocked else "FREE")
+    
+    # Welcome message - Different for FREE vs PREMIUM
+    from bot.services.recommendation import get_greeting
+    greeting = get_greeting(db_user) if db_user else f"👋 Xin chào {user.first_name}!"
+    
+    # PREMIUM MENU - Calm, supportive
     if subscription_tier == "PREMIUM":
-        tier_badge = "💎 PREMIUM"
-    elif is_free_unlocked:
-        tier_badge = "✅ FREE FOREVER"
-    elif subscription_tier == "TRIAL":
-        tier_badge = f"🎯 TRIAL ({referral_count}/2 refs)"
-    else:
-        tier_badge = "🔒 LOCKED"
-    
-    # Welcome message
-    welcome_text = f"""
-👋 **Xin chào {user.first_name}!**
+        days_tracking = db_user.streak_count if db_user else 0
+        
+        welcome_text = f"""
+{greeting}
 
-{tier_badge}
+━━━━━━━━━━━━━━━━━━━━━
+💎 **PREMIUM - Giảm tải não**
+━━━━━━━━━━━━━━━━━━━━━
 
-Mình là **Freedom Wallet Bot** 🤖 - trợ lý AI hỗ trợ bạn 24/7 về:
+Bạn đã ghi chi tiêu được {days_tracking} ngày.
 
-✅ **Tính năng app:** Giao dịch, 6 Hũ, Đầu tư, Tài sản
-✅ **Hướng dẫn:** Step-by-step chi tiết
-✅ **Khắc phục lỗi:** Giải quyết nhanh các vấn đề
-✅ **Tư vấn tài chính:** Tips về 6 Jars method
+Sheet của bạn đã có đầy đủ dữ liệu và báo cáo.
+Premium không thêm chart hay dashboard.
 
-💡 **Bạn có thể hỏi gì?**
-• "Làm sao thêm giao dịch?"
-• "6 hũ tiền là gì?"
-• "Tại sao số dư hũ sai?"
-• "Cách tính ROI đầu tư?"
+Premium giúp bạn:
 
-📱 **Hoặc chọn menu bên dưới:**
+• Không phải canh tiền mỗi ngày
+• Được cảnh báo sớm khi có rủi ro
+• Không quên khoản định kỳ
+• Phát hiện chi tiêu bất thường
+
+👉 Bạn nghĩ về tiền ÍT hơn,
+nhưng kiểm soát TỐT hơn.
+
+💡 Ghi chi tiêu, hoặc hỏi tôi bất cứ lúc nào.
 """
-    
-    # Inline keyboard with quick actions
-    keyboard = []
-    
-    # Add registration button if not registered
-    if not db_user.is_registered:
-        keyboard.append([
-            InlineKeyboardButton("📝 Đăng ký nhận Template FREE", callback_data="start_register")
-        ])
-    
-    keyboard.extend([
-        [
-            InlineKeyboardButton("📚 Hướng dẫn", callback_data="help_tutorial"),
-            InlineKeyboardButton("❓ FAQ", callback_data="help_faq")
-        ],
-        [
-            InlineKeyboardButton("🔧 Khắc phục lỗi", callback_data="help_troubleshoot"),
-            InlineKeyboardButton("💡 Tips tài chính", callback_data="help_tips")
-        ],
-        [
-            InlineKeyboardButton("🎁 Giới thiệu bạn bè", callback_data="referral_menu")
-        ],
-        [
-            InlineKeyboardButton("🆘 Liên hệ hỗ trợ", callback_data="contact_support")
-        ],
-        [
-            InlineKeyboardButton("🌐 Mở Freedom Wallet", url="https://script.google.com/...")
+        
+        keyboard = [
+            [
+                InlineKeyboardButton("💬 Ghi chi tiêu", callback_data="quick_record")
+            ],
+            [
+                InlineKeyboardButton("📊 Xem tổng quan", callback_data="today_status"),
+                InlineKeyboardButton("🛠️ Cài đặt", callback_data="setup")
+            ]
         ]
-    ])
-    reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    # FREE & UNLOCKED - Calm, value-focused
+    else:
+        if is_free_unlocked:
+            # UNLOCKED: Bot is connected, user can log quickly
+            days_tracking = db_user.streak_count if db_user else 0
+            
+            welcome_text = f"""
+{greeting}
+
+Bạn đã kết nối Sheet với Bot thành công.
+
+Bây giờ bạn có thể ghi chi tiêu ngay trong chat này.
+5 giây. Không cần mở Sheet.
+
+Sheet vẫn là của bạn.
+Bot chỉ là cầu nối để bạn ghi nhanh hơn.
+
+💡 Ghi chi tiêu ngay, hoặc hỏi tôi nếu cần giúp.
+"""
+            
+            keyboard = [
+                [InlineKeyboardButton("💬 Ghi chi tiêu", callback_data="quick_record")],
+                [InlineKeyboardButton("📖 Hướng dẫn", callback_data="help_tutorial")],
+                [InlineKeyboardButton("💎 Tìm hiểu Premium", callback_data="premium_info")]
+            ]
+        else:
+            # FREE: Clear positioning first, no sales pressure
+            from pathlib import Path
+            
+            welcome_text = f"""
+Chào {user.first_name}, tôi là Trợ lý tài chính của bạn
+Freedom Wallet không phải một app để bạn tải về.
+Đây là một hệ thống quản lý tự do tài chính bạn tự sở hữu.
+
+Mỗi người dùng có:
+• Google Sheet riêng
+• Apps Script riêng
+• Web App riêng
+
+Dữ liệu nằm trên Drive của bạn.
+Không phụ thuộc vào ai.
+
+Nếu bạn muốn đăng ký sở hữu hệ thống web app này,
+mình sẽ hướng dẫn từng bước, rất rõ ràng.
+"""
+            
+            keyboard = [
+                [InlineKeyboardButton("📝 Đăng ký ngay", callback_data="start_free_registration")],
+                [InlineKeyboardButton("📖 Tìm hiểu thêm", callback_data="learn_more")]
+            ]
+            
+            # Send image with message
+            image_path = Path("media/images/web_apps.jpg")
+            
+            try:
+                await update.message.reply_photo(
+                    photo=open(image_path, 'rb'),
+                    caption=welcome_text,
+                    parse_mode="Markdown",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+                return
+            except Exception as e:
+                logger.error(f"Error sending photo: {e}")
+                # Fallback to text only
+                pass
+        
+        reply_markup = InlineKeyboardMarkup(keyboard)
     
     # Send welcome message
     await update.message.reply_text(

@@ -1,0 +1,73 @@
+# Pre-commit hooks for FreedomWalletBot
+# Install: pip install pre-commit
+# Setup: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  - repo: local
+    hooks:
+      # Architecture Dependency Check
+      - id: check-architecture-dependencies
+        name: Check Architecture Dependencies
+        entry: python scripts/check_dependencies.py
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
+      
+      # Check for versioned files
+      - id: check-versioned-files
+        name: Check for Versioned Files
+        entry: bash -c 'if find app bot -type f \( -name "*_v[0-9]*.py" -o -name "*_final*.py" -o -name "*_new*.py" -o -name "*_old*.py" \) 2>/dev/null | grep -q .; then echo "❌ ERROR: Versioned files detected! (LAW #2 violation)"; exit 1; fi'
+        language: system
+        types: [python]
+        pass_filenames: false
+      
+      # Check for backup files
+      - id: check-backup-files
+        name: Check for Backup Files
+        entry: bash -c 'if find . -type f \( -name "*.backup" -o -name "*.bak" -o -name "*.old" \) ! -path "./.git/*" 2>/dev/null | grep -q .; then echo "❌ ERROR: Backup files detected!"; exit 1; fi'
+        language: system
+        pass_filenames: false
+      
+      # Check for forbidden root folders
+      - id: check-forbidden-folders
+        name: Check for Forbidden Root Folders
+        entry: bash -c 'for folder in helpers common shared lib misc temp backup; do if [ -d "$folder" ]; then echo "❌ ERROR: Forbidden root folder detected: $folder/ (LAW #3 violation)"; exit 1; fi; done'
+        language: system
+        pass_filenames: false
+      
+      # Check for planning docs in main docs/
+      - id: check-planning-docs
+        name: Check for Planning Docs in Main docs/
+        entry: bash -c 'if find docs -maxdepth 2 -type f \( -name "*DAY*" -o -name "*WEEK*" -o -name "*SPRINT*" -o -name "*MVP*" \) ! -path "*/archive/*" 2>/dev/null | grep -q .; then echo "❌ ERROR: Planning docs in main docs/ folder!"; exit 1; fi'
+        language: system
+        pass_filenames: false
+
+  # Standard Python hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      
+  # Python code formatting
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        language_version: python3.9
+        args: ['--line-length=100']
+        files: ^(app|bot|tests|scripts)/.*\.py$
+  
+  # Import sorting
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        args: ['--profile=black', '--line-length=100']
+        files: ^(app|bot|tests|scripts)/.*\.py$

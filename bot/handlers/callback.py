@@ -5,6 +5,12 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from loguru import logger
 from config.settings import settings
+from bot.services.analytics import Analytics
+from bot.handlers.admin_callbacks import (
+    handle_admin_approve_callback,
+    handle_admin_reject_callback,
+    handle_admin_list_pending_callback
+)
 
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -13,37 +19,172 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()  # Acknowledge the button click
     
+    callback_data = query.data
+    
+    # Add try-catch for all callback handling
+    try:
+        await _handle_callback_internal(update, context, query, callback_data)
+    except Exception as e:
+        logger.error(f"Error handling callback {callback_data}: {e}", exc_info=True)
+        try:
+            await query.edit_message_text(
+                "😓 Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau!\n"
+                "Nếu vấn đề tiếp diễn, dùng /support để liên hệ.",
+                parse_mode="Markdown"
+            )
+        except:
+            pass
+
+
+async def _handle_callback_internal(update: Update, context: ContextTypes.DEFAULT_TYPE, query, callback_data: str):
+    
+    # Skip sheets-related callbacks (handled by ConversationHandler)
+    if callback_data and callback_data.startswith("sheets_"):
+        logger.debug(f"Skipping sheets callback: {callback_data} (handled by ConversationHandler)")
+        return
+    
+    # Skip free flow callbacks (handled by free_flow.py)
+    if callback_data and callback_data.startswith("free_"):
+        logger.debug(f"Skipping free flow callback: {callback_data} (handled by free_flow handlers)")
+        return
+    
+    # Skip unlock flow callbacks (handled by unlock_calm_flow.py)
+    if callback_data and callback_data.startswith("unlock_"):
+        logger.debug(f"Skipping unlock flow callback: {callback_data} (handled by unlock_calm_flow handlers)")
+        return
+    
+    # Skip learn_more and skip_sharing callbacks (handled by free_flow.py)
+    if callback_data in ["learn_more", "skip_sharing", "show_deploy_guide", "back_to_start", "start_free_registration"]:
+        logger.debug(f"Skipping free flow helper callback: {callback_data}")
+        return
+    
     # Week 4: Update Super VIP activity tracking
     from bot.core.state_machine import StateManager
     with StateManager() as sm:
         sm.update_super_vip_activity(query.from_user.id)
     
-    callback_data = query.data
     logger.info(f"Callback: {callback_data} from user {query.from_user.id}")
     
+    # Route usage tracker callbacks (trial start, etc.)
+    from bot.middleware.usage_tracker import (
+        handle_trial_start,
+        handle_view_premium,
+        handle_why_premium
+    )
+    
+    if callback_data == "start_trial":
+        await handle_trial_start(update, context)
+        return
+    elif callback_data == "view_premium":
+        await handle_view_premium(update, context)
+        return
+    elif callback_data == "why_premium":
+        await handle_why_premium(update, context)
+        return
+    
+    # Onboarding guides for Premium trial users
+    elif callback_data == "webapp_setup_guide":
+        await handle_webapp_setup_guide(update, context)
+        return
+    elif callback_data == "premium_usage_guide":
+        await handle_premium_usage_guide(update, context)
+        return
+    
+    # DAY 2: ROI & Upsell callbacks
+    elif callback_data == "upgrade_to_premium":
+        await handle_upgrade_to_premium(update, context)
+        return
+    elif callback_data == "confirm_payment":
+        await handle_confirm_payment(update, context)
+        return
+    elif callback_data == "view_roi_detail":
+        await handle_view_roi_detail(update, context)
+        return
+    elif callback_data == "optimization_tips":
+        await handle_optimization_tips(update, context)
+        return
+    
+    # DAY 3: Analytics tracking callbacks
+    elif callback_data == "wow_moment_dismiss":
+        await handle_wow_moment_dismiss(update, context)
+        return
+    
+    # Start menu callbacks
+    elif callback_data == "free_chat":
+        await handle_free_chat(update, context)
+        return
+    elif callback_data == "upgrade_premium":
+        await handle_upgrade_premium_from_start(update, context)
+        return
+    
+    # Route Premium callbacks
+    from bot.handlers.premium_commands import PREMIUM_CALLBACKS
+    if callback_data in PREMIUM_CALLBACKS:
+        handler = PREMIUM_CALLBACKS[callback_data]
+        try:
+            await handler(update, context)
+        except Exception as e:
+            logger.error(f"Error in Premium callback {callback_data}: {e}", exc_info=True)
+            await query.edit_message_text(
+                f"😓 Xin lỗi, có lỗi khi xử lý '{callback_data}'. Vui lòng thử lại!\n\n"
+                f"Nếu vấn đề tiếp diễn, dùng /support để liên hệ.",
+                parse_mode="Markdown"
+            )
+        return
+    
+    # Admin payment approval callbacks
+    if callback_data.startswith("admin_approve_"):
+        await handle_admin_approve_callback(update, context)
+        return
+    elif callback_data.startswith("admin_reject_"):
+        await handle_admin_reject_callback(update, context)
+        return
+    elif callback_data == "admin_list_pending":
+        await handle_admin_list_pending_callback(update, context)
+        return
+    
     # Route to appropriate handler based on callback_data
-    if callback_data == "start":
+    if callback_data == "start" or callback_data == "back_home":
         # Back to home
         from bot.handlers.start import start
         # Create mock update for start command
         update.message = query.message
-        await start(update, context)
+        try:
+            await start(update, context)
+        except Exception as e:
+            logger.error(f"Error calling start handler: {e}", exc_info=True)
+            await query.edit_message_text(
+                "😓 Xin lỗi, có lỗi khi quay về trang chủ. Vui lòng gõ /start để thử lại!",
+                parse_mode="Markdown"
+            )
+        return
     
     elif callback_data == "help_tutorial":
         text = """
-📚 **Hướng Dẫn Sử Dụng**
+📚 **Hướng Dẫn Sử Dụng Freedom Wallet**
 
-🎬 **Video Tutorials:**
-Coming soon...
+🌐 **Xem hướng dẫn đầy đủ tại:**
+👉 [eliroxbot.notion.site/freedomwallet](https://eliroxbot.notion.site/freedomwallet)
 
-📖 **Tài liệu:**
-• [Hướng dẫn bắt đầu](https://freedomwallet.com/docs/start)
-• [6 Hũ tiền chi tiết](https://freedomwallet.com/docs/jars)
-• [Đầu tư & ROI](https://freedomwallet.com/docs/investment)
+📖 **Nội dung bao gồm:**
+• Hướng dẫn bắt đầu (Getting Started)
+• Cài đặt Web App trên điện thoại
+• 6 Hũ tiền là gì & cách sử dụng
+• Ghi chép giao dịch nhanh
+• Phân tích tài chính & ROI
+• Gợi ý thông minh
 
-💡 Hoặc hỏi mình trực tiếp: "Làm sao thêm giao dịch?"
+💡 **Hoặc hỏi mình trực tiếp:**
+"Làm sao thêm giao dịch?"
+"6 hũ tiền là gì?"
+"Cách cài Web App?"
 """
-        await query.edit_message_text(text, parse_mode="Markdown")
+        keyboard = [
+            [InlineKeyboardButton("🌐 Mở hướng dẫn", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("🏠 Quay lại", callback_data="back_home")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await query.edit_message_text(text, parse_mode="Markdown", reply_markup=reply_markup)
     
     elif callback_data == "help_faq":
         text = """
@@ -240,7 +381,6 @@ Hoặc mô tả lại vấn đề, mình sẽ cố gắng giúp!
                 message += f"{idx}. {name} ({date})\n"
         
         # Keyboard
-        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
         keyboard = [
             [InlineKeyboardButton("📢 Chia sẻ ngay", 
                                  url=f"https://t.me/share/url?url={referral_link}&text=Tham gia Freedom Wallet Bot - Quản lý tài chính thông minh!")],
@@ -923,3 +1063,663 @@ Hoặc mô tả lại vấn đề, mình sẽ cố gắng giúp!
             "⚠️ Lệnh không hợp lệ. Dùng /help để xem menu!",
             parse_mode="Markdown"
         )
+
+# ============================================================================
+# ONBOARDING GUIDES - Premium Trial Users
+# ============================================================================
+
+async def handle_webapp_setup_guide(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Guide user through Web App installation (30 seconds)"""
+    query = update.callback_query
+    await query.answer()
+    
+    message = """
+📱 **CÀI ĐẶT WEB APP (30 GIÂY)**
+
+━━━━━━━━━━━━━━━━━━━━━
+**BƯỚC 1: Mở freedomwallet.vn**
+━━━━━━━━━━━━━━━━━━━━━
+
+🌐 Truy cập: freedomwallet.vn
+📱 Dùng Safari (iOS) / Chrome (Android)
+
+━━━━━━━━━━━━━━━━━━━━━
+**BƯỚC 2: Cài lên Home Screen**
+━━━━━━━━━━━━━━━━━━━━━
+
+**iPhone:** 
+Share (⬆️) → Add to Home Screen → Add
+
+**Android:**
+Menu (⋮) → Add to Home screen → Add
+
+━━━━━━━━━━━━━━━━━━━━━
+**BƯỚC 3: Mở App**
+━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Tìm icon Freedom Wallet
+📲 Mở như app bình thường
+🚀 Bắt đầu quản lý tài chính!
+
+💡 **Lưu ý:** Lần đầu hơi lâu (10s), sau đó mượt mà!
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("📖 Hướng dẫn sử dụng", callback_data="premium_usage_guide")],
+        [InlineKeyboardButton("🌐 Mở Web App", url="https://freedomwallet.vn")],
+        [InlineKeyboardButton("🏠 Menu Premium", callback_data="premium_menu")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        message,
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )
+
+
+async def handle_wow_moment_dismiss(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle WOW moment dismiss - User clicked 'OK, đã hiểu'"""
+    query = update.callback_query
+    await query.answer("Tuyệt vời! Tiếp tục sử dụng Premium nhé! 🚀")
+    
+    user_id = update.effective_user.id
+    
+    # Track analytics
+    Analytics.track_event(user_id, 'wow_moment_dismissed')
+    
+    await query.edit_message_text(
+        "✅ **Đã ghi nhận!**\n\n"
+        "Bạn có thể xem lại ROI bất kỳ lúc nào bằng lệnh /mystatus\n\n"
+        "💡 Tip: Sử dụng nhiều để tối đa hóa giá trị Premium nhé!",
+        parse_mode="Markdown"
+    )
+
+
+async def handle_trial_reminder_viewed(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Track when user views trial reminder"""
+    query = update.callback_query
+    user_id = update.effective_user.id
+    
+    # Track analytics
+    Analytics.track_event(user_id, 'trial_reminder_viewed')
+    
+    # Handler logic is in upgrade_to_premium or view_roi_detail
+    # This is just for tracking
+    
+
+async def handle_why_premium_from_reminder(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'Tại sao nên Premium?' click from trial reminder"""
+    query = update.callback_query
+    await query.answer()
+    
+    user_id = update.effective_user.id
+    
+    # Track analytics
+    Analytics.track_event(user_id, 'trial_reminder_upgrade_clicked', {'source': 'why_premium'})
+    
+    message = """
+🤔 **TẠI SAO NÊN PREMIUM?**
+
+━━━━━━━━━━━━━━━━━━━━━
+💎 **GIÁ TRỊ VƯỢT TRỘI:**
+━━━━━━━━━━━━━━━━━━━━━
+
+**1️⃣ TIẾT KIỆM THỜI GIAN**
+⏱️ Mỗi ngày tiết kiệm ~1-2 giờ
+   → Không cần tự tính toán
+   → Không cần tổng hợp thủ công
+   → Không cần lên kế hoạch
+
+**2️⃣ TĂNG HIỆU QUẢ TÀI CHÍNH**
+📊 Phân tích thông minh 24/7
+   → Phát hiện điểm lãng phí
+   → Tối ưu ngân sách
+   → Tăng tỷ lệ tiết kiệm
+
+**3️⃣ ĐẦU TƯ NHỎ, LỢI NHUẬN LỚN**
+💰 ~2,750 VNĐ/ngày
+   → Giá 1 ly cà phê
+   → Nhưng giá trị gấp 5-10 lần
+   → ROI trung bình +200%
+
+**4️⃣ KHÔNG QUẢNG CÁO**
+✨ Trải nghiệm premium thực sự
+   → Tập trung 100%
+   → Không gián đoạn
+   → Không làm phiền
+
+━━━━━━━━━━━━━━━━━━━━━
+🎯 **ĐỂ ĐẠT ROI +200%:**
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ Chat với AI mỗi ngày (10+ tin)
+✅ Check dashboard 2-3 lần/tuần
+✅ Đọc gợi ý mỗi sáng
+✅ Dùng phân tích khi cần
+
+→ Thời gian tiết kiệm: ~8-10 giờ/tháng
+→ Giá trị: ~800K - 1M VNĐ
+→ Chi phí: ~83K VNĐ/tháng
+→ **Lời: ~700K - 900K VNĐ!**
+
+━━━━━━━━━━━━━━━━━━━━━
+💡 **KẾT LUẬN:**
+━━━━━━━━━━━━━━━━━━━━━
+
+Premium không phải chi phí,
+mà là **đầu tư sinh lời**! 🚀
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("💎 Nâng cấp ngay", callback_data="upgrade_to_premium")],
+        [InlineKeyboardButton("📊 Xem ROI của tôi", callback_data="view_roi_detail")],
+        [InlineKeyboardButton("🏠 Menu", callback_data="start")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        message,
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )
+
+
+# ============================================================================
+# DAY 2: ROI & UPSELL HANDLERS
+# ============================================================================
+
+async def handle_upgrade_to_premium(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle upgrade to premium callback - Show payment options with QR code"""
+    query = update.callback_query
+    await query.answer()
+    
+    try:
+        user_id = query.from_user.id
+        
+        # Track analytics
+        Analytics.track_event(user_id, 'upgrade_from_status_clicked')
+        
+        # Get payment info with QR code
+        from bot.services.payment_service import PaymentService
+        payment_info = PaymentService.get_payment_instructions(user_id, "PREMIUM")
+        
+        # Format payment message
+        message = PaymentService.format_payment_message(payment_info)
+        
+        keyboard = [
+            [InlineKeyboardButton("✅ Đã thanh toán", callback_data="confirm_payment")],
+            [InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")],
+            [InlineKeyboardButton("📊 Xem ROI chi tiết", callback_data="view_roi_detail")],
+            [InlineKeyboardButton("🤔 Tại sao nên Premium?", callback_data="why_premium")],
+            [InlineKeyboardButton("« Quay lại", callback_data="start")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        # Send QR code image
+        try:
+            await query.message.reply_photo(
+                photo=payment_info['qr_url'],
+                caption=message,
+                parse_mode="Markdown",
+                reply_markup=reply_markup
+            )
+            # Delete the previous message to keep chat clean
+            await query.message.delete()
+        except Exception as e:
+            logger.error(f"Error sending QR code: {e}")
+            # Fallback to text only
+            await query.edit_message_text(
+                message,
+                parse_mode="Markdown",
+                reply_markup=reply_markup
+            )
+    except Exception as e:
+        logger.error(f"Error in handle_upgrade_to_premium: {e}", exc_info=True)
+        await query.edit_message_text(
+            "😓 Xin lỗi, có lỗi khi tải thông tin thanh toán. Vui lòng thử lại sau!\n\n"
+            "Hoặc liên hệ Admin để được hỗ trợ: /support",
+            parse_mode="Markdown"
+        )
+
+
+async def handle_confirm_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle payment confirmation - Create verification request"""
+    query = update.callback_query
+    await query.answer()
+    
+    user_id = query.from_user.id
+    
+    # Track analytics
+    Analytics.track_event(user_id, 'payment_confirmation_clicked')
+    
+    # Store user ID in context for next step
+    context.user_data['awaiting_payment_proof'] = True
+    context.user_data['payment_amount'] = 999000  # Premium price
+    
+    message = """
+✅ **XÁC NHẬN THANH TOÁN**
+
+Cảm ơn bạn đã thanh toán! Để xác nhận nhanh chóng, vui lòng:
+
+**📸 Gửi ảnh chụp màn hình:**
+• Thông báo chuyển khoản thành công
+• Hoặc lịch sử giao dịch trong app ngân hàng
+
+**✍️ Hoặc gửi thông tin:**
+• Số tiền đã chuyển
+• Thời gian chuyển khoản
+• 4 số cuối STK của bạn (nếu có)
+
+━━━━━━━━━━━━━━━━━━━━━
+⏱️ **THỜI GIAN XỬ LÝ:**
+━━━━━━━━━━━━━━━━━━━━━
+
+• Tự động: 5-10 phút
+• Thủ công: 15-30 phút (giờ hành chính)
+• Ngoài giờ: Trong 2 giờ
+
+━━━━━━━━━━━━━━━━━━━━━
+💡 **LƯU Ý:**
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ Đã chuyển đúng nội dung? → Tự động kích hoạt
+⚠️ Chuyển sai nội dung? → Cần xác nhận thủ công
+
+📞 **Cần hỗ trợ?** Nhấn "Liên hệ Admin" bên dưới
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")],
+        [InlineKeyboardButton("« Quay lại", callback_data="start")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    # Delete the QR code message and send new text message
+    try:
+        await query.message.delete()
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=message,
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+    except Exception as e:
+        logger.error(f"Error in handle_confirm_payment: {e}")
+        # Fallback: try to edit if message is text
+        try:
+            await query.edit_message_text(
+                message,
+                parse_mode="Markdown",
+                reply_markup=reply_markup
+            )
+        except:
+            # Last resort: send new message without deleting
+            await context.bot.send_message(
+                chat_id=user_id,
+                text=message,
+                parse_mode="Markdown",
+                reply_markup=reply_markup
+            )
+
+
+async def handle_view_roi_detail(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle view ROI detail callback - Show detailed ROI breakdown"""
+    query = update.callback_query
+    await query.answer()
+    
+    user_id = update.effective_user.id
+    
+    # Track analytics
+    Analytics.track_event(user_id, 'roi_detail_viewed')
+    
+    # Get ROI calculation
+    from bot.services.roi_calculator import ROICalculator
+    from bot.utils.database import get_user_by_id
+    from bot.core.subscription import SubscriptionManager, SubscriptionTier
+    
+    user = await get_user_by_id(user_id)
+    tier = SubscriptionManager.get_user_tier(user) if user else SubscriptionTier.FREE
+    roi = ROICalculator.calculate_monthly_roi(user_id)
+    
+    tier_name = tier.value if tier else "FREE"
+    
+    message = f"""
+📊 **ROI DASHBOARD CHI TIẾT**
+
+━━━━━━━━━━━━━━━━━━━━━
+📈 **PHÂ N TÍCH SỬ DỤNG:**
+━━━━━━━━━━━━━━━━━━━━━
+
+💬 **{roi['messages']} tin nhắn** với AI
+   → Tiết kiệm: {roi['messages'] * 3} phút
+   
+📊 **{roi['analyses']} phân tích** tài chính
+   → Tiết kiệm: {roi['analyses'] * 30} phút
+   
+💡 **{roi['recommendations']} gợi ý** cá nhân
+   → Tiết kiệm: {roi['recommendations'] * 15} phút
+   
+📈 **{roi['dashboard_views']} lần** xem dashboard
+   → Tiết kiệm: {roi['dashboard_views'] * 20} phút
+
+━━━━━━━━━━━━━━━━━━━━━
+⏱️ **TỔNG THỜI GIAN:**
+━━━━━━━━━━━━━━━━━━━━━
+
+Tiết kiệm: **{roi['time_saved']} giờ**
+Giá trị: **{roi['value']:,} VNĐ**
+(Tính theo 100K VNĐ/giờ)
+
+━━━━━━━━━━━━━━━━━━━━━
+💰 **TÍNH TOÁN ROI:**
+━━━━━━━━━━━━━━━━━━━━━
+
+Chi phí {tier_name}: {roi['cost']:,} VNĐ/tháng
+Giá trị nhận: {roi['value']:,} VNĐ/tháng
+
+→ **Lời/Lỗ: {roi['profit']:,} VNĐ**
+→ **ROI: {roi['roi_percent']:+.0f}%**
+
+━━━━━━━━━━━━━━━━━━━━━
+💡 **CÁCH TỐI ƯU:**
+━━━━━━━━━━━━━━━━━━━━━
+
+• Sử dụng nhiều hơn = ROI cao hơn
+• Mục tiêu: ≥+200% ROI
+• Chat với AI mỗi ngày
+• Dùng tính năng Phân tích thường xuyên
+"""
+    
+    if tier == SubscriptionTier.FREE:
+        message += "\n\n💎 Nâng cấp Premium để unlock ROI cao hơn!"
+        keyboard = [
+            [InlineKeyboardButton("🎁 Dùng thử 7 ngày FREE", callback_data="start_trial")],
+            [InlineKeyboardButton("💎 Xem gói Premium", callback_data="view_premium")],
+            [InlineKeyboardButton("« Quay lại", callback_data="start")]
+        ]
+    elif tier == SubscriptionTier.TRIAL:
+        keyboard = [
+            [InlineKeyboardButton("💎 Nâng cấp Premium ngay", callback_data="upgrade_to_premium")],
+            [InlineKeyboardButton("💡 Tips tối ưu", callback_data="optimization_tips")],
+            [InlineKeyboardButton("« Quay lại", callback_data="start")]
+        ]
+    else:  # PREMIUM
+        keyboard = [
+            [InlineKeyboardButton("💡 Tips tối ưu ROI", callback_data="optimization_tips")],
+            [InlineKeyboardButton("📊 Xem status", callback_data="my_status")],
+            [InlineKeyboardButton("« Quay lại", callback_data="start")]
+        ]
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        message,
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )
+
+
+async def handle_optimization_tips(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle optimization tips callback - Show tips to maximize ROI"""
+    query = update.callback_query
+    await query.answer()
+    
+    # Track analytics
+    Analytics.track_event(query.from_user.id, 'optimization_tips_viewed')
+    
+    message = """
+💡 **TIPS TỐI ƯU ROI PREMIUM**
+
+━━━━━━━━━━━━━━━━━━━━━
+🎯 **MỤC TIÊU: ROI ≥ +200%**
+━━━━━━━━━━━━━━━━━━━━━
+
+**1️⃣ SỬ DỤNG AI MỖI NGÀY**
+
+💬 Chat với bot ít nhất 10 tin/ngày
+   → Hỏi về financial planning
+   → Tư vấn tiết kiệm
+   → Phân tích thói quen chi tiêu
+
+**2️⃣ DÙNG TÍNH NĂNG PHÂN TÍCH**
+
+📊 Xem dashboard 2-3 lần/tuần
+   → Theo dõi xu hướng chi tiêu
+   → Phát hiện điểm bất thường
+   → Điều chỉnh kịp thời
+
+**3️⃣ NHẬN GỢI Ý CÁ NHÂN**
+
+💡 Check gợi ý mỗi sáng
+   → Lời khuyên tối ưu tài chính
+   → Tips tiết kiệm theo ngữ cảnh
+   → Nhắc nhở quan trọng
+
+**4️⃣ THIẾT LẬP MỤC TIÊU**
+
+⚙️ Cài đặt mục tiêu tài chính
+   → Tiết kiệm tháng
+   → Kế hoạch đầu tư
+   → Budget cho từng danh mục
+
+**5️⃣ HỎI THÔNG MINH**
+
+🧠 Hỏi những câu hỏi cụ thể:
+   • "Phân tích chi tiêu tháng này"
+   • "Tôi nên tiết kiệm ở đâu?"
+   • "ROI đầu tư này bao nhiêu?"
+   • "Cách tối ưu 6 hũ tiền?"
+
+━━━━━━━━━━━━━━━━━━━━━
+📈 **KẾT QUẢ KỲ VỌNG:**
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ 10+ messages/day = +150% ROI
+✅ 20+ messages/day = +300% ROI
+✅ Active usage = +500% ROI
+
+→ **Premium trả lời bản thân!** 🚀
+
+━━━━━━━━━━━━━━━━━━━━━
+💪 **BẮT ĐẦU NGAY HÔM NAY!**
+━━━━━━━━━━━━━━━━━━━━━
+
+Gõ câu hỏi đầu tiên về tài chính của bạn 👇
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("💬 Chat với AI ngay", callback_data="start")],
+        [InlineKeyboardButton("📊 Xem ROI hiện tại", callback_data="view_roi_detail")],
+        [InlineKeyboardButton("🏠 Menu", callback_data="start")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        message,
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )
+
+
+async def handle_premium_usage_guide(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show Premium features usage guide"""
+    query = update.callback_query
+    await query.answer()
+    
+    message = """
+📖 **HƯỚNG DẪN SỬ DỤNG PREMIUM**
+
+━━━━━━━━━━━━━━━━━━━━━
+✨ **6 TÍNH NĂNG CHÍNH**
+━━━━━━━━━━━━━━━━━━━━━
+
+**📝 1. Ghi chi tiêu nhanh**
+• Gửi: "50k cafe" → Tự động ghi
+• Hỗ trợ nhiều định dạng
+• Không cần form phức tạp
+
+**📊 2. Tình hình tài chính**
+• Xem dashboard real-time
+• Thu chi theo ngày/tuần/tháng
+• Biểu đồ trực quan
+
+**🔍 3. Phân tích thông minh**
+• AI phân tích thói quen chi tiêu
+• Phát hiện chi tiêu bất thường
+• Dự báo xu hướng
+
+**💡 4. Gợi ý cá nhân hóa**
+• Gợi ý tiết kiệm hàng ngày
+• Nhắc nhở khi chưa ghi chép
+• Tips tối ưu tài chính
+
+**⚙️ 5. Setup nâng cao**
+• Tùy chỉnh 6 hũ tiền theo nhu cầu
+• Thiết lập mục tiêu tài chính
+• Sync dữ liệu tự động
+
+**🆘 6. Hỗ trợ ưu tiên**
+• Response trong 30 phút
+• Chat trực tiếp với founder
+• Hỗ trợ 1-1 qua call nếu cần
+
+━━━━━━━━━━━━━━━━━━━━━
+🎯 **BẮT ĐẦU NGAY:**
+━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ Thử ghi 1 giao dịch: "20k trà sữa"
+2️⃣ Xem dashboard: Bấm "📊 Tình hình"
+3️⃣ Nhận gợi ý: Bấm "💡 Gợi ý"
+
+━━━━━━━━━━━━━━━━━━━━━
+📚 **TÀI LIỆU CHI TIẾT:**
+━━━━━━━━━━━━━━━━━━━━━
+
+🌐 Xem full guide tại:
+👉 [eliroxbot.notion.site/freedomwallet](https://eliroxbot.notion.site/freedomwallet)
+
+🎊 **Chúc bạn quản lý tài chính hiệu quả!**
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("🌐 Xem guide đầy đủ", url="https://eliroxbot.notion.site/freedomwallet")],
+        [InlineKeyboardButton("📱 Cài Web App", callback_data="webapp_setup_guide")],
+        [InlineKeyboardButton("🏠 Menu Premium", callback_data="premium_menu")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        message,
+        parse_mode="Markdown",
+        reply_markup=reply_markup,
+        disable_web_page_preview=False
+    )
+
+
+async def handle_free_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle free_chat callback - Prompt user to ask a question"""
+    query = update.callback_query
+    await query.answer()
+    
+    user_id = update.effective_user.id
+    
+    # Track analytics
+    Analytics.track_event(user_id, 'free_chat_clicked')
+    
+    message = """
+💬 **CHAT VỚI BOT (FREE)**
+
+Hãy gõ câu hỏi của bạn, tôi sẽ trả lời ngay! 😊
+
+📋 **Các chủ đề tôi có thể giúp:**
+• Hướng dẫn sử dụng Freedom Wallet
+• Cách thêm/xóa/sửa giao dịch
+• Giải thích về 6 Hũ Tiền
+• Cách setup Google Sheet
+• Khắc phục lỗi thường gặp
+• Tips quản lý tài chính
+
+💬 **Giới hạn hôm nay:** 5 tin nhắn
+
+Gõ câu hỏi của bạn bên dưới! 👇
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("🏠 Quay về Menu", callback_data="start")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        message,
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )
+
+
+async def handle_upgrade_premium_from_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle upgrade_premium callback from start menu - Show trial offer"""
+    query = update.callback_query
+    await query.answer()
+    
+    user_id = update.effective_user.id
+    
+    # Track analytics
+    Analytics.track_event(user_id, 'upgrade_premium_clicked_from_start')
+    
+    message = """
+🎁 **DÙNG THỬ PREMIUM 7 NGÀY MIỄN PHÍ**
+
+━━━━━━━━━━━━━━━━━━━━━
+✨ **BẠN SẼ NHẬN ĐƯỢC:**
+━━━━━━━━━━━━━━━━━━━━━
+
+💬 **Unlimited Chat với AI**
+   → Không giới hạn tin nhắn
+   → Trả lời 24/7 trong vài giây
+
+📊 **Phân Tích Tài Chính Thông Minh**
+   → AI phân tích chi tiêu của bạn
+   → Phát hiện điểm lãng phí
+   → Đề xuất tối ưu hóa
+
+💡 **Gợi Ý Cá Nhân Hóa**
+   → Mỗi ngày nhận 1 tips mới
+   → Dựa trên thói quen chi tiêu
+   → Giúp tiết kiệm tối đa
+
+📈 **ROI Dashboard**
+   → Xem giá trị Premium mang lại
+   → Thống kê thời gian tiết kiệm
+   → Tính toán lợi nhuận đầu tư
+
+🚀 **Hỗ Trợ Ưu Tiên**
+   → Phản hồi trong 30 phút
+   → Hỗ trợ 1-1 qua chat
+   → Setup & troubleshooting
+
+━━━━━━━━━━━━━━━━━━━━━
+🎯 **SAU 7 NGÀY:**
+━━━━━━━━━━━━━━━━━━━━━
+
+Nếu thích → Nâng cấp Premium
+Nếu không → Quay về FREE (5 msg/ngày)
+
+**100% không mất phí, không cần thẻ tín dụng!**
+
+Bắt đầu ngay? 👇
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("🎁 Bắt đầu dùng thử NGAY", callback_data="start_trial")],
+        [InlineKeyboardButton("💰 Xem gói Premium", callback_data="view_premium")],
+        [InlineKeyboardButton("❓ Tại sao nên Premium?", callback_data="why_premium")],
+        [InlineKeyboardButton("🏠 Quay về Menu", callback_data="start")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        message,
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )

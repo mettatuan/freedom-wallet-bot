@@ -67,6 +67,13 @@ class Settings(BaseSettings):
     ENABLE_VOICE: bool = os.getenv("ENABLE_VOICE", "False").lower() in ("true", "1", "t")
     ENABLE_ADMIN: bool = os.getenv("ENABLE_ADMIN", "False").lower() in ("true", "1", "t")
     
+    # Payment Configuration
+    PAYMENT_BANK_NAME: str = os.getenv("PAYMENT_BANK_NAME", "OCB")
+    PAYMENT_ACCOUNT_NAME: str = os.getenv("PAYMENT_ACCOUNT_NAME", "PHAM THANH TUAN")
+    PAYMENT_ACCOUNT_NUMBER: str = os.getenv("PAYMENT_ACCOUNT_NUMBER", "0107103241416363")
+    PREMIUM_PRICE_VND: int = int(os.getenv("PREMIUM_PRICE_VND", "999000"))
+    PAYMENT_QR_API: str = os.getenv("PAYMENT_QR_API", "https://img.vietqr.io/image/{bank_code}-{account_number}-{template}.jpg")
+    
     class Config:
         # No longer need env_file here as we load it manually
         pass

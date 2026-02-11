@@ -38,12 +38,11 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if is_unlocked:
         status_msg = "✅ **FREE FOREVER đã mở khóa!**\n\n"
     else:
-        remaining = 2 - referral_count
-        status_msg = f"🎯 **Còn {remaining} người nữa để mở khóa FREE!**\n\n"
+        status_msg = f"📊 **Tiến độ: {referral_count}/2 bạn bè**\n\n"
     
     # Build message
     message = f"""
-🎁 **HỆ THỐNG GIỚI THIỆU BẠN BÈ**
+🎁 **GIỚI THIỆU BẠN BÈ**
 
 {status_msg}📊 **Thống Kê Của Bạn:**
 • Mã giới thiệu: `{referral_code}`
@@ -59,17 +58,17 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 3. Khi 2 người đăng ký qua link → Bạn mở khóa **FREE FOREVER**!
 
 💎 **Quyền lợi FREE khi unlock:**
-✓ Bot AI không giới hạn
-✓ Template Freedom Wallet đầy đủ
-✓ Hướng dẫn tạo Web App chi tiết 📚
-✓ Tham gia Group hỗ trợ 1-1 💬
-✓ Cập nhật tính năng mới miễn phí
+✓ Template Freedom Wallet v3.2 đầy đủ
+✓ Bot hỗ trợ 5 message/ngày
+✓ Kết nối Google Sheets tự động
+✓ Cộng đồng hỗ trợ & chia sẻ
+✓ Cập nhật tính năng mới
+✓ **Sở hữu VĨNH VIỄN** ♾️
 
-🎯 **Mẹo tăng tốc:**
-• Share trong nhóm gia đình
-• Post lên Facebook cá nhân
-• Gửi cho đồng nghiệp quan tâm tài chính
-• Share story Instagram/TikTok
+💡 **Chia sẻ với:**
+• Bạn bè quan tâm quản lý tiền
+• Người muốn bắt đầu tiết kiệm
+• Ai cần công cụ miễn phí & đơn giản
 """
     
     # Show referred users list
@@ -82,9 +81,9 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Keyboard
     share_text = (
-        "🎁 Freedom Wallet - Ứng dụng quản lý tài chính cá nhân hiện đại!\n\n"
-        "✅ FREE cho 1000 người đầu tiên! Giới thiệu 2 bạn để nhận miễn phí trọn đời.\n\n"
-        "📊 6 Hũ Tiền | 📈 Theo dõi đầu tư | 💰 Tối ưu chi tiêu"
+        "🎁 Freedom Wallet - Quản lý tài chính cá nhân đơn giản!\n\n"
+        "Giới thiệu 2 bạn → Sở hữu vĩnh viễn miễn phí ♾️\n\n"
+        "📊 6 Hũ Tiền | 📈 Google Sheets | 💰 Template sẵn"
     )
     keyboard = [
         [InlineKeyboardButton("📋 Copy Link", callback_data=f"copy_ref_{referral_code}")],

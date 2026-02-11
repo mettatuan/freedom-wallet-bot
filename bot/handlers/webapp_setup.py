@@ -7,6 +7,7 @@ Must be completed BEFORE using the app
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler
 from loguru import logger
+import os
 
 # Web App Setup Guide Content - 3 Steps
 WEBAPP_SETUP_STEPS = {
@@ -53,177 +54,135 @@ Trong 10-15 phút tới:
     1: {
         "title": "📋 BƯỚC 1: TẠO BẢN SAO TEMPLATE",
         "content": """
-**👉 Mục tiêu: Copy Google Sheets Template về tài khoản của bạn**
+**� CÁCH LÀM:**
 
-━━━━━━━━━━━━━━━━━━━━━
+1️⃣ Click **"📑 Copy Template"** bên dưới
 
-**🔗 CÁCH LÀM:**
+2️⃣ Popup "Make a copy" hiện ra
 
-1️⃣ Click nút **"📑 Copy Template"** bên dưới
-   → Hoặc dùng link này: 
-   https://docs.google.com/spreadsheets/d/1dV-KAVxxtbrmp79RPKSfEygFOdamcvlTj6adlHKAq78/copy
+3️⃣ Đổi tên (hoặc giữ nguyên) → Click **"Make a copy"**
 
-2️⃣ Google Sheets sẽ mở → Hiện popup **"Make a copy"**
-
-3️⃣ Đổi tên (nếu muốn):
-   • Ví dụ: "Freedom Wallet - [Tên bạn]"
-   • Hoặc giữ nguyên "Copy of Freedom Wallet v3.2"
-
-4️⃣ Click nút **"Make a copy"**
-
-━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━
 
 **✅ KẾT QUẢ:**
-• Bạn có 1 bản sao riêng trong Google Drive
-• File này thuộc về BẠN (không ai khác xem được)
+• Bản sao riêng trong Google Drive
+• File thuộc về BẠN (100% riêng tư)
 
-━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━
 
-**❓ NẾU GẶP LỖI:**
-• "You need access": Đảm bảo đã đăng nhập Google
-• File không copy được: Thử trình duyệt khác (Chrome)
-• Hỏi trong Group VIP nếu vẫn không được
+**❓ LỖI:**
+• "You need access" → Đăng nhập Google
+• Không copy được → Thử Chrome
+• Cần trợ giúp → Group VIP
 
-💡 **Sau khi copy xong, không đóng tab này!** Chuyển sang Bước 2 ngay.
+💡 **Sau khi copy xong, không đóng tab! Chuyển sang Bước 2 ngay.**
 """,
-        "image": None
+        "image": "docs/make-copy.png"
     },
     
     2: {
         "title": "⚙️ BƯỚC 2: MỞ APP SCRIPT",
         "content": """
-**👉 Mục tiêu: Truy cập code editor của Web App**
+**� CÁCH LÀM:**
 
-━━━━━━━━━━━━━━━━━━━━━
+1️⃣ Trong file Sheets vừa copy → Menu trên cùng
 
-**🔗 CÁCH LÀM:**
-
-1️⃣ Trong file Google Sheets vừa copy:
-   → Nhìn lên menu trên cùng
-
-2️⃣ Click **"Extensions"** (hoặc "Tiện ích mở rộng")
+2️⃣ Click **"Extensions"** (Tiện ích mở rộng)
 
 3️⃣ Chọn **"Apps Script"**
 
-4️⃣ Tab mới mở ra → Đây là Code Editor
-   • Bạn sẽ thấy file `Code.gs`
-   • Có rất nhiều dòng code màu xanh/đỏ
-   • **KHÔNG CẦN ĐỌC/SỬA GÌ CẢ!**
+4️⃣ Tab mới mở → Code Editor
+   • Thấy file `Code.gs` với nhiều code
+   • **KHÔNG CẦN ĐỌC/SỬA GÌ!**
 
-━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━
 
 **✅ KẾT QUẢ:**
-• Bạn đang ở Apps Script Editor
-• Tab có URL dạng: `script.google.com/...`
-• Sẵn sàng cho Bước 3 (Deploy)
+• Đang ở Apps Script Editor
+• URL dạng: `script.google.com/...`
+• Sẵn sàng Deploy (Bước 3)
 
-━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━
 
-**❓ NẾU KHÔNG THẤY "EXTENSIONS":**
-• Thử refresh lại trang
-• Hoặc nhấn `Alt + /` (Windows) hoặc `Option + /` (Mac)
-• Gõ "Apps Script" vào search box
+**❓ Không thấy Extensions?**
+• Refresh trang
+• Hoặc nhấn `Alt + /` → gõ "Apps Script"
 
-💡 **Lưu ý**: Đừng sợ code! Bạn không cần động vào gì cả.
+💡 **Đừng sợ code! Bạn không cần động vào gì cả.**
 """,
-        "image": None
+        "image": "docs/app-script.png"
     },
     
     3: {
         "title": "🚀 BƯỚC 3: DEPLOY WEB APP",
         "content": """
-**👉 Mục tiêu: Tạo Web App link để sử dụng trên điện thoại/máy tính**
+**� CÁCH LÀM:**
 
-━━━━━━━━━━━━━━━━━━━━━
+1️⃣ Apps Script Editor → Click **"Deploy"** (góc phải) → **"New deployment"**
 
-**🔗 CÁCH LÀM:**
+2️⃣ Click ⚙️ → Chọn **"Web app"**
 
-1️⃣ Trong Apps Script Editor:
-   → Nhìn góc trên bên phải
-   → Click nút **"Deploy"** (màu xanh)
-   → Chọn **"New deployment"**
-
-2️⃣ Popup hiện ra:
-   → Click icon ⚙️ (settings/gear) bên cạnh "Select type"
-   → Chọn **"Web app"**
-
-3️⃣ Cấu hình deployment:
-   • **Description**: "Freedom Wallet v1" (hoặc để trống)
-   • **Execute as**: **"Me"** (quan trọng!)
-   • **Who has access**: **"Anyone"** hoặc "Anyone with Google account"
+3️⃣ Cấu hình:
+• **Execute as**: **"Me"**
+• **Who has access**: **"Anyone"**
 
 4️⃣ Click **"Deploy"**
 
-5️⃣ Google sẽ yêu cầu permission:
-   → Click **"Authorize access"**
-   → Chọn tài khoản Google của bạn
-   → Click **"Advanced"** → **"Go to [Project name] (unsafe)"**
-   → Click **"Allow"**
+5️⃣ Authorize:
+→ **"Authorize access"**
+→ Chọn tài khoản
+→ **"Advanced"** → **"Go to... (unsafe)"** → **"Allow"**
 
-6️⃣ Nhận Web App URL:
-   → Copy link dạng: `https://script.google.com/macros/s/.../exec`
-   → **LƯU LINK NÀY LẠI!** (bookmark hoặc save vào Note)
+6️⃣ Copy Web App URL → **LƯU LẠI!**
 
-━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━
 
 **✅ KẾT QUẢ:**
-• Bạn có Web App URL riêng
-• Mở link này trên bất kỳ thiết bị nào
-• Đây là Freedom Wallet CỦA BẠN!
+• Có Web App URL riêng
+• Truy cập mọi thiết bị
+• Freedom Wallet CỦA BẠN!
 
-━━━━━━━━━━━━━━━━━━━━━
-
-**🎉 CHÚC MỪNG!**
-Bạn đã hoàn thành setup! 
-
-**🔜 BƯỚC TIẾP THEO:**
-→ Nhấn nút **"📘 Hướng dẫn sử dụng"** để học cách dùng app
-→ Hoặc bắt đầu ghi chép giao dịch đầu tiên ngay!
+🎉 **Nhấn nút "Tiếp theo" để học cách sử dụng!**
 """,
-        "image": None
+        "image": "docs/deploy-app.png"
     },
     
     4: {
-        "title": "✅ HOÀN THÀNH BƯỚC 1: TẠO WEB APP!",
+        "title": "✅ HOÀN THÀNH: TẠO WEB APP!",
         "content": """
-🎉 **XUẤT SẮC! Bạn đã tạo xong Freedom Wallet Web App!**
+🎉 **XUẤT SẮC! Đã tạo xong Freedom Wallet Web App!**
 
-━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━
 
-**✅ BẠN VỪA HOÀN THÀNH:**
-• Tạo Google Sheets Template riêng
-• Deploy Web App cá nhân
-• Có URL để truy cập bất kỳ lúc nào
+**✅ HOÀN THÀNH:**
+• Google Sheets Template riêng
+• Web App cá nhân
+• URL truy cập mọi lúc
 
-━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━
 
-**💡 MẸO SỬ DỤNG (Tùy chọn):**
+**💡 MẸO:**
 
-📱 **Trên điện thoại:**
-• Thêm Web App URL vào Home Screen
+📱 **Điện thoại:** Thêm vào Home Screen
 • iOS: Safari → Share → Add to Home Screen
 • Android: Chrome → Menu → Add to Home screen
 
-💻 **Trên máy tính:**
-• Bookmark Web App URL (Ctrl+D)
-• Pin tab để truy cập nhanh
+💻 **Máy tính:** Bookmark (Ctrl+D)
 
-━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━
 
-**🚀 TIẾP THEO: HỌC CÁCH SỬ DỤNG**
+**🚀 TIẾP THEO: HỌC CÁCH DÙNG**
 
-Giờ bạn đã có Web App, hãy học cách dùng nó!
-
-Trong **Bước 2**, bạn sẽ học:
+Trong Bước 2:
 • Quản lý tài khoản & giao dịch
 • Áp dụng 6 Hũ Tiền
 • Đạt tự do tài chính
 
-⏱ Thời gian: 15-20 phút
+⏱ 15-20 phút
 
-👉 **Nhấn nút bên dưới để tiếp tục!**
+👉 **Nhấn nút bên dưới!**
 """,
-        "image": None
+        "image": "docs/use-deploy-app.png"
     }
 }
 
@@ -237,7 +196,7 @@ def get_webapp_setup_keyboard(current_step: int) -> InlineKeyboardMarkup:
         buttons.append([
             InlineKeyboardButton(
                 "📑 Copy Template", 
-                url="https://docs.google.com/spreadsheets/d/1dV-KAVxxtbrmp79RPKSfEygFOdamcvlTj6adlHKAq78/copy"
+                url=f"https://docs.google.com/spreadsheets/d/{os.getenv('TEMPLATE_SPREADSHEET_ID', '1er6t9JQHLa9eZ1YTIM4aK0IhN37yPq6IUVbOg4-8mXg')}/copy"
             )
         ])
     
@@ -288,23 +247,63 @@ async def send_webapp_setup_step(update: Update, context: ContextTypes.DEFAULT_T
         
         message_text = f"{step_data['title']}\n\n{step_data['content']}"
         
-        # Edit existing message if this is a callback query
-        if update.callback_query:
-            await update.callback_query.edit_message_text(
-                text=message_text,
-                parse_mode="Markdown",
-                reply_markup=keyboard,
-                disable_web_page_preview=True
-            )
-            await update.callback_query.answer()
+        # Handle image + text combination
+        if step_data.get('image'):
+            # If there's an image, we need to delete old message and send new photo message
+            if update.callback_query:
+                # Delete the old message
+                await update.callback_query.message.delete()
+                
+                # Send new photo message
+                with open(step_data['image'], 'rb') as photo:
+                    await context.bot.send_photo(
+                        chat_id=update.effective_chat.id,
+                        photo=photo,
+                        caption=message_text,
+                        parse_mode="Markdown",
+                        reply_markup=keyboard
+                    )
+                await update.callback_query.answer()
+            else:
+                # Command: send photo directly
+                with open(step_data['image'], 'rb') as photo:
+                    await update.message.reply_photo(
+                        photo=photo,
+                        caption=message_text,
+                        parse_mode="Markdown",
+                        reply_markup=keyboard
+                    )
         else:
-            # Send new message if this is a command
-            await update.message.reply_text(
-                text=message_text,
-                parse_mode="Markdown",
-                reply_markup=keyboard,
-                disable_web_page_preview=True
-            )
+            # No image, just text
+            if update.callback_query:
+                # Check if previous message was a photo
+                if update.callback_query.message.photo:
+                    # Previous was photo, need to delete and send new text message
+                    await update.callback_query.message.delete()
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=message_text,
+                        parse_mode="Markdown",
+                        reply_markup=keyboard,
+                        disable_web_page_preview=True
+                    )
+                    await update.callback_query.answer()
+                else:
+                    # Previous was text, can edit
+                    await update.callback_query.edit_message_text(
+                        text=message_text,
+                        parse_mode="Markdown",
+                        reply_markup=keyboard,
+                        disable_web_page_preview=True
+                    )
+                    await update.callback_query.answer()
+            else:
+                await update.message.reply_text(
+                    text=message_text,
+                    parse_mode="Markdown",
+                    reply_markup=keyboard,
+                    disable_web_page_preview=True
+                )
         
         logger.info(f"Sent webapp setup step {step} to user {update.effective_user.id}")
         

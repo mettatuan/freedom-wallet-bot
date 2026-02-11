@@ -1,14 +1,12 @@
 """
-Setup Guide Handler - Step-by-step Web App setup guide
-Based on BROCHURE_Huong_dan_su_dung.html
-
-Provides interactive 8-step tutorial for Freedom Wallet usage
+Setup Guide Handler - Step-by-step usage guide
+Structure: Setup (3 steps) → Accounts → Categories → Debts → Investments → Assets
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler
 from loguru import logger
 
-# Setup Guide Content - 8 Steps
+# Setup Guide Content - 10 Steps (New structure)
 SETUP_GUIDE_STEPS = {
     0: {
         "title": "📘 BƯỚC 2: HƯỚNG DẪN SỬ DỤNG",
@@ -24,134 +22,192 @@ SETUP_GUIDE_STEPS = {
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**🎯 BƯỚC 2 - BẠN SẼ HỌC GÌ?**
+**🎯 CÁCH SỬ DỤNG HIỆU QUẢ**
 
-Trong **8 phần** sau, bạn sẽ làm chủ Freedom Wallet:
+**1️⃣ CÀI ĐẶT** (3 bước)
+   a. Xóa dữ liệu mẫu
+   b. Cài đặt hũ tiền
+   c. 5 Cấp bậc tài chính
 
-1️⃣ Cài đặt & làm sạch dữ liệu
-2️⃣ Thêm tài khoản (Accounts)
-3️⃣ Ghi chép giao dịch (Transactions)
-4️⃣ Quản lý danh mục (Categories)
-5️⃣ Quản lý khoản nợ (Debts)
-6️⃣ Ghi nhận tài sản (Assets)
-7️⃣ Theo dõi đầu tư (Investments)
-8️⃣ 6 Hũ Tiền - Trái tim Freedom Wallet
+**2️⃣ TÀI KHOẢN** - Biết tiền ở đâu
+
+**3️⃣ DANH MỤC** - Phân loại chi tiêu
+
+**4️⃣ KHOẢN NỢ** - Làm chủ nợ
+
+**5️⃣ ĐẦU TƯ** - Tiền làm việc cho bạn
+
+**6️⃣ TÀI SẢN** - Tính Net Worth
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 ⏱ **Thời gian**: 15-20 phút
-🎯 **Mục tiêu**: Hiểu & sử dụng thành thạo
-
-💡 *Có thể xem lại bất kỳ lúc nào bằng /huongdan*
+💡 *Xem lại: /huongdan*
 """,
         "image": None
     },
     
     1: {
-        "title": "🟦 BƯỚC 1 – BẮT ĐẦU (SETUP BAN ĐẦU)",
+        "title": "⚙️ CÀI ĐẶT (1/3) – XÓA DỮ LIỆU MẪU",
         "content": """
-**👉 Mục tiêu: Chuẩn bị app "trắng", đúng với tài chính thực tế của bạn.**
+**🎯 Mục tiêu: Làm sạch app, chuẩn bị nhập dữ liệu thật**
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**📋 THAO TÁC:**
+**📋 CÁCH LÀM:**
 
-1️⃣ Vào **Cài đặt** (Settings)
-2️⃣ Chọn **Xóa dữ liệu mẫu** (nếu là lần đầu dùng)
-3️⃣ Đổi **mật khẩu** (nếu cần) để bảo mật
+1️⃣ Mở Web App của bạn
+
+2️⃣ Vào **Cài đặt** (Settings) ở menu trên
+
+3️⃣ Nhấn **Xóa dữ liệu mẫu** (Delete Sample Data)
+
+4️⃣ Xác nhận → Tất cả dữ liệu mẫu bị xóa
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 **✅ KẾT QUẢ:**
-• App sẵn sàng cho dữ liệu thật
-• An toàn & cá nhân hóa
-
-━━━━━━━━━━━━━━━━━━━━━
-
-**💡 Nguyên tắc:**
-*"Dữ liệu càng thật → Quyết định tài chính càng đúng"*
-""",
-        "image": None
-    },
-    
-    2: {
-        "title": "🟦 BƯỚC 2 – TÀI KHOẢN (ACCOUNTS)",
-        "content": """
-**👉 Mục tiêu: Biết tiền của bạn đang nằm ở đâu.**
-
-━━━━━━━━━━━━━━━━━━━━━
-
-**📌 VÍ DỤ TÀI KHOẢN:**
-• Tiền mặt
-• Tài khoản ngân hàng (VCB, TCB, MB...)
-• Ví điện tử (Momo, ZaloPay, VNPay...)
-
-━━━━━━━━━━━━━━━━━━━━━
-
-**📋 THAO TÁC:**
-➕ Thêm tài khoản mới
-✏️ Sửa số dư ban đầu
-🗑️ Xóa tài khoản không dùng
-
-━━━━━━━━━━━━━━━━━━━━━
-
-**✅ KẾT QUẢ:**
-• Tổng tiền hiển thị chính xác
-• Là nền tảng cho mọi báo cáo sau này
+• App "trắng tinh"
+• Sẵn sàng cho dữ liệu thực tế
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 **💡 Lưu ý:**
-Số dư ban đầu phải khớp với số dư thực tế để tracking chính xác!
+*Chỉ xóa dữ liệu mẫu 1 lần duy nhất khi bắt đầu!*
 """,
-        "image": None
+        "image": "media/images/cai_dat.png"
     },
     
-    3: {
-        "title": "🟦 BƯỚC 3 – GIAO DỊCH (TRANSACTIONS)",
+    2: {
+        "title": "⚙️ CÀI ĐẶT (2/3) – CÀI ĐẶT HŨ TIỀN",
         "content": """
-**👉 Mục tiêu: Kiểm soát dòng tiền vào – ra mỗi ngày.**
+**🎯 Mục tiêu: Thiết lập 6 Hũ Tiền - Trái tim Freedom Wallet**
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**📊 3 LOẠI GIAO DỊCH:**
-💰 **Thu nhập** (Income) – Tiền vào
-💸 **Chi tiêu** (Expense) – Tiền ra
-🔁 **Chuyển tiền** (Transfer) – Nội bộ giữa các tài khoản
+**🎯 6 HŨ TIÊU CHUẨN:**
+
+1️⃣ **🏠 Chi tiêu thiết yếu** (55%)
+2️⃣ **🎉 Hưởng thụ** (10%)
+3️⃣ **🎓 Giáo dục** (10%)
+4️⃣ **💰 Tiết kiệm dài hạn** (10%)
+5️⃣ **💼 Đầu tư** (10%)
+6️⃣ **❤️ Cho đi** (5%)
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**📝 MỖI GIAO DỊCH GỒM:**
-• Ngày (Date)
-• Số tiền (Amount)
-• Tài khoản (Account)
-• Danh mục (Category)
-• Ghi chú (Note)
+**📋 CÁCH LÀM:**
+
+1️⃣ Vào **Cài đặt** → **6 Jars Settings**
+
+2️⃣ Nhập % cho từng hũ (tổng = 100%)
+
+3️⃣ Lưu lại → Hệ thống tự động phân bổ
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 **✅ KẾT QUẢ:**
-• Biết tiền đi đâu, về đâu
-• Chấm dứt "không hiểu vì sao hết tiền"
+• Mỗi khoản thu tự động phân bổ
+• Tiêu tiền có kỉ luật
+• Vừa sống tốt, vừa giàu lên
+""",
+        "image": "media/images/hu_tien.jpg"
+    },
+    
+    3: {
+        "title": "⚙️ CÀI ĐẶT (3/3) – 5 CẤP BẬC TÀI CHÍNH",
+        "content": """
+**🎯 Mục tiêu: Xác định bạn đang ở đâu, đi đến đâu**
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**💡 Habit vàng:**
-Ghi chép NGAY sau mỗi giao dịch (trong 5 phút)
+**📈 5 CẤP BẬC:**
+
+🔴 **Cấp 1: Bình ổn tài chính**
+   → Chi tiêu bằng thu nhập
+
+🟠 **Cấp 2: An toàn tài chính**
+   → Có quỹ dự phòng 3-6 tháng
+
+🟡 **Cấp 3: Độc lập tài chính**
+   → Không phụ thuộc lương
+
+🟢 **Cấp 4: Tự do tài chính**
+   → Thu nhập thụ động > chi tiêu
+
+🔵 **Cấp 5: Dồi dào tài chính**
+   → Làm được bất cứ điều gì
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**📋 CÁCH DÙNG:**
+
+1️⃣ Tự đánh giá bạn đang ở cấp nào
+
+2️⃣ Đặt mục tiêu lên cấp tiếp theo
+
+3️⃣ Theo dõi tiến độ hàng tháng
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**✅ KẾT QUẢ:**
+• Có lộ trình rõ ràng
+• Động lực thúc đẩy
+• Biết mình cần làm gì
 """,
-        "image": None
+        "image": "media/images/5_cap_bac_tai_chinh.jpg"
     },
     
     4: {
-        "title": "🟦 BƯỚC 4 – DANH MỤC (CATEGORIES)",
+        "title": "💳 TÀI KHOẢN – BIẾT TIỀN Ở ĐÂU",
         "content": """
-**👉 Mục tiêu: Hiểu thói quen chi tiêu của bạn.**
+**🎯 Mục tiêu: Biết tiền của bạn đang nằm ở đâu**
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**📌 VÍ DỤ TÀI KHOẢN:**
+
+• 💵 Tiền mặt
+• 🏦 Tài khoản ngân hàng (VCB, TCB, MB...)
+• 📱 Ví điện tử (Momo, ZaloPay, VNPay...)
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**📋 CÁCH LÀM:**
+
+1️⃣ Vào mục **Accounts** (Tài khoản)
+
+2️⃣ ➕ Thêm tất cả tài khoản của bạn
+
+3️⃣ Nhập **số dư ban đầu** (phải khớp với thực tế!)
+
+4️⃣ Lưu lại → Xem tổng tài sản
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**✅ KẾT QUẢ:**
+• Biết tổng tiền có bao nhiêu
+• Tiền nằm ở đâu
+• Nền tảng cho tracking sau này
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**💡 Quan trọng:**
+*Số dư ban đầu sai → tất cả báo cáo sai!*
+""",
+        "image": "media/images/tai_khoan.jpg"
+    },
+    
+    5: {
+        "title": "📂 DANH MỤC – PHÂN LOẠI CHI TIÊU",
+        "content": """
+**🎯 Mục tiêu: Hiểu tiền đi đâu, vào đâu**
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 **📂 VÍ DỤ DANH MỤC:**
 
-**Chi tiêu (Expenses):**
+**Chi tiêu:**
 • 🍜 Ăn uống
 • 🏠 Nhà ở
 • 🎓 Giáo dục
@@ -159,183 +215,168 @@ Ghi chép NGAY sau mỗi giao dịch (trong 5 phút)
 • 🚗 Di chuyển
 • 👨‍⚕️ Sức khỏe
 
-**Thu nhập (Income):**
+**Thu nhập:**
 • 💼 Lương
 • 💰 Kinh doanh
 • 🎁 Quà tặng
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**📋 THAO TÁC:**
-• Thêm / sửa / xóa danh mục
-• Gán danh mục cho giao dịch
+**📋 CÁCH LÀM:**
+
+1️⃣ Vào mục **Categories**
+
+2️⃣ Thêm các danh mục phù hợp với cuộc sống
+
+3️⃣ Khi ghi giao dịch → chọn danh mục
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 **✅ KẾT QUẢ:**
-• Báo cáo chi tiêu rõ ràng
-• Nhận diện "lỗ hổng tài chính"
+• Báo cáo chi tiêu theo danh mục
+• Nhận diện "lỗ hổng" tiền
+• Cắt giảm chi tiêu hiệu quả
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**💡 Tip:**
+*Danh mục chi tiết → phân tích tốt hơn!*
 """,
-        "image": None
+        "image": "media/images/danh_muc.jpg"
     },
     
-    5: {
-        "title": "🟦 BƯỚC 5 – KHOẢN NỢ (DEBTS)",
+    6: {
+        "title": "💳 KHOẢN NỢ – LÀM CHỦ NỢ",
         "content": """
-**👉 Mục tiêu: Không né tránh – chủ động làm chủ nợ.**
+**🎯 Mục tiêu: Không né tránh - chủ động làm chủ nợ**
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 **💳 CÓ THỂ QUẢN LÝ:**
+
 • Nợ vay ngân hàng
-• Trả góp (xe, nhà, điện thoại...)
-• Nợ cá nhân (bạn bè, gia đình)
+• Trả góp (xe, nhà, điện thoại)
+• Nợ cá nhân
 • Thẻ tín dụng
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**📊 THEO DÕI:**
-• Số tiền gốc
-• Lãi suất
-• Tiến độ trả nợ
-• Thời hạn còn lại
+**📋 CÁCH LÀM:**
+
+1️⃣ Vào mục **Debts** (Khoản nợ)
+
+2️⃣ Thêm tất cả khoản nợ hiện tại
+
+3️⃣ Nhập: Số tiền gốc, lãi suất, kỳ hạn
+
+4️⃣ Cập nhật khi trả nợ
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 **✅ KẾT QUẢ:**
-• Biết chính xác mình đang nợ bao nhiêu
-• Có chiến lược thoát nợ rõ ràng
-• Giảm stress về tài chính
+• Biết chính xác tổng nợ
+• Có chiến lược thoát nợ
+• Giảm stress tài chính
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 **💡 Mindset:**
-*"Nợ không phải kẻ thù – việc không biết mình nợ bao nhiêu mới là kẻ thù"*
+*"Nợ không phải kẻ thù - không biết mình nợ bao nhiêu mới là kẻ thù"*
 """,
-        "image": None
-    },
-    
-    6: {
-        "title": "🟦 BƯỚC 6 – TÀI SẢN (ASSETS)",
-        "content": """
-**👉 Mục tiêu: Nhìn thấy giá trị ròng thực sự của bạn.**
-
-━━━━━━━━━━━━━━━━━━━━━
-
-**🏠 VÍ DỤ TÀI SẢN:**
-• Nhà đất
-• Xe (ô tô, xe máy)
-• Trang sức, vàng
-• Đồ điện tử giá trị cao
-• Tài sản khác (tranh, đồ cổ...)
-
-━━━━━━━━━━━━━━━━━━━━━
-
-**📊 THEO DÕI:**
-• Giá trị mua ban đầu
-• Giá trị hiện tại
-• Tăng / giảm theo thời gian
-• Ghi chú & hình ảnh
-
-━━━━━━━━━━━━━━━━━━━━━
-
-**✅ KẾT QUẢ:**
-• Biết bạn "giàu" hay "nghèo" thật sự
-• Không nhầm lẫn giữa thu nhập và tài sản
-• Tính được **Net Worth** (Tài sản ròng)
-
-━━━━━━━━━━━━━━━━━━━━━
-
-**💡 Công thức:**
-*Net Worth = Tài sản - Nợ*
-""",
-        "image": None
+        "image": "media/images/khoan_no.jpg"
     },
     
     7: {
-        "title": "🟦 BƯỚC 7 – ĐẦU TƯ (INVESTMENTS)",
+        "title": "📈 ĐẦU TƯ – TIỀN LÀM VIỆC CHO BẠN",
         "content": """
-**👉 Mục tiêu: Để tiền làm việc cho bạn.**
+**🎯 Mục tiêu: Theo dõi các khoản đầu tư hiệu quả**
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**📈 CÓ THỂ THEO DÕI:**
-• Chứng khoán (Cổ phiếu, Quỹ đầu tư)
+**📈 CÓ THỂ TRACKING:**
+
+• Chứng khoán (cổ phiếu, quỹ)
 • Vàng
 • Bất động sản cho thuê
-• Kinh doanh (startup, side business)
-• Tiền mã hóa (Bitcoin, Ethereum...)
-• Các khoản đầu tư khác
+• Kinh doanh
+• Crypto
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**📊 XEM ĐƯỢC:**
-• Vốn đầu tư
-• Giá trị hiện tại
-• Lãi / lỗ
-• Tỷ suất sinh lời (ROI)
+**📋 CÁCH LÀM:**
+
+1️⃣ Vào mục **Investments**
+
+2️⃣ Thêm từng khoản đầu tư
+
+3️⃣ Nhập: Vốn gốc, giá trị hiện tại
+
+4️⃣ Cập nhật định kỳ → Xem ROI
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 **✅ KẾT QUẢ:**
-• Đầu tư có kỷ luật
-• Quyết định dựa trên số liệu, không cảm xúc
-• Theo dõi performance của portfolio
+• Biết đầu tư lãi/lỗ bao nhiêu
+• Quyết định dựa trên số liệu
+• Quản lý portfolio hiệu quả
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 **💡 Lưu ý:**
-Đây chỉ là công cụ tracking – không phải tư vấn đầu tư!
+*Chỉ là công cụ tracking - không phải tư vấn đầu tư!*
 """,
-        "image": None
+        "image": "media/images/dau_tu.jpg"
     },
     
     8: {
-        "title": "🟦 BƯỚC 8 – 6 HŨ TIỀN (Trái tim Freedom Wallet)",
+        "title": "🏠 TÀI SẢN – TÍNH NET WORTH",
         "content": """
-**👉 Mục tiêu: Phân bổ tiền cân bằng – bền vững – tự do.**
+**🎯 Mục tiêu: Biết giá trị thực sự của bạn**
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**🎯 6 HŨ TIÊU CHUẨN:**
+**🏠 VÍ DỤ TÀI SẢN:**
 
-1️⃣ **🏠 Chi tiêu thiết yếu** (55%)
-   → Ăn uống, nhà ở, điện nước
-
-2️⃣ **🎉 Hưởng thụ** (10%)
-   → Cafe, shopping, giải trí
-
-3️⃣ **🎓 Giáo dục** (10%)
-   → Sách, khóa học, phát triển bản thân
-
-4️⃣ **💰 Tiết kiệm dài hạn** (10%)
-   → Mua nhà, xe, tài sản lớn
-
-5️⃣ **💼 Đầu tư** (10%)
-   → Chứng khoán, BĐS, kinh doanh
-
-6️⃣ **❤️ Cho đi** (5%)
-   → Từ thiện, giúp đỡ người khác
+• Nhà đất
+• Xe (ô tô, xe máy)
+• Trang sức, vàng
+• Đồ điện tử giá trị
+• Tài sản khác
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**⚙️ CÁCH DÙNG:**
-• Mỗi khoản thu → tự động phân bổ
-• Theo dõi số dư từng hũ
-• Chi tiêu đúng từ hũ tương ứng
+**📋 CÁCH LÀM:**
+
+1️⃣ Vào mục **Assets**
+
+2️⃣ Thêm tất cả tài sản lớn
+
+3️⃣ Nhập: Giá mua, giá hiện tại
+
+4️⃣ Cập nhật định kỳ
 
 ━━━━━━━━━━━━━━━━━━━━━
 
 **✅ KẾT QUẢ:**
-• Tiêu tiền không tội lỗi
-• Vừa sống tốt – vừa giàu lên
-• Đạt tự do tài chính bền vững
+• Tính được **Net Worth**
+• Biết mình "giàu" thật sự chưa
+• Theo dõi tăng trưởng tài sản
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**💡 Công thức vàng:**
+```
+Net Worth = Tài sản - Nợ
+```
+
+*Thu nhập cao ≠ Giàu*
+*Giàu = Net Worth cao!*
 """,
-        "image": None
+        "image": "media/images/tai_san.jpg"
     },
     
     9: {
-        "title": "🎯 KẾT LUẬN – CÁCH DÙNG TỐI ƯU",
+        "title": "🎯 KẾT LUẬN – TỔNG QUAN",
         "content": """
 **🏆 NGUYÊN TẮC VÀNG KHI DÙNG FREEDOM WALLET:**
 
@@ -367,7 +408,7 @@ Ghi chép NGAY sau mỗi giao dịch (trong 5 phút)
 
 🎉 **Chúc bạn thành công trên hành trình tự do tài chính!**
 """,
-        "image": None
+        "image": "media/images/tong_quan.jpg"
     }
 }
 
@@ -390,8 +431,8 @@ def get_setup_guide_keyboard(current_step: int) -> InlineKeyboardMarkup:
     # Jump to specific sections (only show on step 0)
     if current_step == 0:
         buttons.append([
-            InlineKeyboardButton("📋 Bước 1-4", callback_data="guide_step_1"),
-            InlineKeyboardButton("📊 Bước 5-8", callback_data="guide_step_5")
+            InlineKeyboardButton("⚙️ Cài đặt (1-3)", callback_data="guide_step_1"),
+            InlineKeyboardButton("💳 Tracking (4-8)", callback_data="guide_step_4")
         ])
     
     # Menu row
@@ -425,21 +466,60 @@ async def send_guide_step(update: Update, context: ContextTypes.DEFAULT_TYPE, st
         
         message_text = f"{guide_data['title']}\n\n{guide_data['content']}"
         
-        # Edit existing message if this is a callback query
-        if update.callback_query:
-            await update.callback_query.edit_message_text(
-                text=message_text,
-                parse_mode="Markdown",
-                reply_markup=keyboard
-            )
-            await update.callback_query.answer()
+        # Handle image + text combination
+        if guide_data.get('image'):
+            # If there's an image, we need to delete old message and send new photo message
+            if update.callback_query:
+                # Delete the old message
+                await update.callback_query.message.delete()
+                
+                # Send new photo message
+                with open(guide_data['image'], 'rb') as photo:
+                    await context.bot.send_photo(
+                        chat_id=update.effective_chat.id,
+                        photo=photo,
+                        caption=message_text,
+                        parse_mode="Markdown",
+                        reply_markup=keyboard
+                    )
+                await update.callback_query.answer()
+            else:
+                # Command: send photo directly
+                with open(guide_data['image'], 'rb') as photo:
+                    await update.message.reply_photo(
+                        photo=photo,
+                        caption=message_text,
+                        parse_mode="Markdown",
+                        reply_markup=keyboard
+                    )
         else:
-            # Send new message if this is a command
-            await update.message.reply_text(
-                text=message_text,
-                parse_mode="Markdown",
-                reply_markup=keyboard
-            )
+            # No image, just text
+            if update.callback_query:
+                # Check if previous message was a photo
+                if update.callback_query.message.photo:
+                    # Previous was photo, need to delete and send new text message
+                    await update.callback_query.message.delete()
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=message_text,
+                        parse_mode="Markdown",
+                        reply_markup=keyboard
+                    )
+                    await update.callback_query.answer()
+                else:
+                    # Previous was text, can edit
+                    await update.callback_query.edit_message_text(
+                        text=message_text,
+                        parse_mode="Markdown",
+                        reply_markup=keyboard
+                    )
+                    await update.callback_query.answer()
+            else:
+                await update.message.reply_text(
+                    text=message_text,
+                    parse_mode="Markdown",
+                    reply_markup=keyboard
+                )
         
         logger.info(f"Sent guide step {step} to user {update.effective_user.id}")
         
@@ -465,23 +545,48 @@ async def guide_callback_handler(update: Update, context: ContextTypes.DEFAULT_T
             await send_guide_step(update, context, step)
         
         elif callback_data == "guide_complete":
-            await query.edit_message_text(
-                text="✅ **Hoàn thành hướng dẫn!**\n\n"
-                     "Bạn đã hoàn thành 8 bước hướng dẫn Freedom Wallet.\n\n"
-                     "🎯 **Bước tiếp theo:**\n"
-                     "1. Mở Web App của bạn\n"
-                     "2. Bắt đầu ghi chép giao dịch đầu tiên\n"
-                     "3. Thiết lập 6 Hũ Tiền\n\n"
-                     "💬 Cần hỗ trợ? → /help hoặc vào Group VIP\n\n"
-                     "🔄 Xem lại hướng dẫn? → /huongdan",
+            # Delete photo message from step 9 before sending text
+            await query.message.delete()
+            
+            # Send completion message with next steps
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="🎉 **CHÚC MỪNG! BẠN ĐÃ HOÀN THÀNH HƯỚNG DẪN!**\n\n"
+                     "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                     "✅ **Bạn đã học được:**\n"
+                     "• Cách cài đặt và xóa dữ liệu mẫu\n"
+                     "• Thiết lập 6 Hũ Tiền và 5 Cấp bậc\n"
+                     "• Quản lý Tài khoản, Danh mục, Nợ, Đầu tư, Tài sản\n\n"
+                     "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                     "🚀 **BƯỚC TIẾP THEO - HÀNH ĐỘNG NGAY:**\n\n"
+                     "**1️⃣ Ghi giao dịch đầu tiên** (Quan trọng nhất!)\n"
+                     "   → Mở Web App của bạn (link ở Day 1)\n"
+                     "   → Thử ghi 1 khoản chi tiêu hôm nay\n\n"
+                     "**2️⃣ Thiết lập 6 Hũ Tiền của bạn**\n"
+                     "   → Settings → 6 Jars → Điều chỉnh %\n\n"
+                     "**3️⃣ Nhập số dư tài khoản chính xác**\n"
+                     "   → Accounts → Thêm tất cả tài khoản\n\n"
+                     "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                     "💎 **CAM KẾT 7 NGÀY ĐẦU TIÊN:**\n"
+                     "Mỗi ngày bạn sẽ nhận được:\n"
+                     "• 1 bài học thực tế về quản lý tài chính\n"
+                     "• 1 nhiệm vụ nhỏ để thực hành\n"
+                     "• Động lực và nhắc nhở từ bot\n\n"
+                     "🎯 **Mục tiêu:** Ghi chép đủ 7 ngày → Hình thành thói quen!\n\n"
+                     "🔥 **Tham gia Group để:**\n"
+                     "• Được hỗ trợ trực tiếp khi gặp khó khăn\n"
+                     "• Học hỏi kinh nghiệm từ cộng đồng\n"
+                     "• Nhận tips & tricks độc quyền\n"
+                     "• Tham gia thử thách 30 ngày ghi chép\n\n"
+                     "💪 **Bắt đầu ngay hôm nay - Tương lai sẽ cảm ơn bạn!**",
                 parse_mode="Markdown",
-                reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("📖 Xem lại hướng dẫn", callback_data="guide_step_0")
-                ], [
-                    InlineKeyboardButton("👥 Tham gia Group VIP", url="https://t.me/freedomwalletapp")
-                ]])
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("👥 Tham gia Group VIP", url="https://t.me/freedomwalletapp")],
+                    [InlineKeyboardButton("📖 Xem lại hướng dẫn", callback_data="guide_step_0")],
+                    [InlineKeyboardButton("💬 Chat với Admin", url="https://t.me/freedomwalletapp")]
+                ])
             )
-            await query.answer("🎉 Chúc mừng bạn!")
+            await query.answer("🎉 Hoàn thành! Bắt đầu ghi chép ngay nhé!")
         
     except Exception as e:
         logger.error(f"Error in guide callback handler: {e}")

@@ -1,0 +1,45 @@
+"""
+Inline Registration - Start registration from button click (not /register command)
+"""
+
+from telegram import Update
+from telegram.ext import ContextTypes
+from loguru import logger
+
+
+async def start_free_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Start registration flow from button click"""
+    query = update.callback_query
+    await query.answer()
+    
+    user = update.effective_user
+    
+    # Check if already registered
+    from bot.utils.database import get_user_by_id
+    db_user = await get_user_by_id(user.id)
+    
+    if db_user and db_user.email and db_user.full_name:
+        # Already registered, go to step 2
+        await query.message.delete()
+        await query.message.reply_text("Bạn đã đăng ký rồi. Đang chuyển đến bước tiếp theo...")
+        
+        # Import and call step 2
+        from bot.handlers.free_flow import free_step2_show_value
+        # Create fake callback for step 2
+        update.callback_query = query
+        await free_step2_show_value(update, context)
+        return
+    
+    # Not registered yet, guide to use /register command
+    try:
+        await query.message.delete()
+    except:
+        pass
+    
+    await query.message.reply_text(
+        "📝 **Để đăng ký, vui lòng gõ lệnh:**\n\n"
+        "/register\n\n"
+        "Tôi sẽ hướng dẫn bạn từng bước.",
+        parse_mode="Markdown"
+    )
+
