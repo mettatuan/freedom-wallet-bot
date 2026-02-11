@@ -6,6 +6,7 @@ the normal request/response flow (e.g., scheduled reminders, program messages).
 
 Pattern: Schedulers/Jobs → Messaging Service → Telegram API
 """
+from datetime import datetime
 from telegram.ext import ContextTypes
 from loguru import logger
 from app.utils.database import SessionLocal, User
