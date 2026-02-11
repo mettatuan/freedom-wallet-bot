@@ -238,21 +238,78 @@ TOTAL:         36 files
 
 ## 🎯 REFACTOR PRIORITIES
 
+```
+╔═══════════════════════════════════════════════════════════╗
+║                                                           ║
+║   🚨 CRITICAL: FIRST DOMINO STRATEGY 🚨                   ║
+║                                                           ║
+║   DO NOT extract 6 services in parallel.                  ║
+║   That is the same mistake as CA big-bang.                ║
+║                                                           ║
+║   Extract ONE service at a time.                          ║
+║   Start with biggest offender: RegistrationService        ║
+║                                                           ║
+║   Why?                                                    ║
+║   - Most violations (7+ DB queries, 150+ line function)   ║
+║   - Most dependencies (referral, VIP, fraud, unlock)      ║
+║   - Fixing it eliminates 30% of all problems              ║
+║                                                           ║
+║   After RegistrationService works → Then do next one.     ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+```
+
+---
+
 ### **Phase 1: Extract Service Layer** (2 weeks)
 
 **Target**: Eliminate direct DB access in handlers
 
-**Steps**:
+**⚠️ EXECUTION ORDER (Sequential, NOT Parallel)**:
+
+**Week 1: Registration ONLY**
 1. Create `app/services/` directory
-2. Extract services one by one:
-   - `UserRegistrationService` (from registration.py)
-   - `ReferralService` (from registration.py, admin_fraud.py)
-   - `VIPMilestoneService` (from vip.py)
-   - `FraudReviewService` (from admin_fraud.py)
-   - `StreakTrackingService` (from engagement/streak_tracking.py)
-   - `LeaderboardService` (from callback.py)
+2. Extract `RegistrationService` (from registration.py)
+   - Move all DB queries to service
+   - Move fraud detection logic
+   - Move referral verification logic
+   - Keep message formatting in handler
+3. Update registration.py to call service
+4. Test thoroughly before proceeding
+
+**Week 2: Related Services (Referral + VIP)**
+5. Extract `ReferralService` (from registration.py, admin_fraud.py)
+   - Depends on RegistrationService working
+6. Extract `VIPMilestoneService` (from vip.py)
+   - Depends on ReferralService working
+
+**Future Weeks (After Week 2 succeeds)**:
+7. Extract `FraudReviewService` (from admin_fraud.py)
+8. Extract `StreakTrackingService` (from engagement/streak_tracking.py)
+9. Extract `LeaderboardService` (from callback.py)
 
 **Success Metric**: Zero `session.query()` or `session.commit()` calls in handlers
+
+**🚫 ANTI-PATTERN WARNING**:
+
+```python
+# ❌ DON'T DO THIS (mini Clean Architecture):
+class RegistrationService:
+    def __init__(self, user_repo: IUserRepository, referral_repo: IReferralRepository):
+        self._user_repo = user_repo
+        self._referral_repo = referral_repo
+
+# ✅ DO THIS (plain Python service):
+class RegistrationService:
+    def complete_registration(self, user_id: int, email: str):
+        session = SessionLocal()
+        user = session.query(User).filter(User.id == user_id).first()
+        # ... business logic
+        session.commit()
+        return user
+```
+
+**No interfaces. No abstract base classes. No dependency injection. Just services.**
 
 ---
 

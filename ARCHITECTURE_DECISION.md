@@ -309,6 +309,27 @@ Change all 100+ `User.id` → `User.user_id` references:
 
 ## Future Architecture Path
 
+### ⚠️ We Will NOT Attempt Clean Architecture Migration Again Unless:
+
+1. **Team size ≥ 3 developers**
+   - Solo developer cannot maintain CA complexity
+   - Current: 1 developer
+   - Required: 3+ for proper CA ownership
+
+2. **Feature set stable for ≥ 6 months**
+   - CA requires stable domain boundaries
+   - Current: Features change weekly
+   - Required: 6+ months feature freeze
+
+3. **Clear measured ROI exists**
+   - Must prove CA saves time/money
+   - Current: CA costs 400 hours, saves 0 hours
+   - Required: Positive ROI with metrics
+
+**This condition prevents spontaneous "CA v2" experiments in next 12 months.**
+
+---
+
 ### Incremental Refactoring Strategy
 
 Instead of Clean Architecture rewrite, we apply principles gradually:

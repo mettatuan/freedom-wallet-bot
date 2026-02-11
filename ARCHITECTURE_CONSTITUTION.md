@@ -160,10 +160,15 @@ app/handlers/premium/unlock_calm_flow.py  # Merge into unlock_flow.py
 
 ✅ REQUIRED:
   - Handler → Service → Model (unidirectional flow)
-  - Thin handlers (<50 lines business logic)
+  - Handlers contain NO database queries
+  - Handlers contain NO cross-domain orchestration
   - Services contain business logic
   - Models are pure data (SQLAlchemy ORM)
 ```
+
+**Metric**: Handler responsibility, not line count.
+
+**Rationale**: Some callback routers may exceed 50 lines but contain zero business logic (just routing). The rule is **NO DB queries + NO orchestration**, not arbitrary line limits.
 
 **Architecture Diagram**:
 ```
