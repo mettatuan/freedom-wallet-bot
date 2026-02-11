@@ -6,7 +6,7 @@ from telegram.ext import ContextTypes
 from loguru import logger
 from config.settings import settings
 from app.services.analytics import Analytics
-from app.handlers.admin_callbacks import (
+from app.handlers.admin.admin_callbacks import (
     handle_admin_approve_callback,
     handle_admin_reject_callback,
     handle_admin_list_pending_callback
@@ -118,7 +118,7 @@ async def _handle_callback_internal(update: Update, context: ContextTypes.DEFAUL
         return
     
     # Route Premium callbacks
-    from app.handlers.premium_commands import PREMIUM_CALLBACKS
+    from app.handlers.premium.premium_commands import PREMIUM_CALLBACKS
     if callback_data in PREMIUM_CALLBACKS:
         handler = PREMIUM_CALLBACKS[callback_data]
         try:
@@ -146,7 +146,7 @@ async def _handle_callback_internal(update: Update, context: ContextTypes.DEFAUL
     # Route to appropriate handler based on callback_data
     if callback_data == "start" or callback_data == "back_home":
         # Back to home
-        from app.handlers.start import start
+        from app.handlers.user.start import start
         # Create mock update for start command
         update.message = query.message
         try:
@@ -319,7 +319,7 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     
     elif callback_data == "referral_menu":
         # Show referral system
-        from app.handlers.referral import referral_command
+        from app.handlers.engagement.referral import referral_command
         from app.utils.database import get_user_by_id
         
         user = query.from_user
@@ -395,12 +395,12 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     
     elif callback_data == "share_link":
         # Handle share link button from daily nurture
-        from app.handlers.daily_nurture import handle_share_link_button
+        from app.handlers.engagement.daily_nurture import handle_share_link_button
         await handle_share_link_button(update, context)
     
     elif callback_data == "check_progress":
         # Handle check progress button
-        from app.handlers.daily_nurture import handle_check_progress_button
+        from app.handlers.engagement.daily_nurture import handle_check_progress_button
         await handle_check_progress_button(update, context)
     
     elif callback_data == "vip_gifts":
@@ -430,7 +430,7 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     
     elif callback_data == "onboarding_start":
         # Start 7-day onboarding journey
-        from app.handlers.onboarding import start_onboarding_journey
+        from app.handlers.user.onboarding import start_onboarding_journey
         
         user_id = query.from_user.id
         success = await start_onboarding_journey(user_id, context)

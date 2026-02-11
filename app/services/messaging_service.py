@@ -17,7 +17,7 @@ async def send_morning_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int
     Send morning reminder to a specific user.
     Called by reminder_scheduler.py
     """
-    from app.handlers.engagement.daily_reminder import MORNING_REMINDER_TEMPLATE
+    from app.messages.reminder_messages import MORNING_REMINDER_TEMPLATE, get_streak_message
     
     db = SessionLocal()
     try:
@@ -25,16 +25,9 @@ async def send_morning_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int
         if not user:
             return
             
-        # Calculate streak
+        # Calculate streak & get message
         streak = user.streak_days or 0
-        streak_message = ""
-        
-        if streak >= 7:
-            streak_message = f"🔥 **{streak} ngày liên tiếp!** Bạn đang rất tốt!"
-        elif streak >= 3:
-            streak_message = f"⭐ **{streak} ngày liên tiếp!** Còn {7-streak} ngày nữa đến mốc 1 tuần!"
-        else:
-            streak_message = "💪 Hãy bắt đầu chuỗi ghi chép liên tiếp!"
+        streak_message = get_streak_message(streak)
         
         message = MORNING_REMINDER_TEMPLATE.format(
             name=user.name or "bạn",
@@ -60,7 +53,7 @@ async def send_evening_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int
     Send evening reminder to a specific user.
     Called by reminder_scheduler.py
     """
-    from app.handlers.engagement.daily_reminder import EVENING_REMINDER_TEMPLATE
+    from app.messages.reminder_messages import EVENING_REMINDER_TEMPLATE
     
     db = SessionLocal()
     try:

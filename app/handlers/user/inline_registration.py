@@ -24,7 +24,7 @@ async def start_free_registration(update: Update, context: ContextTypes.DEFAULT_
         await query.message.reply_text("Báº¡n Ä‘Ã£ Ä‘Äƒng kÃ½ rá»“i. Äang chuyá»ƒn Ä‘áº¿n bÆ°á»›c tiáº¿p theo...")
         
         # Import and call step 2
-        from app.handlers.free_flow import free_step2_show_value
+        from app.handlers.user.free_flow import free_step2_show_value
         # Create fake callback for step 2
         update.callback_query = query
         await free_step2_show_value(update, context)

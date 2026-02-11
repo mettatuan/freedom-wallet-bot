@@ -33,7 +33,7 @@ async def free_step1_intro(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.edit_message_text("Äang táº£i...")
             
             # Import here to avoid circular dependency
-            from app.handlers.free_flow import free_step2_show_value
+            from app.handlers.user.free_flow import free_step2_show_value
             update.callback_query = query
             await free_step2_show_value(update, context)
             return ConversationHandler.END
@@ -215,7 +215,7 @@ async def receive_free_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await asyncio.sleep(1)
             
             # Proceed to step 2
-            from app.handlers.free_flow import free_step2_show_value
+            from app.handlers.user.free_flow import free_step2_show_value
             
             # Create a fake callback query for step 2
             from telegram import CallbackQuery

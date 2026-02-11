@@ -5,8 +5,8 @@ PhÃ¡t hiá»‡n khi user ghi giao dá»‹ch vÃ  update streak
 from loguru import logger
 from datetime import datetime, timedelta
 from app.utils.database import SessionLocal, User
-from app.handlers.celebration import check_and_celebrate_milestone
-from app.handlers.daily_reminder import send_skip_alert
+from app.handlers.engagement.celebration import check_and_celebrate_milestone
+from app.handlers.engagement.daily_reminder import send_skip_alert
 
 
 def record_transaction_event(user_id: int, context=None):

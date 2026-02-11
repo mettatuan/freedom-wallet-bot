@@ -9,10 +9,7 @@ from loguru import logger
 from datetime import datetime, timedelta
 from app.utils.database import SessionLocal, User
 from app.services.messaging_service import send_morning_reminder, send_evening_reminder
-
-# NOTE: Tech Debt - services should not import from handlers
-# TODO: Move check_missed_days to services/streak_service.py
-from app.handlers.engagement.streak_tracking import check_missed_days
+from app.services.streak_service import check_missed_days
 
 
 class DailyReminderScheduler:

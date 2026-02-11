@@ -185,7 +185,7 @@ async def handle_webapp_guide(update: Update, context: ContextTypes.DEFAULT_TYPE
     await query.answer()
     
     # Use existing webapp setup handler
-    from app.handlers.webapp_setup import start_webapp_setup
+    from app.handlers.core.webapp_setup import start_webapp_setup
     await start_webapp_setup(update, context)
 
 

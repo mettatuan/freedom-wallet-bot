@@ -288,7 +288,7 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                         
                         # Check VIP milestones (10/50/100 refs) - Identity Layer
                         try:
-                            from app.handlers.vip import check_vip_milestone
+                            from app.handlers.premium.vip import check_vip_milestone
                             await check_vip_milestone(referrer.id, context)
                         except Exception as e:
                             logger.error(f"Failed to check VIP milestone for {referrer.id}: {e}")
@@ -326,7 +326,7 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                             # UNLOCK FLOW v3.0 (Feb 2026) - Ownership-first, Identity-driven
                             try:
                                 # Cancel remaining daily nurture messages
-                                from app.handlers.daily_nurture import cancel_remaining_nurture
+                                from app.handlers.engagement.daily_nurture import cancel_remaining_nurture
                                 await cancel_remaining_nurture(referrer.id, 0, context)
                                 
                                 # Send optimized unlock flow Message 1

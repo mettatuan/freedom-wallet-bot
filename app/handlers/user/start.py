@@ -7,7 +7,7 @@ from telegram.ext import ContextTypes
 from loguru import logger
 from datetime import datetime
 from app.utils.database import save_user_to_db, get_user_by_id, update_user_registration
-from app.handlers.referral import handle_referral_start
+from app.handlers.engagement.referral import handle_referral_start
 from app.utils.sheets import sync_web_registration
 from config.settings import settings
 
@@ -86,7 +86,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     
                     # Start onboarding journey (Day 1 scheduled)
-                    from app.handlers.onboarding import start_onboarding_journey
+                    from app.handlers.user.onboarding import start_onboarding_journey
                     await start_onboarding_journey(user.id, context)
                     
                     # Enable daily reminders for new VIP user
@@ -149,7 +149,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     )
                     
                     # Continue daily nurture if not started
-                    from app.handlers.daily_nurture import start_daily_nurture
+                    from app.handlers.engagement.daily_nurture import start_daily_nurture
                     await start_daily_nurture(user.id, context)
                     
                     return

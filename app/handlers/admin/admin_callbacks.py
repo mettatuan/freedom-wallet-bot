@@ -6,7 +6,7 @@ from telegram.ext import ContextTypes
 from loguru import logger
 from app.services.payment_service import PaymentVerificationService
 from app.utils.database import get_db, PaymentVerification, User
-from app.handlers.admin_payment import is_admin
+from app.handlers.admin.admin_payment import is_admin
 from datetime import datetime
 import html
 

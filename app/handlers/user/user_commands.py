@@ -5,7 +5,7 @@ User Commands - CÃ¡c lá»‡nh user cÃ³ thá»ƒ sá»­ dá»¥ng
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from loguru import logger
-from app.handlers.streak_tracking import get_user_streak_stats, toggle_reminder, record_transaction_event
+from app.handlers.engagement.streak_tracking import get_user_streak_stats, toggle_reminder, record_transaction_event
 
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):

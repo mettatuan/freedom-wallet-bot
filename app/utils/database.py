@@ -39,7 +39,10 @@ class User(Base):
     """User model - Store Telegram user info"""
     __tablename__ = "users"
     
-    id = Column(Integer, primary_key=True)  # Telegram user ID
+    # TEMP HOTFIX: Column mapping to match database schema (user_id column)
+    # This allows legacy code to use User.id while DB uses user_id
+    # TODO: Remove after architecture refactor complete (Phase 2) - use CA model only
+    id = Column("user_id", Integer, primary_key=True)  # Maps to DB column 'user_id'
     username = Column(String(100), nullable=True)
     first_name = Column(String(100), nullable=True)
     last_name = Column(String(100), nullable=True)

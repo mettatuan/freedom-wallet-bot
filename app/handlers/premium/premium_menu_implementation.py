@@ -454,7 +454,7 @@ def register_premium_menu_handlers(application):
 """
 # In main.py, add this:
 
-from app.handlers.premium_menu_implementation import register_premium_menu_handlers
+from app.handlers.premium.premium_menu_implementation import register_premium_menu_handlers
 
 def main():
     application = Application.builder().token(TOKEN).build()

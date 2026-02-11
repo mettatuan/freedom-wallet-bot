@@ -13,7 +13,7 @@ from config.settings import settings
 
 
 # Load FAQ data
-FAQ_FILE = Path(__file__).parent.parent / "knowledge" / "faq.json"
+FAQ_FILE = Path(__file__).parent.parent.parent / "knowledge" / "faq.json"
 with open(FAQ_FILE, "r", encoding="utf-8") as f:
     FAQ_DATA = json.load(f)
 
@@ -472,7 +472,7 @@ async def handle_admin_rejection_reason(update: Update, context: ContextTypes.DE
     """Handle rejection reason from admin"""
     from app.services.payment_service import PaymentVerificationService
     from app.utils.database import get_db, PaymentVerification
-    from app.handlers.admin_payment import is_admin
+    from app.handlers.admin.admin_payment import is_admin
     
     user_id = update.effective_user.id
     
@@ -507,7 +507,7 @@ async def handle_admin_rejection_reason(update: Update, context: ContextTypes.DE
             
             if verification:
                 # Log to Google Sheets
-                from app.handlers.admin_callbacks import log_payment_to_sheets
+                from app.handlers.admin.admin_callbacks import log_payment_to_sheets
                 from app.utils.database import User
                 user = db.query(User).filter(User.id == verification.user_id).first()
                 

@@ -275,7 +275,7 @@ def main() -> None:
     
     # Register unlock flow v3.0 handlers (Feb 2026)
     try:
-        from bot.handlers.unlock_flow_v3 import register_unlock_handlers
+        from app.handlers.premium.unlock_flow_v3 import register_unlock_handlers
         register_unlock_handlers(application)
         logger.info("✅ Unlock flow v3.0 handlers registered")
     except Exception as e:
@@ -296,7 +296,7 @@ def main() -> None:
     
     # Register sheets setup handlers (Google Sheets connection)
     try:
-        from bot.handlers.sheets_setup import register_sheets_setup_handlers
+        from app.handlers.sheets.sheets_setup import register_sheets_setup_handlers
         logger.info("📦 Importing sheets_setup handlers...")
         register_sheets_setup_handlers(application)
         logger.info("✅ Sheets setup handlers registration COMPLETED")
@@ -309,7 +309,7 @@ def main() -> None:
     
     # Week 2: Web App URL Management
     try:
-        from bot.handlers.webapp_url_handler import register_webapp_handlers
+        from app.handlers.core.webapp_url_handler import register_webapp_handlers
         logger.info("📦 Importing webapp_url_handler...")
         register_webapp_handlers(application)
         logger.info("✅ Web App URL handlers registered")
@@ -317,16 +317,16 @@ def main() -> None:
         logger.error(f"❌ Failed to register webapp_url handlers: {e}", exc_info=True)
     
     # Week 2: Quick Record & Premium Features (Option 3 - Template Integration)
-    from bot.handlers.sheets_template_integration import register_sheets_template_handlers
-    from bot.handlers.quick_record_template import register_quick_record_handlers
-    from bot.handlers.sheets_premium_commands import register_sheets_premium_commands
+    from app.handlers.sheets.sheets_template_integration import register_sheets_template_handlers
+    from app.handlers.user.quick_record_template import register_quick_record_handlers
+    from app.handlers.sheets.sheets_premium_commands import register_sheets_premium_commands
     
     register_sheets_template_handlers(application)
     register_quick_record_handlers(application)
     register_sheets_premium_commands(application)
     
     # Week 5: Admin fraud review commands
-    from bot.handlers.admin_fraud import (
+    from app.handlers.admin.admin_fraud import (
         fraud_queue_command,
         fraud_review_command,
         fraud_approve_command,
@@ -340,7 +340,7 @@ def main() -> None:
     application.add_handler(CommandHandler("fraud_stats", fraud_stats_command))
     
     # Admin payment commands
-    from bot.handlers.admin_payment import (
+    from app.handlers.admin.admin_payment import (
         payment_pending_command,
         payment_approve_command,
         payment_reject_command,
@@ -353,7 +353,7 @@ def main() -> None:
     
     # Phase 2: Admin metrics dashboard (Feb 2026)
     try:
-        from bot.handlers.admin_metrics import register_admin_metrics_handlers
+        from app.handlers.admin.admin_metrics import register_admin_metrics_handlers
         register_admin_metrics_handlers(application)
         logger.info("✅ Admin metrics handlers registered")
     except Exception as e:
@@ -363,7 +363,7 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(handle_callback))
     
     # Register photo handler (for payment proof)
-    from bot.handlers.message import handle_payment_proof_photo
+    from app.handlers.core.message import handle_payment_proof_photo
     application.add_handler(
         MessageHandler(filters.PHOTO, handle_payment_proof_photo),
         group=50
@@ -391,8 +391,8 @@ def main() -> None:
     application.add_error_handler(error_handler)
     
     # Setup daily background jobs (Week 4)
-    from bot.jobs import setup_daily_jobs
-    from bot.jobs.unlock_trigger import setup_unlock_trigger_job
+    from app.jobs import setup_daily_jobs
+    from app.jobs.unlock_trigger import setup_unlock_trigger_job
     setup_daily_jobs(application)
     setup_unlock_trigger_job(application)
     

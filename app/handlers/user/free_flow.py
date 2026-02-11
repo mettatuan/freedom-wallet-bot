@@ -378,7 +378,7 @@ async def back_to_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     # Import start function and call it
-    from app.handlers.start import start
+    from app.handlers.user.start import start
     
     # Simulate /start command
     await query.message.delete()

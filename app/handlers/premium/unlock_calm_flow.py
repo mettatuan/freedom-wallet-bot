@@ -433,7 +433,7 @@ def register_unlock_calm_flow_handlers(application):
         query = update.callback_query
         await query.answer()
         # Forward to sheets_setup flow
-        from app.handlers.sheets_setup import start_sheets_setup_flow
+        from app.handlers.sheets.sheets_setup import start_sheets_setup_flow
         await start_sheets_setup_flow(update, context)
     
     application.add_handler(CallbackQueryHandler(redirect_to_sheets_setup, pattern="^unlock_input_sheet_id$"))

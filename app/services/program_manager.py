@@ -257,18 +257,17 @@ class ProgramManager:
         day = job_data["day"]
         config = job_data["config"]
         
-        # NOTE: Tech Debt - services should not import handlers (circular dependency)
-        # TODO: Move message sending logic to messaging_service.py
-        if program == ProgramType.NURTURE_7_DAY.value:
-            from app.handlers.engagement.daily_nurture import send_nurture_message
-            await send_nurture_message(context, user_id, day)
+        # Get message from config
+        messages = self._get_program_config(ProgramType(program))
+        if day not in messages:
+            logger.warning(f"No message for {program} day {day}")
+            return
+            
+        message_data = messages[day]
         
-        elif program == ProgramType.ONBOARDING_7_DAY.value:
-            from app.handlers.user.onboarding import send_onboarding_message
-            await send_onboarding_message(context, user_id, day)
-        
-        else:
-            logger.warning(f"Unknown program: {program}")
+        # Send message using messaging service
+        from app.services.messaging_service import send_program_message
+        await send_program_message(context, user_id, message_data["content"])
     
     def _get_program_config(self, program: ProgramType) -> Dict[int, Dict[str, Any]]:
         """
@@ -277,14 +276,12 @@ class ProgramManager:
         Note: Content is still in daily_nurture.py and onboarding.py
         This just returns the structure
         """
-        # NOTE: Tech Debt - services should not import handlers
-        # TODO: Move message constants to app/messages/ or app/config/
         if program == ProgramType.NURTURE_7_DAY:
-            from app.handlers.engagement.daily_nurture import NURTURE_MESSAGES
+            from app.messages.nurture_messages import NURTURE_MESSAGES
             return NURTURE_MESSAGES
         
         elif program == ProgramType.ONBOARDING_7_DAY:
-            from app.handlers.user.onboarding import ONBOARDING_MESSAGES
+            from app.messages.onboarding_messages import ONBOARDING_MESSAGES
             return ONBOARDING_MESSAGES
         
         else:
