@@ -20,6 +20,7 @@ class UserModel(Base):
     
     __tablename__ = "users"
     
+    # Match actual database schema (user_id, not id)
     user_id = Column(Integer, primary_key=True, index=True)
     telegram_username = Column(String, nullable=True, index=True)
     email = Column(String, nullable=True, index=True)

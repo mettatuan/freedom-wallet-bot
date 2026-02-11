@@ -23,7 +23,7 @@ async def start_sheet_setup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     message_text = (
         f"{user.first_name} ơi\n\n"
-        "Bạn đang chuẩn bị tạo hệ thống Freedom Wallet của riêng mình.\n\n"
+        "Bạn đang chuẩn bị tạo hệ thống Freedom Wallet - ví quản lý tự do tài chính của riêng mình.\n\n"
         "Để mình gửi hướng dẫn cài đặt\n"
         "và thông tin cấu hình cần thiết,\n"
         "vui lòng cho mình email của bạn.\n\n"
@@ -67,9 +67,11 @@ async def receive_email(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"✅ Email saved: {email}")
     
     await update.message.reply_text(
-        f"✅ Email: {email}\n\n"
-        f"👉 **Bước 2/4:** Nhập **Số điện thoại** của bạn\n"
-        f"(Ví dụ: 0901234567 hoặc +84901234567):"
+        f"✅ **Email đã lưu:** `{email}`\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"📱 **Bước 2/4: Số điện thoại**\n"
+        f"Nhập số điện thoại của bạn:\n\n"
+        f"📝 Ví dụ: `0901234567` hoặc `+84901234567`"
     )
     
     return AWAITING_PHONE
