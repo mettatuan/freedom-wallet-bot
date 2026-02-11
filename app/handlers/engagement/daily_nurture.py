@@ -1,0 +1,324 @@
+"""
+Daily Nurture Campaign - Gá»­i ná»™i dung giÃ¡o dá»¥c hÃ ng ngÃ y
+Cho users chÆ°a Ä‘á»§ 2 referrals
+
+Week 3: Integrated with ProgramManager
+"""
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
+from loguru import logger
+from datetime import datetime, timedelta
+
+# Week 3: Import ProgramManager
+from app.services.program_manager import ProgramManager, ProgramType
+
+
+# Ná»™i dung nurture theo tá»«ng ngÃ y
+NURTURE_MESSAGES = {
+    1: {
+        "title": "ðŸ“… DAY 1 â€“ VÃŒ SAO Cáº¦N QUáº¢N LÃ TÃ€I CHÃNH?",
+        "content": (
+            "â“ **Báº¡n cÃ³ biáº¿t?**\n\n"
+            "**90% ngÆ°á»i Ä‘i lÃ m** khÃ´ng biáº¿t tiá»n cá»§a mÃ¬nh Ä‘ang Ä‘i Ä‘Ã¢u má»—i thÃ¡ng\n\n"
+            "Quáº£n lÃ½ tÃ i chÃ­nh **khÃ´ng pháº£i** Ä‘á»ƒ tiáº¿t kiá»‡m cá»±c khá»•, mÃ  Ä‘á»ƒ:\n"
+            "âœ“ **An tÃ¢m hÆ¡n**\n"
+            "âœ“ **Chá»§ Ä‘á»™ng hÆ¡n**\n"
+            "âœ“ **KhÃ´ng bá»‹ tiá»n chi phá»‘i cáº£m xÃºc**\n\n"
+            "ðŸ‘‰ Freedom Wallet giÃºp báº¡n nhÃ¬n tháº¥y **toÃ n bá»™ bá»©c tranh tÃ i chÃ­nh**"
+        ),
+        "delay_hours": 24  # Gá»­i sau 24h Ä‘Äƒng kÃ½
+    },
+    2: {
+        "title": "ðŸ“… DAY 2 â€“ CÃI GIÃ Cá»¦A VIá»†C KHÃ”NG QUáº¢N LÃ TIá»€N",
+        "content": (
+            "ðŸ’¥ **KhÃ´ng quáº£n lÃ½ tÃ i chÃ­nh dáº«n Ä‘áº¿n:**\n\n"
+            "âŒ LÃ m nhiá»u nhÆ°ng khÃ´ng dÆ°\n"
+            "âŒ CÃ³ tiá»n váº«n lo\n"
+            "âŒ KhÃ´ng dÃ¡m Ä‘áº§u tÆ° dÃ i háº¡n\n\n"
+            "ðŸ‘‰ **Quáº£n lÃ½ tiá»n = kiá»ƒm soÃ¡t cuá»™c sá»‘ng**\n\n"
+            "ðŸ”— Chia sáº» Ä‘á»ƒ má»Ÿ khÃ³a bá»™ cÃ´ng cá»¥ trá»n Ä‘á»i"
+        ),
+        "delay_hours": 48
+    },
+    3: {
+        "title": "ðŸ“… DAY 3 â€“ 6 HÅ¨ TIá»€N & 5 Cáº¤P Báº¬C TÃ€I CHÃNH",
+        "content": (
+            "ðŸ§  **Freedom Wallet Ã¡p dá»¥ng:**\n\n"
+            "ðŸ’° **6 HÅ© Tiá»n:** phÃ¢n bá»• dÃ²ng tiá»n khoa há»c\n"
+            "â€¢ 55% Chi tiÃªu thiáº¿t yáº¿u (NEC)\n"
+            "â€¢ 10% Tá»± do tÃ i chÃ­nh (FFA)\n"
+            "â€¢ 10% GiÃ¡o dá»¥c (EDU)\n"
+            "â€¢ 10% Tiáº¿t kiá»‡m dÃ i háº¡n (LTSS)\n"
+            "â€¢ 10% HÆ°á»Ÿng thá»¥ (PLAY)\n"
+            "â€¢ 5% Cho Ä‘i (GIVE)\n\n"
+            "ðŸ“Š **5 Cáº¥p Báº­c TÃ i ChÃ­nh:** biáº¿t báº¡n Ä‘ang á»Ÿ Ä‘Ã¢u & Ä‘i vá» Ä‘Ã¢u\n\n"
+            "ðŸ‘‰ KhÃ´ng há»c lÃ½ thuyáº¿t suÃ´ng â€“ **Ã¡p dá»¥ng ngay**"
+        ),
+        "delay_hours": 72
+    },
+    4: {
+        "title": "ðŸ“… DAY 4 â€“ VÃŒ SAO CHÃšNG TÃ”I Táº¶NG QUÃ€?",
+        "content": (
+            "ðŸŽ **VÃ¬ chÃºng tÃ´i tin ráº±ng:**\n\n"
+            "âœ… NgÆ°á»i dÃ¹ng tá»‘t nháº¥t â†’ lÃ  ngÆ°á»i **giá»›i thiá»‡u ngÆ°á»i tá»‘t**\n"
+            "âœ… Chia sáº» giÃ¡ trá»‹ â†’ táº¡o **cá»™ng Ä‘á»“ng cháº¥t lÆ°á»£ng**\n"
+            "âœ… GiÃºp nhau â†’ cÃ¹ng **tiáº¿n bá»™**\n\n"
+            "ðŸ‘‰ **Báº¡n giÃºp 2 ngÆ°á»i â€“ báº¡n nháº­n há»‡ thá»‘ng trá»n Ä‘á»i**\n\n"
+            "ÄÆ¡n giáº£n váº­y thÃ´i! ðŸ’™"
+        ),
+        "delay_hours": 96
+    },
+    5: {
+        "title": "ðŸ“… DAY 5 â€“ NHáº®C NHáº¸ + Táº O Cáº¤P BÃCH",
+        "content": (
+            "â³ **Bá»™ quÃ  chá»‰ dÃ nh cho ngÆ°á»i hoÃ n thÃ nh Ä‘á»§ 2 lÆ°á»£t giá»›i thiá»‡u**\n\n"
+            "HÃ ng ngÃ n ngÆ°á»i Ä‘Ã£ nháº­n Ä‘Æ°á»£c:\n"
+            "âœ… Google Sheet Template\n"
+            "âœ… Apps Script tá»± Ä‘á»™ng hÃ³a\n"
+            "âœ… HÆ°á»›ng dáº«n Ä‘áº§y Ä‘á»§\n"
+            "âœ… Há»— trá»£ 1-1\n\n"
+            "ðŸ‘‰ **Chá»‰ cÃ²n thiáº¿u báº¡n!**"
+        ),
+        "delay_hours": 120
+    }
+}
+
+
+async def start_daily_nurture(user_id: int, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Start daily nurture campaign for new user
+    
+    Week 3: Now uses ProgramManager for enrollment
+    Old scheduling logic kept for backward compatibility
+    """
+    try:
+        logger.info(f"Starting daily nurture for user {user_id}")
+        
+        # Week 3: Use ProgramManager
+        with ProgramManager() as pm:
+            success = await pm.enroll_user(
+                user_id, 
+                ProgramType.NURTURE_7_DAY, 
+                context,
+                force=False  # Don't override existing programs
+            )
+            
+            if success:
+                logger.info(f"âœ… User {user_id} enrolled in NURTURE_7_DAY via ProgramManager")
+            else:
+                logger.info(f"âš ï¸ User {user_id} already in program, skipped NURTURE enrollment")
+        
+    except Exception as e:
+        logger.error(f"âŒ Error starting daily nurture for user {user_id}: {e}")
+        # Fallback to old method if ProgramManager fails
+        await _start_daily_nurture_legacy(user_id, context)
+
+
+async def _start_daily_nurture_legacy(user_id: int, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Legacy method: Schedule all 5 days at once
+    Kept for backward compatibility
+    """
+    try:
+        logger.info(f"Using legacy nurture scheduling for user {user_id}")
+        
+        logger.info(f"Using legacy nurture scheduling for user {user_id}")
+        
+        # Schedule all 5 days
+        for day, data in NURTURE_MESSAGES.items():
+            delay_seconds = data["delay_hours"] * 3600
+            
+            # Schedule the message
+            context.job_queue.run_once(
+                send_nurture_message,
+                delay_seconds,
+                data={
+                    "user_id": user_id,
+                    "day": day,
+                    "title": data["title"],
+                    "content": data["content"]
+                },
+                name=f"nurture_day{day}_user{user_id}"
+            )
+        
+        logger.info(f"âœ… Scheduled 5-day nurture (legacy) for user {user_id}")
+        
+    except Exception as e:
+        logger.error(f"âŒ Error in legacy nurture scheduling for user {user_id}: {e}")
+
+
+async def send_nurture_message(context: ContextTypes.DEFAULT_TYPE):
+    """
+    Send a single nurture message (called by scheduler)
+    """
+    try:
+        job_data = context.job.data
+        user_id = job_data["user_id"]
+        day = job_data["day"]
+        title = job_data["title"]
+        content = job_data["content"]
+        
+        # Check if user already has 2+ referrals (stop nurture if unlocked)
+        from app.utils.database import get_user_by_id
+        db_user = await get_user_by_id(user_id)
+        
+        if not db_user:
+            logger.warning(f"User {user_id} not found, skipping nurture day {day}")
+            return
+        
+        if db_user.referral_count >= 2:
+            logger.info(f"User {user_id} already unlocked (2+ refs), skipping nurture day {day}")
+            # Cancel remaining nurture jobs
+            await cancel_remaining_nurture(user_id, day, context)
+            return
+        
+        # Get current progress
+        referral_count = db_user.referral_count
+        remaining = 2 - referral_count
+        
+        # Generate referral link
+        from app.utils.database import generate_referral_code
+        referral_code = generate_referral_code(user_id)
+        bot_username = (await context.bot.get_me()).username
+        referral_link = f"https://t.me/{bot_username}?start=REF{referral_code}"
+        
+        # Build keyboard
+        keyboard = [
+            [InlineKeyboardButton("ðŸ”— Chia sáº» ngay", callback_data="share_link")],
+            [InlineKeyboardButton("ðŸ“Š Xem tiáº¿n Ä‘á»™", callback_data="check_progress")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        # Send message
+        message_text = (
+            f"{title}\n\n"
+            f"{content}\n\n"
+            f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
+            f"ðŸ“Š **Tiáº¿n Ä‘á»™ cá»§a báº¡n:** {referral_count} / 2 ngÆ°á»i\n"
+        )
+        
+        if referral_count == 0:
+            message_text += f"ðŸŽ¯ **CÃ²n 2 ngÆ°á»i ná»¯a!**\n\n"
+        elif referral_count == 1:
+            message_text += f"ðŸŽ¯ **Chá»‰ cÃ²n 1 ngÆ°á»i ná»¯a!** ðŸ”¥\n\n"
+        
+        message_text += f"ðŸ”— **Link cá»§a báº¡n:**\n`{referral_link}`"
+        
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=message_text,
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+        
+        logger.info(f"âœ… Sent nurture day {day} to user {user_id}")
+        
+    except Exception as e:
+        logger.error(f"âŒ Error sending nurture message: {e}")
+
+
+async def cancel_remaining_nurture(user_id: int, current_day: int, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Cancel remaining nurture jobs when user unlocks
+    """
+    try:
+        jobs = context.job_queue.get_jobs_by_name(f"nurture_day*_user{user_id}")
+        for job in jobs:
+            # Extract day number from job name
+            job_day = int(job.name.split("day")[1].split("_")[0])
+            if job_day > current_day:
+                job.schedule_removal()
+                logger.info(f"Cancelled nurture day {job_day} for user {user_id}")
+    except Exception as e:
+        logger.error(f"Error cancelling nurture jobs: {e}")
+
+
+async def handle_share_link_button(update, context):
+    """Handle 'Chia sáº» ngay' button"""
+    query = update.callback_query
+    await query.answer()
+    
+    user_id = query.from_user.id
+    
+    # Get user data
+    from app.utils.database import get_user_by_id
+    from app.utils.database import generate_referral_code
+    
+    db_user = await get_user_by_id(user_id)
+    if not db_user:
+        await query.edit_message_text("âŒ KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin user. DÃ¹ng /register Ä‘á»ƒ Ä‘Äƒng kÃ½.")
+        return
+    
+    referral_count = db_user.referral_count
+    referral_code = generate_referral_code(user_id)
+    bot_username = (await context.bot.get_me()).username
+    referral_link = f"https://t.me/{bot_username}?start=REF{referral_code}"
+    
+    # Send share message with social buttons
+    keyboard = [
+        [
+            InlineKeyboardButton("ðŸ“± Telegram", url=f"https://t.me/share/url?url={referral_link}&text=Tham gia Freedom Wallet cÃ¹ng tÃ´i!"),
+            InlineKeyboardButton("ðŸ’¬ Facebook", url=f"https://www.facebook.com/sharer/sharer.php?u={referral_link}")
+        ],
+        [
+            InlineKeyboardButton("ðŸ¦ X (Twitter)", url=f"https://twitter.com/intent/tweet?url={referral_link}&text=Quáº£n lÃ½ tÃ i chÃ­nh cÃ¡ nhÃ¢n vá»›i Freedom Wallet!")
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        f"ðŸ”— **LINK GIá»šI THIá»†U Cá»¦A Báº N:**\n\n"
+        f"`{referral_link}`\n\n"
+        f"ðŸ“Š **Tiáº¿n Ä‘á»™:** {referral_count}/2 ngÆ°á»i\n\n"
+        f"ðŸ‘† Copy link hoáº·c chia sáº» trá»±c tiáº¿p:",
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )
+
+
+async def handle_check_progress_button(update, context):
+    """Handle 'Xem tiáº¿n Ä‘á»™' button"""
+    query = update.callback_query
+    await query.answer()
+    
+    user_id = query.from_user.id
+    
+    # Get user data
+    from app.utils.database import get_user_by_id
+    db_user = await get_user_by_id(user_id)
+    
+    if not db_user:
+        await query.edit_message_text("âŒ KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin user. DÃ¹ng /register Ä‘á»ƒ Ä‘Äƒng kÃ½.")
+        return
+    
+    referral_count = db_user.referral_count
+    remaining = 2 - referral_count
+    
+    if referral_count >= 2:
+        status = "âœ… **ÄÃƒ Má»ž KHÃ“A TRá»ŒN Äá»œI!**"
+    elif referral_count == 1:
+        status = "ðŸ”¥ **Chá»‰ cÃ²n 1 ngÆ°á»i ná»¯a!**"
+    else:
+        status = "ðŸŽ¯ **Báº¯t Ä‘áº§u chia sáº» ngay!**"
+    
+    keyboard = [
+        [InlineKeyboardButton("ðŸ”— Chia sáº» link", callback_data="share_link")],
+        [InlineKeyboardButton("ðŸ  Menu chÃ­nh", callback_data="start")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        f"ðŸ“Š **TIáº¾N Äá»˜ GIá»šI THIá»†U**\n\n"
+        f"**{referral_count} / 2 ngÆ°á»i**\n\n"
+        f"{status}\n\n"
+        f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
+        f"ðŸŽ **Báº¡n sáº½ nháº­n Ä‘Æ°á»£c:**\n"
+        f"âœ… Full Google Sheet 3.2\n"
+        f"âœ… Full Apps Script\n"
+        f"âœ… Full HÆ°á»›ng dáº«n Notion\n"
+        f"âœ… Video tutorials\n"
+        f"âœ… Sá»­ dá»¥ng trá»n Ä‘á»i",
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )
+

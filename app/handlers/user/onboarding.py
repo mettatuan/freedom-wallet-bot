@@ -1,0 +1,685 @@
+"""
+Onboarding Journey Handler - 7-Day Welcome Journey
+Guides new users through Freedom Wallet features
+
+Week 3: Integrated with ProgramManager
+"""
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
+from loguru import logger
+from datetime import datetime, timedelta
+
+# Week 3: Import ProgramManager
+from app.services.program_manager import ProgramManager, ProgramType
+
+
+# 7-Day Onboarding Content with Inline Keyboards
+ONBOARDING_MESSAGES = {
+    1: {
+        "title": "ï¿½ CHÃšC Má»ªNG! Báº N ÄÃƒ Má»ž KHÃ“A VIP",
+        "content": """
+ðŸ‘ **Tuyá»‡t vá»i! Báº¡n Ä‘Ã£ giá»›i thiá»‡u thÃ nh cÃ´ng 2 ngÆ°á»i!**
+
+Giá» Ä‘Ã¢y, báº¡n Ä‘Æ°á»£c truy cáº­p **Freedom Wallet VIP** â€“ cÃ´ng cá»¥ quáº£n lÃ½ tÃ i chÃ­nh cÃ¡ nhÃ¢n máº¡nh máº½!
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸŽ¯ **HAI BÆ¯á»šC TIáº¾P THEO:**
+
+**BÆ¯á»šC 1: Táº O WEB APP** (10-15 phÃºt)
+   â€¢ Copy Google Sheets Template
+   â€¢ Deploy Web App cÃ¡ nhÃ¢n
+   â€¢ 100% dá»¯ liá»‡u riÃªng tÆ°
+
+**BÆ¯á»šC 2: Há»ŒC CÃCH DÃ™NG** (15-20 phÃºt)
+   â€¢ Quáº£n lÃ½ tÃ i khoáº£n & giao dá»‹ch
+   â€¢ Ãp dá»¥ng 6 HÅ© Tiá»n
+   â€¢ Äáº¡t tá»± do tÃ i chÃ­nh
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ’¡ **Äá»«ng lo!** MÃ¬nh sáº½ hÆ°á»›ng dáº«n tá»«ng bÆ°á»›c.
+
+ðŸ‘‰ **Nháº¥n nÃºt bÃªn dÆ°á»›i Ä‘á»ƒ báº¯t Ä‘áº§u BÆ°á»›c 1!**
+""",
+        "delay_hours": 0,
+        "buttons": [
+            [{"text": "ðŸš€ Báº¯t Ä‘áº§u thiáº¿t láº­p Freedom Wallet", "callback_data": "webapp_step_0"}]
+        ]
+    },
+    
+    2: {
+        "title": "ðŸ’° Day 2: Hiá»ƒu vá» 6 HÅ© Tiá»n",
+        "content": """
+ðŸ’° **6 HÅ¨ TIá»€N - CON ÄÆ¯á»œNG Tá»° DO TÃ€I CHÃNH**
+
+ÄÃ¢y lÃ  phÆ°Æ¡ng phÃ¡p Ä‘Æ°á»£c triá»‡u ngÆ°á»i Ã¡p dá»¥ng thÃ nh cÃ´ng!
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**ðŸ  HÅ¨ 1: CHI TIÃŠU THIáº¾T Yáº¾U (55%)**
+â€¢ Ä‚n uá»‘ng, nhÃ  á»Ÿ, Ä‘iá»‡n nÆ°á»›c
+â€¢ Chi phÃ­ sá»‘ng hÃ ng ngÃ y
+â€¢ Target: Giá»¯ dÆ°á»›i 55% thu nháº­p
+
+**ðŸŽ‰ HÅ¨ 2: HÆ¯á»žNG THá»¤ (10%)**
+â€¢ Cafe, shopping, giáº£i trÃ­
+â€¢ Reward báº£n thÃ¢n
+â€¢ DÃ¹ng háº¿t má»—i thÃ¡ng - sá»‘ng cÃ¢n báº±ng!
+
+**ðŸ’Ž HÅ¨ 3: Äáº¦U TÆ¯ DÃ€I Háº N (10%)**
+â€¢ Cá»• phiáº¿u, quá»¹ Ä‘áº§u tÆ°
+â€¢ Báº¥t Ä‘á»™ng sáº£n
+â€¢ Táº¡o thu nháº­p thá»¥ Ä‘á»™ng
+
+**ðŸ“š HÅ¨ 4: Há»ŒC Táº¬P & PHÃT TRIá»‚N (10%)**
+â€¢ SÃ¡ch, khÃ³a há»c
+â€¢ Há»™i tháº£o, workshop
+â€¢ Äáº§u tÆ° vÃ o báº£n thÃ¢n
+
+**ðŸŽ HÅ¨ 5: Tá»ª THIá»†N & CHO ÄI (5%)**
+â€¢ GiÃºp Ä‘á»¡ ngÆ°á»i khÃ¡c
+â€¢ ÄÃ³ng gÃ³p cá»™ng Ä‘á»“ng
+â€¢ TÃ­ch lÅ©y phÆ°á»›c bÃ¡o
+
+**ðŸ†˜ HÅ¨ 6: Dá»° PHÃ’NG (10%)**
+â€¢ Quá»¹ kháº©n cáº¥p 3-6 thÃ¡ng
+â€¢ Báº£o hiá»ƒm
+â€¢ An toÃ n tÃ i chÃ­nh
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ“Š **VÃ Dá»¤ THá»°C Táº¾:**
+
+Thu nháº­p: 20,000,000 VNÄ/thÃ¡ng
+â€¢ HÅ© 1: 11M (chi tiÃªu)
+â€¢ HÅ© 2: 2M (hÆ°á»Ÿng thá»¥)
+â€¢ HÅ© 3: 2M (Ä‘áº§u tÆ°)
+â€¢ HÅ© 4: 2M (há»c táº­p)
+â€¢ HÅ© 5: 1M (tá»« thiá»‡n)
+â€¢ HÅ© 6: 2M (dá»± phÃ²ng)
+
+ðŸ’¡ **Máº¸O:** Báº¡n cÃ³ thá»ƒ Ä‘iá»u chá»‰nh % phÃ¹ há»£p
+vá»›i hoÃ n cáº£nh riÃªng cá»§a mÃ¬nh!
+
+ðŸ“± **THá»°C HÃ€NH:**
+VÃ o Freedom Wallet â†’ "6 Jars" â†’ Xem phÃ¢n bá»• cá»§a báº¡n
+
+â“ CÃ³ tháº¯c máº¯c vá» hÅ© nÃ o khÃ´ng? Há»i mÃ¬nh nhÃ©!
+""",
+        "delay_hours": 24,
+        "buttons": [
+            [{"text": "ðŸ“Š Xem 6 HÅ© trong App", "callback_data": "onboard_open_app"}],
+            [{"text": "ðŸ’¡ VÃ­ dá»¥ phÃ¢n bá»•", "callback_data": "onboard_example_day2"}],
+            [{"text": "âœ… ÄÃ£ hiá»ƒu rá»“i", "callback_data": "onboard_complete_2"}],
+            [{"text": "â“ Cáº§n há»— trá»£", "callback_data": "onboard_help_2"}]
+        ]
+    },
+    
+    3: {
+        "title": "ðŸŽ¯ Day 3: 5 Cáº¥p Báº­c TÃ i ChÃ­nh",
+        "content": """
+ðŸŽ¯ **5 Cáº¤P Báº¬C TÃ€I CHÃNH - Báº N ÄANG á»ž ÄÃ‚U?**
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**ðŸ”´ Cáº¤P 1: TÃ€I CHÃNH Báº¤T á»”N**
+ðŸ“ Thu nháº­p < Chi tiÃªu
+ðŸ’” Ná»£ náº§n, stress liÃªn tá»¥c
+ðŸŽ¯ Má»¥c tiÃªu: Cáº¯t giáº£m chi, tÄƒng thu
+
+**ðŸŸ  Cáº¤P 2: TÃ€I CHÃNH á»”N Äá»ŠNH**
+ðŸ“ Thu nháº­p = Chi tiÃªu
+ðŸ’° Sá»‘ng vá»«a Ä‘á»§, khÃ´ng dÆ°
+ðŸŽ¯ Má»¥c tiÃªu: Táº¡o tháº·ng dÆ° 10-20%
+
+**ðŸŸ¡ Cáº¤P 3: TÃ€I CHÃNH TÃCH LÅ¨Y**
+ðŸ“ Thu nháº­p > Chi tiÃªu
+ðŸ’µ Báº¯t Ä‘áº§u tiáº¿t kiá»‡m & Ä‘áº§u tÆ°
+ðŸŽ¯ Má»¥c tiÃªu: Äáº§u tÆ° 10-20% thu nháº­p
+
+**ðŸŸ¢ Cáº¤P 4: TÃ€I CHÃNH AN TOÃ€N**
+ðŸ“ CÃ³ quá»¹ kháº©n cáº¥p 6+ thÃ¡ng
+ðŸ’Ž Thu nháº­p thá»¥ Ä‘á»™ng Ä‘Ã¡ng ká»ƒ
+ðŸŽ¯ Má»¥c tiÃªu: TÄƒng thu nháº­p thá»¥ Ä‘á»™ng
+
+**ðŸ”µ Cáº¤P 5: Tá»° DO TÃ€I CHÃNH**
+ðŸ“ Thu nháº­p thá»¥ Ä‘á»™ng > Chi tiÃªu
+ðŸ† KhÃ´ng cáº§n lÃ m váº«n cÃ³ tiá»n
+ðŸŽ¯ Má»¥c tiÃªu: Maintain & enjoy life!
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸŽ® **QUIZ: Báº N ÄANG á»ž Cáº¤P NÃ€O?**
+
+1ï¸âƒ£ Reply "1" náº¿u báº¡n á»Ÿ Cáº¥p 1
+2ï¸âƒ£ Reply "2" náº¿u báº¡n á»Ÿ Cáº¥p 2
+3ï¸âƒ£ Reply "3" náº¿u báº¡n á»Ÿ Cáº¥p 3
+4ï¸âƒ£ Reply "4" náº¿u báº¡n á»Ÿ Cáº¥p 4
+5ï¸âƒ£ Reply "5" náº¿u báº¡n á»Ÿ Cáº¥p 5
+
+MÃ¬nh sáº½ cho tips Ä‘á»ƒ lÃªn cáº¥p tiáº¿p theo!
+
+ðŸ“Š **Xem chi tiáº¿t trong app:**
+Freedom Wallet â†’ "Financial Level"
+""",
+        "delay_hours": 48,
+        "buttons": [
+            [{"text": "ðŸŽ¯ Quiz: TÃ´i á»Ÿ cáº¥p máº¥y?", "callback_data": "onboard_quiz_level"}],
+            [{"text": "ðŸ’¡ Tips lÃªn cáº¥p", "callback_data": "onboard_level_tips"}],
+            [{"text": "âœ… ÄÃ£ xÃ¡c Ä‘á»‹nh cáº¥p", "callback_data": "onboard_complete_3"}],
+            [{"text": "â“ Cáº§n há»— trá»£", "callback_data": "onboard_help_3"}]
+        ]
+    },
+    
+    4: {
+        "title": "âš¡ Day 4: ThÃªm Giao Dá»‹ch Äáº§u TiÃªn",
+        "content": """
+âš¡ **THÃŠM GIAO Dá»ŠCH - THEO DÃ•I CHI TIÃŠU**
+
+ÄÃ£ setup xong? Giá» lÃ  lÃºc báº¯t Ä‘áº§u tracking!
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ“ **CÃCH THÃŠM GIAO Dá»ŠCH:**
+
+**BÆ°á»›c 1:** Má»Ÿ Freedom Wallet
+**BÆ°á»›c 2:** Click "ThÃªm giao dá»‹ch"
+**BÆ°á»›c 3:** Äiá»n thÃ´ng tin:
+   â€¢ Loáº¡i: Thu/Chi
+   â€¢ Sá»‘ tiá»n
+   â€¢ Danh má»¥c (Ä‚n uá»‘ng, Di chuyá»ƒn...)
+   â€¢ HÅ© tiá»n (náº¿u lÃ  chi tiÃªu)
+   â€¢ Ghi chÃº (optional)
+
+**BÆ°á»›c 4:** LÆ°u láº¡i â†’ Done!
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ’¡ **TIPS PHÃ‚N LOáº I:**
+
+**Chi tiÃªu HÅ© 1 (Thiáº¿t yáº¿u):**
+â€¢ Tiá»n nhÃ , Ä‘iá»‡n nÆ°á»›c
+â€¢ Äi láº¡i, xÄƒng xe
+â€¢ Marketing, chi phÃ­ kinh doanh
+
+**Chi tiÃªu HÅ© 2 (HÆ°á»Ÿng thá»¥):**
+â€¢ Cafe, trÃ  sá»¯a
+â€¢ Ä‚n nhÃ  hÃ ng
+â€¢ Shopping, giáº£i trÃ­
+
+**Thu nháº­p:**
+â€¢ LÆ°Æ¡ng, thÆ°á»Ÿng
+â€¢ Doanh thu kinh doanh
+â€¢ LÃ£i Ä‘áº§u tÆ°, lÃ£i ngÃ¢n hÃ ng
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸŽ¯ **THÃCH THá»¨C:**
+
+HÃ´m nay, thÃªm Ã­t nháº¥t **3 giao dá»‹ch** gáº§n Ä‘Ã¢y:
+1ï¸âƒ£ 1 giao dá»‹ch chi tiÃªu thiáº¿t yáº¿u
+2ï¸âƒ£ 1 giao dá»‹ch hÆ°á»Ÿng thá»¥
+3ï¸âƒ£ 1 giao dá»‹ch thu nháº­p (náº¿u cÃ³)
+
+âœ… Xong rá»“i? Nháº¯n "DONE" nhÃ©!
+
+â“ **Gáº·p váº¥n Ä‘á»?**
+â€¢ KhÃ´ng biáº¿t chá»n danh má»¥c?
+â€¢ App bÃ¡o lá»—i?
+â€¢ CÃ¡ch nÃ o nhanh nháº¥t?
+
+Há»i mÃ¬nh ngay!
+""",
+        "delay_hours": 72,
+        "buttons": [
+            [{"text": "ðŸ“ Má»Ÿ App Ä‘á»ƒ thÃªm", "callback_data": "onboard_open_app"}],
+            [{"text": "ðŸ’¡ Tips phÃ¢n loáº¡i", "callback_data": "onboard_tips_day4"}],
+            [{"text": "âœ… ÄÃ£ thÃªm xong", "callback_data": "onboard_complete_4"}],
+            [{"text": "â“ Cáº§n há»— trá»£", "callback_data": "onboard_help_4"}]
+        ]
+    },
+    
+    5: {
+        "title": "ðŸ“ˆ Day 5: TÃ­nh NÄƒng NÃ¢ng Cao",
+        "content": """
+ðŸ“ˆ **TÃNH NÄ‚NG NÃ‚NG CAO - MASTER FREEDOM WALLET**
+
+Giá» báº¡n Ä‘Ã£ quen vá»›i basics, nÃ¢ng cáº¥p thÃ´i!
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**1ï¸âƒ£ Äáº¦U TÆ¯ & ROI TRACKER**
+
+ðŸ“Š Theo dÃµi hiá»‡u suáº¥t Ä‘áº§u tÆ°:
+â€¢ Cá»• phiáº¿u
+â€¢ Crypto
+â€¢ Báº¥t Ä‘á»™ng sáº£n
+â€¢ VÃ ng, ngoáº¡i tá»‡
+
+ðŸ’¡ **CÃ¡ch dÃ¹ng:**
+â€¢ Nháº­p giÃ¡ mua ban Ä‘áº§u
+â€¢ Cáº­p nháº­t giÃ¡ hiá»‡n táº¡i
+â€¢ Xem ROI% tá»± Ä‘á»™ng
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**2ï¸âƒ£ TÃ€I Sáº¢N & Ná»¢**
+
+ðŸ’Ž Quáº£n lÃ½ tá»•ng tÃ i sáº£n:
+â€¢ Tiá»n máº·t, ngÃ¢n hÃ ng
+â€¢ Báº¥t Ä‘á»™ng sáº£n
+â€¢ Xe cá»™, trang sá»©c
+â€¢ Ná»£ vay, tháº» tÃ­n dá»¥ng
+
+ðŸ’¡ **Lá»£i Ã­ch:**
+Biáº¿t chÃ­nh xÃ¡c net worth cá»§a báº¡n!
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**3ï¸âƒ£ BÃO CÃO & THá»NG KÃŠ**
+
+ðŸ“Š Dashboard tá»± Ä‘á»™ng:
+â€¢ Chi tiÃªu theo thÃ¡ng
+â€¢ So sÃ¡nh vá»›i thÃ¡ng trÆ°á»›c
+â€¢ Top danh má»¥c chi nhiá»u nháº¥t
+â€¢ Xu hÆ°á»›ng tiáº¿t kiá»‡m
+
+ðŸ’¡ **Xem ngay:**
+Freedom Wallet â†’ "Reports"
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**4ï¸âƒ£ NGÃ‚N SÃCH & Má»¤C TIÃŠU**
+
+ðŸŽ¯ Äáº·t má»¥c tiÃªu:
+â€¢ Tiáº¿t kiá»‡m 10M trong 6 thÃ¡ng
+â€¢ Giáº£m chi tiÃªu hÆ°á»Ÿng thá»¥ 20%
+â€¢ Äáº§u tÆ° 5M/thÃ¡ng
+
+ðŸ“ˆ Theo dÃµi tiáº¿n Ä‘á»™ tá»± Ä‘á»™ng!
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ’ª **THÃCH THá»¨C:**
+
+KhÃ¡m phÃ¡ 1 tÃ­nh nÄƒng má»›i hÃ´m nay:
+1. Thá»­ ROI Tracker vá»›i 1 khoáº£n Ä‘áº§u tÆ°
+2. Nháº­p tÃ i sáº£n & ná»£ cá»§a báº¡n
+3. Xem Reports thÃ¡ng nÃ y
+
+â“ Cáº§n hÆ°á»›ng dáº«n chi tiáº¿t? Há»i mÃ¬nh!
+""",
+        "delay_hours": 96
+    },
+    
+    6: {
+        "title": "ðŸ‘¥ Day 6: Tham Gia Cá»™ng Äá»“ng",
+        "content": """
+ðŸ‘¥ **THAM GIA Cá»˜NG Äá»’NG FREEDOM WALLET**
+
+Há»c há»i & chia sáº» vá»›i 1000+ thÃ nh viÃªn!
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ’¬ **FREEDOM WALLET GROUP**
+
+ðŸ‘‰ [Tham gia ngay](https://t.me/freedomwalletapp)
+
+ðŸ“š **Báº¡n sáº½ nháº­n Ä‘Æ°á»£c:**
+
+âœ“ Há»— trá»£ trá»±c tiáº¿p tá»« team & community
+âœ“ Tips tÃ i chÃ­nh hÃ ng ngÃ y
+âœ“ Case studies thá»±c táº¿
+âœ“ Updates tÃ­nh nÄƒng má»›i
+âœ“ TÃ i liá»‡u & templates miá»…n phÃ­
+âœ“ Livestream Q&A Ä‘á»‹nh ká»³
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ”¥ **TOPICS THÆ¯á»œNG TRÃ€:**
+
+â€¢ CÃ¡ch tá»‘i Æ°u 6 HÅ© Tiá»n
+â€¢ Chiáº¿n lÆ°á»£c Ä‘áº§u tÆ° cho ngÆ°á»i má»›i
+â€¢ Tiáº¿t kiá»‡m 50% lÆ°Æ¡ng má»—i thÃ¡ng
+â€¢ Passive income ideas
+â€¢ Kháº¯c phá»¥c lá»—i app nhanh
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ“– **CÃC NGUá»’N Há»ŒC THÃŠM:**
+
+**1. Notion Guide:**
+ðŸ‘‰ [eliroxbot.notion.site/freedomwallet](https://eliroxbot.notion.site/freedomwallet)
+â€¢ HÆ°á»›ng dáº«n chi tiáº¿t má»i tÃ­nh nÄƒng
+â€¢ Video tutorials
+â€¢ Troubleshooting guide
+
+**2. Resources & Templates:**
+â€¢ Excel budgeting templates
+â€¢ Financial planning worksheets
+â€¢ Reading list cho financial literacy
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ’¡ **CHIA Sáºº THÃ€NH CÃ”NG Cá»¦A Báº N!**
+
+Báº¡n Ä‘Ã£ track Ä‘Æ°á»£c gÃ¬ sau 6 ngÃ y?
+â€¢ Tiáº¿t kiá»‡m Ä‘Æ°á»£c bao nhiÃªu?
+â€¢ PhÃ¡t hiá»‡n ra Ä‘iá»ƒm nÃ o lÃ£ng phÃ­?
+â€¢ Má»¥c tiÃªu tiáº¿p theo lÃ  gÃ¬?
+
+Chia sáº» trong Group Ä‘á»ƒ inspire ngÆ°á»i khÃ¡c nhÃ©!
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+â“ **FAQ NHANH:**
+
+Q: Group cÃ³ thu phÃ­ khÃ´ng?
+A: 100% miá»…n phÃ­ mÃ£i mÃ£i!
+
+Q: TÃ´i cÃ³ thá»ƒ há»i báº¥t cá»© Ä‘iá»u gÃ¬?
+A: CÃ³! Team & community sáº½ giÃºp báº¡n.
+
+Q: CÃ³ Ä‘Æ°á»£c support 1-1 khÃ´ng?
+A: CÃ³! Tag @admin trong group.
+
+ðŸš€ Tham gia ngay Ä‘á»ƒ khÃ´ng bá» lá»¡!
+""",
+        "delay_hours": 120
+    },
+    
+    7: {
+        "title": "ðŸŽŠ Day 7: Ã”n Táº­p & Káº¿ Hoáº¡ch",
+        "content": """
+ðŸŽŠ **CHÃšC Má»ªNG! Báº N ÄÃƒ HOÃ€N THÃ€NH 7 NGÃ€Y ONBOARDING!**
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ“š **REVIEW: NHá»®NG GÃŒ Báº N ÄÃƒ Há»ŒC**
+
+âœ… **Day 1:** Setup Web App hoÃ n chá»‰nh
+âœ… **Day 2:** Hiá»ƒu rÃµ 6 HÅ© Tiá»n
+âœ… **Day 3:** XÃ¡c Ä‘á»‹nh cáº¥p Ä‘á»™ tÃ i chÃ­nh hiá»‡n táº¡i
+âœ… **Day 4:** Tracking giao dá»‹ch thÃ nh tháº¡o
+âœ… **Day 5:** Sá»­ dá»¥ng tÃ­nh nÄƒng nÃ¢ng cao
+âœ… **Day 6:** Tham gia cá»™ng Ä‘á»“ng
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸŽ¯ **Káº¾ HOáº CH 30 NGÃ€Y Tá»šI**
+
+**TUáº¦N 2: Táº O THÃ“I QUEN**
+â€¢ Track má»i giao dá»‹ch hÃ ng ngÃ y (cáº£ nhá» nháº¥t)
+â€¢ Review chi tiÃªu má»—i tá»‘i 5 phÃºt
+â€¢ Má»¥c tiÃªu: 21 ngÃ y = 1 thÃ³i quen
+
+**TUáº¦N 3: Tá»I Æ¯U HÃ“A**
+â€¢ PhÃ¢n tÃ­ch chi tiÃªu thÃ¡ng trÆ°á»›c
+â€¢ TÃ¬m 3 Ä‘iá»ƒm cÃ³ thá»ƒ cáº¯t giáº£m
+â€¢ TÄƒng hÅ© Ä‘áº§u tÆ° thÃªm 5%
+
+**TUáº¦N 4: Má»ž Rá»˜NG**
+â€¢ Thá»­ 1 cÃ¡ch Ä‘áº§u tÆ° má»›i
+â€¢ Äáº·t má»¥c tiÃªu tiáº¿t kiá»‡m cá»¥ thá»ƒ
+â€¢ Share kinh nghiá»‡m trong Group
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ’ª **THÃCH THá»¨C 30 NGÃ€Y:**
+
+MÃ¬nh thÃ¡ch báº¡n trong 30 ngÃ y tá»›i:
+1ï¸âƒ£ Track 100% giao dá»‹ch
+2ï¸âƒ£ Tiáº¿t kiá»‡m thÃªm 10% thu nháº­p
+3ï¸âƒ£ TÃ¬m 1 nguá»“n thu thá»¥ Ä‘á»™ng má»›i
+
+Nháº¯n "ACCEPT" Ä‘á»ƒ nháº­n challenge!
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ“Š **ÄÃNH GIÃ:**
+
+GiÃºp mÃ¬nh cáº£i thiá»‡n báº±ng cÃ¡ch tráº£ lá»i:
+
+**Onboarding 7 ngÃ y cÃ³ há»¯u Ã­ch khÃ´ng?**
+1ï¸âƒ£ = Ráº¥t tá»‡
+2ï¸âƒ£ = Tá»‡
+3ï¸âƒ£ = BÃ¬nh thÆ°á»ng
+4ï¸âƒ£ = Tá»‘t
+5ï¸âƒ£ = Xuáº¥t sáº¯c!
+
+Reply sá»‘ tá»« 1-5 nhÃ©!
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸŽ **SPECIAL BONUS:**
+
+**Referral Rewards má»›i:**
+Giá»›i thiá»‡u thÃªm 3 ngÆ°á»i â†’ Nháº­n:
+â€¢ 1 giá» tÆ° váº¥n tÃ i chÃ­nh 1-1
+â€¢ Premium templates pack
+â€¢ Early access tÃ­nh nÄƒng má»›i
+
+Share link cá»§a báº¡n: /referral
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸš€ **HÃ€NH TRÃŒNH Má»šI Báº®T Äáº¦U!**
+
+Freedom Wallet khÃ´ng chá»‰ lÃ  app,
+Ä‘Ã³ lÃ  hÃ nh trÃ¬nh thay Ä‘á»•i tÃ i chÃ­nh cá»§a báº¡n.
+
+MÃ¬nh sáº½ luÃ´n á»Ÿ Ä‘Ã¢y support báº¡n!
+
+ðŸ’¬ Cáº§n gÃ¬ cá»© há»i - /help
+ðŸŽ¯ Äáº·t má»¥c tiÃªu - /goals
+ðŸ“Š Xem tiáº¿n Ä‘á»™ - /stats
+ðŸ‘¥ Cá»™ng Ä‘á»“ng - /community
+
+**ChÃºc báº¡n thÃ nh cÃ´ng trÃªn con Ä‘Æ°á»ng tá»± do tÃ i chÃ­nh! ðŸŽ‰**
+
+P/S: Nhá»› track chi tiÃªu hÃ´m nay nhÃ©! ðŸ˜‰
+""",
+        "delay_hours": 144
+    }
+}
+
+
+async def start_onboarding_journey(user_id: int, context: ContextTypes.DEFAULT_TYPE, initial_delay_minutes: int = 0):
+    """
+    Start 7-day onboarding journey for a user
+    
+    Args:
+        user_id: Telegram user ID
+        context: Telegram context
+        initial_delay_minutes: Delay before sending Day 1 (0 = immediate)
+    
+    Week 3: Now uses ProgramManager for enrollment
+    Old scheduling logic kept for backward compatibility
+    """
+    try:
+        logger.info(f"Starting onboarding journey for user {user_id} (delay: {initial_delay_minutes}m)")
+        
+        # Week 3: Use ProgramManager
+        with ProgramManager() as pm:
+            success = await pm.enroll_user(
+                user_id, 
+                ProgramType.ONBOARDING_7_DAY, 
+                context,
+                force=True,  # Override nurture if exists (VIP takes priority)
+                initial_delay_minutes=initial_delay_minutes
+            )
+            
+            if success:
+                logger.success(f"âœ… User {user_id} enrolled in ONBOARDING_7_DAY via ProgramManager")
+                return True
+            else:
+                logger.warning(f"âš ï¸ Failed to enroll user {user_id} in ONBOARDING_7_DAY")
+                # Fallback to legacy method
+                return await _start_onboarding_journey_legacy(user_id, context)
+        
+    except Exception as e:
+        logger.error(f"Failed to start onboarding for user {user_id}: {e}")
+        # Fallback to legacy method
+        return await _start_onboarding_journey_legacy(user_id, context)
+
+
+async def _start_onboarding_journey_legacy(user_id: int, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Legacy method: Schedule all 7 days at once
+    Kept for backward compatibility
+    """
+    try:
+        logger.info(f"Using legacy onboarding scheduling for user {user_id}")
+        bot_context = context.bot_data
+        
+        for day, message_data in ONBOARDING_MESSAGES.items():
+            # Calculate when to send
+            send_time = datetime.now() + timedelta(hours=message_data['delay_hours'])
+            
+            # Schedule message with buttons
+            context.job_queue.run_once(
+                send_onboarding_message,
+                when=send_time,
+                data={
+                    'user_id': user_id,
+                    'day': day,
+                    'title': message_data['title'],
+                    'content': message_data['content'],
+                    'buttons': message_data.get('buttons', [])  # Include buttons if available
+                },
+                name=f"onboarding_day_{day}_user_{user_id}"
+            )
+            
+            logger.info(f"Scheduled onboarding Day {day} for user {user_id} at {send_time}")
+        
+        logger.success(f"Started 7-day onboarding (legacy) for user {user_id}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to start legacy onboarding for user {user_id}: {e}")
+        return False
+
+
+async def send_onboarding_message(context: ContextTypes.DEFAULT_TYPE, user_id: int = None, day: int = None):
+    """
+    Send onboarding message with inline keyboard
+    
+    Can be called in two ways:
+    1. From ProgramManager: send_onboarding_message(context, user_id, day)
+    2. From legacy scheduler: send_onboarding_message(context) with job.data
+    """
+    # If user_id and day not provided, get from job.data (legacy)
+    if user_id is None or day is None:
+        job = context.job
+        data = job.data
+        user_id = data['user_id']
+        day = data['day']
+        title = data['title']
+        content = data['content']
+        buttons = data.get('buttons', [])
+    else:
+        # Get from ONBOARDING_MESSAGES (modern ProgramManager way)
+        if day not in ONBOARDING_MESSAGES:
+            logger.error(f"Invalid onboarding day: {day}")
+            return
+        
+        message_data = ONBOARDING_MESSAGES[day]
+        title = message_data['title']
+        content = message_data['content']
+        buttons = message_data.get('buttons', [])
+    
+    try:
+        # Build inline keyboard if buttons provided
+        reply_markup = None
+        if buttons:
+            keyboard = []
+            for row in buttons:
+                button_row = []
+                for btn in row:
+                    if 'url' in btn:
+                        button_row.append(InlineKeyboardButton(btn['text'], url=btn['url']))
+                    else:
+                        button_row.append(InlineKeyboardButton(btn['text'], callback_data=btn['callback_data']))
+                keyboard.append(button_row)
+            reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=f"{title}\n{content}",
+            parse_mode="Markdown",
+            disable_web_page_preview=True,
+            reply_markup=reply_markup
+        )
+        
+        logger.info(f"Sent onboarding Day {day} to user {user_id} with {len(buttons)} button rows")
+        
+        # TODO: Update onboarding_progress in database
+        
+    except Exception as e:
+        logger.error(f"Failed to send onboarding Day {day} to user {user_id}: {e}")
+
+
+async def handle_onboarding_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle user responses to onboarding messages
+    """
+    text = update.message.text.strip().upper()
+    user_id = update.effective_user.id
+    
+    # Check for completion markers
+    if text == "DONE":
+        await update.message.reply_text(
+            "ðŸŽ‰ Tuyá»‡t vá»i! Báº¡n Ä‘Ã£ hoÃ n thÃ nh nhiá»‡m vá»¥!\n"
+            "Tiáº¿p tá»¥c theo dÃµi nhÃ©, mÃ¬nh sáº½ gá»­i bÃ i tiáº¿p theo sá»›m thÃ´i!",
+            parse_mode="Markdown"
+        )
+        return
+    
+    # Check for challenge acceptance
+    if text == "ACCEPT":
+        await update.message.reply_text(
+            "ðŸ’ª **CHALLENGE ACCEPTED!**\n\n"
+            "MÃ¬nh sáº½ nháº¯c báº¡n má»—i tuáº§n Ä‘á»ƒ check progress.\n"
+            "CÃ¹ng nhau lÃ m nÃªn Ä‘iá»u tuyá»‡t vá»i! ðŸš€",
+            parse_mode="Markdown"
+        )
+        # TODO: Schedule weekly check-ins
+        return
+    
+    # Check for level quiz answer (1-5)
+    if text in ["1", "2", "3", "4", "5"]:
+        level = int(text)
+        tips = {
+            1: "ðŸ’¡ **Tips lÃªn Cáº¥p 2:**\nâ€¢ Liá»‡t kÃª táº¥t cáº£ chi tiÃªu\nâ€¢ TÃ¬m 3 khoáº£n cÃ³ thá»ƒ cáº¯t\nâ€¢ TÄƒng thu nháº­p (side hustle)\nâ€¢ DÃ¹ng app track má»—i ngÃ y",
+            2: "ðŸ’¡ **Tips lÃªn Cáº¥p 3:**\nâ€¢ Táº¡o ngÃ¢n sÃ¡ch chi tiáº¿t\nâ€¢ Ãp dá»¥ng 6 HÅ© Tiá»n\nâ€¢ Tiáº¿t kiá»‡m Ã­t nháº¥t 10%\nâ€¢ TÃ¬m cÃ¡ch tÄƒng thu",
+            3: "ðŸ’¡ **Tips lÃªn Cáº¥p 4:**\nâ€¢ XÃ¢y quá»¹ kháº©n cáº¥p 6 thÃ¡ng\nâ€¢ Äáº§u tÆ° 10-20% thu nháº­p\nâ€¢ Há»c vá» Ä‘áº§u tÆ° an toÃ n\nâ€¢ TÄƒng passive income",
+            4: "ðŸ’¡ **Tips lÃªn Cáº¥p 5:**\nâ€¢ Scale passive income\nâ€¢ Äa dáº¡ng hÃ³a Ä‘áº§u tÆ°\nâ€¢ Tá»‘i Æ°u thuáº¿\nâ€¢ Enjoy life but stay disciplined",
+            5: "ðŸ† **CHÃšC Má»ªNG!**\nBáº¡n Ä‘Ã£ Ä‘áº¡t tá»± do tÃ i chÃ­nh!\nGiá» lÃ  lÃºc giÃºp Ä‘á»¡ ngÆ°á»i khÃ¡c vÃ  enjoy cuá»™c sá»‘ng!"
+        }
+        
+        await update.message.reply_text(
+            f"âœ… Báº¡n Ä‘ang á»Ÿ **Cáº¥p {level}**!\n\n{tips[level]}",
+            parse_mode="Markdown"
+        )
+        return
+    
+    # Check for rating (1-5)
+    # Will handle in general message handler
+
+
+async def stop_onboarding_journey(user_id: int, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Stop onboarding journey for a user (if they request)
+    """
+    try:
+        jobs = context.job_queue.get_jobs_by_name(f"onboarding_*_user_{user_id}")
+        for job in jobs:
+            job.schedule_removal()
+        
+        logger.info(f"Stopped onboarding for user {user_id}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to stop onboarding for user {user_id}: {e}")
+        return False
+

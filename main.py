@@ -50,25 +50,25 @@ if USE_CLEAN_ARCHITECTURE:
         recent_transactions_command as ca_recent_command
     )
 
-# Old handlers
-from bot.handlers.start import start, help_menu
-from bot.handlers.status import mystatus_command  # DAY 2: ROI Dashboard
-from bot.handlers.message import handle_message
-from bot.handlers.support import support_command, save_support_ticket, cancel_support
-from bot.handlers.callback import handle_callback
-from bot.handlers.referral import referral_command
-from bot.handlers.registration import (
+# Old handlers (Traditional Architecture)
+from app.handlers.user.start import start, help_menu
+from app.handlers.user.status import mystatus_command  # DAY 2: ROI Dashboard
+from app.handlers.core.message import handle_message
+from app.handlers.support.support import support_command, save_support_ticket, cancel_support
+from app.handlers.core.callback import handle_callback
+from app.handlers.engagement.referral import referral_command
+from app.handlers.user.registration import (
     start_registration, receive_email, receive_phone, receive_name,
     confirm_registration, cancel_registration,
     AWAITING_EMAIL, AWAITING_PHONE, AWAITING_NAME, CONFIRM
 )
-from bot.handlers.setup_guide import register_setup_guide_handlers
-from bot.handlers.webapp_setup import register_webapp_setup_handlers
-from bot.handlers.daily_reminder import register_reminder_handlers
-from bot.handlers.user_commands import register_user_command_handlers
-from bot.handlers.vip import register_vip_handlers  # VIP Identity Tier (Feb 2026)
-from bot.handlers.free_flow import register_free_flow_handlers  # FREE step-by-step flow (Feb 2026)
-from bot.handlers.unlock_calm_flow import register_unlock_calm_flow_handlers  # UNLOCK calm flow (Feb 2026)
+from app.handlers.support.setup_guide import register_setup_guide_handlers
+from app.handlers.core.webapp_setup import register_webapp_setup_handlers
+from app.handlers.engagement.daily_reminder import register_reminder_handlers
+from app.handlers.user.user_commands import register_user_command_handlers
+from app.handlers.premium.vip import register_vip_handlers  # VIP Identity Tier (Feb 2026)
+from app.handlers.user.free_flow import register_free_flow_handlers  # FREE step-by-step flow (Feb 2026)
+from app.handlers.premium.unlock_calm_flow import register_unlock_calm_flow_handlers  # UNLOCK calm flow (Feb 2026)
 
 # Configure logging with UTF-8 encoding
 logging.basicConfig(

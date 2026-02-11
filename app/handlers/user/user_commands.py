@@ -1,0 +1,133 @@
+"""
+User Commands - CÃ¡c lá»‡nh user cÃ³ thá»ƒ sá»­ dá»¥ng
+/stats, /reminder_on, /reminder_off, /record_transaction
+"""
+from telegram import Update
+from telegram.ext import ContextTypes, CommandHandler
+from loguru import logger
+from app.handlers.streak_tracking import get_user_streak_stats, toggle_reminder, record_transaction_event
+
+
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show user's streak statistics"""
+    user_id = update.effective_user.id
+    
+    stats = get_user_streak_stats(user_id)
+    
+    if not stats:
+        await update.message.reply_text(
+            "âŒ KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin cá»§a báº¡n.\n"
+            "Vui lÃ²ng Ä‘Äƒng kÃ½ trÆ°á»›c: /start"
+        )
+        return
+    
+    message = f"""
+ðŸ“Š **THá»NG KÃŠ GHI CHÃ‰P - {stats['user_name'].upper()}**
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ”¥ **STREAK HIá»†N Táº I:**
+{stats['current_streak']} ngÃ y liÃªn tá»¥c
+
+ðŸ† **STREAK DÃ€I NHáº¤T:**
+{stats['longest_streak']} ngÃ y
+
+ðŸ“ **Tá»”NG GIAO Dá»ŠCH:**
+{stats['total_transactions']} giao dá»‹ch
+
+ðŸ“… **GHI CHÃ‰P Gáº¦N NHáº¤T:**
+{stats['last_transaction_date'] or 'ChÆ°a cÃ³'}
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+âœ¨ **MILESTONES:**
+â€¢ 7 ngÃ y: {'âœ… Äáº¡t rá»“i!' if stats['milestones']['7_days'] else 'â³ ChÆ°a Ä‘áº¡t'}
+â€¢ 30 ngÃ y: {'âœ… Äáº¡t rá»“i!' if stats['milestones']['30_days'] else 'â³ ChÆ°a Ä‘áº¡t'}
+â€¢ 90 ngÃ y: {'âœ… Äáº¡t rá»“i!' if stats['milestones']['90_days'] else 'â³ ChÆ°a Ä‘áº¡t'}
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+{'âœ… **ÄÃ£ ghi chÃ©p hÃ´m nay!**' if stats['recorded_today'] else 'âš ï¸ **ChÆ°a ghi chÃ©p hÃ´m nay!**'}
+
+ðŸ’¡ *Ghi chÃ©p Ä‘á»u Ä‘áº·n Ä‘á»ƒ giá»¯ streak!*
+"""
+    
+    await update.message.reply_text(message, parse_mode="Markdown")
+    logger.info(f"Showed stats for user {user_id}")
+
+
+async def reminder_on_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Enable daily reminders"""
+    user_id = update.effective_user.id
+    
+    success = toggle_reminder(user_id, True)
+    
+    if success:
+        await update.message.reply_text(
+            "âœ… **ÄÃ£ báº­t nháº¯c nhá»Ÿ hÃ ng ngÃ y!**\n\n"
+            "Báº¡n sáº½ nháº­n Ä‘Æ°á»£c:\n"
+            "â€¢ Nháº¯c nhá»Ÿ sÃ¡ng (8:00 AM)\n"
+            "â€¢ Nháº¯c nhá»Ÿ tá»‘i (8:00 PM)\n\n"
+            "ðŸ’¡ *Táº¯t báº¥t cá»© lÃºc nÃ o: /reminder_off*",
+            parse_mode="Markdown"
+        )
+    else:
+        await update.message.reply_text(
+            "âŒ KhÃ´ng thá»ƒ báº­t nháº¯c nhá»Ÿ.\n"
+            "Vui lÃ²ng liÃªn há»‡ support."
+        )
+
+
+async def reminder_off_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Disable daily reminders"""
+    user_id = update.effective_user.id
+    
+    success = toggle_reminder(user_id, False)
+    
+    if success:
+        await update.message.reply_text(
+            "ðŸ”• **ÄÃ£ táº¯t nháº¯c nhá»Ÿ hÃ ng ngÃ y.**\n\n"
+            "Báº¡n sáº½ khÃ´ng nháº­n thÃ´ng bÃ¡o tá»± Ä‘á»™ng ná»¯a.\n\n"
+            "ðŸ’¡ *Báº­t láº¡i báº¥t cá»© lÃºc nÃ o: /reminder_on*",
+            parse_mode="Markdown"
+        )
+    else:
+        await update.message.reply_text(
+            "âŒ KhÃ´ng thá»ƒ táº¯t nháº¯c nhá»Ÿ.\n"
+            "Vui lÃ²ng liÃªn há»‡ support."
+        )
+
+
+async def record_transaction_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Manually record that user made a transaction (for testing/manual entry)"""
+    user_id = update.effective_user.id
+    
+    # Record transaction event
+    record_transaction_event(user_id, context)
+    
+    # Get updated stats
+    stats = get_user_streak_stats(user_id)
+    
+    if stats:
+        await update.message.reply_text(
+            f"âœ… **ÄÃ£ ghi nháº­n giao dá»‹ch!**\n\n"
+            f"ðŸ”¥ Streak hiá»‡n táº¡i: **{stats['current_streak']} ngÃ y**\n"
+            f"ðŸ“ Tá»•ng giao dá»‹ch: {stats['total_transactions']}\n\n"
+            f"ðŸ’¡ *Tiáº¿p tá»¥c giá»¯ streak nhÃ©!*",
+            parse_mode="Markdown"
+        )
+    else:
+        await update.message.reply_text("âœ… ÄÃ£ ghi nháº­n!")
+    
+    logger.info(f"Manually recorded transaction for user {user_id}")
+
+
+def register_user_command_handlers(application):
+    """Register user command handlers"""
+    application.add_handler(CommandHandler("stats", stats_command))
+    application.add_handler(CommandHandler("reminder_on", reminder_on_command))
+    application.add_handler(CommandHandler("reminder_off", reminder_off_command))
+    application.add_handler(CommandHandler("record_transaction", record_transaction_command))
+    
+    logger.info("âœ… User command handlers registered")
+

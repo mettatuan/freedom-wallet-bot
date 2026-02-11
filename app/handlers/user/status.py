@@ -1,0 +1,221 @@
+"""
+Status Command - Show user subscription status and ROI
+
+Shows:
+- Current tier (FREE/TRIAL/PREMIUM)
+- Usage stats
+- ROI for premium users
+- Days remaining for trial
+"""
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
+from app.utils.database import get_user_by_id
+from app.core.subscription import SubscriptionManager, SubscriptionTier
+from app.services.roi_calculator import ROICalculator
+from app.services.analytics import Analytics
+from datetime import datetime
+from loguru import logger
+
+
+async def mystatus_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /mystatus command"""
+    
+    user_id = update.effective_user.id
+    user = await get_user_by_id(user_id)  # FIX: Added await
+    
+    if not user:
+        await update.message.reply_text(
+            "âŒ KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin user.\n"
+            "GÃµ /start Ä‘á»ƒ báº¯t Ä‘áº§u!"
+        )
+        return
+    
+    # Get user tier
+    tier = SubscriptionManager.get_user_tier(user)
+    
+    # Build message based on tier
+    if tier == SubscriptionTier.FREE:
+        message = _build_free_status_message(user)  # FIX: Removed await (not async)
+        keyboard = [
+            [InlineKeyboardButton("ðŸ“Š Xem tiáº¿n Ä‘á»™", callback_data="referral_progress")],
+            [InlineKeyboardButton("ðŸ“– HÆ°á»›ng dáº«n", callback_data="help_tutorial")],
+            [InlineKeyboardButton("ðŸ  Menu", callback_data="start")]
+        ]
+    
+    elif tier == SubscriptionTier.TRIAL:
+        message = _build_trial_status_message(user, user_id)  # FIX: Removed await
+        keyboard = [
+            [InlineKeyboardButton("ðŸ’Ž NÃ¢ng cáº¥p Premium ngay", callback_data="upgrade_to_premium")],
+            [InlineKeyboardButton("ðŸ“Š Xem ROI chi tiáº¿t", callback_data="view_roi_detail")],
+            [InlineKeyboardButton("ðŸ  Menu", callback_data="start")]
+        ]
+    
+    elif tier == SubscriptionTier.PREMIUM:
+        message = _build_premium_status_message(user, user_id)  # FIX: Removed await
+        keyboard = [
+            [InlineKeyboardButton("ðŸ“Š ROI Dashboard Ä‘áº§y Ä‘á»§", callback_data="view_roi_detail")],
+            [InlineKeyboardButton("ðŸ’¡ Tá»‘i Æ°u sá»­ dá»¥ng", callback_data="optimization_tips")],
+            [InlineKeyboardButton("ðŸ  Menu", callback_data="start")]
+        ]
+    
+    else:
+        message = "âš ï¸ Lá»—i: KhÃ´ng xÃ¡c Ä‘á»‹nh Ä‘Æ°á»£c tier"
+        keyboard = [[InlineKeyboardButton("ðŸ  Menu", callback_data="start")]]
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    # Track analytics
+    Analytics.track_event(user_id, 'mystatus_viewed', {
+        'tier': tier.value,
+        'messages_today': user.bot_chat_count or 0
+    })
+    
+    await update.message.reply_text(
+        message,
+        parse_mode='Markdown',
+        reply_markup=reply_markup
+    )
+
+
+def _build_free_status_message(user) -> str:
+    """Build status message for FREE users"""
+    
+    messages_today = user.bot_chat_count or 0
+    remaining = max(0, 5 - messages_today)
+    referral_count = user.referral_count or 0
+    is_unlocked = user.is_free_unlocked
+    
+    if is_unlocked:
+        status_emoji = "âœ…"
+        status_text = "FREE FOREVER"
+    else:
+        status_emoji = "ðŸ“Š"
+        status_text = f"FREE (Tiáº¿n Ä‘á»™: {referral_count}/2)"
+    
+    message = f"""
+{status_emoji} **TÃ€I KHOáº¢N {status_text}**
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+ðŸ“Š **Sá»¬ Dá»¤NG HÃ”M NAY:**
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ’¬ Tin nháº¯n: {messages_today}/5
+ðŸ“ CÃ²n láº¡i: {remaining} tin nháº¯n
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+ðŸŽ **QUYá»€N Lá»¢I Cá»¦A Báº N:**
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+âœ“ Template Freedom Wallet Ä‘áº§y Ä‘á»§
+âœ“ Bot há»— trá»£ 5 message/ngÃ y
+âœ“ Káº¿t ná»‘i Google Sheets
+âœ“ Cá»™ng Ä‘á»“ng há»— trá»£
+
+{"" if is_unlocked else f"""
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+ðŸ’¡ **Má»ž KHÃ“A Äáº¦Y Äá»¦:**
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+Giá»›i thiá»‡u 2 báº¡n â†’ Sá»Ÿ há»¯u vÄ©nh viá»…n â™¾ï¸
+GÃµ /referral Ä‘á»ƒ xem link cá»§a báº¡n.
+"""}
+"""
+    
+    return message
+
+
+def _build_trial_status_message(user, user_id: int) -> str:
+    """Build status message for TRIAL users"""
+    
+    # Calculate days remaining
+    if user.trial_ends_at:
+        now = datetime.utcnow()
+        time_remaining = user.trial_ends_at - now
+        days_remaining = max(0, time_remaining.days)
+        hours_remaining = max(0, int(time_remaining.total_seconds() / 3600))
+        trial_end_str = user.trial_ends_at.strftime("%d/%m/%Y %H:%M")
+    else:
+        days_remaining = 0
+        hours_remaining = 0
+        trial_end_str = "N/A"
+    
+    # Get ROI stats
+    roi = ROICalculator.calculate_monthly_roi(user_id)
+    
+    message = f"""
+ðŸŽ **TÃ€I KHOáº¢N TRIAL**
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+â° **THá»œI GIAN TRIAL:**
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ“… Káº¿t thÃºc: {trial_end_str}
+â³ CÃ²n láº¡i: **{days_remaining} ngÃ y** ({hours_remaining}h)
+
+{ROICalculator.format_roi_message(roi, "TRIAL")}
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+âœ¨ **TÃNH NÄ‚NG ÄÃƒ Má»ž:**
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+âœ… Unlimited tin nháº¯n
+âœ… AI phÃ¢n tÃ­ch tÃ i chÃ­nh
+âœ… Dashboard thÃ´ng minh
+âœ… Gá»£i Ã½ cÃ¡ nhÃ¢n hÃ³a
+âœ… Há»— trá»£ Æ°u tiÃªn 30 phÃºt
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+ðŸ’¡ **SAU KHI TRIAL Káº¾T THÃšC:**
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+NÃ¢ng cáº¥p Premium Ä‘á»ƒ tiáº¿p tá»¥c:
+ðŸ’° 999,000 VNÄ/nÄƒm (~2,750 VNÄ/ngÃ y)
+ðŸš€ KÃ­ch hoáº¡t ngay láº­p tá»©c
+"""
+    
+    return message
+
+
+def _build_premium_status_message(user, user_id: int) -> str:
+    """Build status message for PREMIUM users"""
+    
+    # Calculate expiry date
+    if user.premium_expires_at:
+        days_remaining = (user.premium_expires_at - datetime.utcnow()).days
+        expiry_date = user.premium_expires_at.strftime("%d/%m/%Y")
+    else:
+        days_remaining = 365
+        expiry_date = "N/A"
+    
+    # Get ROI stats
+    roi = ROICalculator.calculate_monthly_roi(user_id)
+    
+    message = f"""
+ðŸ’Ž **TÃ€I KHOáº¢N PREMIUM**
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+â° **THÃ”NG TIN:**
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ“… Háº¿t háº¡n: {expiry_date}
+â³ CÃ²n láº¡i: {days_remaining} ngÃ y
+
+{ROICalculator.format_roi_message(roi, "PREMIUM")}
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+ðŸŽ¯ **Tá»I Æ¯U HÃ“A GIÃ TRá»Š:**
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ’¡ Sá»­ dá»¥ng nhiá»u hÆ¡n = ROI cao hÆ¡n!
+
+**Gá»£i Ã½:**
+â€¢ Chat vá»›i AI má»—i ngÃ y
+â€¢ DÃ¹ng Dashboard thÆ°á»ng xuyÃªn
+â€¢ Thá»­ tÃ­nh nÄƒng PhÃ¢n tÃ­ch
+â€¢ Nháº­n Gá»£i Ã½ cÃ¡ nhÃ¢n
+
+â†’ Má»¥c tiÃªu: ROI â‰¥ +200% ðŸš€
+"""
+    
+    return message
+

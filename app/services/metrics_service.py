@@ -1,0 +1,382 @@
+"""
+Phase 2 Metrics Calculation Service
+Calculates the 6 behavioral metrics for 60-day testing phase
+NO optimization logic - observation only!
+"""
+from datetime import datetime, timedelta
+from sqlalchemy import func, case, and_, or_
+from loguru import logger
+from app.utils.database import get_db, User
+from typing import Dict, Optional
+import time
+
+
+class MetricsCalculationService:
+    """
+    Calculate 6 Phase 2 metrics:
+    - FREE: 30-day retention, transactions per user
+    - VIP: Weekly active rate, natural Premium conversion
+    - PREMIUM: AI usage, 90-day churn
+    """
+    
+    def __init__(self):
+        self.cache = {}
+        self.cache_duration = 600  # 10 minutes cache
+    
+    def get_all_metrics(self, force_refresh: bool = False) -> Dict:
+        """
+        Get all 6 metrics in one call
+        Cached for 10 minutes unless force_refresh=True
+        
+        Returns:
+            {
+                'timestamp': datetime,
+                'free': {...},
+                'vip': {...},
+                'premium': {...},
+                'overall_status': 'HEALTHY' | 'WARNING' | 'CRITICAL'
+            }
+        """
+        cache_key = 'all_metrics'
+        
+        # Check cache
+        if not force_refresh and cache_key in self.cache:
+            cached_data, cached_time = self.cache[cache_key]
+            if time.time() - cached_time < self.cache_duration:
+                logger.info("ðŸ“Š Returning cached metrics")
+                return cached_data
+        
+        logger.info("ðŸ“Š Calculating fresh metrics...")
+        
+        db = next(get_db())
+        try:
+            metrics = {
+                'timestamp': datetime.utcnow(),
+                'free': self._calculate_free_metrics(db),
+                'vip': self._calculate_vip_metrics(db),
+                'premium': self._calculate_premium_metrics(db),
+            }
+            
+            # Calculate overall status
+            metrics['overall_status'] = self._calculate_overall_status(metrics)
+            
+            # Cache results
+            self.cache[cache_key] = (metrics, time.time())
+            
+            logger.info(f"âœ… Metrics calculated: {metrics['overall_status']}")
+            return metrics
+            
+        finally:
+            db.close()
+    
+    def _calculate_free_metrics(self, db) -> Dict:
+        """
+        FREE Tier Metrics:
+        1. 30-day retention â‰¥50%
+        2. Transactions per user â‰¥10/month
+        """
+        # 1. 30-Day Retention
+        # Users created 30+ days ago who were active in last 7 days
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        
+        total_old_users = db.query(User).filter(
+            User.created_at <= thirty_days_ago,
+            User.is_free_unlocked == True
+        ).count()
+        
+        active_old_users = db.query(User).filter(
+            User.created_at <= thirty_days_ago,
+            User.is_free_unlocked == True,
+            User.last_active >= seven_days_ago
+        ).count()
+        
+        retention_30day = (active_old_users / total_old_users * 100) if total_old_users > 0 else 0
+        
+        # 2. Transactions per User
+        avg_transactions = db.query(
+            func.avg(User.total_transactions)
+        ).filter(
+            User.is_free_unlocked == True,
+            User.total_transactions > 0
+        ).scalar() or 0
+        
+        # Supporting data
+        total_free_users = db.query(User).filter(User.is_free_unlocked == True).count()
+        active_7d = db.query(User).filter(
+            User.is_free_unlocked == True,
+            User.last_active >= seven_days_ago
+        ).count()
+        
+        new_this_week = db.query(User).filter(
+            User.is_free_unlocked == True,
+            User.created_at >= seven_days_ago
+        ).count()
+        
+        avg_referrals = db.query(
+            func.avg(User.referral_count)
+        ).filter(
+            User.is_free_unlocked == True
+        ).scalar() or 0
+        
+        return {
+            'retention_30day': round(retention_30day, 1),
+            'retention_target_met': retention_30day >= 50,
+            'transactions_per_user': round(avg_transactions, 1),
+            'transactions_target_met': avg_transactions >= 10,
+            'total_users': total_free_users,
+            'active_7d': active_7d,
+            'new_this_week': new_this_week,
+            'avg_referrals': round(avg_referrals, 1),
+            'status': 'ðŸŸ¢' if (retention_30day >= 50 and avg_transactions >= 10) else 'ðŸŸ¡' if (retention_30day >= 45 or avg_transactions >= 9) else 'ðŸ”´'
+        }
+    
+    def _calculate_vip_metrics(self, db) -> Dict:
+        """
+        VIP Tier Metrics:
+        3. Weekly active rate â‰¥70%
+        4. Natural Premium conversion ~30% (25-35% OK)
+        """
+        # 3. Weekly Active Rate
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        
+        total_vip = db.query(User).filter(
+            User.vip_tier.isnot(None)
+        ).count()
+        
+        active_vip = db.query(User).filter(
+            User.vip_tier.isnot(None),
+            User.last_active >= seven_days_ago
+        ).count()
+        
+        weekly_active_pct = (active_vip / total_vip * 100) if total_vip > 0 else 0
+        
+        # 4. Natural Premium Conversion
+        vip_with_premium = db.query(User).filter(
+            User.vip_tier.isnot(None),
+            User.subscription_tier == 'PREMIUM'
+        ).count()
+        
+        premium_conversion_pct = (vip_with_premium / total_vip * 100) if total_vip > 0 else 0
+        
+        # VIP tier breakdown
+        rising_star_count = db.query(User).filter(
+            User.vip_tier == 'RISING_STAR'
+        ).count()
+        
+        super_vip_count = db.query(User).filter(
+            User.vip_tier == 'SUPER_VIP'
+        ).count()
+        
+        legend_count = db.query(User).filter(
+            User.vip_tier == 'LEGEND'
+        ).count()
+        
+        avg_refs_per_vip = db.query(
+            func.avg(User.referral_count)
+        ).filter(
+            User.vip_tier.isnot(None)
+        ).scalar() or 0
+        
+        return {
+            'weekly_active_pct': round(weekly_active_pct, 1),
+            'weekly_active_target_met': weekly_active_pct >= 70,
+            'premium_conversion_pct': round(premium_conversion_pct, 1),
+            'premium_conversion_target_met': 25 <= premium_conversion_pct <= 35,
+            'total_vip': total_vip,
+            'active_vip': active_vip,
+            'vip_with_premium': vip_with_premium,
+            'rising_star_count': rising_star_count,
+            'super_vip_count': super_vip_count,
+            'legend_count': legend_count,
+            'avg_refs_per_vip': round(avg_refs_per_vip, 1),
+            'status': 'ðŸŸ¢' if (weekly_active_pct >= 70 and 25 <= premium_conversion_pct <= 35) else 'ðŸŸ¡' if (weekly_active_pct >= 63 or 20 <= premium_conversion_pct <= 40) else 'ðŸ”´'
+        }
+    
+    def _calculate_premium_metrics(self, db) -> Dict:
+        """
+        PREMIUM Tier Metrics:
+        5. AI usage â‰¥10 msg/user
+        6. 90-day churn <15%
+        """
+        # 5. AI Usage per User
+        avg_ai_usage = db.query(
+            func.avg(User.bot_chat_count)
+        ).filter(
+            User.subscription_tier.in_(['TRIAL', 'PREMIUM']),
+            User.bot_chat_count > 0
+        ).scalar() or 0
+        
+        # 6. 90-Day Churn
+        ninety_days_ago = datetime.utcnow() - timedelta(days=90)
+        
+        total_premium_90d = db.query(User).filter(
+            User.premium_started_at <= ninety_days_ago,
+            User.subscription_tier.in_(['TRIAL', 'PREMIUM'])
+        ).count()
+        
+        churned_premium = db.query(User).filter(
+            User.premium_started_at <= ninety_days_ago,
+            User.subscription_tier.in_(['TRIAL', 'PREMIUM']),
+            User.subscription_expires < datetime.utcnow()
+        ).count()
+        
+        churn_90day_pct = (churned_premium / total_premium_90d * 100) if total_premium_90d > 0 else 0
+        
+        # Supporting data
+        total_premium = db.query(User).filter(
+            User.subscription_tier == 'PREMIUM'
+        ).count()
+        
+        trial_users = db.query(User).filter(
+            User.subscription_tier == 'TRIAL'
+        ).count()
+        
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        active_premium_7d = db.query(User).filter(
+            User.subscription_tier.in_(['TRIAL', 'PREMIUM']),
+            User.last_active >= seven_days_ago
+        ).count()
+        
+        # Calculate avg subscription duration
+        avg_sub_duration = db.query(
+            func.avg(
+                func.julianday(func.coalesce(User.subscription_expires, datetime.utcnow())) - 
+                func.julianday(User.premium_started_at)
+            )
+        ).filter(
+            User.premium_started_at.isnot(None)
+        ).scalar() or 0
+        
+        return {
+            'ai_usage_avg': round(avg_ai_usage, 1),
+            'ai_usage_target_met': avg_ai_usage >= 10,
+            'churn_90day_pct': round(churn_90day_pct, 1),
+            'churn_target_met': churn_90day_pct < 15,
+            'total_premium': total_premium,
+            'trial_users': trial_users,
+            'active_7d': active_premium_7d,
+            'avg_sub_duration_days': round(avg_sub_duration, 0),
+            'status': 'ðŸŸ¢' if (avg_ai_usage >= 10 and churn_90day_pct < 15) else 'ðŸŸ¡' if (avg_ai_usage >= 9 or churn_90day_pct < 17) else 'ðŸ”´'
+        }
+    
+    def _calculate_overall_status(self, metrics: Dict) -> str:
+        """
+        Overall health status:
+        - HEALTHY: All 6 targets met
+        - WARNING: 1-2 targets missed
+        - CRITICAL: 3+ targets missed
+        """
+        targets_met = 0
+        
+        if metrics['free']['retention_target_met']:
+            targets_met += 1
+        if metrics['free']['transactions_target_met']:
+            targets_met += 1
+        if metrics['vip']['weekly_active_target_met']:
+            targets_met += 1
+        if metrics['vip']['premium_conversion_target_met']:
+            targets_met += 1
+        if metrics['premium']['ai_usage_target_met']:
+            targets_met += 1
+        if metrics['premium']['churn_target_met']:
+            targets_met += 1
+        
+        if targets_met == 6:
+            return 'HEALTHY'
+        elif targets_met >= 4:
+            return 'WARNING'
+        else:
+            return 'CRITICAL'
+    
+    def format_telegram_message(self, metrics: Dict) -> str:
+        """
+        Format metrics for Telegram display
+        """
+        m = metrics
+        
+        # Status emoji
+        status_emoji = {
+            'HEALTHY': 'ðŸŸ¢',
+            'WARNING': 'ðŸŸ¡',
+            'CRITICAL': 'ðŸ”´'
+        }
+        
+        # Status names in Vietnamese
+        status_names = {
+            'HEALTHY': 'Tá»T',
+            'WARNING': 'Cáº¢NH BÃO',
+            'CRITICAL': 'NGHIÃŠM TRá»ŒNG'
+        }
+        
+        message = f"""ðŸ“Š <b>Báº¢NG THEO DÃ•I METRICS PHASE 2</b>
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+ðŸ“… NgÃ y: {m['timestamp'].strftime('%Y-%m-%d %H:%M')}
+â±ï¸ Cáº­p nháº­t: Thá»§ cÃ´ng
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+ðŸŽ <b>GIAI ÄOáº N FREE</b>
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+Tá»· lá»‡ giá»¯ chÃ¢n 30 ngÃ y: <b>{m['free']['retention_30day']}%</b> {m['free']['status']} (Má»¥c tiÃªu: â‰¥50%)
+Giao dá»‹ch/User: <b>{m['free']['transactions_per_user']}</b> {m['free']['status']} (Má»¥c tiÃªu: â‰¥10)
+
+Tá»•ng user FREE: {m['free']['total_users']}
+Hoáº¡t Ä‘á»™ng (7 ngÃ y): {m['free']['active_7d']} ({round(m['free']['active_7d']/m['free']['total_users']*100 if m['free']['total_users'] > 0 else 0, 0):.0f}%)
+Má»›i tuáº§n nÃ y: {m['free']['new_this_week']}
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+â­ <b>GIAI ÄOáº N VIP (Táº§ng Danh TÃ­nh)</b>
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+Hoáº¡t Ä‘á»™ng hÃ ng tuáº§n: <b>{m['vip']['weekly_active_pct']}%</b> {m['vip']['status']} (Má»¥c tiÃªu: â‰¥70%)
+Chuyá»ƒn Premium tá»± nhiÃªn: <b>{m['vip']['premium_conversion_pct']}%</b> {m['vip']['status']} (Má»¥c tiÃªu: ~30%)
+
+Tá»•ng user VIP: {m['vip']['total_vip']}
+â”œâ”€ NgÃ´i Sao Má»›i (10+): {m['vip']['rising_star_count']}
+â”œâ”€ SiÃªu VIP (50+): {m['vip']['super_vip_count']}
+â””â”€ Huyá»n Thoáº¡i (100+): {m['vip']['legend_count']}
+
+Hoáº¡t Ä‘á»™ng (7 ngÃ y): {m['vip']['active_vip']}/{m['vip']['total_vip']}
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+ðŸ’Ž <b>GIAI ÄOáº N PREMIUM (Cháº¿ Äá»™ Máº¡nh)</b>
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+Sá»­ dá»¥ng AI: <b>{m['premium']['ai_usage_avg']} tin nháº¯n</b> {m['premium']['status']} (Má»¥c tiÃªu: â‰¥10)
+Rá»i bá» 90 ngÃ y: <b>{m['premium']['churn_90day_pct']}%</b> {m['premium']['status']} (Má»¥c tiÃªu: &lt;15%)
+
+Tá»•ng Premium: {m['premium']['total_premium']}
+User dÃ¹ng thá»­: {m['premium']['trial_users']}
+Hoáº¡t Ä‘á»™ng (7 ngÃ y): {m['premium']['active_7d']}/{m['premium']['total_premium'] + m['premium']['trial_users']} ({round(m['premium']['active_7d']/(m['premium']['total_premium'] + m['premium']['trial_users'])*100 if (m['premium']['total_premium'] + m['premium']['trial_users']) > 0 else 0, 0):.0f}%)
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+ðŸ“ˆ <b>TÃŒNH TRáº NG Tá»”NG QUÃT: {status_emoji[m['overall_status']]} {status_names[m['overall_status']]}</b>
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+"""
+        
+        if m['overall_status'] == 'HEALTHY':
+            message += "Táº¥t cáº£ 6 metrics Ä‘áº¡t má»¥c tiÃªu âœ…\n"
+        elif m['overall_status'] == 'WARNING':
+            message += "1-2 metrics dÆ°á»›i má»¥c tiÃªu âš ï¸\n"
+        else:
+            message += "3+ metrics dÆ°á»›i má»¥c tiÃªu ðŸš¨\n"
+        
+        message += f"""
+ðŸ”— <b>Dashboard Ä‘áº§y Ä‘á»§:</b>
+https://docs.google.com/spreadsheets/d/1-fruHaSlCKIOpIfU5Qrkns0ze3bx3E-mKUgQ5fUF-Hg/edit
+
+âš ï¸ <b>LÆ¯U Ã:</b>
+â€¢ Theo dÃµi, Ä‘á»«ng tá»‘i Æ°u
+â€¢ Ghi chÃ©p, Ä‘á»«ng sá»­a
+â€¢ Quan sÃ¡t, Ä‘á»«ng can thiá»‡p
+â€¢ Äá»£i Ä‘á»§ 60 ngÃ y trÆ°á»›c khi thay Ä‘á»•i
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+Cáº­p nháº­t tá»± Ä‘á»™ng tiáº¿p: NgÃ y mai 8:00 sÃ¡ng
+"""
+        
+        return message
+
+
+# Create singleton instance
+metrics_service = MetricsCalculationService()
+

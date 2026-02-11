@@ -1,0 +1,346 @@
+"""
+Start Command Handler - Welcome Message
+Week 2: Soft-integrated with State Machine
+"""
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
+from loguru import logger
+from datetime import datetime
+from app.utils.database import save_user_to_db, get_user_by_id, update_user_registration
+from app.handlers.referral import handle_referral_start
+from app.utils.sheets import sync_web_registration
+from config.settings import settings
+
+# Week 2: Import state machine (soft-integration)
+from app.core.state_machine import StateManager, UserState
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /start command - Show welcome message with menu"""
+    
+    user = update.effective_user
+    logger.info(f"User {user.id} ({user.username}) started the bot")
+    
+    # Save user to database
+    db_user = await save_user_to_db(user)
+    
+    # Week 4: Update Super VIP activity tracking
+    from app.core.state_machine import StateManager
+    with StateManager() as sm:
+        sm.update_super_vip_activity(user.id)
+    
+    # Check for deep link code: /start CODE
+    if context.args:
+        code = context.args[0]
+        logger.info(f"User {user.id} started with code: {code}")
+        
+        # Case 1: WEB registration (from freedomwallet.app)
+        if code.startswith("WEB_"):
+            email_hash = code[4:]  # Remove "WEB_" prefix
+            logger.info(f"ðŸŒ Web registration detected: {email_hash}")
+            
+            # Try to sync from Google Sheets
+            web_data = await sync_web_registration(user.id, user.username or '', email_hash)
+            
+            if web_data:
+                # Update user in database with web registration data
+                await update_user_registration(
+                    user_id=user.id,
+                    email=web_data.get('email'),
+                    phone=web_data.get('phone'),
+                    full_name=web_data.get('full_name'),
+                    source='WEB',
+                    referral_count=web_data.get('referral_count', 0)
+                )
+                
+                # Reload user to check unlock status
+                db_user = await get_user_by_id(user.id)
+                referral_count = db_user.referral_count if db_user else 0
+                is_unlocked = referral_count >= 2
+                
+                # Week 2: Auto-upgrade state if unlocked
+                if is_unlocked:
+                    with StateManager() as state_mgr:
+                        new_state = state_mgr.check_and_update_state_by_referrals(user.id)
+                        if new_state:
+                            logger.info(f"ðŸŽ¯ User {user.id} auto-upgraded to {new_state.value}")
+                
+                tier = "ðŸ’Ž PREMIUM" if web_data.get('plan') == 'premium' else "ðŸŽ FREE"
+                
+                if is_unlocked:
+                    # UNLOCKED: Start onboarding calmly
+                    from pathlib import Path
+                    
+                    # Send calm affirmation (not celebration)
+                    await update.message.reply_text(
+                        f"ChÃ o {web_data.get('full_name', user.first_name)},\n\n"
+                        f"Báº¡n vá»«a káº¿t ná»‘i Sheet vá»›i Bot thÃ nh cÃ´ng.\n\n"
+                        f"BÃ¢y giá» báº¡n cÃ³ thá»ƒ ghi chi tiÃªu ngay trong chat nÃ y.\n"
+                        f"5 giÃ¢y. KhÃ´ng cáº§n má»Ÿ Sheet.\n\n"
+                        f"Sheet váº«n lÃ  cá»§a báº¡n.\n"
+                        f"Bot chá»‰ lÃ  cáº§u ná»‘i Ä‘á»ƒ báº¡n ghi nhanh hÆ¡n.\n\n"
+                        f"Thá»­ ghi khoáº£n chi tiÃªu Ä‘áº§u tiÃªn nhÃ©.",
+                        parse_mode="Markdown"
+                    )
+                    
+
+                    
+                    # Start onboarding journey (Day 1 scheduled)
+                    from app.handlers.onboarding import start_onboarding_journey
+                    await start_onboarding_journey(user.id, context)
+                    
+                    # Enable daily reminders for new VIP user
+                    from app.utils.database import SessionLocal
+                    db = SessionLocal()
+                    db_user = db.merge(db_user)  # Merge into new session
+                    db_user.reminder_enabled = True
+                    db.commit()
+                    db.close()
+                    logger.info(f"âœ… Enabled daily reminders for new VIP user {user.id}")
+                    
+                    logger.info(f"âœ… Web user {user.id} unlocked VIP and started onboarding")
+                    return
+                    
+                else:
+                    # Week 2: Transition to REGISTERED if not yet VIP
+                    with StateManager() as state_mgr:
+                        current_state, is_legacy = state_mgr.get_user_state(user.id)
+                        if is_legacy or current_state == UserState.VISITOR:
+                            state_mgr.transition_user(user.id, UserState.REGISTERED, "Web registration not unlocked")
+                    # NOT UNLOCKED: Show referral link and progress with buttons
+                    from app.utils.database import generate_referral_code
+                    
+                    referral_code = generate_referral_code(user.id)
+                    bot_username = (await context.bot.get_me()).username
+                    referral_link = f"https://t.me/{bot_username}?start=REF{referral_code}"
+                    
+                    remaining = 2 - referral_count
+                    
+                    keyboard = [
+                        [InlineKeyboardButton("ðŸ”— Káº¿t ná»‘i Sheet", callback_data="sheets_setup")],
+                        [InlineKeyboardButton("â“ Cáº§n há»— trá»£ setup", callback_data="help_unlock")]
+                    ]
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    
+                    await update.message.reply_text(
+                        f"ChÃ o {web_data.get('full_name', user.first_name)},\n\n"
+                        f"Báº¡n Ä‘Ã£ setup Sheet thÃ nh cÃ´ng!\n"
+                        f"Há»‡ thá»‘ng quáº£n lÃ½ tÃ i chÃ­nh riÃªng Ä‘Ã£ sáºµn sÃ ng.\n\n"
+                        f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
+                        f"ðŸ’¡ **BÃ¢y giá» báº¡n cÃ³ thá»ƒ:**\n"
+                        f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
+                        f"âœ… Má»Ÿ Sheet vÃ  báº¯t Ä‘áº§u ghi thu chi\n"
+                        f"âœ… Xem phÃ¢n bá»• 6 hÅ© tiá»n\n"
+                        f"âœ… Kiá»ƒm tra cáº¥p Ä‘á»™ tÃ i chÃ­nh\n"
+                        f"âœ… Xem bÃ¡o cÃ¡o chi tiáº¿t\n\n"
+                        f"Tuáº§n Ä‘áº§u, thá»­ ghi tay vÃ o Sheet.\n"
+                        f"DÃ¹ cháº­m, nhÆ°ng Ä‘Ã¢y lÃ  lÃºc báº¡n \"nhÃ¬n rÃµ tiá»n\".\n\n"
+                        f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
+                        f"ðŸ¤ **Muá»‘n ghi nhanh hÆ¡n qua Telegram?**\n\n"
+                        f"Káº¿t ná»‘i Telegram vá»›i Sheet cáº§n cáº¥u hÃ¬nh API,\n"
+                        f"hÆ¡i ká»¹ thuáº­t vÃ  dá»… sai.\n\n"
+                        f"Náº¿u báº¡n giá»›i thiá»‡u 2 ngÆ°á»i báº¡n\n"
+                        f"cÅ©ng tháº­t sá»± muá»‘n quáº£n lÃ½ tÃ i chÃ­nh,\n"
+                        f"tÃ´i sáº½ há»— trá»£ báº¡n setup 1-1,\n"
+                        f"Ä‘áº£m báº£o káº¿t ná»‘i thÃ nh cÃ´ng.\n\n"
+                        f"ðŸ”— Link giá»›i thiá»‡u: `{referral_link}`",
+                        parse_mode="Markdown",
+                        reply_markup=reply_markup
+                    )
+                    
+                    # Continue daily nurture if not started
+                    from app.handlers.daily_nurture import start_daily_nurture
+                    await start_daily_nurture(user.id, context)
+                    
+                    return
+                
+            else:
+                # Email hash not found in Sheets
+                await update.message.reply_text(
+                    "âŒ **Lá»—i xÃ¡c thá»±c**\n\n"
+                    "KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin Ä‘Äƒng kÃ½ cá»§a báº¡n tá»« website.\n\n"
+                    "Vui lÃ²ng:\n"
+                    "1ï¸âƒ£ ÄÄƒng kÃ½ láº¡i táº¡i [freedomwallet.app](https://freedomwallet.app)\n"
+                    "2ï¸âƒ£ Hoáº·c Ä‘Äƒng kÃ½ trá»±c tiáº¿p trong bot: /register",
+                    parse_mode="Markdown"
+                )
+                return
+        
+        # Case 2: Referral link (from Telegram)
+        else:
+            referral_code = code
+            logger.info(f"ðŸŽ Referral detected: {referral_code}")
+            
+            # Handle referral (will show special welcome + notify referrer)
+            referred = await handle_referral_start(update, context, referral_code)
+            
+            if referred:
+                # Show brief pause before main menu
+                import asyncio
+                await asyncio.sleep(2)
+    
+    # Get user subscription status
+    subscription_tier = db_user.subscription_tier if db_user else "FREE"
+    referral_count = db_user.referral_count if db_user else 0
+    is_free_unlocked = db_user.is_free_unlocked if db_user else False
+    
+    # Determine user stage (not "tier")
+    user_stage = "PREMIUM" if subscription_tier == "PREMIUM" else ("UNLOCKED" if is_free_unlocked else "FREE")
+    
+    # Welcome message - Different for FREE vs PREMIUM
+    from app.services.recommendation import get_greeting
+    greeting = get_greeting(db_user) if db_user else f"ðŸ‘‹ Xin chÃ o {user.first_name}!"
+    
+    # PREMIUM MENU - Calm, supportive
+    if subscription_tier == "PREMIUM":
+        days_tracking = db_user.streak_count if db_user else 0
+        
+        welcome_text = f"""
+{greeting}
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+ðŸ’Ž **PREMIUM - Giáº£m táº£i nÃ£o**
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+Báº¡n Ä‘Ã£ ghi chi tiÃªu Ä‘Æ°á»£c {days_tracking} ngÃ y.
+
+Sheet cá»§a báº¡n Ä‘Ã£ cÃ³ Ä‘áº§y Ä‘á»§ dá»¯ liá»‡u vÃ  bÃ¡o cÃ¡o.
+Premium khÃ´ng thÃªm chart hay dashboard.
+
+Premium giÃºp báº¡n:
+
+â€¢ KhÃ´ng pháº£i canh tiá»n má»—i ngÃ y
+â€¢ ÄÆ°á»£c cáº£nh bÃ¡o sá»›m khi cÃ³ rá»§i ro
+â€¢ KhÃ´ng quÃªn khoáº£n Ä‘á»‹nh ká»³
+â€¢ PhÃ¡t hiá»‡n chi tiÃªu báº¥t thÆ°á»ng
+
+ðŸ‘‰ Báº¡n nghÄ© vá» tiá»n ÃT hÆ¡n,
+nhÆ°ng kiá»ƒm soÃ¡t Tá»T hÆ¡n.
+
+ðŸ’¡ Ghi chi tiÃªu, hoáº·c há»i tÃ´i báº¥t cá»© lÃºc nÃ o.
+"""
+        
+        keyboard = [
+            [
+                InlineKeyboardButton("ðŸ’¬ Ghi chi tiÃªu", callback_data="quick_record")
+            ],
+            [
+                InlineKeyboardButton("ðŸ“Š Xem tá»•ng quan", callback_data="today_status"),
+                InlineKeyboardButton("ðŸ› ï¸ CÃ i Ä‘áº·t", callback_data="setup")
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    # FREE & UNLOCKED - Calm, value-focused
+    else:
+        if is_free_unlocked:
+            # UNLOCKED: Bot is connected, user can log quickly
+            days_tracking = db_user.streak_count if db_user else 0
+            
+            welcome_text = f"""
+{greeting}
+
+Báº¡n Ä‘Ã£ káº¿t ná»‘i Sheet vá»›i Bot thÃ nh cÃ´ng.
+
+BÃ¢y giá» báº¡n cÃ³ thá»ƒ ghi chi tiÃªu ngay trong chat nÃ y.
+5 giÃ¢y. KhÃ´ng cáº§n má»Ÿ Sheet.
+
+Sheet váº«n lÃ  cá»§a báº¡n.
+Bot chá»‰ lÃ  cáº§u ná»‘i Ä‘á»ƒ báº¡n ghi nhanh hÆ¡n.
+
+ðŸ’¡ Ghi chi tiÃªu ngay, hoáº·c há»i tÃ´i náº¿u cáº§n giÃºp.
+"""
+            
+            keyboard = [
+                [InlineKeyboardButton("ðŸ’¬ Ghi chi tiÃªu", callback_data="quick_record")],
+                [InlineKeyboardButton("ðŸ“– HÆ°á»›ng dáº«n", callback_data="help_tutorial")],
+                [InlineKeyboardButton("ðŸ’Ž TÃ¬m hiá»ƒu Premium", callback_data="premium_info")]
+            ]
+        else:
+            # FREE: Clear positioning first, no sales pressure
+            from pathlib import Path
+            
+            welcome_text = f"""
+ChÃ o {user.first_name}, tÃ´i lÃ  Trá»£ lÃ½ tÃ i chÃ­nh cá»§a báº¡n
+Freedom Wallet khÃ´ng pháº£i má»™t app Ä‘á»ƒ báº¡n táº£i vá».
+ÄÃ¢y lÃ  má»™t há»‡ thá»‘ng quáº£n lÃ½ tá»± do tÃ i chÃ­nh báº¡n tá»± sá»Ÿ há»¯u.
+
+Má»—i ngÆ°á»i dÃ¹ng cÃ³:
+â€¢ Google Sheet riÃªng
+â€¢ Apps Script riÃªng
+â€¢ Web App riÃªng
+
+Dá»¯ liá»‡u náº±m trÃªn Drive cá»§a báº¡n.
+KhÃ´ng phá»¥ thuá»™c vÃ o ai.
+
+Náº¿u báº¡n muá»‘n Ä‘Äƒng kÃ½ sá»Ÿ há»¯u há»‡ thá»‘ng web app nÃ y,
+mÃ¬nh sáº½ hÆ°á»›ng dáº«n tá»«ng bÆ°á»›c, ráº¥t rÃµ rÃ ng.
+"""
+            
+            keyboard = [
+                [InlineKeyboardButton("ðŸ“ ÄÄƒng kÃ½ ngay", callback_data="start_free_registration")],
+                [InlineKeyboardButton("ðŸ“– TÃ¬m hiá»ƒu thÃªm", callback_data="learn_more")]
+            ]
+            
+            # Send image with message
+            image_path = Path("media/images/web_apps.jpg")
+            
+            try:
+                await update.message.reply_photo(
+                    photo=open(image_path, 'rb'),
+                    caption=welcome_text,
+                    parse_mode="Markdown",
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+                return
+            except Exception as e:
+                logger.error(f"Error sending photo: {e}")
+                # Fallback to text only
+                pass
+        
+        reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    # Send welcome message
+    await update.message.reply_text(
+        welcome_text,
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )
+
+
+async def help_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /help command - Show help menu"""
+    
+    help_text = """
+ðŸ“‹ **Danh SÃ¡ch Lá»‡nh**
+
+**/start** - Hiá»‡n menu chÃ­nh
+**/help** - Hiá»‡n menu nÃ y
+**/tutorial** - HÆ°á»›ng dáº«n cÃ³ hÃ¬nh áº£nh
+**/support** - LiÃªn há»‡ support team
+**/tips** - Nháº­n tips tÃ i chÃ­nh hÃ ng ngÃ y
+**/status** - Kiá»ƒm tra tÃ¬nh tráº¡ng app
+
+ðŸ’¬ **Hoáº·c chat trá»±c tiáº¿p vá»›i mÃ¬nh:**
+GÃµ cÃ¢u há»i báº±ng tiáº¿ng Viá»‡t hoáº·c English!
+
+ðŸ“š **VÃ­ dá»¥ cÃ¢u há»i:**
+â€¢ LÃ m sao thÃªm giao dá»‹ch?
+â€¢ 6 hÅ© tiá»n lÃ  gÃ¬?
+â€¢ CÃ¡ch chuyá»ƒn tiá»n giá»¯a hÅ©?
+â€¢ App khÃ´ng load Ä‘Æ°á»£c dá»¯ liá»‡u
+
+ðŸ¤– MÃ¬nh sáº½ tráº£ lá»i ngay láº­p tá»©c!
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("ðŸ  Vá» trang chá»§", callback_data="start")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.message.reply_text(
+        help_text,
+        parse_mode="Markdown",
+        reply_markup=reply_markup
+    )
+

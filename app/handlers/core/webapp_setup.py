@@ -1,0 +1,342 @@
+"""
+Web App Setup Guide Handler - 3-step guide to create Freedom Wallet Web App
+Based on Huong_dan_tao_wepapp.html
+
+Must be completed BEFORE using the app
+"""
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler
+from loguru import logger
+import os
+
+# Web App Setup Guide Content - 3 Steps
+WEBAPP_SETUP_STEPS = {
+    0: {
+        "title": "ðŸš€ BÆ¯á»šC 1: Táº O WEB APP",
+        "content": """
+ðŸ‘‹ **ChÃ o má»«ng! HÃ£y báº¯t Ä‘áº§u thiáº¿t láº­p Freedom Wallet!**
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**ðŸ“ Báº N ÄANG á»ž ÄÃ‚U?**
+
+âž¡ï¸ **BÆ¯á»šC 1: Táº¡o Web App** (báº¡n Ä‘ang á»Ÿ Ä‘Ã¢y)
+    â†’ BÆ°á»›c 2: Há»c cÃ¡ch sá»­ dá»¥ng
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**ðŸŽ¯ BÆ¯á»šC 1 - Báº N Sáº¼ LÃ€M GÃŒ?**
+
+Trong 10-15 phÃºt tá»›i:
+1ï¸âƒ£ Táº¡o báº£n sao Google Sheets Template
+2ï¸âƒ£ Má»Ÿ Extensions â†’ App Script
+3ï¸âƒ£ Deploy Web App cá»§a riÃªng báº¡n
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**âœ… SAU KHI HOÃ€N THÃ€NH:**
+â€¢ Web App cÃ¡ nhÃ¢n (cháº¡y trÃªn Google Sheets cá»§a báº¡n)
+â€¢ Dá»¯ liá»‡u 100% riÃªng tÆ°
+â€¢ Truy cáº­p má»i lÃºc, má»i thiáº¿t bá»‹
+â€¢ KhÃ´ng cáº§n biáº¿t code
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**â± THá»œI GIAN**: 10-15 phÃºt
+**ðŸ“± THIáº¾T Bá»Š**: Desktop/Laptop (khuyáº¿n nghá»‹)
+**ðŸ”— Cáº¦N**: TÃ i khoáº£n Google
+
+ðŸ’¡ *LÃ m cháº­m cÅ©ng á»•n. CÃ³ Group VIP há»— trá»£ náº¿u cáº§n!*
+""",
+        "image": None
+    },
+    
+    1: {
+        "title": "ðŸ“‹ BÆ¯á»šC 1: Táº O Báº¢N SAO TEMPLATE",
+        "content": """
+**ï¿½ CÃCH LÃ€M:**
+
+1ï¸âƒ£ Click **"ðŸ“‘ Copy Template"** bÃªn dÆ°á»›i
+
+2ï¸âƒ£ Popup "Make a copy" hiá»‡n ra
+
+3ï¸âƒ£ Äá»•i tÃªn (hoáº·c giá»¯ nguyÃªn) â†’ Click **"Make a copy"**
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**âœ… Káº¾T QUáº¢:**
+â€¢ Báº£n sao riÃªng trong Google Drive
+â€¢ File thuá»™c vá» Báº N (100% riÃªng tÆ°)
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**â“ Lá»–I:**
+â€¢ "You need access" â†’ ÄÄƒng nháº­p Google
+â€¢ KhÃ´ng copy Ä‘Æ°á»£c â†’ Thá»­ Chrome
+â€¢ Cáº§n trá»£ giÃºp â†’ Group VIP
+
+ðŸ’¡ **Sau khi copy xong, khÃ´ng Ä‘Ã³ng tab! Chuyá»ƒn sang BÆ°á»›c 2 ngay.**
+""",
+        "image": "docs/make-copy.png"
+    },
+    
+    2: {
+        "title": "âš™ï¸ BÆ¯á»šC 2: Má»ž APP SCRIPT",
+        "content": """
+**ï¿½ CÃCH LÃ€M:**
+
+1ï¸âƒ£ Trong file Sheets vá»«a copy â†’ Menu trÃªn cÃ¹ng
+
+2ï¸âƒ£ Click **"Extensions"** (Tiá»‡n Ã­ch má»Ÿ rá»™ng)
+
+3ï¸âƒ£ Chá»n **"Apps Script"**
+
+4ï¸âƒ£ Tab má»›i má»Ÿ â†’ Code Editor
+   â€¢ Tháº¥y file `Code.gs` vá»›i nhiá»u code
+   â€¢ **KHÃ”NG Cáº¦N Äá»ŒC/Sá»¬A GÃŒ!**
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**âœ… Káº¾T QUáº¢:**
+â€¢ Äang á»Ÿ Apps Script Editor
+â€¢ URL dáº¡ng: `script.google.com/...`
+â€¢ Sáºµn sÃ ng Deploy (BÆ°á»›c 3)
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**â“ KhÃ´ng tháº¥y Extensions?**
+â€¢ Refresh trang
+â€¢ Hoáº·c nháº¥n `Alt + /` â†’ gÃµ "Apps Script"
+
+ðŸ’¡ **Äá»«ng sá»£ code! Báº¡n khÃ´ng cáº§n Ä‘á»™ng vÃ o gÃ¬ cáº£.**
+""",
+        "image": "docs/app-script.png"
+    },
+    
+    3: {
+        "title": "ðŸš€ BÆ¯á»šC 3: DEPLOY WEB APP",
+        "content": """
+**ï¿½ CÃCH LÃ€M:**
+
+1ï¸âƒ£ Apps Script Editor â†’ Click **"Deploy"** (gÃ³c pháº£i) â†’ **"New deployment"**
+
+2ï¸âƒ£ Click âš™ï¸ â†’ Chá»n **"Web app"**
+
+3ï¸âƒ£ Cáº¥u hÃ¬nh:
+â€¢ **Execute as**: **"Me"**
+â€¢ **Who has access**: **"Anyone"**
+
+4ï¸âƒ£ Click **"Deploy"**
+
+5ï¸âƒ£ Authorize:
+â†’ **"Authorize access"**
+â†’ Chá»n tÃ i khoáº£n
+â†’ **"Advanced"** â†’ **"Go to... (unsafe)"** â†’ **"Allow"**
+
+6ï¸âƒ£ Copy Web App URL â†’ **LÆ¯U Láº I!**
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**âœ… Káº¾T QUáº¢:**
+â€¢ CÃ³ Web App URL riÃªng
+â€¢ Truy cáº­p má»i thiáº¿t bá»‹
+â€¢ Freedom Wallet Cá»¦A Báº N!
+
+ðŸŽ‰ **Nháº¥n nÃºt "Tiáº¿p theo" Ä‘á»ƒ há»c cÃ¡ch sá»­ dá»¥ng!**
+""",
+        "image": "docs/deploy-app.png"
+    },
+    
+    4: {
+        "title": "âœ… HOÃ€N THÃ€NH: Táº O WEB APP!",
+        "content": """
+ðŸŽ‰ **XUáº¤T Sáº®C! ÄÃ£ táº¡o xong Freedom Wallet Web App!**
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**âœ… HOÃ€N THÃ€NH:**
+â€¢ Google Sheets Template riÃªng
+â€¢ Web App cÃ¡ nhÃ¢n
+â€¢ URL truy cáº­p má»i lÃºc
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**ðŸ’¡ Máº¸O:**
+
+ðŸ“± **Äiá»‡n thoáº¡i:** ThÃªm vÃ o Home Screen
+â€¢ iOS: Safari â†’ Share â†’ Add to Home Screen
+â€¢ Android: Chrome â†’ Menu â†’ Add to Home screen
+
+ðŸ’» **MÃ¡y tÃ­nh:** Bookmark (Ctrl+D)
+
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+
+**ðŸš€ TIáº¾P THEO: Há»ŒC CÃCH DÃ™NG**
+
+Trong BÆ°á»›c 2:
+â€¢ Quáº£n lÃ½ tÃ i khoáº£n & giao dá»‹ch
+â€¢ Ãp dá»¥ng 6 HÅ© Tiá»n
+â€¢ Äáº¡t tá»± do tÃ i chÃ­nh
+
+â± 15-20 phÃºt
+
+ðŸ‘‰ **Nháº¥n nÃºt bÃªn dÆ°á»›i!**
+""",
+        "image": "docs/use-deploy-app.png"
+    }
+}
+
+
+def get_webapp_setup_keyboard(current_step: int) -> InlineKeyboardMarkup:
+    """Generate navigation keyboard for webapp setup guide"""
+    buttons = []
+    
+    # Special handling for step 1 - add Copy Template button
+    if current_step == 1:
+        buttons.append([
+            InlineKeyboardButton(
+                "ðŸ“‘ Copy Template", 
+                url=f"https://docs.google.com/spreadsheets/d/{os.getenv('TEMPLATE_SPREADSHEET_ID', '1er6t9JQHLa9eZ1YTIM4aK0IhN37yPq6IUVbOg4-8mXg')}/copy"
+            )
+        ])
+    
+    # Navigation row
+    nav_row = []
+    if current_step > 0:
+        nav_row.append(InlineKeyboardButton("â¬…ï¸ Quay láº¡i", callback_data=f"webapp_step_{current_step-1}"))
+    
+    if current_step < 4:
+        nav_row.append(InlineKeyboardButton("Tiáº¿p theo âž¡ï¸", callback_data=f"webapp_step_{current_step+1}"))
+    
+    if nav_row:
+        buttons.append(nav_row)
+    
+    # Menu row
+    menu_row = []
+    if current_step != 0:
+        menu_row.append(InlineKeyboardButton("ðŸ“± Menu", callback_data="webapp_step_0"))
+    
+    # Step 4 (completion) - add special buttons
+    if current_step == 4:
+        buttons.append([
+            InlineKeyboardButton("ðŸ“˜ Tiáº¿p theo: HÆ°á»›ng dáº«n sá»­ dá»¥ng âž¡ï¸", callback_data="guide_step_0")
+        ])
+        buttons.append([
+            InlineKeyboardButton("ðŸ’¬ Cáº§n trá»£ giÃºp?", url="https://t.me/freedomwalletapp")
+        ])
+    else:
+        # Help row (for steps 0-3)
+        if menu_row:
+            buttons.append(menu_row)
+        buttons.append([
+            InlineKeyboardButton("ðŸ’¬ Cáº§n trá»£ giÃºp?", url="https://t.me/freedomwalletapp")
+        ])
+    
+    return InlineKeyboardMarkup(buttons)
+
+
+async def send_webapp_setup_step(update: Update, context: ContextTypes.DEFAULT_TYPE, step: int):
+    """Send a specific webapp setup step"""
+    try:
+        if step not in WEBAPP_SETUP_STEPS:
+            await update.callback_query.answer("âŒ BÆ°á»›c khÃ´ng há»£p lá»‡!")
+            return
+        
+        step_data = WEBAPP_SETUP_STEPS[step]
+        keyboard = get_webapp_setup_keyboard(step)
+        
+        message_text = f"{step_data['title']}\n\n{step_data['content']}"
+        
+        # Handle image + text combination
+        if step_data.get('image'):
+            # If there's an image, we need to delete old message and send new photo message
+            if update.callback_query:
+                # Delete the old message
+                await update.callback_query.message.delete()
+                
+                # Send new photo message
+                with open(step_data['image'], 'rb') as photo:
+                    await context.bot.send_photo(
+                        chat_id=update.effective_chat.id,
+                        photo=photo,
+                        caption=message_text,
+                        parse_mode="Markdown",
+                        reply_markup=keyboard
+                    )
+                await update.callback_query.answer()
+            else:
+                # Command: send photo directly
+                with open(step_data['image'], 'rb') as photo:
+                    await update.message.reply_photo(
+                        photo=photo,
+                        caption=message_text,
+                        parse_mode="Markdown",
+                        reply_markup=keyboard
+                    )
+        else:
+            # No image, just text
+            if update.callback_query:
+                # Check if previous message was a photo
+                if update.callback_query.message.photo:
+                    # Previous was photo, need to delete and send new text message
+                    await update.callback_query.message.delete()
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=message_text,
+                        parse_mode="Markdown",
+                        reply_markup=keyboard,
+                        disable_web_page_preview=True
+                    )
+                    await update.callback_query.answer()
+                else:
+                    # Previous was text, can edit
+                    await update.callback_query.edit_message_text(
+                        text=message_text,
+                        parse_mode="Markdown",
+                        reply_markup=keyboard,
+                        disable_web_page_preview=True
+                    )
+                    await update.callback_query.answer()
+            else:
+                await update.message.reply_text(
+                    text=message_text,
+                    parse_mode="Markdown",
+                    reply_markup=keyboard,
+                    disable_web_page_preview=True
+                )
+        
+        logger.info(f"Sent webapp setup step {step} to user {update.effective_user.id}")
+        
+    except Exception as e:
+        logger.error(f"Error sending webapp setup step {step}: {e}")
+        if update.callback_query:
+            await update.callback_query.answer("âŒ CÃ³ lá»—i xáº£y ra!")
+
+
+async def taoweb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler for /taoweb command"""
+    await send_webapp_setup_step(update, context, step=0)
+
+
+async def webapp_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle webapp setup navigation callbacks"""
+    query = update.callback_query
+    callback_data = query.data
+    
+    try:
+        if callback_data.startswith("webapp_step_"):
+            step = int(callback_data.split("_")[-1])
+            await send_webapp_setup_step(update, context, step)
+        
+    except Exception as e:
+        logger.error(f"Error in webapp callback handler: {e}")
+        await query.answer("âŒ CÃ³ lá»—i xáº£y ra!")
+
+
+def register_webapp_setup_handlers(application):
+    """Register all webapp setup handlers"""
+    application.add_handler(CommandHandler("taoweb", taoweb_command))
+    application.add_handler(CallbackQueryHandler(webapp_callback_handler, pattern="^webapp_"))
+    
+    logger.info("âœ… Web App setup handlers registered")
+

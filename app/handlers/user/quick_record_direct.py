@@ -1,0 +1,222 @@
+"""
+Quick Record - Direct Write (OPTION 1)
+Parse natural language and write to Google Sheets
+Requires EDITOR permission
+"""
+from telegram import Update
+from telegram.ext import ContextTypes
+from loguru import logger
+from app.services.sheets_writer import get_user_sheets_writer
+from app.core.subscription import SubscriptionManager, SubscriptionTier
+from app.utils.database import get_user_by_id
+from app.services.analytics import Analytics
+import re
+
+
+async def handle_quick_expense(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Parse and record expense from natural language
+    
+    Examples:
+    - "chi 50k tiá»n Äƒn"
+    - "mua sáº¯m 200k"
+    - "xÄƒng xe 150000 Ä‘á»• xÄƒng Shell"
+    """
+    user_id = update.effective_user.id
+    user = await get_user_by_id(user_id)
+    tier = SubscriptionManager.get_user_tier(user)
+    
+    # Check Premium
+    if tier not in [SubscriptionTier.PREMIUM, SubscriptionTier.TRIAL]:
+        await update.message.reply_text(
+            "ðŸ”’ **TÃ­nh nÄƒng Premium**\n\n"
+            "Quick Record chá»‰ dÃ nh cho Premium/Trial.\n\n"
+            "ðŸŽ DÃ¹ng thá»­ 7 ngÃ y FREE: /start"
+        )
+        return
+    
+    # Check if Sheets connected with EDITOR permission
+    sheets = await get_user_sheets_writer(user_id)
+    if not sheets:
+        await update.message.reply_text(
+            "ðŸ“Š **ChÆ°a káº¿t ná»‘i Google Sheets**\n\n"
+            "Äá»ƒ ghi chi tiÃªu tá»± Ä‘á»™ng, hÃ£y:\n"
+            "1. Káº¿t ná»‘i Sheets: /connectsheets\n"
+            "2. Share quyá»n **Editor** (thay vÃ¬ Viewer)\n\n"
+            "âš ï¸ LÆ°u Ã½: Bot cáº§n Editor Ä‘á»ƒ ghi Ä‘Æ°á»£c data!"
+        )
+        return
+    
+    # Parse message
+    text = update.message.text
+    parsed = parse_expense_message(text)
+    
+    if not parsed:
+        await update.message.reply_text(
+            "âŒ **KhÃ´ng hiá»ƒu format!**\n\n"
+            "Thá»­ láº¡i vá»›i format:\n"
+            "â€¢ `chi 50k tiá»n Äƒn`\n"
+            "â€¢ `mua sáº¯m 200k`\n"
+            "â€¢ `xÄƒng xe 150000 Ä‘á»• táº¡i Shell`\n\n"
+            "Hoáº·c dÃ¹ng: /record"
+        )
+        return
+    
+    amount = parsed['amount']
+    category = parsed['category']
+    note = parsed.get('note', '')
+    
+    # Confirm before writing
+    await update.message.reply_text(
+        f"ðŸ“ **XÃ¡c nháº­n ghi:**\n\n"
+        f"ðŸ’¸ Sá»‘ tiá»n: {amount:,.0f} VNÄ\n"
+        f"ðŸ“‚ Danh má»¥c: {category}\n"
+        f"ðŸ“Œ Ghi chÃº: {note if note else '(trá»‘ng)'}\n\n"
+        f"ðŸ”„ Äang ghi vÃ o Google Sheets..."
+    )
+    
+    # Write to Sheets
+    try:
+        success = await sheets.add_expense(
+            amount=amount,
+            category=category,
+            note=note,
+            method='Telegram Bot'
+        )
+        
+        if success:
+            await update.message.reply_text(
+                f"âœ… **ÄÃ£ ghi thÃ nh cÃ´ng!**\n\n"
+                f"ðŸ’¸ Chi: {amount:,.0f} VNÄ\n"
+                f"ðŸ“‚ {category}\n\n"
+                f"ðŸ“Š Xem sá»‘ dÆ°: /balance"
+            )
+            
+            # Track usage
+            Analytics.track_event(user_id, 'quick_record_success', {
+                'amount': amount,
+                'category': category,
+                'method': 'direct_write'
+            })
+            
+            logger.info(f"User {user_id} recorded expense: {amount} - {category}")
+        else:
+            await update.message.reply_text(
+                "âŒ **Lá»—i ghi dá»¯ liá»‡u!**\n\n"
+                "Kiá»ƒm tra:\n"
+                "â€¢ ÄÃ£ share quyá»n Editor chÆ°a?\n"
+                "â€¢ Google Sheets cÃ³ cá»™t Ä‘Ãºng format chÆ°a?\n\n"
+                "LiÃªn há»‡ /support náº¿u váº«n lá»—i"
+            )
+    
+    except Exception as e:
+        await update.message.reply_text(
+            f"âŒ **Lá»—i ghi!**\n\n"
+            f"Chi tiáº¿t: {str(e)}\n\n"
+            f"LiÃªn há»‡ /support"
+        )
+        logger.error(f"Quick record error for user {user_id}: {e}")
+
+
+def parse_expense_message(text: str) -> dict:
+    """
+    Parse natural language expense message
+    
+    Examples:
+    - "chi 50k tiá»n Äƒn" â†’ {amount: 50000, category: "tiá»n Äƒn"}
+    - "mua sáº¯m 200k quáº§n Ã¡o" â†’ {amount: 200000, category: "mua sáº¯m", note: "quáº§n Ã¡o"}
+    - "150000 xÄƒng xe" â†’ {amount: 150000, category: "xÄƒng xe"}
+    
+    Returns:
+        dict with amount, category, note or None if parse failed
+    """
+    text = text.lower().strip()
+    
+    # Pattern 1: "chi 50k tiá»n Äƒn"
+    # Pattern 2: "mua sáº¯m 200k"
+    # Pattern 3: "150000 xÄƒng xe"
+    
+    # Extract amount (with k/K multiplier)
+    amount_pattern = r'(\d+(?:[,\.]\d+)?)\s*k?'
+    amount_match = re.search(amount_pattern, text)
+    
+    if not amount_match:
+        return None
+    
+    amount_str = amount_match.group(1).replace(',', '.')
+    amount = float(amount_str)
+    
+    # Check if has 'k' suffix
+    if 'k' in text[amount_match.start():amount_match.end()].lower():
+        amount *= 1000
+    
+    # Extract category and note
+    # Remove amount part from text
+    remaining = text[:amount_match.start()] + text[amount_match.end():]
+    remaining = remaining.strip()
+    
+    # Remove common prefixes
+    prefixes = ['chi', 'mua', 'tráº£', 'thanh toÃ¡n']
+    for prefix in prefixes:
+        if remaining.startswith(prefix):
+            remaining = remaining[len(prefix):].strip()
+            break
+    
+    # Split into category and note
+    parts = remaining.split(maxsplit=2)
+    
+    if not parts:
+        category = "KhÃ¡c"
+        note = ""
+    elif len(parts) == 1:
+        category = parts[0]
+        note = ""
+    else:
+        category = parts[0]
+        note = ' '.join(parts[1:])
+    
+    # Map common categories
+    category_map = {
+        'Äƒn': 'Ä‚n uá»‘ng',
+        'uá»‘ng': 'Ä‚n uá»‘ng',
+        'cÆ¡m': 'Ä‚n uá»‘ng',
+        'cafe': 'Cafe',
+        'cÃ  phÃª': 'Cafe',
+        'xÄƒng': 'XÄƒng xe',
+        'xe': 'XÄƒng xe',
+        'Ä‘iá»‡n': 'HÃ³a Ä‘Æ¡n',
+        'nÆ°á»›c': 'HÃ³a Ä‘Æ¡n',
+        'internet': 'HÃ³a Ä‘Æ¡n',
+        'mua': 'Mua sáº¯m',
+        'sáº¯m': 'Mua sáº¯m',
+        'quáº§n': 'Quáº§n Ã¡o',
+        'Ã¡o': 'Quáº§n Ã¡o',
+    }
+    
+    for key, value in category_map.items():
+        if key in category.lower():
+            category = value
+            break
+    
+    return {
+        'amount': amount,
+        'category': category.capitalize(),
+        'note': note
+    }
+
+
+# Register handler
+def register_quick_record_direct_handler(application):
+    """Register Quick Record handler (direct write)"""
+    from telegram.ext import MessageHandler, filters
+    
+    # Match messages like "chi 50k tiá»n Äƒn"
+    expense_pattern = r'(?:chi|mua|tráº£|thanh toÃ¡n)?\s*\d+(?:[,\.]\d+)?\s*k?\s*.+'
+    
+    application.add_handler(MessageHandler(
+        filters.TEXT & filters.Regex(expense_pattern, re.IGNORECASE),
+        handle_quick_expense
+    ))
+    
+    logger.info("âœ… Quick Record (direct write) handler registered")
+
