@@ -53,7 +53,10 @@ class User(Base):
     # This is NOT a hack - it's an intentional design decision.
     # See: ARCHITECTURE_DECISION.md for full context
     id = Column("user_id", Integer, primary_key=True, autoincrement=False)
-    username = Column(String(100), nullable=True)
+    
+    # Column mapping: username → telegram_username (database schema)
+    username = Column("telegram_username", String(100), nullable=True)
+    
     first_name = Column(String(100), nullable=True)
     last_name = Column(String(100), nullable=True)
     language_code = Column(String(10), default="vi")
