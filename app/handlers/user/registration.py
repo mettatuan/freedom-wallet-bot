@@ -427,10 +427,8 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                     
                     # Urgent notification to admin
                     await notify_admin_fraud_review(referral.id, fraud_score, fraud_flags, context, urgent=True)
-            
-            session.commit()
-    
-    except Exception as e:
+        
+        session.commit()
         session.rollback()
         logger.error(f"❌ Referral verification failed: {e}", exc_info=True)
         # Non-fatal: Registration already completed by service, continue
