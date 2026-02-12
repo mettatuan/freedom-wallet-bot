@@ -326,6 +326,11 @@ Change all 100+ `User.id` → `User.user_id` references:
    - Current: CA costs 400 hours, saves 0 hours
    - Required: Positive ROI with metrics
 
+**Additional constraint:**
+- **Any attempt to reintroduce parallel runtime architectures is strictly forbidden.**
+- Refactor must be **in-place** only (modify existing files, not create parallel systems).
+- This prevents pattern: "Let's do CA again but without the toggle this time."
+
 **This condition prevents spontaneous "CA v2" experiments in next 12 months.**
 
 ---

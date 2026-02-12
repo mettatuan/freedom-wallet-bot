@@ -214,29 +214,49 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
     phone = context.user_data.get('phone')
     full_name = context.user_data['full_name']
     
-    # Save to database
+    # === SERVICE LAYER EXTRACTION (Week 1 - Step 1) ===
+    # Call registration service instead of direct DB access
+    from app.services.registration_service import registration_service
+    
+    try:
+        # Service handles: user update + state transition + basic referral check
+        result = registration_service.complete_registration(
+            telegram_user_id=user.id,
+            telegram_username=user.username,
+            email=email,
+            phone=phone,
+            full_name=full_name,
+        )
+        
+        logger.info(f"✅ Service completed registration for user {user.id}")
+        
+    except ValueError as e:
+        logger.error(f"❌ Registration validation error: {e}")
+        await query.edit_message_text(
+            "❌ Có lỗi xảy ra. Vui lòng thử lại sau.",
+            parse_mode="Markdown"
+        )
+        return ConversationHandler.END
+    
+    except Exception as e:
+        logger.error(f"❌ Registration failed: {e}", exc_info=True)
+        await query.edit_message_text(
+            "😓 Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau!",
+            parse_mode="Markdown"
+        )
+        return ConversationHandler.END
+    
+    # === TEMPORARY: Full referral logic still in handler (will extract Week 1 - Day 2) ===
+    # TODO: Move fraud detection, VIP checks, unlock flows to service
     session = SessionLocal()
     try:
-        db_user = session.query(User).filter(User.id == user.id).first()
-        if db_user:
-            db_user.email = email
-            db_user.phone = phone
-            db_user.full_name = full_name
-            db_user.is_registered = True
-            
-            # Week 2: Transition user to REGISTERED state
-            with StateManager() as state_mgr:
-                current_state, is_legacy = state_mgr.get_user_state(user.id)
-                if is_legacy or current_state == UserState.VISITOR:
-                    state_mgr.transition_user(user.id, UserState.REGISTERED, "Completed registration")
-            
-            # Verify referral if exists
-            referral = session.query(Referral).filter(
-                Referral.referred_id == user.id,
-                Referral.status == "PENDING"
-            ).first()
-            
-            if referral:
+        # Check for pending referral (service already checked, but we need full logic)
+        referral = session.query(Referral).filter(
+            Referral.referred_id == user.id,
+            Referral.status == "PENDING"
+        ).first()
+        
+        if referral:
                 # Week 5: FRAUD DETECTION BEFORE VERIFICATION
                 from app.core.fraud_detector import check_referral_fraud, generate_device_fingerprint
                 
@@ -409,8 +429,17 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                     await notify_admin_fraud_review(referral.id, fraud_score, fraud_flags, context, urgent=True)
             
             session.commit()
-        
-        # Sync to Google Sheets
+    
+    except Exception as e:
+        session.rollback()
+        logger.error(f"❌ Referral verification failed: {e}", exc_info=True)
+        # Non-fatal: Registration already completed by service, continue
+    
+    finally:
+        session.close()
+    
+    # === SHEETS SYNC & SUCCESS MESSAGE (Handler responsibility) ===
+    # Sync to Google Sheets
         from app.utils.sheets import sync_user_to_sheet
         await sync_user_to_sheet(user.id, email, phone, full_name)
         
@@ -507,18 +536,7 @@ Báº¡n sáºµn sÃ ng táº¡o há»‡ thá»‘ng cá»§a riÃªng mÃ¬n
         # Clear conversation state flag before ending
         context.user_data.pop('conversation_state', None)
         return ConversationHandler.END
-        
-    except Exception as e:
-        session.rollback()
-        await query.message.reply_text(
-            f"âŒ Lá»—i khi lÆ°u thÃ´ng tin: {str(e)}\n\n"
-            f"Vui lÃ²ng thá»­ láº¡i sau hoáº·c dÃ¹ng /support"
-        )
-        # Clear conversation state flag
-        context.user_data.pop('conversation_state', None)
-        return ConversationHandler.END
-    finally:
-        session.close()
+
 
 
 async def send_super_vip_notification(user_id: int, ref_count: int, new_ref_name: str, context: ContextTypes.DEFAULT_TYPE):
