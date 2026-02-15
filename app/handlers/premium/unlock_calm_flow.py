@@ -1,5 +1,5 @@
 """
-UNLOCK Flow - "GIá»® NHá»ŠP Má»–I NGÃ€Y"
+UNLOCK Flow - "GIỮ NHỊP MỖI NGÀY"
 Philosophy: Reduce friction to maintain habit, NOT unlock features
 Triggered: After 7-10 days of FREE usage (natural transition)
 """
@@ -19,25 +19,25 @@ async def unlock_step1_natural_transition(update: Update, context: ContextTypes.
     await query.answer()
     
     message = """
-Báº¡n Ä‘Ã£ dÃ¹ng Freedom Wallet Ä‘Æ°á»£c má»™t thá»i gian.
+Bạn đã dùng Freedom Wallet được một thời gian.
 
-Nhiá»u ngÆ°á»i á»Ÿ giai Ä‘oáº¡n nÃ y nháº­n ra:
-Viá»‡c má»Ÿ Web App má»—i láº§n Ä‘á»ƒ ghi chi tiÃªu
-khÃ´ng pháº£i lÃºc nÃ o cÅ©ng tiá»‡n.
+Nhiều người ở giai đoạn này nhận ra:
+Việc mở Web App mỗi lần để ghi chi tiêu
+không phải lúc nào cũng tiện.
 
-KhÃ´ng pháº£i vÃ¬ lÆ°á»i.
-Chá»‰ lÃ  cuá»™c sá»‘ng báº­n.
+Không phải vì lười.
+Chỉ là cuộc sống bận.
 
-Náº¿u báº¡n muá»‘n,
-mÃ¬nh cÃ³ thá»ƒ káº¿t ná»‘i Telegram vá»›i Sheet cá»§a báº¡n.
-Báº¡n sáº½ ghi giao dá»‹ch ngay trong chat nÃ y.
-Khoáº£ng 5 giÃ¢y.
+Nếu bạn muốn,
+mình có thể kết nối Telegram với Sheet của bạn.
+Bạn sẽ ghi giao dịch ngay trong chat này.
+Khoảng 5 giây.
 """
     
     keyboard = [
-        [InlineKeyboardButton("Káº¿t ná»‘i Telegram", callback_data="unlock_step2_explain")],
-        [InlineKeyboardButton("Há»i thÃªm", callback_data="unlock_ask_question")],
-        [InlineKeyboardButton("Äá»ƒ sau", callback_data="unlock_skip")]
+        [InlineKeyboardButton("Kết nối Telegram", callback_data="unlock_step2_explain")],
+        [InlineKeyboardButton("Hỏi thêm", callback_data="unlock_ask_question")],
+        [InlineKeyboardButton("Để sau", callback_data="unlock_skip")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -53,18 +53,18 @@ async def unlock_step2_explain(update: Update, context: ContextTypes.DEFAULT_TYP
     await query.answer()
     
     message = """
-Telegram khÃ´ng thay tháº¿ há»‡ thá»‘ng cá»§a báº¡n.
+Telegram không thay thế hệ thống của bạn.
 
-Sheet váº«n náº±m trÃªn Drive cá»§a báº¡n.
-Web App váº«n hoáº¡t Ä‘á»™ng nhÆ° cÅ©.
+Sheet vẫn nằm trên Drive của bạn.
+Web App vẫn hoạt động như cũ.
 
-Telegram chá»‰ lÃ  cáº§u ná»‘i,
-giÃºp báº¡n ghi nhanh mÃ  khÃ´ng cáº§n má»Ÿ app.
+Telegram chỉ là cầu nối,
+giúp bạn ghi nhanh mà không cần mở app.
 """
     
     keyboard = [
-        [InlineKeyboardButton("Tiáº¿p tá»¥c káº¿t ná»‘i", callback_data="unlock_step3_prepare")],
-        [InlineKeyboardButton("Xem láº¡i cÃ¡ch hoáº¡t Ä‘á»™ng", callback_data="unlock_explain_how")]
+        [InlineKeyboardButton("Tiếp tục kết nối", callback_data="unlock_step3_prepare")],
+        [InlineKeyboardButton("Xem lại cách hoạt động", callback_data="unlock_explain_how")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -80,20 +80,20 @@ async def unlock_step3_prepare(update: Update, context: ContextTypes.DEFAULT_TYP
     await query.answer()
     
     message = """
-Äá»ƒ káº¿t ná»‘i,
-mÃ¬nh cáº§n:
+Để kết nối,
+mình cần:
 
-â€¢ ID Google Sheet cá»§a báº¡n
-â€¢ Link Web App Ä‘Ã£ deploy
+• ID Google Sheet của bạn
+• Link Web App đã deploy
 
-Chá»‰ cáº§n lÃ m theo tá»«ng bÆ°á»›c.
-Náº¿u chÆ°a rÃµ chá»— nÃ o,
-mÃ¬nh sáº½ hÆ°á»›ng dáº«n tiáº¿p.
+Chỉ cần làm theo từng bước.
+Nếu chưa rõ chỗ nào,
+mình sẽ hướng dẫn tiếp.
 """
     
     keyboard = [
-        [InlineKeyboardButton("Nháº­p Sheet ID", callback_data="unlock_input_sheet_id")],
-        [InlineKeyboardButton("TÃ´i chÆ°a rÃµ", callback_data="unlock_help_sheet_id")]
+        [InlineKeyboardButton("Nhập Sheet ID", callback_data="unlock_input_sheet_id")],
+        [InlineKeyboardButton("Tôi chưa rõ", callback_data="unlock_help_sheet_id")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -109,22 +109,22 @@ async def unlock_step4_connection_success(update: Update, context: ContextTypes.
     user = update.effective_user
     
     message = """
-Káº¿t ná»‘i hoÃ n táº¥t.
+Kết nối hoàn tất.
 
-Tá»« giá», báº¡n cÃ³ thá»ƒ ghi giao dá»‹ch ngay táº¡i Ä‘Ã¢y.
+Từ giờ, bạn có thể ghi giao dịch ngay tại đây.
 
-VÃ­ dá»¥:
-Chi 50k Äƒn sÃ¡ng
-Thu 5 triá»‡u lÆ°Æ¡ng
-Chi 200k xÄƒng xe
+Ví dụ:
+Chi 50k ăn sáng
+Thu 5 triệu lương
+Chi 200k xăng xe
 
-KhÃ´ng cáº§n Ä‘Ãºng cÃº phÃ¡p tuyá»‡t Ä‘á»‘i.
-MÃ¬nh sáº½ tá»± hiá»ƒu.
+Không cần đúng cú pháp tuyệt đối.
+Mình sẽ tự hiểu.
 """
     
     keyboard = [
-        [InlineKeyboardButton("Thá»­ ghi giao dá»‹ch", callback_data="unlock_try_first_transaction")],
-        [InlineKeyboardButton("Xem vÃ­ dá»¥ khÃ¡c", callback_data="unlock_show_examples")]
+        [InlineKeyboardButton("Thử ghi giao dịch", callback_data="unlock_try_first_transaction")],
+        [InlineKeyboardButton("Xem ví dụ khác", callback_data="unlock_show_examples")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -146,12 +146,12 @@ async def unlock_step5_first_transaction_prompt(update: Update, context: Context
     await query.answer()
     
     message = """
-Thá»­ ghi má»™t khoáº£n ngay bÃ¢y giá».
+Thử ghi một khoản ngay bây giờ.
 
-Chá»‰ má»™t khoáº£n thÃ´i.
+Chỉ một khoản thôi.
 
-Viá»‡c quan trá»ng khÃ´ng pháº£i sá»‘ tiá»n.
-MÃ  lÃ  viá»‡c báº¡n giá»¯ Ä‘Æ°á»£c nhá»‹p má»—i ngÃ y.
+Việc quan trọng không phải số tiền.
+Mà là việc bạn giữ được nhịp mỗi ngày.
 """
     
     # No buttons - let user type naturally
@@ -161,18 +161,18 @@ MÃ  lÃ  viá»‡c báº¡n giá»¯ Ä‘Æ°á»£c nhá»‹p má»—i n
 async def unlock_step6_after_first_transaction(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """STEP 6 - After first successful transaction via Telegram"""
     message = """
-ÄÃ£ ghi.
+Đã ghi.
 
-Báº¡n khÃ´ng cáº§n má»Ÿ Web App.
-Báº¡n khÃ´ng cáº§n nhá»› cuá»‘i ngÃ y.
-Báº¡n chá»‰ cáº§n ghi ngay khi phÃ¡t sinh.
+Bạn không cần mở Web App.
+Bạn không cần nhớ cuối ngày.
+Bạn chỉ cần ghi ngay khi phát sinh.
 
-ThÃ³i quen Ä‘Æ°á»£c giá»¯ báº±ng sá»± Ä‘Æ¡n giáº£n.
+Thói quen được giữ bằng sự đơn giản.
 """
     
     keyboard = [
-        [InlineKeyboardButton("Xem trÃªn Web App", callback_data="open_webapp")],
-        [InlineKeyboardButton("Tiáº¿p tá»¥c ghi", callback_data="continue_logging")]
+        [InlineKeyboardButton("Xem trên Web App", callback_data="open_webapp")],
+        [InlineKeyboardButton("Tiếp tục ghi", callback_data="continue_logging")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -191,13 +191,13 @@ async def unlock_checkin_after_silence(update: Update, context: ContextTypes.DEF
     user_id = context.job.data['user_id']
     
     message = """
-CÃ³ váº» vÃ i ngÃ y rá»“i báº¡n chÆ°a ghi giao dá»‹ch.
+Có vẻ vài ngày rồi bạn chưa ghi giao dịch.
 
-KhÃ´ng sao cáº£.
-Khi nÃ o phÃ¡t sinh khoáº£n má»›i,
-chá»‰ cáº§n nháº¯n vÃ o Ä‘Ã¢y.
+Không sao cả.
+Khi nào phát sinh khoản mới,
+chỉ cần nhắn vào đây.
 
-MÃ¬nh váº«n á»Ÿ Ä‘Ã¢y.
+Mình vẫn ở đây.
 """
     
     # No buttons, no pressure, no push
@@ -206,7 +206,7 @@ MÃ¬nh váº«n á»Ÿ Ä‘Ã¢y.
             chat_id=user_id,
             text=message
         )
-        logger.info(f"âœ… Sent calm check-in to user {user_id}")
+        logger.info(f"✅ Sent calm check-in to user {user_id}")
     except Exception as e:
         logger.error(f"Failed to send check-in to {user_id}: {e}")
 
@@ -218,15 +218,15 @@ async def unlock_milestone_7days(update: Update, context: ContextTypes.DEFAULT_T
     Simple acknowledgment
     """
     message = """
-Báº¡n Ä‘Ã£ ghi giao dá»‹ch liÃªn tá»¥c má»™t tuáº§n.
+Bạn đã ghi giao dịch liên tục một tuần.
 
-Má»™t tuáº§n trÆ°á»›c,
-viá»‡c quáº£n lÃ½ tiá»n cÃ³ thá»ƒ cÃ²n mÆ¡ há»“.
+Một tuần trước,
+việc quản lý tiền có thể còn mơ hồ.
 
-BÃ¢y giá»,
-má»i khoáº£n thu â€“ chi Ä‘á»u cÃ³ dáº¥u váº¿t.
+Bây giờ,
+mọi khoản thu – chi đều có dấu vết.
 
-Chá»‰ cáº§n tiáº¿p tá»¥c nhÆ° váº­y.
+Chỉ cần tiếp tục như vậy.
 """
     
     # No buttons, no celebration, just acknowledgment
@@ -239,23 +239,23 @@ async def unlock_show_examples(update: Update, context: ContextTypes.DEFAULT_TYP
     await query.answer()
     
     message = """
-CÃ¡c cÃ¡ch ghi giao dá»‹ch:
+Các cách ghi giao dịch:
 
-**Thu nháº­p:**
-Thu 10 triá»‡u lÆ°Æ¡ng
-Nháº­n 500k tiá»n thÆ°á»Ÿng
-Thu 2 triá»‡u tá»« dá»± Ã¡n
+**Thu nhập:**
+Thu 10 triệu lương
+Nhận 500k tiền thưởng
+Thu 2 triệu từ dự án
 
-**Chi tiÃªu:**
-Chi 200k Äƒn trÆ°a
-Mua 150k cÃ  phÃª
-Tráº£ 500k Ä‘iá»‡n nÆ°á»›c
+**Chi tiêu:**
+Chi 200k ăn trưa
+Mua 150k cà phê
+Trả 500k điện nước
 
-**Chuyá»ƒn khoáº£n:**
-Chuyá»ƒn 1 triá»‡u vÃ o tiáº¿t kiá»‡m
-Dá»i 500k sang Ä‘áº§u tÆ°
+**Chuyển khoản:**
+Chuyển 1 triệu vào tiết kiệm
+Dời 500k sang đầu tư
 
-Ghi tá»± nhiÃªn, mÃ¬nh sáº½ hiá»ƒu.
+Ghi tự nhiên, mình sẽ hiểu.
 """
     
     keyboard = [
@@ -276,16 +276,16 @@ async def unlock_skip(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     message = """
-KhÃ´ng sao.
+Không sao.
 
-Báº¡n váº«n cÃ³ thá»ƒ dÃ¹ng Web App nhÆ° bÃ¬nh thÆ°á»ng.
+Bạn vẫn có thể dùng Web App như bình thường.
 
-Náº¿u muá»‘n thá»­ Telegram sau nÃ y,
-báº¡n cÃ³ thá»ƒ vÃ o /start vÃ  chá»n "Káº¿t ná»‘i Telegram".
+Nếu muốn thử Telegram sau này,
+bạn có thể vào /start và chọn "Kết nối Telegram".
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ  Vá» trang chá»§", callback_data="start")]
+        [InlineKeyboardButton("🏠 Về trang chủ", callback_data="start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -301,27 +301,27 @@ async def unlock_ask_question(update: Update, context: ContextTypes.DEFAULT_TYPE
     await query.answer()
     
     message = """
-**CÃ¢u há»i thÆ°á»ng gáº·p:**
+**Câu hỏi thường gặp:**
 
-**1. Dá»¯ liá»‡u cÃ³ máº¥t khÃ´ng?**
-KhÃ´ng. Dá»¯ liá»‡u váº«n náº±m trÃªn Sheet cá»§a báº¡n.
-Telegram chá»‰ gá»­i lá»‡nh, khÃ´ng lÆ°u trá»¯.
+**1. Dữ liệu có mất không?**
+Không. Dữ liệu vẫn nằm trên Sheet của bạn.
+Telegram chỉ gửi lệnh, không lưu trữ.
 
-**2. Web App cÃ³ cÃ²n hoáº¡t Ä‘á»™ng khÃ´ng?**
-CÃ³. Web App hoáº¡t Ä‘á»™ng Ä‘á»™c láº­p.
-Telegram chá»‰ lÃ  thÃªm 1 cÃ¡ch ghi nhanh.
+**2. Web App có còn hoạt động không?**
+Có. Web App hoạt động độc lập.
+Telegram chỉ là thêm 1 cách ghi nhanh.
 
-**3. CÃ³ báº¯t buá»™c khÃ´ng?**
-KhÃ´ng. Báº¡n cÃ³ thá»ƒ chá»‰ dÃ¹ng Web App.
-Telegram lÃ  tuá»³ chá»n.
+**3. Có bắt buộc không?**
+Không. Bạn có thể chỉ dùng Web App.
+Telegram là tuỳ chọn.
 
-**4. CÃ³ máº¥t phÃ­ khÃ´ng?**
-KhÃ´ng. Káº¿t ná»‘i Telegram miá»…n phÃ­.
+**4. Có mất phí không?**
+Không. Kết nối Telegram miễn phí.
 """
     
     keyboard = [
-        [InlineKeyboardButton("Káº¿t ná»‘i Telegram", callback_data="unlock_step2_explain")],
-        [InlineKeyboardButton("Quay láº¡i", callback_data="unlock_step1_natural_transition")]
+        [InlineKeyboardButton("Kết nối Telegram", callback_data="unlock_step2_explain")],
+        [InlineKeyboardButton("Quay lại", callback_data="unlock_step1_natural_transition")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -338,27 +338,27 @@ async def unlock_explain_how(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.answer()
     
     message = """
-**CÃ¡ch hoáº¡t Ä‘á»™ng:**
+**Cách hoạt động:**
 
-1. Báº¡n gÃµ giao dá»‹ch trong Telegram
-   VÃ­ dá»¥: "Chi 50k Äƒn sÃ¡ng"
+1. Bạn gõ giao dịch trong Telegram
+   Ví dụ: "Chi 50k ăn sáng"
 
-2. Bot hiá»ƒu vÃ  gá»­i lá»‡nh Ä‘áº¿n Web App
+2. Bot hiểu và gửi lệnh đến Web App
 
-3. Web App cáº­p nháº­t vÃ o Google Sheet
+3. Web App cập nhật vào Google Sheet
 
-4. Sheet tÃ­nh toÃ¡n tá»± Ä‘á»™ng
+4. Sheet tính toán tự động
 
-5. Báº¡n cÃ³ thá»ƒ xem káº¿t quáº£ á»Ÿ Web App
-   hoáº·c há»i bot "sá»‘ dÆ°"
+5. Bạn có thể xem kết quả ở Web App
+   hoặc hỏi bot "số dư"
 
-**Dá»¯ liá»‡u váº«n á»Ÿ Sheet cá»§a báº¡n.**
-**Telegram chá»‰ lÃ  remote control.**
+**Dữ liệu vẫn ở Sheet của bạn.**
+**Telegram chỉ là remote control.**
 """
     
     keyboard = [
-        [InlineKeyboardButton("Hiá»ƒu rá»“i, tiáº¿p tá»¥c", callback_data="unlock_step3_prepare")],
-        [InlineKeyboardButton("Quay láº¡i", callback_data="unlock_step1_natural_transition")]
+        [InlineKeyboardButton("Hiểu rồi, tiếp tục", callback_data="unlock_step3_prepare")],
+        [InlineKeyboardButton("Quay lại", callback_data="unlock_step1_natural_transition")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -439,5 +439,5 @@ def register_unlock_calm_flow_handlers(application):
     application.add_handler(CallbackQueryHandler(redirect_to_sheets_setup, pattern="^unlock_input_sheet_id$"))
     application.add_handler(CallbackQueryHandler(redirect_to_sheets_setup, pattern="^unlock_help_sheet_id$"))
     
-    logger.info("âœ… UNLOCK calm flow handlers registered")
+    logger.info("✅ UNLOCK calm flow handlers registered")
 

@@ -58,9 +58,9 @@ async def check_message_limit(update: Update, context: ContextTypes.DEFAULT_TYPE
         tier = SubscriptionManager.get_user_tier(user)
         if tier == SubscriptionTier.FREE:
             await update.message.reply_text(
-                "âš ï¸ **CÃ²n 1 tin nháº¯n cuá»‘i cÃ¹ng hÃ´m nay!**\n\n"
-                "ðŸ’Ž NÃ¢ng cáº¥p Premium = Unlimited messages + AI insights\n\n"
-                "ðŸŽ DÃ¹ng thá»­ FREE 7 ngÃ y!",
+                "⚠️ **Còn 1 tin nhắn cuối cùng hôm nay!**\n\n"
+                "💎 Nâng cấp Premium = Unlimited messages + AI insights\n\n"
+                "🎁 Dùng thử FREE 7 ngày!",
                 parse_mode="Markdown"
             )
     
@@ -71,30 +71,30 @@ async def send_upgrade_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE
     """Send upgrade prompt when user hits limit"""
     
     keyboard = [
-        [InlineKeyboardButton("ðŸŽ DÃ¹ng thá»­ Premium 7 ngÃ y FREE", callback_data="start_trial")],
-        [InlineKeyboardButton("ðŸ’Ž Xem gÃ³i Premium", callback_data="view_premium")],
-        [InlineKeyboardButton("ðŸ“Š Táº¡i sao nÃªn nÃ¢ng cáº¥p?", callback_data="why_premium")]
+        [InlineKeyboardButton("🎁 Dùng thử Premium 7 ngày FREE", callback_data="start_trial")],
+        [InlineKeyboardButton("💎 Xem gói Premium", callback_data="view_premium")],
+        [InlineKeyboardButton("📊 Tại sao nên nâng cấp?", callback_data="why_premium")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     message = f"""
 {error_msg}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’Ž **PREMIUM = UNLIMITED**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💎 **PREMIUM = UNLIMITED**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ¨ KhÃ´ng giá»›i háº¡n tin nháº¯n
-ðŸ§  AI phÃ¢n tÃ­ch tÃ i chÃ­nh
-ðŸ“Š Dashboard thÃ´ng minh
-ðŸŽ¯ Gá»£i Ã½ cÃ¡ nhÃ¢n hÃ³a
-ðŸš€ Há»— trá»£ Æ°u tiÃªn 30 phÃºt
+✨ Không giới hạn tin nhắn
+🧠 AI phân tích tài chính
+📊 Dashboard thông minh
+🎯 Gợi ý cá nhân hóa
+🚀 Hỗ trợ ưu tiên 30 phút
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’° **CHá»ˆ 83K/THÃNG**
-(= 1 ly cÃ  phÃª/tuáº§n)
+━━━━━━━━━━━━━━━━━━━━━
+💰 **CHỈ 83K/THÁNG**
+(= 1 ly cà phê/tuần)
 
-ðŸŽ **DÃ¹ng thá»­ FREE 7 ngÃ y - KhÃ´ng cáº§n tháº»!**
+🎁 **Dùng thử FREE 7 ngày - Không cần thẻ!**
 """
     
     await update.message.reply_text(
@@ -113,15 +113,15 @@ async def handle_trial_start(update: Update, context: ContextTypes.DEFAULT_TYPE)
     user = await get_user_by_id(user_id)
     
     if not user:
-        await query.edit_message_text("âŒ Lá»—i: KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin user")
+        await query.edit_message_text("❌ Lỗi: Không tìm thấy thông tin user")
         return
     
     # Check if already on trial or premium
     tier = SubscriptionManager.get_user_tier(user)
     if tier in [SubscriptionTier.PREMIUM, SubscriptionTier.TRIAL]:
         await query.edit_message_text(
-            f"âœ… Báº¡n Ä‘ang dÃ¹ng {tier.value}!\n\n"
-            f"Sá»­ dá»¥ng /mystatus Ä‘á»ƒ xem chi tiáº¿t."
+            f"✅ Bạn đang dùng {tier.value}!\n\n"
+            f"Sử dụng /mystatus để xem chi tiết."
         )
         return
     
@@ -138,43 +138,43 @@ async def handle_trial_start(update: Update, context: ContextTypes.DEFAULT_TYPE)
     trial_end = user.trial_ends_at.strftime('%d/%m/%Y %H:%M') if user.trial_ends_at else 'N/A'
     
     message = f"""
-ðŸŽ‰ **CHÃšC Má»ªNG! KÃCH HOáº T THÃ€NH CÃ”NG**
+🎉 **CHÚC MỪNG! KÍCH HOẠT THÀNH CÔNG**
 
-âœ… Premium Trial Ä‘Ã£ Ä‘Æ°á»£c kÃ­ch hoáº¡t!
+✅ Premium Trial đã được kích hoạt!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â° **THÃ”NG TIN:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+⏰ **THÔNG TIN:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŽ Trial: 7 ngÃ y miá»…n phÃ­
-ðŸ“… Káº¿t thÃºc: {trial_end}
-ðŸ’³ KhÃ´ng cáº§n tháº» tÃ­n dá»¥ng
+🎁 Trial: 7 ngày miễn phí
+📅 Kết thúc: {trial_end}
+💳 Không cần thẻ tín dụng
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-âœ¨ **ÄÃƒ Má»ž KHÃ“A:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+✨ **ĐÃ MỞ KHÓA:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… Unlimited tin nháº¯n vá»›i bot
-âœ… AI phÃ¢n tÃ­ch tÃ i chÃ­nh thÃ´ng minh  
-âœ… Dashboard chi tiÃªu trá»±c quan
-âœ… Gá»£i Ã½ cÃ¡ nhÃ¢n hÃ³a má»—i ngÃ y
-âœ… Há»— trá»£ Æ°u tiÃªn trong 30 phÃºt
+✅ Unlimited tin nhắn với bot
+✅ AI phân tích tài chính thông minh  
+✅ Dashboard chi tiêu trực quan
+✅ Gợi ý cá nhân hóa mỗi ngày
+✅ Hỗ trợ ưu tiên trong 30 phút
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸš€ **BÆ¯á»šC TIáº¾P THEO:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🚀 **BƯỚC TIẾP THEO:**
+━━━━━━━━━━━━━━━━━━━━━
 
-1ï¸âƒ£ CÃ i Ä‘áº·t Web App (30 giÃ¢y)
-2ï¸âƒ£ Xem hÆ°á»›ng dáº«n sá»­ dá»¥ng
-3ï¸âƒ£ Báº¯t Ä‘áº§u quáº£n lÃ½ tÃ i chÃ­nh!
+1️⃣ Cài đặt Web App (30 giây)
+2️⃣ Xem hướng dẫn sử dụng
+3️⃣ Bắt đầu quản lý tài chính!
 
-ðŸ‘‡ Chá»n hÃ nh Ä‘á»™ng bÃªn dÆ°á»›i:
+👇 Chọn hành động bên dưới:
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ“± HÆ°á»›ng dáº«n cÃ i Web App", callback_data="webapp_setup_guide")],
-        [InlineKeyboardButton("ðŸ“– HÆ°á»›ng dáº«n sá»­ dá»¥ng Premium", callback_data="premium_usage_guide")],
-        [InlineKeyboardButton("ðŸ  Xem menu Premium", callback_data="premium_menu")]
+        [InlineKeyboardButton("📱 Hướng dẫn cài Web App", callback_data="webapp_setup_guide")],
+        [InlineKeyboardButton("📖 Hướng dẫn sử dụng Premium", callback_data="premium_usage_guide")],
+        [InlineKeyboardButton("🏠 Xem menu Premium", callback_data="premium_menu")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -193,50 +193,50 @@ async def handle_view_premium(update: Update, context: ContextTypes.DEFAULT_TYPE
     await query.answer()
     
     message = """
-ðŸ’Ž **GÃ“I PREMIUM**
+💎 **GÓI PREMIUM**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’° **GIÃ:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💰 **GIÁ:**
+━━━━━━━━━━━━━━━━━━━━━
 
-999,000 VNÄ/nÄƒm
-= 83,250 VNÄ/thÃ¡ng
-= 2,750 VNÄ/ngÃ y (1 ly cÃ  phÃª/tuáº§n!)
+999,000 VNĐ/năm
+= 83,250 VNĐ/tháng
+= 2,750 VNĐ/ngày (1 ly cà phê/tuần!)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-âœ¨ **TÃNH NÄ‚NG:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+✨ **TÍNH NĂNG:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¬ **Unlimited messages** (vs FREE 5/day)
-ðŸ§  **AI phÃ¢n tÃ­ch tÃ i chÃ­nh** - Auto insights
-ðŸ“Š **Dashboard thÃ´ng minh** - Real-time
-ðŸŽ¯ **Gá»£i Ã½ cÃ¡ nhÃ¢n hÃ³a** - Context-aware
-ðŸ“ **Ghi chi tiÃªu 1-click** - NLP parser
-ðŸ› ï¸ **Managed setup** - LÃ m giÃºp 5 phÃºt
-ðŸš€ **Há»— trá»£ Æ°u tiÃªn** - Tráº£ lá»i 30 phÃºt
-ðŸ“ˆ **ROI tracking** - Xem lá»£i nhuáº­n
-ðŸ’¾ **Export bÃ¡o cÃ¡o** - Excel + PDF
+💬 **Unlimited messages** (vs FREE 5/day)
+🧠 **AI phân tích tài chính** - Auto insights
+📊 **Dashboard thông minh** - Real-time
+🎯 **Gợi ý cá nhân hóa** - Context-aware
+📝 **Ghi chi tiêu 1-click** - NLP parser
+🛠️ **Managed setup** - Làm giúp 5 phút
+🚀 **Hỗ trợ ưu tiên** - Trả lời 30 phút
+📈 **ROI tracking** - Xem lợi nhuận
+💾 **Export báo cáo** - Excel + PDF
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â±ï¸ **TIáº¾T KIá»†M:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+⏱️ **TIẾT KIỆM:**
+━━━━━━━━━━━━━━━━━━━━━
 
-~6.5 giá»/thÃ¡ng = 650K value
+~6.5 giờ/tháng = 650K value
 Chi: 83K
-â†’ **ROI: 780%** ðŸš€
+→ **ROI: 780%** 🚀
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸŽ **Æ¯U ÄÃƒI:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🎁 **ƯU ĐÃI:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… DÃ¹ng thá»­ 7 ngÃ y FREE
-âœ… KhÃ´ng cáº§n tháº» tÃ­n dá»¥ng
-âœ… Huá»· báº¥t cá»© lÃºc nÃ o
+✅ Dùng thử 7 ngày FREE
+✅ Không cần thẻ tín dụng
+✅ Huỷ bất cứ lúc nào
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸŽ DÃ¹ng thá»­ FREE 7 ngÃ y", callback_data="start_trial")],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data="start")]
+        [InlineKeyboardButton("🎁 Dùng thử FREE 7 ngày", callback_data="start_trial")],
+        [InlineKeyboardButton("« Quay lại", callback_data="start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -253,65 +253,65 @@ async def handle_why_premium(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.answer()
     
     message = """
-ðŸ¤” **Táº I SAO NÃŠN NÃ‚NG Cáº¤P?**
+🤔 **TẠI SAO NÊN NÂNG CẤP?**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â° **TIáº¾T KIá»†M THá»œI GIAN:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+⏰ **TIẾT KIỆM THỜI GIAN:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âŒ FREE: Má»Ÿ Sheet, tÃ¬m data, tá»± tÃ­nh = 10 phÃºt
-âœ… PREMIUM: Há»i bot, nháº­n ngay = 5 giÃ¢y
+❌ FREE: Mở Sheet, tìm data, tự tính = 10 phút
+✅ PREMIUM: Hỏi bot, nhận ngay = 5 giây
 
-**Má»—i ngÃ y tiáº¿t kiá»‡m 15-20 phÃºt!**
+**Mỗi ngày tiết kiệm 15-20 phút!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’° **Ráºº HÆ N 1 LY CÃ€ PHÃŠ:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💰 **RẺ HƠN 1 LY CÀ PHÊ:**
+━━━━━━━━━━━━━━━━━━━━━
 
-83K/thÃ¡ng = 2,750 VNÄ/ngÃ y
+83K/tháng = 2,750 VNĐ/ngày
 
-So sÃ¡nh:
-â€¢ 1 ly Highlands: ~50K
-â€¢ 1 bá»¯a cÆ¡m: ~70K
-â€¢ Premium: 3K/ngÃ y!
+So sánh:
+• 1 ly Highlands: ~50K
+• 1 bữa cơm: ~70K
+• Premium: 3K/ngày!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸš€ **ÄÆ¯á»¢C GÃŒ?**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🚀 **ĐƯỢC GÌ?**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… Trá»£ lÃ½ AI 24/7 khÃ´ng giá»›i háº¡n
-âœ… Setup giÃºp báº¡n (khÃ´ng tá»± lÃ m)
-âœ… Insights tá»± Ä‘á»™ng (khÃ´ng tá»± tÃ­nh)
-âœ… Priority support (30 phÃºt tráº£ lá»i)
+✅ Trợ lý AI 24/7 không giới hạn
+✅ Setup giúp bạn (không tự làm)
+✅ Insights tự động (không tự tính)
+✅ Priority support (30 phút trả lời)
 
-â†’ **KhÃ´ng pháº£i "feature bundle"**
-â†’ **LÃ  "trá»£ lÃ½ cÃ¡ nhÃ¢n" tháº­t sá»±**
+→ **Không phải "feature bundle"**
+→ **Là "trợ lý cá nhân" thật sự**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“Š **CASE STUDY:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📊 **CASE STUDY:**
+━━━━━━━━━━━━━━━━━━━━━
 
 User A (FREE):
-â€¢ Má»Ÿ Sheet 10 láº§n/ngÃ y = 30 phÃºt
-â€¢ Tá»± lÃ m report = 1 giá»/tuáº§n
-â€¢ Tá»± debug lá»—i = 2 giá»/thÃ¡ng
+• Mở Sheet 10 lần/ngày = 30 phút
+• Tự làm report = 1 giờ/tuần
+• Tự debug lỗi = 2 giờ/tháng
 
-**Total: 13 giá»/thÃ¡ng lÃ£ng phÃ­**
+**Total: 13 giờ/tháng lãng phí**
 
 User B (PREMIUM):
-â€¢ Há»i bot = 5 giÃ¢y
-â€¢ Report tá»± Ä‘á»™ng = 0 phÃºt
-â€¢ Priority support fix ngay
+• Hỏi bot = 5 giây
+• Report tự động = 0 phút
+• Priority support fix ngay
 
-**Total: 13 giá»/thÃ¡ng tiáº¿t kiá»‡m = 1.3M value**
+**Total: 13 giờ/tháng tiết kiệm = 1.3M value**
 
 Chi: 83K
-â†’ ROI: **1,466%** ðŸš€
+→ ROI: **1,466%** 🚀
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸŽ OK, tÃ´i dÃ¹ng thá»­!", callback_data="start_trial")],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data="start")]
+        [InlineKeyboardButton("🎁 OK, tôi dùng thử!", callback_data="start_trial")],
+        [InlineKeyboardButton("« Quay lại", callback_data="start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     

@@ -19,37 +19,37 @@ async def cmd_mywebapp(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = db.query(User).filter(User.id == user_id).first()
         
         if not user:
-            await update.message.reply_text("âŒ User not found. Please /start first.")
+            await update.message.reply_text("❌ User not found. Please /start first.")
             return
         
         if user.web_app_url:
             # User has saved URL
             keyboard = [
-                [InlineKeyboardButton("ðŸŒ Má»Ÿ Web App", url=user.web_app_url)],
-                [InlineKeyboardButton("âœï¸ Cáº­p nháº­t link", callback_data="update_webapp_url")]
+                [InlineKeyboardButton("🌐 Mở Web App", url=user.web_app_url)],
+                [InlineKeyboardButton("✏️ Cập nhật link", callback_data="update_webapp_url")]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
             await update.message.reply_text(
-                f"ðŸ“± **Web App cá»§a báº¡n:**\n\n"
+                f"📱 **Web App của bạn:**\n\n"
                 f"`{user.web_app_url}`\n\n"
-                f"ðŸ’¡ Nháº¥n nÃºt bÃªn dÆ°á»›i Ä‘á»ƒ má»Ÿ hoáº·c cáº­p nháº­t link!",
+                f"💡 Nhấn nút bên dưới để mở hoặc cập nhật link!",
                 parse_mode="Markdown",
                 reply_markup=reply_markup
             )
         else:
             # No URL saved yet
-            keyboard = [[InlineKeyboardButton("ðŸ’¾ LÆ°u link Web App", callback_data="save_webapp_url")]]
+            keyboard = [[InlineKeyboardButton("💾 Lưu link Web App", callback_data="save_webapp_url")]]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
             await update.message.reply_text(
-                f"ðŸ“± **LÆ°u link Web App**\n\n"
-                f"Báº¡n chÆ°a lÆ°u link Web App cá»§a Freedom Wallet.\n\n"
-                f"ðŸ’¡ LÆ°u link Ä‘á»ƒ:\n"
-                f"â€¢ Truy cáº­p nhanh khi cáº§n ghi chÃ©p\n"
-                f"â€¢ KhÃ´ng pháº£i tÃ¬m láº¡i link má»—i láº§n\n"
-                f"â€¢ Bot sáº½ gá»­i link cho báº¡n khi cáº§n\n\n"
-                f"Nháº¥n nÃºt bÃªn dÆ°á»›i Ä‘á»ƒ lÆ°u!",
+                f"📱 **Lưu link Web App**\n\n"
+                f"Bạn chưa lưu link Web App của Freedom Wallet.\n\n"
+                f"💡 Lưu link để:\n"
+                f"• Truy cập nhanh khi cần ghi chép\n"
+                f"• Không phải tìm lại link mỗi lần\n"
+                f"• Bot sẽ gửi link cho bạn khi cần\n\n"
+                f"Nhấn nút bên dưới để lưu!",
                 parse_mode="Markdown",
                 reply_markup=reply_markup
             )
@@ -63,11 +63,11 @@ async def callback_save_webapp_url(update: Update, context: ContextTypes.DEFAULT
     await query.answer()
     
     await query.edit_message_text(
-        "ðŸ“± **Gá»­i link Web App cá»§a báº¡n**\n\n"
-        "Vui lÃ²ng gá»­i URL cá»§a Freedom Wallet Web App.\n"
+        "📱 **Gửi link Web App của bạn**\n\n"
+        "Vui lòng gửi URL của Freedom Wallet Web App.\n"
         "VD: `https://script.google.com/macros/s/ABC.../exec`\n\n"
-        "ðŸ“Œ Báº¡n cÃ³ thá»ƒ tÃ¬m link nÃ y trong Apps Script deployment.\n\n"
-        "Hoáº·c gá»­i /cancel Ä‘á»ƒ há»§y.",
+        "📌 Bạn có thể tìm link này trong Apps Script deployment.\n\n"
+        "Hoặc gửi /cancel để hủy.",
         parse_mode="Markdown"
     )
     
@@ -79,10 +79,10 @@ async def callback_update_webapp_url(update: Update, context: ContextTypes.DEFAU
     await query.answer()
     
     await query.edit_message_text(
-        "ðŸ“± **Cáº­p nháº­t link Web App**\n\n"
-        "Vui lÃ²ng gá»­i URL má»›i cá»§a Freedom Wallet Web App.\n"
+        "📱 **Cập nhật link Web App**\n\n"
+        "Vui lòng gửi URL mới của Freedom Wallet Web App.\n"
         "VD: `https://script.google.com/macros/s/ABC.../exec`\n\n"
-        "Hoáº·c gá»­i /cancel Ä‘á»ƒ há»§y.",
+        "Hoặc gửi /cancel để hủy.",
         parse_mode="Markdown"
     )
     
@@ -96,8 +96,8 @@ async def handle_webapp_url_input(update: Update, context: ContextTypes.DEFAULT_
     # Basic validation
     if not url.startswith("http"):
         await update.message.reply_text(
-            "âŒ URL khÃ´ng há»£p lá»‡. Vui lÃ²ng gá»­i URL báº¯t Ä‘áº§u báº±ng http:// hoáº·c https://\n\n"
-            "Hoáº·c /cancel Ä‘á»ƒ há»§y."
+            "❌ URL không hợp lệ. Vui lòng gửi URL bắt đầu bằng http:// hoặc https://\n\n"
+            "Hoặc /cancel để hủy."
         )
         return WAITING_FOR_URL
     
@@ -107,29 +107,29 @@ async def handle_webapp_url_input(update: Update, context: ContextTypes.DEFAULT_
         user = db.query(User).filter(User.id == user_id).first()
         
         if not user:
-            await update.message.reply_text("âŒ User not found.")
+            await update.message.reply_text("❌ User not found.")
             return ConversationHandler.END
         
         # Save URL
         user.web_app_url = url
         db.commit()
         
-        keyboard = [[InlineKeyboardButton("ðŸŒ Má»Ÿ Web App", url=url)]]
+        keyboard = [[InlineKeyboardButton("🌐 Mở Web App", url=url)]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await update.message.reply_text(
-            f"âœ… **ÄÃ£ lÆ°u link Web App!**\n\n"
+            f"✅ **Đã lưu link Web App!**\n\n"
             f"`{url}`\n\n"
-            f"ðŸ’¡ DÃ¹ng /mywebapp Ä‘á»ƒ xem láº¡i link báº¥t cá»© lÃºc nÃ o!",
+            f"💡 Dùng /mywebapp để xem lại link bất cứ lúc nào!",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
         
-        logger.info(f"âœ… User {user_id} saved Web App URL")
+        logger.info(f"✅ User {user_id} saved Web App URL")
         
     except Exception as e:
-        logger.error(f"âŒ Error saving Web App URL: {e}")
-        await update.message.reply_text("âŒ CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i sau.")
+        logger.error(f"❌ Error saving Web App URL: {e}")
+        await update.message.reply_text("❌ Có lỗi xảy ra. Vui lòng thử lại sau.")
     
     finally:
         db.close()
@@ -138,7 +138,7 @@ async def handle_webapp_url_input(update: Update, context: ContextTypes.DEFAULT_
 
 async def cancel_webapp_url(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Cancel the conversation"""
-    await update.message.reply_text("âŒ ÄÃ£ há»§y. DÃ¹ng /mywebapp Ä‘á»ƒ thá»­ láº¡i.")
+    await update.message.reply_text("❌ Đã hủy. Dùng /mywebapp để thử lại.")
     return ConversationHandler.END
 
 def register_webapp_handlers(application):
@@ -164,5 +164,5 @@ def register_webapp_handlers(application):
     application.add_handler(conv_handler)
     application.add_handler(CommandHandler("mywebapp", cmd_mywebapp))
     
-    logger.info("âœ… Web App URL handlers registered")
+    logger.info("✅ Web App URL handlers registered")
 

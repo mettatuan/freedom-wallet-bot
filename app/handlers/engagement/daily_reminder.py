@@ -1,6 +1,6 @@
 """
-Daily Reminder System - Nháº¯c nhá»Ÿ ghi chÃ©p hÃ ng ngÃ y
-GiÃºp user táº¡o thÃ³i quen tracking tÃ i chÃ­nh 
+Daily Reminder System - Nhắc nhở ghi chép hàng ngày
+Giúp user tạo thói quen tracking tài chính 
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler
@@ -11,86 +11,86 @@ from app.utils.database import SessionLocal, User
 
 # Morning Reminder Content (8:00 AM)
 MORNING_REMINDER_TEMPLATE = """
-ðŸŒ… **ChÃ o buá»•i sÃ¡ng {name}!**
+🌅 **Chào buổi sáng {name}!**
 
-ðŸ’ª **HÃ´m nay lÃ  ngÃ y thá»© {streak} ghi chÃ©p cá»§a báº¡n!**
+💪 **Hôm nay là ngày thứ {streak} ghi chép của bạn!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŽ¯ **Má»¥c tiÃªu hÃ´m nay:**
-â€¢ Ghi Ã­t nháº¥t 3 giao dá»‹ch
-â€¢ Nhá»› phÃ¢n loáº¡i Ä‘Ãºng hÅ© tiá»n
-â€¢ Review tá»•ng chi tiÃªu
+🎯 **Mục tiêu hôm nay:**
+• Ghi ít nhất 3 giao dịch
+• Nhớ phân loại đúng hũ tiền
+• Review tổng chi tiêu
 
 {streak_message}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¡ **Tip:** Ghi chÃ©p ngay khi chi tiÃªu â†’ khÃ´ng bao giá» quÃªn!
+💡 **Tip:** Ghi chép ngay khi chi tiêu → không bao giờ quên!
 """
 
 # Evening Reminder Content (8:00 PM)
 EVENING_REMINDER_TEMPLATE = """
-ðŸŒ™ **TrÆ°á»›c khi ngá»§... {name}**
+🌙 **Trước khi ngủ... {name}**
 
-â“ **HÃ´m nay báº¡n Ä‘Ã£ ghi chÃ©p chÆ°a?**
+❓ **Hôm nay bạn đã ghi chép chưa?**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
 {streak_status}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¤ **Ghi ngay trÆ°á»›c khi quÃªn:**
-â€¢ Bá»¯a Äƒn hÃ´m nay
-â€¢ Di chuyá»ƒn (xÄƒng, grab...)
-â€¢ Cafe, giáº£i trÃ­
-â€¢ Mua sáº¯m
+💤 **Ghi ngay trước khi quên:**
+• Bữa ăn hôm nay
+• Di chuyển (xăng, grab...)
+• Cafe, giải trí
+• Mua sắm
 
-ðŸ’¡ *Chá»‰ máº¥t 30 giÃ¢y thÃ´i!*
+💡 *Chỉ mất 30 giây thôi!*
 """
 
-# Skip Alert (náº¿u khÃ´ng ghi 2 ngÃ y liÃªn tiáº¿p)
+# Skip Alert (nếu không ghi 2 ngày liên tiếp)
 SKIP_ALERT_TEMPLATE = """
-ðŸ˜¢ **Uhm... {name}, báº¡n á»•n chá»©?**
+😢 **Uhm... {name}, bạn ổn chứ?**
 
-MÃ¬nh tháº¥y báº¡n Ä‘Ã£ khÃ´ng ghi chÃ©p {skip_days} ngÃ y rá»“i.
+Mình thấy bạn đã không ghi chép {skip_days} ngày rồi.
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¡ **Gáº·p khÃ³ khÄƒn gÃ¬ khÃ´ng?**
-â€¢ QuÃªn máº¥t?
-â€¢ App gáº·p lá»—i?
-â€¢ ChÆ°a rÃµ cÃ¡ch ghi?
+💡 **Gặp khó khăn gì không?**
+• Quên mất?
+• App gặp lỗi?
+• Chưa rõ cách ghi?
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-MÃ¬nh á»Ÿ Ä‘Ã¢y giÃºp báº¡n! Nháº¯n cho mÃ¬nh nhÃ© ðŸ’¬
+Mình ở đây giúp bạn! Nhắn cho mình nhé 💬
 
-*"ThÃ nh cÃ´ng khÃ´ng Ä‘áº¿n tá»« Ä‘á»™ng lá»±c - mÃ  Ä‘áº¿n tá»« hÃ nh Ä‘á»™ng!"*
+*"Thành công không đến từ động lực - mà đến từ hành động!"*
 """
 
 
 def get_streak_message(streak: int) -> str:
     """Generate encouraging message based on streak"""
     if streak == 1:
-        return "ðŸŒ± **Streak má»›i báº¯t Ä‘áº§u!** HÃ£y tiáº¿p tá»¥c nhÃ©!"
+        return "🌱 **Streak mới bắt đầu!** Hãy tiếp tục nhé!"
     elif streak < 3:
-        return f"ðŸ”¥ **Streak: {streak} ngÃ y!** Cá»‘ gáº¯ng thÃªm má»™t chÃºt ná»¯a!"
+        return f"🔥 **Streak: {streak} ngày!** Cố gắng thêm một chút nữa!"
     elif streak < 7:
-        return f"ðŸ”¥ **Streak: {streak} ngÃ y!** Tuyá»‡t vá»i! CÃ²n {7-streak} ngÃ y ná»¯a Ä‘áº¡t 7 ngÃ y!"
+        return f"🔥 **Streak: {streak} ngày!** Tuyệt vời! Còn {7-streak} ngày nữa đạt 7 ngày!"
     elif streak == 7:
-        return "ðŸŽ‰ **CHÃšC Má»ªNG! 7 NGÃ€Y LIÃŠN Tá»¤C!** HÃ´m nay báº¡n sáº½ nháº­n quÃ  Ä‘áº·c biá»‡t!"
+        return "🎉 **CHÚC MỪNG! 7 NGÀY LIÊN TỤC!** Hôm nay bạn sẽ nhận quà đặc biệt!"
     elif streak < 21:
-        return f"ðŸ”¥ **Streak: {streak} ngÃ y!** Amazing! Äang trÃªn Ä‘Æ°á»ng hÃ¬nh thÃ nh thÃ³i quen!"
+        return f"🔥 **Streak: {streak} ngày!** Amazing! Đang trên đường hình thành thói quen!"
     elif streak < 30:
-        return f"ðŸ”¥ **Streak: {streak} ngÃ y!** Xuáº¥t sáº¯c! CÃ²n {30-streak} ngÃ y ná»¯a Ä‘áº¡t 30 ngÃ y!"
+        return f"🔥 **Streak: {streak} ngày!** Xuất sắc! Còn {30-streak} ngày nữa đạt 30 ngày!"
     elif streak == 30:
-        return "ðŸ† **CHÃšC Má»ªNG! 30 NGÃ€Y LIÃŠN Tá»¤C!** Báº¡n sáº½ nháº­n huy chÆ°Æ¡ng danh dá»±!"
+        return "🏆 **CHÚC MỪNG! 30 NGÀY LIÊN TỤC!** Bạn sẽ nhận huy chương danh dự!"
     elif streak < 90:
-        return f"ðŸ”¥ **Streak: {streak} ngÃ y!** Legendary! Báº¡n lÃ  master rá»“i!"
+        return f"🔥 **Streak: {streak} ngày!** Legendary! Bạn là master rồi!"
     else:
-        return f"ðŸ‘‘ **Streak: {streak} ngÃ y!** Báº N LÃ€ HUYá»€N THOáº I!"
+        return f"👑 **Streak: {streak} ngày!** BẠN LÀ HUYỀN THOẠI!"
 
 
 async def send_morning_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int):
@@ -104,7 +104,7 @@ async def send_morning_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int
             return
         
         # Get user name
-        name = user.full_name or user.first_name or "báº¡n"
+        name = user.full_name or user.first_name or "bạn"
         streak = user.streak_count or 0
         
         # Generate message
@@ -117,9 +117,9 @@ async def send_morning_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int
         
         # Keyboard
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("ðŸ“ Má»Ÿ App ngay", callback_data="reminder_open_app")],
-            [InlineKeyboardButton("â° Nháº¯c tÃ´i tá»‘i nay", callback_data="reminder_snooze_evening")],
-            [InlineKeyboardButton("ðŸ”• Táº¯t nháº¯c nhá»Ÿ hÃ´m nay", callback_data="reminder_disable_today")]
+            [InlineKeyboardButton("📝 Mở App ngay", callback_data="reminder_open_app")],
+            [InlineKeyboardButton("⏰ Nhắc tôi tối nay", callback_data="reminder_snooze_evening")],
+            [InlineKeyboardButton("🔕 Tắt nhắc nhở hôm nay", callback_data="reminder_disable_today")]
         ])
         
         # Send message
@@ -152,7 +152,7 @@ async def send_evening_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int
             return
         
         # Get user name
-        name = user.full_name or user.first_name or "báº¡n"
+        name = user.full_name or user.first_name or "bạn"
         streak = user.streak_count or 0
         
         # Check if user recorded transaction today
@@ -161,9 +161,9 @@ async def send_evening_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int
         recorded_today = last_transaction and last_transaction.date() == today
         
         if recorded_today:
-            streak_status = f"âœ… **Tuyá»‡t vá»i!** Báº¡n Ä‘Ã£ ghi chÃ©p hÃ´m nay!\n\nðŸ”¥ **Streak: {streak} ngÃ y liÃªn tá»¥c!**"
+            streak_status = f"✅ **Tuyệt vời!** Bạn đã ghi chép hôm nay!\n\n🔥 **Streak: {streak} ngày liên tục!**"
         else:
-            streak_status = "âš ï¸ **ChÆ°a ghi chÃ©p hÃ´m nay!**\n\nGhi ngay Ä‘á»ƒ giá»¯ streak nhÃ©!"
+            streak_status = "⚠️ **Chưa ghi chép hôm nay!**\n\nGhi ngay để giữ streak nhé!"
         
         # Generate message
         message = EVENING_REMINDER_TEMPLATE.format(
@@ -174,14 +174,14 @@ async def send_evening_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int
         # Keyboard
         if recorded_today:
             keyboard = InlineKeyboardMarkup([
-                [InlineKeyboardButton("ðŸ“Š Xem bÃ¡o cÃ¡o", callback_data="reminder_view_report")],
-                [InlineKeyboardButton("ðŸ“ Ghi thÃªm", callback_data="reminder_open_app")]
+                [InlineKeyboardButton("📊 Xem báo cáo", callback_data="reminder_view_report")],
+                [InlineKeyboardButton("📝 Ghi thêm", callback_data="reminder_open_app")]
             ])
         else:
             keyboard = InlineKeyboardMarkup([
-                [InlineKeyboardButton("ðŸ“ Ghi ngay", callback_data="reminder_open_app")],
-                [InlineKeyboardButton("âœ… ÄÃ£ ghi xong", callback_data="reminder_done")],
-                [InlineKeyboardButton("â° Nháº¯c tÃ´i sau 1h", callback_data="reminder_snooze_1h")]
+                [InlineKeyboardButton("📝 Ghi ngay", callback_data="reminder_open_app")],
+                [InlineKeyboardButton("✅ Đã ghi xong", callback_data="reminder_done")],
+                [InlineKeyboardButton("⏰ Nhắc tôi sau 1h", callback_data="reminder_snooze_1h")]
             ])
         
         # Send message
@@ -214,7 +214,7 @@ async def send_skip_alert(context: ContextTypes.DEFAULT_TYPE, user_id: int, skip
             return
         
         # Get user name
-        name = user.full_name or user.first_name or "báº¡n"
+        name = user.full_name or user.first_name or "bạn"
         
         # Generate message
         message = SKIP_ALERT_TEMPLATE.format(
@@ -224,9 +224,9 @@ async def send_skip_alert(context: ContextTypes.DEFAULT_TYPE, user_id: int, skip
         
         # Keyboard
         keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("ðŸ“ Ghi bÃ¹ ngay", callback_data="reminder_catch_up")],
-            [InlineKeyboardButton("ðŸ’¬ Cáº§n há»— trá»£", url="https://t.me/freedomwalletapp")],
-            [InlineKeyboardButton("â° Nháº¯c tÃ´i sÃ¡ng mai", callback_data="reminder_snooze_tomorrow")]
+            [InlineKeyboardButton("📝 Ghi bù ngay", callback_data="reminder_catch_up")],
+            [InlineKeyboardButton("💬 Cần hỗ trợ", url="https://t.me/freedomwalletapp")],
+            [InlineKeyboardButton("⏰ Nhắc tôi sáng mai", callback_data="reminder_snooze_tomorrow")]
         ])
         
         # Send message
@@ -254,22 +254,87 @@ async def reminder_callback_handler(update: Update, context: ContextTypes.DEFAUL
     user_id = update.effective_user.id
     
     try:
-        if callback_data == "reminder_open_app":
+        # Handle reminder time setting buttons
+        if callback_data == "reminder_morning":
+            db = SessionLocal()
+            user = db.query(User).filter(User.id == user_id).first()
+            if user:
+                user.reminder_time = "09:00"  # 9:00 AM
+                user.reminder_enabled = True
+                db.commit()
+            db.close()
+            
             await query.edit_message_text(
-                text="ðŸ“± **HÃ£y má»Ÿ Web App cá»§a báº¡n Ä‘á»ƒ ghi chÃ©p!**\n\n"
-                     "Link Web App náº±m trong message Day 1 cá»§a báº¡n.\n\n"
-                     "ðŸ’¡ *Tip: Pin message chá»©a Web App Ä‘á»ƒ truy cáº­p nhanh!*",
+                text="🌅 **Đã bật nhắc nhở buổi sáng!**\n\n"
+                     "⏰ Mỗi sáng 9:00, bot sẽ nhắc bạn ghi chép.\n\n"
+                     "💡 Tắt bất cứ lúc nào: /reminder off",
+                parse_mode="Markdown"
+            )
+        
+        elif callback_data == "reminder_noon":
+            db = SessionLocal()
+            user = db.query(User).filter(User.id == user_id).first()
+            if user:
+                user.reminder_time = "12:00"  # 12:00 PM
+                user.reminder_enabled = True
+                db.commit()
+            db.close()
+            
+            await query.edit_message_text(
+                text="☀️ **Đã bật nhắc nhở buổi trưa!**\n\n"
+                     "⏰ Mỗi trưa 12:00, bot sẽ nhắc bạn ghi chép.\n\n"
+                     "💡 Tắt bất cứ lúc nào: /reminder off",
+                parse_mode="Markdown"
+            )
+        
+        elif callback_data == "reminder_evening":
+            db = SessionLocal()
+            user = db.query(User).filter(User.id == user_id).first()
+            if user:
+                user.reminder_time = "20:00"  # 8:00 PM
+                user.reminder_enabled = True
+                db.commit()
+            db.close()
+            
+            await query.edit_message_text(
+                text="🌙 **Đã bật nhắc nhở buổi tối!**\n\n"
+                     "⏰ Mỗi tối 20:00, bot sẽ nhắc bạn ghi chép.\n\n"
+                     "💡 Tắt bất cứ lúc nào: /reminder off",
+                parse_mode="Markdown"
+            )
+        
+        elif callback_data == "reminder_off":
+            db = SessionLocal()
+            user = db.query(User).filter(User.id == user_id).first()
+            if user:
+                user.reminder_enabled = False
+                db.commit()
+            db.close()
+            
+            await query.edit_message_text(
+                text="🔕 **Đã tắt nhắc nhở!**\n\n"
+                     "Bạn có thể bật lại bất cứ lúc nào:\n"
+                     "• Vào Cài đặt → Nhắc nhở\n"
+                     "• Hoặc dùng lệnh /reminder",
+                parse_mode="Markdown"
+            )
+        
+        elif callback_data == "reminder_open_app":
+            await query.edit_message_text(
+                text="📱 **Hãy mở Web App của bạn để ghi chép!**\n\n"
+                     "Link Web App nằm trong message Day 1 của bạn.\n\n"
+                     "💡 *Tip: Pin message chứa Web App để truy cập nhanh!*",
                 parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("ðŸ‘¥ Group VIP", url="https://t.me/freedomwalletapp")
+                    InlineKeyboardButton("👥 Group VIP", url="https://t.me/freedomwalletapp")
                 ]])
             )
         
         elif callback_data == "reminder_done":
             await query.edit_message_text(
-                text="âœ… **Tuyá»‡t vá»i! Cáº£m Æ¡n báº¡n Ä‘Ã£ ghi chÃ©p!**\n\n"
-                     "ðŸ”¥ Streak cá»§a báº¡n Ä‘Æ°á»£c giá»¯ nguyÃªn!\n\n"
-                     "Háº¹n gáº·p láº¡i báº¡n vÃ o sÃ¡ng mai! ðŸ˜Š",
+                text="✅ **Tuyệt vời! Cảm ơn bạn đã ghi chép!**\n\n"
+                     "🔥 Streak của bạn được giữ nguyên!\n\n"
+                     "Hẹn gặp lại bạn vào sáng mai! 😊",
                 parse_mode="Markdown"
             )
         
@@ -282,37 +347,37 @@ async def reminder_callback_handler(update: Update, context: ContextTypes.DEFAUL
             db.close()
             
             await query.edit_message_text(
-                text="ðŸ”• **ÄÃ£ táº¯t nháº¯c nhá»Ÿ hÃ´m nay.**\n\n"
-                     "Báº¡n cÃ³ thá»ƒ báº­t láº¡i báº¥t cá»© lÃºc nÃ o báº±ng lá»‡nh /reminder_on",
+                text="🔕 **Đã tắt nhắc nhở hôm nay.**\n\n"
+                     "Bạn có thể bật lại bất cứ lúc nào bằng lệnh /reminder_on",
                 parse_mode="Markdown"
             )
         
         elif callback_data in ["reminder_snooze_evening", "reminder_snooze_1h", "reminder_snooze_tomorrow"]:
             await query.edit_message_text(
-                text="â° **Okay! MÃ¬nh sáº½ nháº¯c báº¡n sau!**\n\n"
-                     "Äá»«ng quÃªn ghi chÃ©p nhÃ©! ðŸ˜Š",
+                text="⏰ **Okay! Mình sẽ nhắc bạn sau!**\n\n"
+                     "Đừng quên ghi chép nhé! 😊",
                 parse_mode="Markdown"
             )
         
         elif callback_data == "reminder_view_report":
             await query.edit_message_text(
-                text="ðŸ“Š **Xem bÃ¡o cÃ¡o trong Web App cá»§a báº¡n!**\n\n"
-                     "VÃ o menu â†’ Reports Ä‘á»ƒ xem chi tiáº¿t:\n"
-                     "â€¢ Chi tiÃªu theo danh má»¥c\n"
-                     "â€¢ PhÃ¢n bá»• 6 HÅ© Tiá»n\n"
-                     "â€¢ Xu hÆ°á»›ng theo thá»i gian\n\n"
-                     "ðŸ’¡ *Review hÃ ng tuáº§n Ä‘á»ƒ tá»‘i Æ°u tÃ i chÃ­nh!*",
+                text="📊 **Xem báo cáo trong Web App của bạn!**\n\n"
+                     "Vào menu → Reports để xem chi tiết:\n"
+                     "• Chi tiêu theo danh mục\n"
+                     "• Phân bổ 6 Hũ Tiền\n"
+                     "• Xu hướng theo thời gian\n\n"
+                     "💡 *Review hàng tuần để tối ưu tài chính!*",
                 parse_mode="Markdown"
             )
         
         elif callback_data == "reminder_catch_up":
             await query.edit_message_text(
-                text="ðŸ’ª **Tuyá»‡t! HÃ£y ghi bÃ¹ nhá»¯ng giao dá»‹ch Ä‘Ã£ bá» lá»¡!**\n\n"
-                     "ðŸ“ **Tips ghi bÃ¹:**\n"
-                     "1. Má»Ÿ Web App\n"
-                     "2. ThÃªm giao dá»‹ch â†’ Chá»n ngÃ y cÅ©\n"
-                     "3. Ghi táº¥t cáº£ giao dá»‹ch Ä‘Ã£ nhá»› ra\n\n"
-                     "ðŸŽ¯ Sau khi ghi xong, streak sáº½ Ä‘Æ°á»£c cáº­p nháº­t!",
+                text="💪 **Tuyệt! Hãy ghi bù những giao dịch đã bỏ lỡ!**\n\n"
+                     "📝 **Tips ghi bù:**\n"
+                     "1. Mở Web App\n"
+                     "2. Thêm giao dịch → Chọn ngày cũ\n"
+                     "3. Ghi tất cả giao dịch đã nhớ ra\n\n"
+                     "🎯 Sau khi ghi xong, streak sẽ được cập nhật!",
                 parse_mode="Markdown"
             )
         
@@ -323,5 +388,5 @@ async def reminder_callback_handler(update: Update, context: ContextTypes.DEFAUL
 def register_reminder_handlers(application):
     """Register reminder callback handlers"""
     application.add_handler(CallbackQueryHandler(reminder_callback_handler, pattern="^reminder_"))
-    logger.info("âœ… Daily reminder handlers registered")
+    logger.info("✅ Daily reminder handlers registered")
 

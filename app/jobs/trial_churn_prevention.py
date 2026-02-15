@@ -43,53 +43,53 @@ class TrialChurnPrevention:
             trial_end = user.trial_ends_at.strftime("%d/%m/%Y %H:%M") if user.trial_ends_at else "N/A"
             
             message = f"""
-â° **TRIAL Káº¾T THÃšC SAU 24H!**
+⏰ **TRIAL KẾT THÚC SAU 24H!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸŽ¯ **7 NGÃ€Y TRIAL Cá»¦A Báº N:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🎯 **7 NGÀY TRIAL CỦA BẠN:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“… Káº¿t thÃºc: {trial_end}
-â³ CÃ²n láº¡i: **24 giá»**
+📅 Kết thúc: {trial_end}
+⏳ Còn lại: **24 giờ**
 
 {ROICalculator.format_roi_message(roi, "TRIAL")}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’Ž **Náº¾U TIáº¾P Tá»¤C PREMIUM:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💎 **NẾU TIẾP TỤC PREMIUM:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… Unlimited tin nháº¯n (khÃ´ng giá»›i háº¡n)
-âœ… AI phÃ¢n tÃ­ch tÃ i chÃ­nh 24/7
-âœ… Dashboard thÃ´ng minh
-âœ… Gá»£i Ã½ cÃ¡ nhÃ¢n hÃ³a má»—i ngÃ y
-âœ… Há»— trá»£ Æ°u tiÃªn 30 phÃºt
-âœ… Web App khÃ´ng quáº£ng cÃ¡o
+✅ Unlimited tin nhắn (không giới hạn)
+✅ AI phân tích tài chính 24/7
+✅ Dashboard thông minh
+✅ Gợi ý cá nhân hóa mỗi ngày
+✅ Hỗ trợ ưu tiên 30 phút
+✅ Web App không quảng cáo
 
-ðŸ’° **GiÃ¡:** 999,000 VNÄ/nÄƒm (~2,750 VNÄ/ngÃ y)
+💰 **Giá:** 999,000 VNĐ/năm (~2,750 VNĐ/ngày)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ”„ **Náº¾U KHÃ”NG TIáº¾P Tá»¤C:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🔄 **NẾU KHÔNG TIẾP TỤC:**
+━━━━━━━━━━━━━━━━━━━━━
 
-Sau 24h, báº¡n sáº½ quay vá» FREE:
-â€¢ Chá»‰ 5 tin nháº¯n/ngÃ y
-â€¢ KhÃ´ng cÃ³ phÃ¢n tÃ­ch AI
-â€¢ KhÃ´ng gá»£i Ã½ cÃ¡ nhÃ¢n
-â€¢ Dashboard bá»‹ khÃ³a
+Sau 24h, bạn sẽ quay về FREE:
+• Chỉ 5 tin nhắn/ngày
+• Không có phân tích AI
+• Không gợi ý cá nhân
+• Dashboard bị khóa
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ **QUYáº¾T Äá»ŠNH NGAY:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 **QUYẾT ĐỊNH NGAY:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ‘‡ Chá»n hÃ nh Ä‘á»™ng bÃªn dÆ°á»›i:
+👇 Chọn hành động bên dưới:
 """
             
             # Action buttons
             keyboard = [
-                [InlineKeyboardButton("ðŸ’Ž NÃ¢ng cáº¥p Premium ngay", callback_data="upgrade_to_premium")],
-                [InlineKeyboardButton("ðŸ“Š Xem ROI chi tiáº¿t", callback_data="view_roi_detail")],
-                [InlineKeyboardButton("ðŸ¤” Táº¡i sao nÃªn Premium?", callback_data="why_premium")],
-                [InlineKeyboardButton("ðŸ’¬ Chat vá»›i Support", callback_data="contact_support")]
+                [InlineKeyboardButton("💎 Nâng cấp Premium ngay", callback_data="upgrade_to_premium")],
+                [InlineKeyboardButton("📊 Xem ROI chi tiết", callback_data="view_roi_detail")],
+                [InlineKeyboardButton("🤔 Tại sao nên Premium?", callback_data="why_premium")],
+                [InlineKeyboardButton("💬 Chat với Support", callback_data="contact_support")]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
@@ -127,33 +127,33 @@ Sau 24h, báº¡n sáº½ quay vá» FREE:
                 return
             
             message = """
-â° **TRIAL ÄÃƒ Káº¾T THÃšC**
+⏰ **TRIAL ĐÃ KẾT THÚC**
 
-Cáº£m Æ¡n báº¡n Ä‘Ã£ tráº£i nghiá»‡m Premium Trial 7 ngÃ y! ðŸ™
+Cảm ơn bạn đã trải nghiệm Premium Trial 7 ngày! 🙏
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ†“ **TÃ€I KHOáº¢N FREE:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🆓 **TÀI KHOẢN FREE:**
+━━━━━━━━━━━━━━━━━━━━━
 
-Báº¡n Ä‘Ã£ quay vá» tÃ i khoáº£n FREE:
-â€¢ 5 tin nháº¯n/ngÃ y vá»›i bot
-â€¢ Truy cáº­p Web App cÆ¡ báº£n
-â€¢ Há»— trá»£ cá»™ng Ä‘á»“ng
+Bạn đã quay về tài khoản FREE:
+• 5 tin nhắn/ngày với bot
+• Truy cập Web App cơ bản
+• Hỗ trợ cộng đồng
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’Ž **MUá»N QUAY Láº I PREMIUM?**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💎 **MUỐN QUAY LẠI PREMIUM?**
+━━━━━━━━━━━━━━━━━━━━━
 
-NÃ¢ng cáº¥p báº¥t cá»© lÃºc nÃ o:
-ðŸ’° 999,000 VNÄ/nÄƒm
-âš¡ KÃ­ch hoáº¡t ngay láº­p tá»©c
+Nâng cấp bất cứ lúc nào:
+💰 999,000 VNĐ/năm
+⚡ Kích hoạt ngay lập tức
 
-GÃµ /upgrade Ä‘á»ƒ xem chi tiáº¿t!
+Gõ /upgrade để xem chi tiết!
 """
             
             keyboard = [
-                [InlineKeyboardButton("ðŸ’Ž NÃ¢ng cáº¥p Premium", callback_data="upgrade_to_premium")],
-                [InlineKeyboardButton("ðŸ  Menu FREE", callback_data="start")]
+                [InlineKeyboardButton("💎 Nâng cấp Premium", callback_data="upgrade_to_premium")],
+                [InlineKeyboardButton("🏠 Menu FREE", callback_data="start")]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             

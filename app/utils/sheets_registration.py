@@ -54,8 +54,8 @@ async def save_user_to_registration_sheet(
     Save user to registration Google Sheet
     
     Columns:
-    ðŸ“… NgÃ y Ä‘Äƒng kÃ½ | User ID | Username | Há» & TÃªn | ðŸ“§ Email | ðŸ‘¤ Äiá»‡n thoáº¡i | 
-    ðŸ’Ž GÃ³i | ðŸ”— Link giá»›i thiá»‡u | ðŸ‘¥ Sá»‘ ngÆ°á»i Ä‘Ã£ giá»›i thiá»‡u | ðŸ“ Nguá»“n | ðŸ“Š Tráº¡ng thÃ¡i | ðŸ‘¤ NgÆ°á»i giá»›i thiá»‡u
+    📅 Ngày đăng ký | User ID | Username | Họ & Tên | 📧 Email | 👤 Điện thoại | 
+    💎 Gói | 🔗 Link giới thiệu | 👥 Số người đã giới thiệu | 📍 Nguồn | 📊 Trạng thái | 👤 Người giới thiệu
     """
     try:
         worksheet = get_registration_worksheet()
@@ -77,28 +77,28 @@ async def save_user_to_registration_sheet(
         # Prepare row data
         registration_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         row_data = [
-            registration_date,              # ðŸ“… NgÃ y Ä‘Äƒng kÃ½
+            registration_date,              # 📅 Ngày đăng ký
             str(user_id),                   # User ID
             username or "",                 # Username
-            full_name or "",                # Há» & TÃªn
-            email or "",                    # ðŸ“§ Email
-            phone or "",                    # ðŸ‘¤ Äiá»‡n thoáº¡i
-            plan,                           # ðŸ’Ž GÃ³i
-            referral_link,                  # ðŸ”— Link giá»›i thiá»‡u
-            str(referral_count),            # ðŸ‘¥ Sá»‘ ngÆ°á»i Ä‘Ã£ giá»›i thiá»‡u
-            source,                         # ðŸ“ Nguá»“n
-            status,                         # ðŸ“Š Tráº¡ng thÃ¡i
-            referred_by or ""               # ðŸ‘¤ NgÆ°á»i giá»›i thiá»‡u
+            full_name or "",                # Họ & Tên
+            email or "",                    # 📧 Email
+            phone or "",                    # 👤 Điện thoại
+            plan,                           # 💎 Gói
+            referral_link,                  # 🔗 Link giới thiệu
+            str(referral_count),            # 👥 Số người đã giới thiệu
+            source,                         # 📍 Nguồn
+            status,                         # 📊 Trạng thái
+            referred_by or ""               # 👤 Người giới thiệu
         ]
         
         if user_exists:
             # Update existing row
             worksheet.update(f'A{user_row}:L{user_row}', [row_data])
-            logger.info(f"âœ… Updated user {user_id} in registration sheet (row {user_row})")
+            logger.info(f"✅ Updated user {user_id} in registration sheet (row {user_row})")
         else:
             # Append new row
             worksheet.append_row(row_data)
-            logger.info(f"âœ… Added new user {user_id} to registration sheet")
+            logger.info(f"✅ Added new user {user_id} to registration sheet")
         
         return True
         

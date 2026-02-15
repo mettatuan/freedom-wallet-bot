@@ -1,5 +1,5 @@
 """
-User Commands - CÃ¡c lá»‡nh user cÃ³ thá»ƒ sá»­ dá»¥ng
+User Commands - Các lệnh user có thể sử dụng
 /stats, /reminder_on, /reminder_off, /record_transaction
 """
 from telegram import Update
@@ -16,40 +16,40 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if not stats:
         await update.message.reply_text(
-            "âŒ KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin cá»§a báº¡n.\n"
-            "Vui lÃ²ng Ä‘Äƒng kÃ½ trÆ°á»›c: /start"
+            "❌ Không tìm thấy thông tin của bạn.\n"
+            "Vui lòng đăng ký trước: /start"
         )
         return
     
     message = f"""
-ðŸ“Š **THá»NG KÃŠ GHI CHÃ‰P - {stats['user_name'].upper()}**
+📊 **THỐNG KÊ GHI CHÉP - {stats['user_name'].upper()}**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ”¥ **STREAK HIá»†N Táº I:**
-{stats['current_streak']} ngÃ y liÃªn tá»¥c
+🔥 **STREAK HIỆN TẠI:**
+{stats['current_streak']} ngày liên tục
 
-ðŸ† **STREAK DÃ€I NHáº¤T:**
-{stats['longest_streak']} ngÃ y
+🏆 **STREAK DÀI NHẤT:**
+{stats['longest_streak']} ngày
 
-ðŸ“ **Tá»”NG GIAO Dá»ŠCH:**
-{stats['total_transactions']} giao dá»‹ch
+📝 **TỔNG GIAO DỊCH:**
+{stats['total_transactions']} giao dịch
 
-ðŸ“… **GHI CHÃ‰P Gáº¦N NHáº¤T:**
-{stats['last_transaction_date'] or 'ChÆ°a cÃ³'}
+📅 **GHI CHÉP GẦN NHẤT:**
+{stats['last_transaction_date'] or 'Chưa có'}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ¨ **MILESTONES:**
-â€¢ 7 ngÃ y: {'âœ… Äáº¡t rá»“i!' if stats['milestones']['7_days'] else 'â³ ChÆ°a Ä‘áº¡t'}
-â€¢ 30 ngÃ y: {'âœ… Äáº¡t rá»“i!' if stats['milestones']['30_days'] else 'â³ ChÆ°a Ä‘áº¡t'}
-â€¢ 90 ngÃ y: {'âœ… Äáº¡t rá»“i!' if stats['milestones']['90_days'] else 'â³ ChÆ°a Ä‘áº¡t'}
+✨ **MILESTONES:**
+• 7 ngày: {'✅ Đạt rồi!' if stats['milestones']['7_days'] else '⏳ Chưa đạt'}
+• 30 ngày: {'✅ Đạt rồi!' if stats['milestones']['30_days'] else '⏳ Chưa đạt'}
+• 90 ngày: {'✅ Đạt rồi!' if stats['milestones']['90_days'] else '⏳ Chưa đạt'}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-{'âœ… **ÄÃ£ ghi chÃ©p hÃ´m nay!**' if stats['recorded_today'] else 'âš ï¸ **ChÆ°a ghi chÃ©p hÃ´m nay!**'}
+{'✅ **Đã ghi chép hôm nay!**' if stats['recorded_today'] else '⚠️ **Chưa ghi chép hôm nay!**'}
 
-ðŸ’¡ *Ghi chÃ©p Ä‘á»u Ä‘áº·n Ä‘á»ƒ giá»¯ streak!*
+💡 *Ghi chép đều đặn để giữ streak!*
 """
     
     await update.message.reply_text(message, parse_mode="Markdown")
@@ -64,17 +64,17 @@ async def reminder_on_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     if success:
         await update.message.reply_text(
-            "âœ… **ÄÃ£ báº­t nháº¯c nhá»Ÿ hÃ ng ngÃ y!**\n\n"
-            "Báº¡n sáº½ nháº­n Ä‘Æ°á»£c:\n"
-            "â€¢ Nháº¯c nhá»Ÿ sÃ¡ng (8:00 AM)\n"
-            "â€¢ Nháº¯c nhá»Ÿ tá»‘i (8:00 PM)\n\n"
-            "ðŸ’¡ *Táº¯t báº¥t cá»© lÃºc nÃ o: /reminder_off*",
+            "✅ **Đã bật nhắc nhở hàng ngày!**\n\n"
+            "Bạn sẽ nhận được:\n"
+            "• Nhắc nhở sáng (8:00 AM)\n"
+            "• Nhắc nhở tối (8:00 PM)\n\n"
+            "💡 *Tắt bất cứ lúc nào: /reminder_off*",
             parse_mode="Markdown"
         )
     else:
         await update.message.reply_text(
-            "âŒ KhÃ´ng thá»ƒ báº­t nháº¯c nhá»Ÿ.\n"
-            "Vui lÃ²ng liÃªn há»‡ support."
+            "❌ Không thể bật nhắc nhở.\n"
+            "Vui lòng liên hệ support."
         )
 
 
@@ -86,15 +86,15 @@ async def reminder_off_command(update: Update, context: ContextTypes.DEFAULT_TYP
     
     if success:
         await update.message.reply_text(
-            "ðŸ”• **ÄÃ£ táº¯t nháº¯c nhá»Ÿ hÃ ng ngÃ y.**\n\n"
-            "Báº¡n sáº½ khÃ´ng nháº­n thÃ´ng bÃ¡o tá»± Ä‘á»™ng ná»¯a.\n\n"
-            "ðŸ’¡ *Báº­t láº¡i báº¥t cá»© lÃºc nÃ o: /reminder_on*",
+            "🔕 **Đã tắt nhắc nhở hàng ngày.**\n\n"
+            "Bạn sẽ không nhận thông báo tự động nữa.\n\n"
+            "💡 *Bật lại bất cứ lúc nào: /reminder_on*",
             parse_mode="Markdown"
         )
     else:
         await update.message.reply_text(
-            "âŒ KhÃ´ng thá»ƒ táº¯t nháº¯c nhá»Ÿ.\n"
-            "Vui lÃ²ng liÃªn há»‡ support."
+            "❌ Không thể tắt nhắc nhở.\n"
+            "Vui lòng liên hệ support."
         )
 
 
@@ -110,14 +110,14 @@ async def record_transaction_command(update: Update, context: ContextTypes.DEFAU
     
     if stats:
         await update.message.reply_text(
-            f"âœ… **ÄÃ£ ghi nháº­n giao dá»‹ch!**\n\n"
-            f"ðŸ”¥ Streak hiá»‡n táº¡i: **{stats['current_streak']} ngÃ y**\n"
-            f"ðŸ“ Tá»•ng giao dá»‹ch: {stats['total_transactions']}\n\n"
-            f"ðŸ’¡ *Tiáº¿p tá»¥c giá»¯ streak nhÃ©!*",
+            f"✅ **Đã ghi nhận giao dịch!**\n\n"
+            f"🔥 Streak hiện tại: **{stats['current_streak']} ngày**\n"
+            f"📝 Tổng giao dịch: {stats['total_transactions']}\n\n"
+            f"💡 *Tiếp tục giữ streak nhé!*",
             parse_mode="Markdown"
         )
     else:
-        await update.message.reply_text("âœ… ÄÃ£ ghi nháº­n!")
+        await update.message.reply_text("✅ Đã ghi nhận!")
     
     logger.info(f"Manually recorded transaction for user {user_id}")
 
@@ -129,5 +129,5 @@ def register_user_command_handlers(application):
     application.add_handler(CommandHandler("reminder_off", reminder_off_command))
     application.add_handler(CommandHandler("record_transaction", record_transaction_command))
     
-    logger.info("âœ… User command handlers registered")
+    logger.info("✅ User command handlers registered")
 

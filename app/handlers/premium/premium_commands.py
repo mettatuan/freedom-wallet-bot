@@ -1,8 +1,8 @@
 """
 Premium Commands - Handlers for Premium menu buttons
-6 main buttons: Ghi chi tiÃªu, TÃ¬nh hÃ¬nh, PhÃ¢n tÃ­ch, Gá»£i Ã½, Setup, Há»— trá»£
+6 main buttons: Ghi chi tiêu, Tình hình, Phân tích, Gợi ý, Setup, Hỗ trợ
 
-Design principle: 1 nÃºt = 1 hÃ nh Ä‘á»™ng quen thuá»™c
+Design principle: 1 nút = 1 hành động quen thuộc
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
@@ -14,10 +14,10 @@ from app.services.recommendation import get_recommendation_for_user, get_greetin
 
 async def quick_record_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    ðŸ’¬ Ghi chi tiÃªu nhanh
+    💬 Ghi chi tiêu nhanh
     
-    HÃ nh vi láº·p nhiá»u nháº¥t - Neo thÃ³i quen
-    Premium cáº£m nháº­n "nháº¹ Ä‘áº§u" rÃµ nháº¥t
+    Hành vi lặp nhiều nhất - Neo thói quen
+    Premium cảm nhận "nhẹ đầu" rõ nhất
     """
     query = update.callback_query
     await query.answer()
@@ -26,25 +26,25 @@ async def quick_record_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         user_id = update.effective_user.id
         user = await get_user_by_id(user_id)
         
-        greeting = get_greeting(user) if user else "ðŸ‘‹ Xin chÃ o!"
+        greeting = get_greeting(user) if user else "👋 Xin chào!"
         
         message = f"""
 {greeting}
 
-ðŸ’¬ **GHI CHI TIÃŠU NHANH**
+💬 **GHI CHI TIÊU NHANH**
 
-Báº¡n chi bao nhiÃªu vÃ  cho viá»‡c gÃ¬?
+Bạn chi bao nhiêu và cho việc gì?
 
-**VÃ­ dá»¥:**
-â€¢ "50k cÃ  phÃª"
-â€¢ "200k Äƒn trÆ°a"
-â€¢ "1tr5 tiá»n nhÃ "
+**Ví dụ:**
+• "50k cà phê"
+• "200k ăn trưa"
+• "1tr5 tiền nhà"
 
-ðŸ’¡ TÃ´i sáº½ hiá»ƒu vÃ  ghi vÃ o Sheet cho báº¡n!
+💡 Tôi sẽ hiểu và ghi vào Sheet cho bạn!
 """
         
         keyboard = [
-            [InlineKeyboardButton("Â« Quay láº¡i", callback_data="premium_menu")]
+            [InlineKeyboardButton("« Quay lại", callback_data="premium_menu")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
@@ -58,17 +58,17 @@ Báº¡n chi bao nhiÃªu vÃ  cho viá»‡c gÃ¬?
     except Exception as e:
         logger.error(f"Error in quick_record_handler: {e}", exc_info=True)
         await query.edit_message_text(
-            "ðŸ˜“ CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i sau!",
+            "😓 Có lỗi xảy ra. Vui lòng thử lại sau!",
             parse_mode="Markdown"
         )
 
 
 async def today_status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    ðŸ“Š TÃ¬nh hÃ¬nh hÃ´m nay
+    📊 Tình hình hôm nay
     
-    Thay tháº¿ cho: /balance, /today, /status
-    User khÃ´ng cáº§n biáº¿t há»i cÃ¢u nÃ o
+    Thay thế cho: /balance, /today, /status
+    User không cần biết hỏi câu nào
     """
     query = update.callback_query
     await query.answer()
@@ -77,7 +77,7 @@ async def today_status_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     user = await get_user_by_id(user_id)
     
     if not user:
-        await query.edit_message_text("âŒ KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin cá»§a báº¡n.")
+        await query.edit_message_text("❌ Không tìm thấy thông tin của bạn.")
         return
     
     # Get today's stats (mock for now - replace with real data)
@@ -87,35 +87,35 @@ async def today_status_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     recorded_today = user.last_transaction_date == datetime.now().date() if user.last_transaction_date else False
     
     message = f"""
-ðŸ“Š **TÃŒNH HÃŒNH HÃ”M NAY**
+📊 **TÌNH HÌNH HÔM NAY**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’° **CHI TIÃŠU:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💰 **CHI TIÊU:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ÄÃ£ chi: {today_spent}
-NgÃ¢n sÃ¡ch: {budget}
-CÃ²n láº¡i: {remaining}
+Đã chi: {today_spent}
+Ngân sách: {budget}
+Còn lại: {remaining}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“ **GIAO Dá»ŠCH:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📝 **GIAO DỊCH:**
+━━━━━━━━━━━━━━━━━━━━━
 
-{'âœ… ÄÃ£ ghi giao dá»‹ch hÃ´m nay' if recorded_today else 'âš ï¸ ChÆ°a ghi giao dá»‹ch nÃ o'}
+{'✅ Đã ghi giao dịch hôm nay' if recorded_today else '⚠️ Chưa ghi giao dịch nào'}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ”¥ **STREAK:** {user.streak_count if user else 0} ngÃ y
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🔥 **STREAK:** {user.streak_count if user else 0} ngày
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¡ {'Tuyá»‡t vá»i! HÃ£y tiáº¿p tá»¥c!' if recorded_today else 'HÃ£y ghi giao dá»‹ch Ä‘á»ƒ giá»¯ streak!'}
+💡 {'Tuyệt vời! Hãy tiếp tục!' if recorded_today else 'Hãy ghi giao dịch để giữ streak!'}
 """
     
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ“ Ghi ngay", callback_data="quick_record"),
-            InlineKeyboardButton("ðŸ§  PhÃ¢n tÃ­ch", callback_data="analysis")
+            InlineKeyboardButton("📝 Ghi ngay", callback_data="quick_record"),
+            InlineKeyboardButton("🧠 Phân tích", callback_data="analysis")
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data="premium_menu")]
+        [InlineKeyboardButton("« Quay lại", callback_data="premium_menu")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -130,10 +130,10 @@ CÃ²n láº¡i: {remaining}
 
 async def analysis_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    ðŸ§  PhÃ¢n tÃ­ch cho tÃ´i
+    🧠 Phân tích cho tôi
     
-    NÃºt "giÃ¡ trá»‹ Premium"
-    KhÃ´ng cáº§n chá»n loáº¡i phÃ¢n tÃ­ch - Bot tá»± quyáº¿t â†’ Ä‘Ãºng vai trá»£ lÃ½
+    Nút "giá trị Premium"
+    Không cần chọn loại phân tích - Bot tự quyết → đúng vai trợ lý
     """
     query = update.callback_query
     await query.answer()
@@ -142,7 +142,7 @@ async def analysis_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = await get_user_by_id(user_id)
     
     # Show loading message
-    await query.edit_message_text("ðŸ§  Äang phÃ¢n tÃ­ch dá»¯ liá»‡u cá»§a báº¡n...\n\nâ³ Vui lÃ²ng Ä‘á»£i 2-3 giÃ¢y...")
+    await query.edit_message_text("🧠 Đang phân tích dữ liệu của bạn...\n\n⏳ Vui lòng đợi 2-3 giây...")
     
     # TODO: Real analysis from Sheet data
     # For now, show mock analysis
@@ -150,42 +150,42 @@ async def analysis_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await asyncio.sleep(2)
     
     message = f"""
-ðŸ§  **PHÃ‚N TÃCH TÃ€I CHÃNH**
+🧠 **PHÂN TÍCH TÀI CHÍNH**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“Š **TUáº¦N NÃ€Y:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📊 **TUẦN NÀY:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… **LÃ m tá»‘t:**
-â€¢ Ghi chÃ©p Ä‘á»u Ä‘áº·n 7/7 ngÃ y
-â€¢ Chi tiÃªu hÅ© NEC giáº£m 20%
+✅ **Làm tốt:**
+• Ghi chép đều đặn 7/7 ngày
+• Chi tiêu hũ NEC giảm 20%
 
-âš ï¸ **Cáº§n chÃº Ã½:**
-â€¢ Chi hÅ© PLAY tÄƒng 35% (vÆ°á»£t 150K)
-â€¢ 3 khoáº£n chi "linh tinh" chÆ°a phÃ¢n loáº¡i
+⚠️ **Cần chú ý:**
+• Chi hũ PLAY tăng 35% (vượt 150K)
+• 3 khoản chi "linh tinh" chưa phân loại
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ **Gá»¢I Ã:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 **GỢI Ý:**
+━━━━━━━━━━━━━━━━━━━━━
 
-1. Xem láº¡i khoáº£n chi PLAY (cÃ³ thá»ƒ giáº£m)
-2. PhÃ¢n loáº¡i 3 khoáº£n "linh tinh" Ä‘á»ƒ rÃµ rÃ ng
-3. Tuáº§n sau nÃªn giá»¯ má»©c chi hiá»‡n táº¡i
+1. Xem lại khoản chi PLAY (có thể giảm)
+2. Phân loại 3 khoản "linh tinh" để rõ ràng
+3. Tuần sau nên giữ mức chi hiện tại
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“ˆ **XU HÆ¯á»šNG:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📈 **XU HƯỚNG:**
+━━━━━━━━━━━━━━━━━━━━━
 
-NhÃ¬n chung báº¡n Ä‘ang lÃ m ráº¥t tá»‘t! ðŸŽ‰
-Tiáº¿p tá»¥c duy trÃ¬ streak vÃ  kiá»ƒm soÃ¡t chi tiÃªu.
+Nhìn chung bạn đang làm rất tốt! 🎉
+Tiếp tục duy trì streak và kiểm soát chi tiêu.
 """
     
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ“Š Xem chi tiáº¿t", callback_data="detailed_report"),
-            InlineKeyboardButton("ðŸ’¾ Xuáº¥t bÃ¡o cÃ¡o", callback_data="export_report")
+            InlineKeyboardButton("📊 Xem chi tiết", callback_data="detailed_report"),
+            InlineKeyboardButton("💾 Xuất báo cáo", callback_data="export_report")
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data="premium_menu")]
+        [InlineKeyboardButton("« Quay lại", callback_data="premium_menu")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -200,13 +200,13 @@ Tiáº¿p tá»¥c duy trÃ¬ streak vÃ  kiá»ƒm soÃ¡t chi tiÃªu.
 
 async def recommendation_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    ðŸŽ¯ Gá»£i Ã½ tiáº¿p theo â­ (NÃšT QUAN TRá»ŒNG NHáº¤T)
+    🎯 Gợi ý tiếp theo ⭐ (NÚT QUAN TRỌNG NHẤT)
     
-    "Menu Ä‘á» xuáº¥t" Ä‘Ãºng nghÄ©a
-    Bot chá»§ Ä‘á»™ng Ä‘á» xuáº¥t viá»‡c user nÃªn lÃ m tiáº¿p theo
+    "Menu đề xuất" đúng nghĩa
+    Bot chủ động đề xuất việc user nên làm tiếp theo
     
-    ðŸ‘‰ User má»Ÿ bot chá»‰ Ä‘á»ƒ báº¥m nÃºt nÃ y
-    ðŸ‘‰ Retention tÄƒng máº¡nh
+    👉 User mở bot chỉ để bấm nút này
+    👉 Retention tăng mạnh
     """
     query = update.callback_query
     await query.answer()
@@ -219,27 +219,27 @@ async def recommendation_handler(update: Update, context: ContextTypes.DEFAULT_T
     message = f"""
 {recommendation['emoji']} **{recommendation['title']}**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
 {recommendation['message']}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ *TÃ´i luÃ´n theo dÃµi vÃ  gá»£i Ã½ cho báº¡n!*
+━━━━━━━━━━━━━━━━━━━━━
+💡 *Tôi luôn theo dõi và gợi ý cho bạn!*
 """
     
     # Dynamic keyboard based on recommendation action
     keyboard = []
     
     if recommendation['action'] == 'quick_record':
-        keyboard.append([InlineKeyboardButton("ðŸ“ Ghi ngay", callback_data="quick_record")])
+        keyboard.append([InlineKeyboardButton("📝 Ghi ngay", callback_data="quick_record")])
     elif recommendation['action'] == 'today_summary':
-        keyboard.append([InlineKeyboardButton("ðŸ“Š Xem tÃ¬nh hÃ¬nh", callback_data="today_status")])
+        keyboard.append([InlineKeyboardButton("📊 Xem tình hình", callback_data="today_status")])
     elif recommendation['action'] in ['last_week_analysis', 'month_analysis']:
-        keyboard.append([InlineKeyboardButton("ðŸ§  PhÃ¢n tÃ­ch ngay", callback_data="analysis")])
+        keyboard.append([InlineKeyboardButton("🧠 Phân tích ngay", callback_data="analysis")])
     else:
-        keyboard.append([InlineKeyboardButton("ðŸ“Š Xem dashboard", callback_data="today_status")])
+        keyboard.append([InlineKeyboardButton("📊 Xem dashboard", callback_data="today_status")])
     
-    keyboard.append([InlineKeyboardButton("Â« Quay láº¡i", callback_data="premium_menu")])
+    keyboard.append([InlineKeyboardButton("« Quay lại", callback_data="premium_menu")])
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await query.edit_message_text(
@@ -253,10 +253,10 @@ async def recommendation_handler(update: Update, context: ContextTypes.DEFAULT_T
 
 async def setup_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    ðŸ› ï¸ Setup giÃºp tÃ´i
+    🛠️ Setup giúp tôi
     
-    KhÃ¡c biá»‡t Premium ráº¥t rÃµ
-    BÃ¡n "tiáº¿t kiá»‡m thá»i gian", khÃ´ng bÃ¡n feature
+    Khác biệt Premium rất rõ
+    Bán "tiết kiệm thời gian", không bán feature
     """
     query = update.callback_query
     await query.answer()
@@ -265,39 +265,39 @@ async def setup_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = await get_user_by_id(user_id)
     
     message = f"""
-ðŸ› ï¸ **MANAGED SETUP SERVICE**
+🛠️ **MANAGED SETUP SERVICE**
 
-Äá»ƒ tÃ´i setup giÃºp báº¡n trong 5 phÃºt! âš¡
+Để tôi setup giúp bạn trong 5 phút! ⚡
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“‹ **QUY TRÃŒNH:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📋 **QUY TRÌNH:**
+━━━━━━━━━━━━━━━━━━━━━
 
-1ï¸âƒ£ Báº¡n cho tÃ´i quyá»n truy cáº­p Sheet
-2ï¸âƒ£ TÃ´i copy template + cáº¥u hÃ¬nh
-3ï¸âƒ£ TÃ´i setup Apps Script
-4ï¸âƒ£ TÃ´i test vÃ  bÃ n giao
-5ï¸âƒ£ Báº¡n dÃ¹ng ngay!
+1️⃣ Bạn cho tôi quyền truy cập Sheet
+2️⃣ Tôi copy template + cấu hình
+3️⃣ Tôi setup Apps Script
+4️⃣ Tôi test và bàn giao
+5️⃣ Bạn dùng ngay!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â±ï¸ **THá»œI GIAN:** 5-10 phÃºt
-âœ… **MIá»„N PHÃ** cho Premium
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+⏱️ **THỜI GIAN:** 5-10 phút
+✅ **MIỄN PHÍ** cho Premium
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¡ Báº¡n chá»‰ cáº§n ngá»“i uá»‘ng cÃ  phÃª, tÃ´i lo pháº§n cÃ²n láº¡i!
+💡 Bạn chỉ cần ngồi uống cà phê, tôi lo phần còn lại!
 
-ðŸ“§ **LiÃªn há»‡ ngay:**
-â†’ @freedom_wallet_admin
-â†’ email@freedomwallet.app
+📧 **Liên hệ ngay:**
+→ @freedom_wallet_admin
+→ email@freedomwallet.app
 """
     
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ“§ Chat Admin", url="https://t.me/freedom_wallet_admin"),
-            InlineKeyboardButton("ðŸ“… Äáº·t lá»‹ch", callback_data="schedule_setup")
+            InlineKeyboardButton("📧 Chat Admin", url="https://t.me/freedom_wallet_admin"),
+            InlineKeyboardButton("📅 Đặt lịch", callback_data="schedule_setup")
         ],
-        [InlineKeyboardButton("ðŸ“¹ Hoáº·c tá»± setup", callback_data="guide_self_setup")],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data="premium_menu")]
+        [InlineKeyboardButton("📹 Hoặc tự setup", callback_data="guide_self_setup")],
+        [InlineKeyboardButton("« Quay lại", callback_data="premium_menu")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -312,10 +312,10 @@ async def setup_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def priority_support_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    ðŸš€ Há»— trá»£ Æ°u tiÃªn
+    🚀 Hỗ trợ ưu tiên
     
-    Premium cáº£m tháº¥y Ä‘Æ°á»£c chÄƒm sÃ³c
-    Giáº£m churn, táº¡o cáº£m giÃ¡c "VIP tháº­t"
+    Premium cảm thấy được chăm sóc
+    Giảm churn, tạo cảm giác "VIP thật"
     """
     query = update.callback_query
     await query.answer()
@@ -323,47 +323,47 @@ async def priority_support_handler(update: Update, context: ContextTypes.DEFAULT
     user_id = update.effective_user.id
     
     message = f"""
-ðŸš€ **Há»– TRá»¢ Æ¯U TIÃŠN - PREMIUM**
+🚀 **HỖ TRỢ ƯU TIÊN - PREMIUM**
 
-Báº¡n cÃ³ quyá»n Ä‘Æ°á»£c há»— trá»£ nhanh chÃ³ng! âš¡
+Bạn có quyền được hỗ trợ nhanh chóng! ⚡
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â±ï¸ **CAM Káº¾T:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+⏱️ **CAM KẾT:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“± Chat: Tráº£ lá»i trong **30 phÃºt**
-ðŸ“§ Email: Tráº£ lá»i trong **2 giá»**
-ðŸ“ž Gá»i Ä‘iá»‡n: Äáº·t lá»‹ch trong ngÃ y
+📱 Chat: Trả lời trong **30 phút**
+📧 Email: Trả lời trong **2 giờ**
+📞 Gọi điện: Đặt lịch trong ngày
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ **CÃC Váº¤N Äá»€ Æ¯U TIÃŠN:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 **CÁC VẤN ĐỀ ƯU TIÊN:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… Há»i phá»©c táº¡p vá» cÃ´ng thá»©c
-âœ… Lá»—i khÃ´ng load Ä‘Æ°á»£c dá»¯ liá»‡u
-âœ… Cáº§n phÃ¢n tÃ­ch/tÆ° váº¥n ngay
-âœ… Sá»± cá»‘ kháº©n cáº¥p vá»›i app
+✅ Hỏi phức tạp về công thức
+✅ Lỗi không load được dữ liệu
+✅ Cần phân tích/tư vấn ngay
+✅ Sự cố khẩn cấp với app
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“ž **LIÃŠN Há»†:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📞 **LIÊN HỆ:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¬ Telegram: @freedom_wallet_admin
-ðŸ“§ Email: support@freedomwallet.app
-ðŸ“… Äáº·t lá»‹ch gá»i: [Link]
+💬 Telegram: @freedom_wallet_admin
+📧 Email: support@freedomwallet.app
+📅 Đặt lịch gọi: [Link]
 
-ðŸ’¡ *ChÃºng tÃ´i sáºµn sÃ ng há»— trá»£ 24/7!*
+💡 *Chúng tôi sẵn sàng hỗ trợ 24/7!*
 """
     
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ’¬ Chat ngay", url="https://t.me/freedom_wallet_admin")
+            InlineKeyboardButton("💬 Chat ngay", url="https://t.me/freedom_wallet_admin")
         ],
         [
-            InlineKeyboardButton("ðŸ“§ Gá»­i email", callback_data="send_email"),
-            InlineKeyboardButton("ðŸ“… Äáº·t lá»‹ch", callback_data="schedule_call")
+            InlineKeyboardButton("📧 Gửi email", callback_data="send_email"),
+            InlineKeyboardButton("📅 Đặt lịch", callback_data="schedule_call")
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data="premium_menu")]
+        [InlineKeyboardButton("« Quay lại", callback_data="premium_menu")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -388,35 +388,35 @@ async def premium_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         user_id = update.effective_user.id
         user = await get_user_by_id(user_id)
         
-        greeting = get_greeting(user) if user else "ðŸ‘‹ Xin chÃ o!"
+        greeting = get_greeting(user) if user else "👋 Xin chào!"
         
         message = f"""
 {greeting}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’Ž **TRá»¢ LÃ TÃ€I CHÃNH Cá»¦A Báº N**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💎 **TRỢ LÝ TÀI CHÍNH CỦA BẠN**
+━━━━━━━━━━━━━━━━━━━━━
 
-TÃ´i luÃ´n sáºµn sÃ ng há»— trá»£ báº¡n 24/7! ðŸ¤–
+Tôi luôn sẵn sàng hỗ trợ bạn 24/7! 🤖
 
-ðŸ“Š **HÃ´m nay:** {datetime.now().strftime('%d/%m/%Y')}
-ðŸ”¥ **Streak cá»§a báº¡n:** {user.streak_count if user else 0} ngÃ y
+📊 **Hôm nay:** {datetime.now().strftime('%d/%m/%Y')}
+🔥 **Streak của bạn:** {user.streak_count if user else 0} ngày
 
-ðŸ’¡ Chá»n viá»‡c báº¡n muá»‘n lÃ m:
+💡 Chọn việc bạn muốn làm:
 """
         
         keyboard = [
             [
-                InlineKeyboardButton("ðŸ’¬ Ghi chi tiÃªu nhanh", callback_data="quick_record"),
-                InlineKeyboardButton("ðŸ“Š TÃ¬nh hÃ¬nh hÃ´m nay", callback_data="today_status")
+                InlineKeyboardButton("💬 Ghi chi tiêu nhanh", callback_data="quick_record"),
+                InlineKeyboardButton("📊 Tình hình hôm nay", callback_data="today_status")
             ],
             [
-                InlineKeyboardButton("ðŸ§  PhÃ¢n tÃ­ch cho tÃ´i", callback_data="analysis"),
-                InlineKeyboardButton("ðŸŽ¯ Gá»£i Ã½ tiáº¿p theo", callback_data="recommendation")
+                InlineKeyboardButton("🧠 Phân tích cho tôi", callback_data="analysis"),
+                InlineKeyboardButton("🎯 Gợi ý tiếp theo", callback_data="recommendation")
             ],
             [
-                InlineKeyboardButton("ðŸ› ï¸ Setup giÃºp tÃ´i", callback_data="setup"),
-                InlineKeyboardButton("ðŸš€ Há»— trá»£ Æ°u tiÃªn", callback_data="priority_support")
+                InlineKeyboardButton("🛠️ Setup giúp tôi", callback_data="setup"),
+                InlineKeyboardButton("🚀 Hỗ trợ ưu tiên", callback_data="priority_support")
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -431,7 +431,7 @@ TÃ´i luÃ´n sáºµn sÃ ng há»— trá»£ báº¡n 24/7! ðŸ¤–
     except Exception as e:
         logger.error(f"Error in premium_menu_handler: {e}", exc_info=True)
         await query.edit_message_text(
-            "ðŸ˜“ CÃ³ lá»—i xáº£y ra. Vui lÃ²ng gÃµ /start Ä‘á»ƒ quay vá» trang chá»§!",
+            "😓 Có lỗi xảy ra. Vui lòng gõ /start để quay về trang chủ!",
             parse_mode="Markdown"
         )
 

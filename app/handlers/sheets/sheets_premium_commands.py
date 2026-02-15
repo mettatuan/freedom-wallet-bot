@@ -24,13 +24,13 @@ async def handle_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if not user or not user.spreadsheet_id:
         await update.message.reply_text(
-            "âš ï¸ Báº¡n chÆ°a káº¿t ná»‘i Google Sheets!\n\n"
-            "DÃ¹ng /connectsheets Ä‘á»ƒ káº¿t ná»‘i trÆ°á»›c nhÃ©. ðŸ˜Š"
+            "⚠️ Bạn chưa kết nối Google Sheets!\n\n"
+            "Dùng /connectsheets để kết nối trước nhé. 😊"
         )
         return
     
     # Get balance from Sheets
-    await update.message.reply_text("ðŸ”„ Äang láº¥y sá»‘ dÆ°...\nâ³ Vui lÃ²ng Ä‘á»£i...")
+    await update.message.reply_text("🔄 Đang lấy số dư...\n⏳ Vui lòng đợi...")
     
     try:
         client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
@@ -39,9 +39,9 @@ async def handle_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not result.get("success"):
             error_msg = result.get("error", "Unknown error")
             await update.message.reply_text(
-                f"âŒ **KhÃ´ng láº¥y Ä‘Æ°á»£c sá»‘ dÆ°**\n\n"
+                f"❌ **Không lấy được số dư**\n\n"
                 f"Lá»—i: {error_msg}\n\n"
-                f"Vui lÃ²ng thá»­ láº¡i hoáº·c liÃªn há»‡ admin. ðŸ˜¢",
+                f"Vui lòng thử lại hoặc liên hệ admin. 😢",
                 parse_mode="Markdown"
             )
             return
@@ -50,30 +50,30 @@ async def handle_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
         jars = result.get("jars", [])
         total_balance = result.get("totalBalance", 0)
         
-        message = "ðŸ’° **Sá» DÆ¯ CÃC HÅ¨**\n\n"
+        message = "💰 **SỐ DƯ CÁC HŨ**\n\n"
         
         for jar in jars:
-            icon = jar.get("icon", "ðŸº")
+            icon = jar.get("icon", "🏺")
             name = jar.get("name", "Unknown")
             balance = jar.get("balance", 0)
             percentage = jar.get("percentage", 0)
             
             message += f"{icon} **{name}** ({percentage}%)\n"
-            message += f"   â”” {balance:,.0f} â‚«\n\n"
+            message += f"   â"" {balance:,.0f} â'«\n\n"
         
-        message += f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-        message += f"ðŸ’Ž **Tá»•ng cá»™ng: {total_balance:,.0f} â‚«**\n\n"
-        message += f"ðŸ“Š DÃ¹ng /spending Ä‘á»ƒ xem chi tiÃªu thÃ¡ng nÃ y nhÃ©!"
+        message += f"━━━━━━━━━━━━━━━\n"
+        message += f"💎 **Tổng cộng: {total_balance:,.0f} ₫**\n\n"
+        message += f"📊 Dùng /spending để xem chi tiêu tháng này nhé!"
         
         await update.message.reply_text(message, parse_mode="Markdown")
-        logger.info(f"âœ… User {user_id} checked balance: {total_balance:,.0f}")
+        logger.info(f"✅ User {user_id} checked balance: {total_balance:,.0f}")
     
     except Exception as e:
-        logger.error(f"âŒ Error getting balance: {e}")
+        logger.error(f"❌ Error getting balance: {e}")
         await update.message.reply_text(
-            f"âŒ **CÃ³ lá»—i xáº£y ra**\n\n"
+            f"❌ **Có lỗi xảy ra**\n\n"
             f"Lá»—i: {str(e)}\n\n"
-            f"Vui lÃ²ng thá»­ láº¡i sau. ðŸ˜¢",
+            f"Vui lòng thử lại sau. 😢",
             parse_mode="Markdown"
         )
 
@@ -91,65 +91,103 @@ async def handle_spending(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if not user or not user.spreadsheet_id:
         await update.message.reply_text(
-            "âš ï¸ Báº¡n chÆ°a káº¿t ná»‘i Google Sheets!\n\n"
-            "DÃ¹ng /connectsheets Ä‘á»ƒ káº¿t ná»‘i trÆ°á»›c nhÃ©. ðŸ˜Š"
+            "⚠️ Bạn chưa kết nối Google Sheets!\n\n"
+            "Dùng /connectsheets để kết nối trước nhé. 😊"
         )
         return
     
-    # Get recent transactions
-    await update.message.reply_text("ðŸ”„ Äang phÃ¢n tÃ­ch chi tiÃªu...\nâ³ Vui lÃ²ng Ä‘á»£i...")
+    # Get recent transactions (limit 200 to get all monthly transactions)
+    await update.message.reply_text("🔄 Đang phân tích chi tiêu tháng này...\n⏳ Vui lòng đợi...")
     
     try:
+        from datetime import datetime
+        
         client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
-        result = await client.get_recent_transactions(limit=10)
+        result = await client.get_recent_transactions(limit=200)
         
         if not result.get("success"):
             error_msg = result.get("error", "Unknown error")
             await update.message.reply_text(
-                f"âŒ **KhÃ´ng láº¥y Ä‘Æ°á»£c dá»¯ liá»‡u**\n\n"
-                f"Lá»—i: {error_msg}\n\n"
-                f"Vui lÃ²ng thá»­ láº¡i. ðŸ˜¢",
+                f"❌ **Không lấy được dữ liệu**\n\n"
+                f"Lỗi: {error_msg}\n\n"
+                f"Vui lòng thử lại. 😢",
                 parse_mode="Markdown"
             )
             return
         
-        transactions = result.get("transactions", [])
-        count = result.get("count", 0)
+        # Filter transactions for current month
+        all_transactions = result.get("transactions", [])
+        current_month = datetime.now().month
+        current_year = datetime.now().year
         
-        if count == 0:
+        monthly_expenses = []
+        total_expense = 0
+        
+        for txn in all_transactions:
+            # Parse transaction date
+            txn_date_str = txn.get('date', '')
+            try:
+                # Try different date formats
+                if '/' in txn_date_str:
+                    parts = txn_date_str.split('/')
+                    if len(parts) == 3:
+                        txn_day, txn_month, txn_year = int(parts[0]), int(parts[1]), int(parts[2])
+                elif '-' in txn_date_str:
+                    txn_date = datetime.strptime(txn_date_str, "%Y-%m-%d")
+                    txn_month = txn_date.month
+                    txn_year = txn_date.year
+                else:
+                    continue
+                
+                # Filter: only "Chi" transactions in current month
+                if txn_month == current_month and txn_year == current_year:
+                    txn_type = txn.get('type', '').strip()
+                    if txn_type == 'Chi':
+                        txn_amount = abs(float(txn.get('amount', 0)))
+                        total_expense += txn_amount
+                        monthly_expenses.append(txn)
+                        
+            except (ValueError, IndexError):
+                continue
+        
+        if len(monthly_expenses) == 0:
             await update.message.reply_text(
-                "ðŸ“Š **PHÃ‚N TÃCH CHI TIÃŠU**\n\n"
-                "ChÆ°a cÃ³ giao dá»‹ch nÃ o!\n\n"
-                "HÃ£y thá»­ ghi má»™t chi tiÃªu:\n"
-                "`chi 50k tiá»n Äƒn`",
+                "📊 **PHÂN TÍCH CHI TIÊU THÁNG NÀY**\n\n"
+                "Chưa có giao dịch chi tiêu nào trong tháng này!\n\n"
+                "Hãy thử ghi một chi tiêu:\n"
+                "`chi 50k tiền ăn`",
                 parse_mode="Markdown"
             )
             return
         
-        # Format transactions
-        message = f"ðŸ“Š **{count} GIAO Dá»ŠCH Gáº¦N ÄÃ‚Y**\n\n"
+        # Format recent expenses (last 10)
+        month_name = datetime.now().strftime("%m/%Y")
+        message = f"📊 **CHI TIÊU THÁNG {month_name}**\n\n"
+        message += f"💸 **Tổng chi:** {total_expense:,.0f} ₫\n"
+        message += f"📝 **Số giao dịch:** {len(monthly_expenses)}\n\n"
+        message += "━━━━━━━━━━━━━━━━━━━━━\n"
+        message += f"**{min(10, len(monthly_expenses))} GIAO DỊCH GẦN NHẤT:**\n\n"
         
-        for i, tx in enumerate(transactions[:10], 1):
+        for i, tx in enumerate(monthly_expenses[-10:][::-1], 1):
             date = tx.get("date", "N/A")
-            tx_type = tx.get("type", "Chi")
-            amount = tx.get("amount", 0)
+            amount = abs(float(tx.get("amount", 0)))
             note = tx.get("note", "")
+            category = tx.get("category", "")
             
-            emoji = "ðŸ’¸" if tx_type == "Chi" else "ðŸ’°"
-            message += f"{i}. {emoji} {date}\n"
-            message += f"   â”” {amount:,.0f} â‚« - {note}\n\n"
+            message += f"{i}. 💸 {date}\n"
+            message += f"   └ {amount:,.0f} ₫ - {category or note}\n\n"
         
-        message += f"ðŸ’¡ DÃ¹ng /balance Ä‘á»ƒ xem sá»‘ dÆ° nhÃ©!"
+        message += f"💡 Dùng /balance để xem số dư nhé!"
         
         await update.message.reply_text(message, parse_mode="Markdown")
-        logger.info(f"âœ… User {user_id} checked spending: {count} transactions")
+        logger.info(f"✅ User {user_id} analyzed spending: {len(monthly_expenses)} expenses, total {total_expense:,.0f}")
     
     except Exception as e:
-        logger.error(f"âŒ Error getting spending: {e}")
+        logger.error(f"❌ Error getting spending: {e}")
         await update.message.reply_text(
-            f"âŒ **CÃ³ lá»—i xáº£y ra**\n\n"
+            f"❌ **Có lỗi xảy ra**\n\n"
             f"Lá»—i: {str(e)}\n\n"
-            f"Vui lÃ²ng thá»­ láº¡i sau. ðŸ˜¢",
+            f"Vui lòng thử lại sau. 😢",
             parse_mode="Markdown"
         )
 
@@ -160,5 +198,5 @@ def register_sheets_premium_commands(application):
     application.add_handler(CommandHandler("balance", handle_balance))
     application.add_handler(CommandHandler("spending", handle_spending))
     
-    logger.info("âœ… Sheets premium commands registered (/balance, /spending)")
+    logger.info("✅ Sheets premium commands registered (/balance, /spending)")
 

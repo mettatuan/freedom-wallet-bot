@@ -2,7 +2,7 @@
 Recommendation Engine - Rule-based (Week 1)
 Generates personalized suggestions for Premium users
 
-Core principle: "Náº¿u tÃ´i lÃ  trá»£ lÃ½ cá»§a báº¡n, lÃºc nÃ y tÃ´i khuyÃªn báº¡n lÃ m viá»‡c nÃ y."
+Core principle: "Nếu tôi là trợ lý của bạn, lúc này tôi khuyên bạn làm việc này."
 """
 from datetime import datetime, timedelta
 from typing import Dict, Optional
@@ -15,11 +15,11 @@ class RecommendationEngine:
     Rule-based recommendation engine for Premium users
     
     Rules priority:
-    1. ChÆ°a ghi hÃ´m nay (10AM-9PM) â†’ Nháº¯c ghi chi tiÃªu
-    2. Cuá»‘i ngÃ y (9PM-11PM) â†’ TÃ³m táº¯t ngÃ y hÃ´m nay
-    3. Äáº§u tuáº§n (Monday morning) â†’ PhÃ¢n tÃ­ch tuáº§n trÆ°á»›c
-    4. Cuá»‘i thÃ¡ng (Last 3 days) â†’ PhÃ¢n tÃ­ch thÃ¡ng
-    5. Default â†’ Khuyáº¿n khÃ­ch duy trÃ¬ streak
+    1. Chưa ghi hôm nay (10AM-9PM) → Nhắc ghi chi tiêu
+    2. Cuối ngày (9PM-11PM) → Tóm tắt ngày hôm nay
+    3. Đầu tuần (Monday morning) → Phân tích tuần trước
+    4. Cuối tháng (Last 3 days) → Phân tích tháng
+    5. Default → Khuyến khích duy trì streak
     """
     
     @staticmethod
@@ -29,10 +29,10 @@ class RecommendationEngine:
         
         Returns:
             {
-                'title': 'Gá»£i Ã½ cho báº¡n',
-                'message': 'Chi tiáº¿t gá»£i Ã½',
+                'title': 'Gợi ý cho bạn',
+                'message': 'Chi tiết gợi ý',
                 'action': 'callback_data',
-                'emoji': 'ðŸŽ¯'
+                'emoji': '🎯'
             }
         """
         user = get_user_by_id(user_id)
@@ -48,73 +48,73 @@ class RecommendationEngine:
         # Check if user recorded today
         recorded_today = RecommendationEngine._check_recorded_today(user)
         
-        # Rule 1: ChÆ°a ghi hÃ´m nay (10AM-9PM)
+        # Rule 1: Chưa ghi hôm nay (10AM-9PM)
         if not recorded_today and 10 <= hour < 21:
             return {
-                'title': 'ðŸ’¡ ÄÃ£ ghi chi tiÃªu hÃ´m nay chÆ°a?',
+                'title': '💡 Đã ghi chi tiêu hôm nay chưa?',
                 'message': (
-                    f"ðŸ‘‹ ChÃ o {user.full_name or user.username}!\n\n"
-                    f"ðŸ“ HÃ´m nay báº¡n chÆ°a ghi giao dá»‹ch nÃ o.\n\n"
-                    f"Ghi ngay Ä‘á»ƒ giá»¯ streak {user.streak_count if user else 0} ngÃ y! ðŸ”¥"
+                    f"👋 Chào {user.full_name or user.username}!\n\n"
+                    f"📝 Hôm nay bạn chưa ghi giao dịch nào.\n\n"
+                    f"Ghi ngay để giữ streak {user.streak_count if user else 0} ngày! 🔥"
                 ),
                 'action': 'quick_record',
-                'emoji': 'ðŸ“'
+                'emoji': '📝'
             }
         
-        # Rule 2: Cuá»‘i ngÃ y (9PM-11PM)
+        # Rule 2: Cuối ngày (9PM-11PM)
         if 21 <= hour < 23:
             return {
-                'title': 'ðŸŒ™ TÃ³m táº¯t ngÃ y hÃ´m nay',
+                'title': '🌙 Tóm tắt ngày hôm nay',
                 'message': (
-                    f"NgÃ y hÃ´m nay cá»§a báº¡n:\n\n"
-                    f"{'âœ… ÄÃ£ ghi giao dá»‹ch' if recorded_today else 'âš ï¸ ChÆ°a ghi giao dá»‹ch'}\n"
-                    f"ðŸ”¥ Streak: {user.streak_count if user else 0} ngÃ y\n\n"
-                    f"ðŸ’¡ Báº¡n cÃ³ muá»‘n xem tÃ¬nh hÃ¬nh chi tiÃªu hÃ´m nay?"
+                    f"Ngày hôm nay của bạn:\n\n"
+                    f"{'✅ Đã ghi giao dịch' if recorded_today else '⚠️ Chưa ghi giao dịch'}\n"
+                    f"🔥 Streak: {user.streak_count if user else 0} ngày\n\n"
+                    f"💡 Bạn có muốn xem tình hình chi tiêu hôm nay?"
                 ),
                 'action': 'today_summary',
-                'emoji': 'ðŸ“Š'
+                'emoji': '📊'
             }
         
-        # Rule 3: Äáº§u tuáº§n (Monday 8AM-12PM)
+        # Rule 3: Đầu tuần (Monday 8AM-12PM)
         if day_of_week == 0 and 8 <= hour < 12:
             return {
-                'title': 'ðŸ“… Báº¯t Ä‘áº§u tuáº§n má»›i',
+                'title': '📅 Bắt đầu tuần mới',
                 'message': (
-                    f"ChÃ o tuáº§n má»›i! ðŸŽ‰\n\n"
-                    f"Tuáº§n trÆ°á»›c báº¡n Ä‘Ã£ ghi {user.streak_count if user else 0} ngÃ y liÃªn tá»¥c.\n\n"
-                    f"ðŸ’¡ Báº¡n cÃ³ muá»‘n xem phÃ¢n tÃ­ch tuáº§n trÆ°á»›c?"
+                    f"Chào tuần mới! 🎉\n\n"
+                    f"Tuần trước bạn đã ghi {user.streak_count if user else 0} ngày liên tục.\n\n"
+                    f"💡 Bạn có muốn xem phân tích tuần trước?"
                 ),
                 'action': 'last_week_analysis',
-                'emoji': 'ðŸ“ˆ'
+                'emoji': '📈'
             }
         
-        # Rule 4: Cuá»‘i thÃ¡ng (Last 3 days)
+        # Rule 4: Cuối tháng (Last 3 days)
         from calendar import monthrange
         _, last_day = monthrange(now.year, now.month)
         
         if day_of_month >= last_day - 2:
             return {
-                'title': 'ðŸ“Š Sáº¯p háº¿t thÃ¡ng rá»“i!',
+                'title': '📊 Sắp hết tháng rồi!',
                 'message': (
-                    f"ThÃ¡ng {now.month} sáº¯p káº¿t thÃºc.\n\n"
-                    f"Báº¡n Ä‘Ã£ ghi {user.streak_count if user else 0} ngÃ y trong thÃ¡ng nÃ y.\n\n"
-                    f"ðŸ’¡ Muá»‘n xem phÃ¢n tÃ­ch thÃ¡ng nÃ y khÃ´ng?"
+                    f"Tháng {now.month} sắp kết thúc.\n\n"
+                    f"Bạn đã ghi {user.streak_count if user else 0} ngày trong tháng này.\n\n"
+                    f"💡 Muốn xem phân tích tháng này không?"
                 ),
                 'action': 'month_analysis',
-                'emoji': 'ðŸ“Š'
+                'emoji': '📊'
             }
         
         # Rule 5: Milestone approaching (e.g., 6/7 days to weekly milestone)
         if user and user.streak_count and user.streak_count % 7 == 6:  # 6, 13, 20, 27...
             return {
-                'title': 'ðŸ”¥ Sáº¯p Ä‘áº¡t milestone!',
+                'title': '🔥 Sắp đạt milestone!',
                 'message': (
-                    f"Báº¡n Ä‘ang cÃ³ streak {user.streak_count} ngÃ y! ðŸ”¥\n\n"
-                    f"Chá»‰ cáº§n 1 ngÃ y ná»¯a lÃ  Ä‘áº¡t milestone {user.streak_count + 1} ngÃ y!\n\n"
-                    f"ðŸ’¡ HÃ£y ghi giao dá»‹ch Ä‘á»ƒ giá»¯ streak nhÃ©!"
+                    f"Bạn đang có streak {user.streak_count} ngày! 🔥\n\n"
+                    f"Chỉ cần 1 ngày nữa là đạt milestone {user.streak_count + 1} ngày!\n\n"
+                    f"💡 Hãy ghi giao dịch để giữ streak nhé!"
                 ),
                 'action': 'quick_record',
-                'emoji': 'ðŸŽ¯'
+                'emoji': '🎯'
             }
         
         # Default: Encourage streak maintenance
@@ -140,31 +140,31 @@ class RecommendationEngine:
         """Default recommendation when no specific rule matches"""
         if user and user.streak_count and user.streak_count > 0:
             return {
-                'title': 'ðŸ”¥ Giá»¯ vá»¯ng streak!',
+                'title': '🔥 Giữ vững streak!',
                 'message': (
-                    f"Báº¡n Ä‘ang cÃ³ streak {user.streak_count} ngÃ y! ðŸ”¥\n\n"
-                    f"HÃ£y tiáº¿p tá»¥c ghi chÃ©p Ä‘á»u Ä‘áº·n Ä‘á»ƒ:\n"
-                    f"âœ… Náº¯m rÃµ tÃ i chÃ­nh\n"
-                    f"âœ… PhÃ¡t hiá»‡n chi tiÃªu lÃ£ng phÃ­\n"
-                    f"âœ… Äáº¡t má»¥c tiÃªu tÃ i chÃ­nh\n\n"
-                    f"ðŸ’¡ TÃ´i cÃ³ thá»ƒ giÃºp gÃ¬ cho báº¡n hÃ´m nay?"
+                    f"Bạn đang có streak {user.streak_count} ngày! 🔥\n\n"
+                    f"Hãy tiếp tục ghi chép đều đặn để:\n"
+                    f"✅ Nắm rõ tài chính\n"
+                    f"✅ Phát hiện chi tiêu lãng phí\n"
+                    f"✅ Đạt mục tiêu tài chính\n\n"
+                    f"💡 Tôi có thể giúp gì cho bạn hôm nay?"
                 ),
                 'action': 'main_menu',
-                'emoji': 'ðŸ’ª'
+                'emoji': '💪'
             }
         
         return {
-            'title': 'ðŸ‘‹ Xin chÃ o!',
+            'title': '👋 Xin chào!',
             'message': (
-                f"TÃ´i lÃ  trá»£ lÃ½ tÃ i chÃ­nh cá»§a báº¡n! ðŸ¤–\n\n"
-                f"TÃ´i cÃ³ thá»ƒ giÃºp báº¡n:\n"
-                f"ðŸ“ Ghi chi tiÃªu nhanh\n"
-                f"ðŸ“Š Xem tÃ¬nh hÃ¬nh tÃ i chÃ­nh\n"
-                f"ðŸ§  PhÃ¢n tÃ­ch vÃ  gá»£i Ã½\n\n"
-                f"ðŸ’¡ Báº¡n muá»‘n lÃ m gÃ¬?"
+                f"Tôi là trợ lý tài chính của bạn! 🤖\n\n"
+                f"Tôi có thể giúp bạn:\n"
+                f"📝 Ghi chi tiêu nhanh\n"
+                f"📊 Xem tình hình tài chính\n"
+                f"🧠 Phân tích và gợi ý\n\n"
+                f"💡 Bạn muốn làm gì?"
             ),
             'action': 'main_menu',
-            'emoji': 'ðŸ¤–'
+            'emoji': '🤖'
         }
 
 
@@ -175,16 +175,16 @@ class SmartGreeting:
     def get_greeting(user) -> str:
         """Get time-appropriate greeting"""
         hour = datetime.now().hour
-        name = user.full_name or user.username or "báº¡n"
+        name = user.full_name or user.username or "bạn"
         
         if 5 <= hour < 12:
-            return f"â˜€ï¸ ChÃ o buá»•i sÃ¡ng {name}!"
+            return f"☀️ Chào buổi sáng {name}!"
         elif 12 <= hour < 18:
-            return f"ðŸŒ¤ï¸ ChÃ o buá»•i chiá»u {name}!"
+            return f"🌤️ Chào buổi chiều {name}!"
         elif 18 <= hour < 22:
-            return f"ðŸŒ† ChÃ o buá»•i tá»‘i {name}!"
+            return f"🌆 Chào buổi tối {name}!"
         else:
-            return f"ðŸŒ™ Khuya rá»“i {name}!"
+            return f"🌙 Khuya rồi {name}!"
 
 
 # Quick access functions
@@ -214,7 +214,7 @@ if __name__ == "__main__":
     # Mock user for testing
     class MockUser:
         def __init__(self):
-            self.full_name = "Tháº¯ng"
+            self.full_name = "Thắng"
             self.username = "thang"
             self.current_streak = 5
             self.last_transaction_date = datetime.now() - timedelta(days=1)

@@ -1,6 +1,6 @@
 """
 Freedom Wallet Sheets API Client (Option 3 - Template Integration)
-Gá»i API tá»« Google Sheets Web App Ä‘Ã£ deploy
+Gọi API từ Google Sheets Web App đã deploy
 Version 2.0 - Added authentication & caching (Phase 1.5)
 """
 import aiohttp
@@ -29,14 +29,14 @@ class SheetsAPIClient:
     
     def __init__(self, spreadsheet_id: str, webapp_url: Optional[str] = None):
         self.spreadsheet_id = spreadsheet_id
-        # âœ… FIX: Use user's webapp_url if provided, otherwise use default
+        # ✅ FIX: Use user's webapp_url if provided, otherwise use default
         self.api_url = webapp_url or SHEETS_API_URL
         
-        # ðŸ› DEBUG: Log API URL being used
-        logger.info(f"ðŸ”§ SheetsAPIClient initialized:")
-        logger.info(f"   ðŸ“Š Spreadsheet ID: {spreadsheet_id[:20]}...")
-        logger.info(f"   ðŸŒ API URL: {self.api_url[:80]}...")
-        logger.info(f"   âœ… Using {'USER' if webapp_url else 'DEFAULT'} URL")
+        # 🐛 DEBUG: Log API URL being used
+        logger.info(f"🔧 SheetsAPIClient initialized:")
+        logger.info(f"   📊 Spreadsheet ID: {spreadsheet_id[:20]}...")
+        logger.info(f"   🌐 API URL: {self.api_url[:80]}...")
+        logger.info(f"   ✅ Using {'USER' if webapp_url else 'DEFAULT'} URL")
         
         # Simple in-memory cache (Phase 1.5 optimization)
         self._cache = {}  # {key: (data, timestamp)}
@@ -48,25 +48,25 @@ class SheetsAPIClient:
             data, timestamp = self._cache[key]
             import time
             if time.time() - timestamp < self._cache_ttl:
-                logger.debug(f"ðŸ“¦ Cache hit: {key}")
+                logger.debug(f"📦 Cache hit: {key}")
                 return data
             else:
                 # Cache expired
                 del self._cache[key]
-                logger.debug(f"â° Cache expired: {key}")
+                logger.debug(f"⏰ Cache expired: {key}")
         return None
     
     def _set_cache(self, key: str, data: Dict[str, Any]):
         """Store data in cache with timestamp"""
         import time
         self._cache[key] = (data, time.time())
-        logger.debug(f"ðŸ’¾ Cached: {key}")
+        logger.debug(f"💾 Cached: {key}")
     
     def _invalidate_cache(self, key: str):
         """Remove cached data after write operations"""
         if key in self._cache:
             del self._cache[key]
-            logger.debug(f"ðŸ—‘ï¸ Cache invalidated: {key}")
+            logger.debug(f"🗑️ Cache invalidated: {key}")
     
     async def _call_api(self, action: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -88,10 +88,10 @@ class SheetsAPIClient:
         if data:
             payload.update(data)
         
-        # âœ… Changed to INFO level for visibility
-        logger.info(f"ðŸ“¤ API Call: action={action}")
-        logger.info(f"   ðŸŒ URL: {self.api_url}")
-        logger.info(f"   ðŸ“¦ Payload keys: {list(payload.keys())}")
+        # ✅ Changed to INFO level for visibility
+        logger.info(f"📤 API Call: action={action}")
+        logger.info(f"   🌐 URL: {self.api_url}")
+        logger.info(f"   📦 Payload keys: {list(payload.keys())}")
         
         try:
             async with aiohttp.ClientSession() as session:
@@ -102,7 +102,7 @@ class SheetsAPIClient:
                 ) as response:
                     if response.status == 200:
                         result = await response.json()
-                        logger.info(f"ðŸ“¥ API Response SUCCESS: {result.get('success')}, action={action}")
+                        logger.info(f"📥 API Response SUCCESS: {result.get('success')}, action={action}")
                         return result
                     else:
                         error_text = await response.text()
@@ -155,7 +155,7 @@ class SheetsAPIClient:
                 return cached
         
         # Cache miss - call API
-        logger.debug("ðŸ“¡ API call: getBalance")
+        logger.debug("📡 API call: getBalance")
         result = await self._call_api("getBalance")
         
         # Store in cache if successful
@@ -196,7 +196,7 @@ class SheetsAPIClient:
         
         transaction = {
             "date": transaction_date,
-            "type": transaction_type,  # âœ… FIX: Use parameter instead of hardcoded
+            "type": transaction_type,  # ✅ FIX: Use parameter instead of hardcoded
             "amount": abs(amount),
             "category": category,
             "fromJar": from_jar,
@@ -248,9 +248,9 @@ class SheetsAPIClient:
                 "categories": [
                     {
                         "id": "CAT001",
-                        "name": "Ä‚n uá»‘ng",
+                        "name": "Ăn uống",
                         "type": "Chi",
-                        "icon": "ðŸ½ï¸",
+                        "icon": "🍽️",
                         "jarId": "NEC",
                         "autoAllocate": False,
                         "note": "..."
@@ -311,20 +311,20 @@ async def test_sheets_connection(spreadsheet_id: str) -> tuple[bool, str, Option
     # Test ping first
     ping_result = await client.ping()
     if not ping_result.get("success"):
-        return False, f"âŒ KhÃ´ng thá»ƒ káº¿t ná»‘i: {ping_result.get('error', 'Unknown error')}", None
+        return False, f"❌ Không thể kết nối: {ping_result.get('error', 'Unknown error')}", None
     
     # Get balance to verify data access
     balance_result = await client.get_balance()
     if not balance_result.get("success"):
-        return False, f"âŒ KhÃ´ng thá»ƒ Ä‘á»c dá»¯ liá»‡u: {balance_result.get('error', 'Unknown error')}", None
+        return False, f"❌ Không thể đọc dữ liệu: {balance_result.get('error', 'Unknown error')}", None
     
     # Success!
     total = balance_result.get("totalBalance", 0)
     jar_count = len(balance_result.get("jars", []))
     
-    message = f"âœ… Káº¿t ná»‘i thÃ nh cÃ´ng!\n\n"
-    message += f"ðŸ’° Tá»•ng sá»‘ dÆ°: {total:,.0f} â‚«\n"
-    message += f"ðŸº Sá»‘ hÅ©: {jar_count}\n"
+    message = f"✅ Kết nối thành công!\n\n"
+    message += f"💰 Tổng số dư: {total:,.0f} ₫\n"
+    message += f"🏺 Số hũ: {jar_count}\n"
     
     return True, message, balance_result
 

@@ -9,6 +9,7 @@ import html
 from pathlib import Path
 from datetime import datetime
 from app.middleware.usage_tracker import check_message_limit
+from app.utils.database import User
 from config.settings import settings
 
 
@@ -74,6 +75,326 @@ def search_faq(query: str) -> dict:
     }
 
 
+async def handle_sheet_url_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Step 1: Handle Google Sheet URL input"""
+    import re
+    
+    user = update.effective_user
+    message_text = update.message.text
+    
+    logger.info(f"📋 Processing Sheet URL from user {user.id}")
+    
+    # Parse Sheet URL
+    sheet_match = re.search(r'https://docs\.google\.com/spreadsheets/d/([a-zA-Z0-9_-]{30,60})', message_text)
+    
+    if not sheet_match:
+        await update.message.reply_text(
+            "❌ **Link không hợp lệ!**\n\n"
+            "Vui lòng gửi link Google Sheet đúng định dạng:\n"
+            "`https://docs.google.com/spreadsheets/d/1Vlq3MA.../edit`\n\n"
+            "💡 **Cách lấy:** Mở Sheet → Copy URL trên thanh địa chỉ",
+            parse_mode="Markdown"
+        )
+        return
+    
+    sheet_id = sheet_match.group(1)
+    logger.info(f"  → Extracted Sheet ID: {sheet_id}")
+    
+    # Save to context
+    context.user_data['temp_sheet_id'] = sheet_id
+    context.user_data['waiting_for_sheet_url'] = False
+    context.user_data['waiting_for_webapp_url'] = True
+    
+    # Ask for Web App URL
+    message = """
+✅ **ĐÃ NHẬN LINK GOOGLE SHEET!**
+
+📋 Sheet ID: `{sheet_id_preview}...`
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**BƯỚC 2/2: Gửi Link Web App** 🔗
+
+Bây giờ vui lòng gửi link Web App của bạn:
+
+**Ví dụ:**
+`https://script.google.com/macros/s/AKfycby.../exec`
+
+━━━━━━━━━━━━━━━━━━━━━
+
+💡 **Cách lấy:**
+1. Vào Apps Script của bạn
+2. Bấm **Deploy** → **Manage deployments**
+3. Copy **Web App URL**
+4. Gửi cho tôi
+
+⏳ **Đang chờ link Web App...**
+""".format(sheet_id_preview=sheet_id[:20])
+    
+    await update.message.reply_text(message, parse_mode="Markdown")
+
+
+async def handle_webapp_url_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Step 2: Handle Web App URL input and finalize connection"""
+    import re
+    from app.utils.database import SessionLocal, User
+    from datetime import datetime
+    
+    user = update.effective_user
+    message_text = update.message.text
+    
+    logger.info(f"🔗 Processing Web App URL from user {user.id}")
+    
+    # Parse Web App URL
+    webapp_match = re.search(r'(https://script\.google\.com/macros/s/[^\s]+)', message_text)
+    
+    if not webapp_match:
+        await update.message.reply_text(
+            "❌ **Link không hợp lệ!**\n\n"
+            "Vui lòng gửi link Web App đúng định dạng:\n"
+            "`https://script.google.com/macros/s/AKfycby.../exec`\n\n"
+            "💡 **Cách lấy:** Apps Script → Deploy → Manage deployments → Copy URL",
+            parse_mode="Markdown"
+        )
+        return
+    
+    webapp_url = webapp_match.group(1)
+    sheet_id = context.user_data.get('temp_sheet_id')
+    
+    if not sheet_id:
+        await update.message.reply_text(
+            "❌ **Lỗi:** Không tìm thấy Sheet ID!\n\n"
+            "Vui lòng bắt đầu lại từ đầu.",
+            parse_mode="Markdown"
+        )
+        context.user_data.clear()
+        return
+    
+    logger.info(f"  → Sheet ID: {sheet_id}, Web App URL: {webapp_url}")
+    
+    # Save to database
+    db = SessionLocal()
+    try:
+        db_user = db.query(User).filter(User.id == user.id).first()
+        if not db_user:
+            await update.message.reply_text(
+                "❌ **Không tìm thấy tài khoản!**\n\n"
+                "Vui lòng đăng ký trước: /register"
+            )
+            return
+        
+        # Update database
+        db_user.spreadsheet_id = sheet_id
+        db_user.web_app_url = webapp_url
+        db_user.sheets_connected_at = datetime.utcnow()
+        db.commit()
+        
+        logger.info(f"✅ Connected user {user.id}: sheet_id={sheet_id}, webapp_url={webapp_url}")
+        
+        # Clear state
+        context.user_data['waiting_for_webapp_url'] = False
+        context.user_data.pop('temp_sheet_id', None)
+        
+        # Success message
+        success_message = """
+�🎊🎊 **CHÚC MỪNG BẠN!** 🎊🎊🎊
+
+**KẾT NỐI FREEDOM WALLET THÀNH CÔNG!**
+
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ **Đã kết nối:**
+📋 Google Sheet: `{sheet_preview}...` ✓
+🔗 Web App: Đã kích hoạt ✓
+⏰ Thời gian: Vừa xong
+
+━━━━━━━━━━━━━━━━━━━━━
+
+🎁 **QUYỀN LỢI CỦA BẠN:**
+
+✨ **1. Ghi chi tiêu siêu nhanh**
+   Chỉ gửi: `Cà phê 35k` → Tự động lưu!
+
+💰 **2. Báo cáo tức thì**
+   `/balance` → Xem số dư
+   `/spending` → Phân tích chi tiêu
+
+🤖 **3. AI tư vấn thông minh**
+   Hỏi bất cứ điều gì về tài chính!
+
+🔔 **4. Nhắc nhở tự động**
+   Bot nhắc hàng ngày, kiếm streak!
+
+━━━━━━━━━━━━━━━━━━━━━
+
+🚀 **BẮT ĐẦU NGAY:**
+Dùng Menu bên dưới để khám phá! ⬇️
+""".format(sheet_preview=sheet_id[:20])
+        
+        keyboard = [
+            [InlineKeyboardButton("📌 Ghi nhanh thu chi", callback_data="quick_record_menu")],
+            [InlineKeyboardButton("📊 Báo cáo nhanh", callback_data="quick_report_menu")],
+            [InlineKeyboardButton("📁 Hệ thống của tôi", callback_data="my_system_menu")],
+            [InlineKeyboardButton("📖 Hướng dẫn sử dụng", callback_data="show_guide_choice"), 
+             InlineKeyboardButton("⚙️ Cài đặt", callback_data="settings_menu")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(
+            success_message,
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to save connection: {e}")
+        await update.message.reply_text(
+            f"❌ **Có lỗi xảy ra!**\n\n"
+            f"Lỗi: {str(e)}\n\n"
+            "Vui lòng thử lại hoặc liên hệ /support"
+        )
+    finally:
+        db.close()
+
+
+async def handle_webapp_connection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Parse and save SHEET ID + WEBAPP URL from user message"""
+    from app.utils.database import get_user_by_id, SessionLocal
+    import re
+    
+    user = update.effective_user
+    message_text = update.message.text
+    
+    logger.info(f"📋 Parsing SHEET/WEBAPP connection from user {user.id}")
+    
+    # Method 1: Parse format SHEET: [ID] and WEBAPP: [URL]
+    sheet_match = re.search(r'SHEET:\s*([a-zA-Z0-9_-]{30,60})', message_text, re.IGNORECASE)
+    sheet_id = sheet_match.group(1).strip() if sheet_match else None
+    
+    webapp_match = re.search(r'WEBAPP:\s*(https://script\.google\.com/macros/s/[^\s]+)', message_text, re.IGNORECASE)
+    webapp_url = webapp_match.group(1).strip() if webapp_match else None
+    
+    # Method 2: Parse direct Google Sheets URL (if SHEET: not found)
+    if not sheet_id:
+        sheets_url_match = re.search(r'https://docs\.google\.com/spreadsheets/d/([a-zA-Z0-9_-]{30,60})', message_text)
+        if sheets_url_match:
+            sheet_id = sheets_url_match.group(1).strip()
+            logger.info(f"  → Extracted Sheet ID from URL: {sheet_id}")
+    
+    # Method 3: Parse direct Web App URL (if WEBAPP: not found)
+    if not webapp_url:
+        webapp_url_match = re.search(r'(https://script\.google\.com/macros/s/[^\s]+)', message_text)
+        if webapp_url_match:
+            webapp_url = webapp_url_match.group(1).strip()
+            logger.info(f"  → Extracted Web App URL: {webapp_url}")
+    
+    logger.info(f"  → Final parsed: sheet_id={sheet_id}, webapp_url={webapp_url}")
+    
+    # Validation
+    errors = []
+    if not sheet_id and not webapp_url:
+        await update.message.reply_text(
+            "❌ **Không tìm thấy thông tin!**\n\n"
+            "Vui lòng gửi 1 trong 2 cách:\n\n"
+            "**Cách 1: Copy paste trực tiếp 2 links**\n"
+            "https://docs.google.com/spreadsheets/d/1Vlq3MA...\n"
+            "https://script.google.com/macros/s/AKfyc...\n\n"
+            "**Cách 2: Theo format**\n"
+            "```\n"
+            "SHEET: [Sheet ID]\n"
+            "WEBAPP: [Web App URL]\n"
+            "```\n\n"
+            "💡 Chỉ gửi 1 link cũng được nếu muốn cập nhật riêng!",
+            parse_mode="Markdown"
+        )
+        return
+    
+    # Validate Sheet ID format
+    if sheet_id and not re.match(r'^[a-zA-Z0-9_-]{30,60}$', sheet_id):
+        errors.append("📋 **Sheet ID không hợp lệ** (phải 30-60 ký tự, chỉ chữ số và dấu gạch)")
+    
+    # Validate Web App URL format
+    if webapp_url and not webapp_url.startswith("https://script.google.com/macros/s/"):
+        errors.append("🔗 **Web App URL không hợp lệ** (phải bắt đầu bằng https://script.google.com/macros/s/)")
+    
+    if errors:
+        await update.message.reply_text(
+            "❌ **Có lỗi trong thông tin:**\n\n" + "\n".join(errors) + "\n\n"
+            "Vui lòng kiểm tra lại và gửi đúng format!",
+            parse_mode="Markdown"
+        )
+        return
+    
+    # Update database
+    db = SessionLocal()
+    try:
+        db_user = db.query(User).filter(User.id == user.id).first()
+        if not db_user:
+            await update.message.reply_text(
+                "❌ **Không tìm thấy tài khoản!**\n\n"
+                "Vui lòng đăng ký trước: /register"
+            )
+            return
+        
+        # Update fields
+        updated_fields = []
+        if sheet_id:
+            db_user.spreadsheet_id = sheet_id
+            updated_fields.append(f"📋 Sheet ID: `{sheet_id[:20]}...`")
+        
+        if webapp_url:
+            db_user.web_app_url = webapp_url
+            db_user.sheets_connected_at = datetime.utcnow()
+            updated_fields.append(f"🔗 Web App: Đã kết nối ✅")
+        
+        db.commit()
+        logger.info(f"✅ Updated user {user.id}: sheet_id={sheet_id}, webapp_url={webapp_url}")
+        
+        # Success message
+        success_message = (
+            "✅ **KẾT NỐI THÀNH CÔNG!**\n\n"
+            "**Đã cập nhật:**\n" + "\n".join(updated_fields) + "\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "🎉 **Chúc mừng! Bạn đã sở hữu Freedom Wallet hoàn chỉnh!**\n\n"
+            "**🤖 Tính năng bot hỗ trợ:**\n\n"
+            "1️⃣ **Ghi chi tiêu nhanh**\n"
+            "   Gửi: `Cà phê 35k`\n"
+            "   → Bot tự động ghi vào Sheet\n\n"
+            "2️⃣ **Xem báo cáo**\n"
+            "   `/balance` - Xem tổng thu/chi\n"
+            "   `/spending` - Chi tiêu theo danh mục\n\n"
+            "3️⃣ **Nhắc nhở hàng ngày**\n"
+            "   Bot sẽ nhắc bạn ghi chi tiêu\n"
+            "   Duy trì streak để nhận huy chương!\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "💡 **Bắt đầu ngay:** Thử gửi `Ăn sáng 30k` để ghi giao dịch đầu tiên!\n\n"
+            "📖 Hoặc dùng /help để xem tất cả lệnh!"
+        )
+        
+        keyboard = [
+            [InlineKeyboardButton("💬 Thử ghi chi tiêu", callback_data="try_quick_record")],
+            [InlineKeyboardButton("📖 Xem hướng dẫn đầy đủ", callback_data="show_full_guide")],
+            [InlineKeyboardButton("🏠 Menu chính", callback_data="back_to_start")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(
+            success_message,
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to update webapp connection: {e}")
+        await update.message.reply_text(
+            f"❌ **Có lỗi xảy ra!**\n\n"
+            f"Lỗi: {str(e)}\n\n"
+            "Vui lòng thử lại hoặc liên hệ /support"
+        )
+    finally:
+        db.close()
+
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle incoming text messages from users"""
     
@@ -81,11 +402,26 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_text = update.message.text
     logger.info(f"User {user.id} ({user.username}): {message_text}")
     
+    # PRIORITY 1: Check if waiting for Sheet URL (Step 1 of connection)
+    if context.user_data.get('waiting_for_sheet_url'):
+        await handle_sheet_url_input(update, context)
+        return
+    
+    # PRIORITY 2: Check if waiting for Web App URL (Step 2 of connection)
+    if context.user_data.get('waiting_for_webapp_url'):
+        await handle_webapp_url_input(update, context)
+        return
+    
+    # PRIORITY 3: Check if user is sending SHEET + WEBAPP connection info (old format)
+    if "SHEET:" in message_text or "WEBAPP:" in message_text:
+        await handle_webapp_connection(update, context)
+        return
+    
     # CRITICAL: Skip if user is in a ConversationHandler flow
     # Check for any active conversation state in context
     conversation_state = context.user_data.get('conversation_state')
     if conversation_state is not None:
-        logger.info(f"  â†’ Skipping AI handler - user in conversation (state: {conversation_state})")
+        logger.info(f"  → Skipping AI handler - user in conversation (state: {conversation_state})")
         return
     
     # Check if user is sending payment proof
@@ -110,17 +446,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Found answer in FAQ
         answer = faq_result["answer"]
         category = faq_result.get("category", "")
-        icon = faq_result.get("icon", "ðŸ’¬")
+        icon = faq_result.get("icon", "💬")
         
         # Quick action buttons
         keyboard = [
             [
-                InlineKeyboardButton("âœ… Giáº£i quyáº¿t", callback_data="feedback_solved"),
-                InlineKeyboardButton("âŒ Váº«n lá»—i", callback_data="feedback_unsolved")
+                InlineKeyboardButton("✅ Giải quyết", callback_data="feedback_solved"),
+                InlineKeyboardButton("❌ Vẫn lỗi", callback_data="feedback_unsolved")
             ],
             [
-                InlineKeyboardButton("ðŸ’¬ Há»i thÃªm", callback_data="ask_more"),
-                InlineKeyboardButton("ðŸ†˜ LiÃªn há»‡ support", callback_data="contact_support")
+                InlineKeyboardButton("💬 Hỏi thêm", callback_data="ask_more"),
+                InlineKeyboardButton("🆘 Liên hệ support", callback_data="contact_support")
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -134,25 +470,25 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         # Not found - fallback response
         fallback_text = """
-ðŸ¤” **Xin lá»—i, mÃ¬nh chÆ°a hiá»ƒu cÃ¢u há»i cá»§a báº¡n.**
+🤔 **Xin lỗi, mình chưa hiểu câu hỏi của bạn.**
 
-ðŸ’¡ **Gá»£i Ã½:**
-â€¢ Há»i báº±ng tá»« khÃ³a Ä‘Æ¡n giáº£n: "thÃªm giao dá»‹ch", "6 hÅ©", "tÃ­nh ROI"
-â€¢ DÃ¹ng /help Ä‘á»ƒ xem danh sÃ¡ch cÃ¢u há»i phá»• biáº¿n
-â€¢ Hoáº·c /support Ä‘á»ƒ liÃªn há»‡ support team
+💡 **Gợi ý:**
+• Hỏi bằng từ khóa đơn giản: "thêm giao dịch", "6 hũ", "tính ROI"
+• Dùng /help để xem danh sách câu hỏi phổ biến
+• Hoặc /support để liên hệ support team
 
-ðŸ” **VÃ­ dá»¥ cÃ¢u há»i:**
-â€¢ LÃ m sao thÃªm giao dá»‹ch?
-â€¢ 6 hÅ© tiá»n lÃ  gÃ¬?
-â€¢ CÃ¡ch chuyá»ƒn tiá»n giá»¯a hÅ©?
+🔍 **Ví dụ câu hỏi:**
+• Làm sao thêm giao dịch?
+• 6 hũ tiền là gì?
+• Cách chuyển tiền giữa hũ?
 
-ðŸ’¬ Thá»­ há»i láº¡i nhÃ©!
+💬 Thử hỏi lại nhé!
 """
         
         keyboard = [
             [
-                InlineKeyboardButton("ðŸ“š Xem FAQ", callback_data="help_faq"),
-                InlineKeyboardButton("ðŸ†˜ LiÃªn há»‡ support", callback_data="contact_support")
+                InlineKeyboardButton("📚 Xem FAQ", callback_data="help_faq"),
+                InlineKeyboardButton("🆘 Liên hệ support", callback_data="contact_support")
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -226,37 +562,37 @@ async def handle_payment_proof_text(update: Update, context: ContextTypes.DEFAUL
         )
         
         message = f"""
-âœ… **ÄÃƒ NHáº¬N THÃ”NG TIN**
+✅ **ĐÃ NHẬN THÔNG TIN**
 
-MÃ£ xÃ¡c nháº­n: `{verification_id}`
+Mã xác nhận: `{verification_id}`
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“‹ **THÃ”NG TIN NHáº¬N ÄÆ¯á»¢C:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📋 **THÔNG TIN NHẬN ĐƯỢC:**
+━━━━━━━━━━━━━━━━━━━━━
 
 {transaction_info}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â±ï¸ **TIáº¾P THEO:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+⏱️ **TIẾP THEO:**
+━━━━━━━━━━━━━━━━━━━━━
 
-â€¢ Há»‡ thá»‘ng Ä‘ang kiá»ƒm tra thanh toÃ¡n
-â€¢ Náº¿u Ä‘Ãºng ná»™i dung CK â†’ Tá»± Ä‘á»™ng kÃ­ch hoáº¡t (5-10 phÃºt)
-â€¢ Náº¿u sai ná»™i dung â†’ Admin xÃ¡c nháº­n thá»§ cÃ´ng (15-30 phÃºt)
+• Hệ thống đang kiểm tra thanh toán
+• Nếu đúng nội dung CK → Tự động kích hoạt (5-10 phút)
+• Nếu sai nội dung → Admin xác nhận thủ công (15-30 phút)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ”” **THÃ”NG BÃO:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🔔 **THÔNG BÁO:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… Báº¡n sáº½ nháº­n thÃ´ng bÃ¡o khi Premium Ä‘Æ°á»£c kÃ­ch hoáº¡t
-ðŸ’¬ Má»i tháº¯c máº¯c, liÃªn há»‡ Admin
+✅ Bạn sẽ nhận thông báo khi Premium được kích hoạt
+💬 Mọi thắc mắc, liên hệ Admin
 
-Cáº£m Æ¡n báº¡n Ä‘Ã£ tin tÆ°á»Ÿng Freedom Wallet! ðŸ’Ž
+Cảm ơn bạn đã tin tưởng Freedom Wallet! 💎
 """
         
         keyboard = [
-            [InlineKeyboardButton("ðŸ’¬ LiÃªn há»‡ Admin", callback_data="contact_support")],
-            [InlineKeyboardButton("ðŸ  Vá» trang chá»§", callback_data="start")]
+            [InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")],
+            [InlineKeyboardButton("🏠 Về trang chủ", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
@@ -278,34 +614,34 @@ Cáº£m Æ¡n báº¡n Ä‘Ã£ tin tÆ°á»Ÿng Freedom Wallet! ðŸ’Ž
                 safe_transaction = html.escape(transaction_info)
                 
                 admin_message = f"""
-ðŸ”” <b>YÃŠU Cáº¦U XÃC NHáº¬N THANH TOÃN Má»šI</b>
+🔔 <b>YÊU CẦU XÁC NHẬN THANH TOÁN MỚI</b>
 
-MÃ£: <code>{verification_id}</code>
+Mã: <code>{verification_id}</code>
 User ID: <code>{user_id}</code>
 Username: @{safe_username}
-TÃªn: {safe_fullname}
-Sá»‘ tiá»n: {amount:,.0f} VND
+Tên: {safe_fullname}
+Số tiền: {amount:,.0f} VND
 
-ðŸ“‹ <b>ThÃ´ng tin:</b>
+📋 <b>Thông tin:</b>
 {safe_transaction}
 
-â±ï¸ Thá»i gian: {update.message.date.strftime('%d/%m/%Y %H:%M:%S')}
+⏱️ Thời gian: {update.message.date.strftime('%d/%m/%Y %H:%M:%S')}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ <b>HÃ nh Ä‘á»™ng:</b>
+━━━━━━━━━━━━━━━━━━━━━
+💡 <b>Hành động:</b>
 
-â€¢ Xem pending: /payment_pending
-â€¢ Duyá»‡t: /payment_approve {verification_id}
-â€¢ Tá»« chá»‘i: /payment_reject {verification_id} [lÃ½ do]
+• Xem pending: /payment_pending
+• Duyệt: /payment_approve {verification_id}
+• Từ chối: /payment_reject {verification_id} [lý do]
 """
                 
                 # Add inline buttons for quick action
                 keyboard = [
                     [
-                        InlineKeyboardButton("âœ… Duyá»‡t", callback_data=f"admin_approve_{verification_id}"),
-                        InlineKeyboardButton("âŒ Tá»« chá»‘i", callback_data=f"admin_reject_{verification_id}")
+                        InlineKeyboardButton("✅ Duyệt", callback_data=f"admin_approve_{verification_id}"),
+                        InlineKeyboardButton("❌ Từ chối", callback_data=f"admin_reject_{verification_id}")
                     ],
-                    [InlineKeyboardButton("ðŸ“‹ Xem táº¥t cáº£ pending", callback_data="admin_list_pending")]
+                    [InlineKeyboardButton("📋 Xem tất cả pending", callback_data="admin_list_pending")]
                 ]
                 reply_markup = InlineKeyboardMarkup(keyboard)
                 
@@ -322,9 +658,9 @@ Sá»‘ tiá»n: {amount:,.0f} VND
     except Exception as e:
         logger.error(f"Error creating payment verification: {e}")
         await update.message.reply_text(
-            "âŒ CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i hoáº·c liÃªn há»‡ Admin.",
+            "❌ Có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ Admin.",
             reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("ðŸ’¬ LiÃªn há»‡ Admin", callback_data="contact_support")
+                InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")
             ]])
         )
 
@@ -362,37 +698,37 @@ async def handle_payment_proof_photo(update: Update, context: ContextTypes.DEFAU
         )
         
         message = f"""
-âœ… **ÄÃƒ NHáº¬N áº¢NH XÃC NHáº¬N**
+✅ **ĐÃ NHẬN ẢNH XÁC NHẬN**
 
-MÃ£ xÃ¡c nháº­n: `{verification_id}`
+Mã xác nhận: `{verification_id}`
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“¸ **áº¢NH NHáº¬N ÄÆ¯á»¢C:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📸 **ẢNH NHẬN ĐƯỢC:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ÄÃ£ lÆ°u áº£nh chuyá»ƒn khoáº£n cá»§a báº¡n
+Đã lưu ảnh chuyển khoản của bạn
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â±ï¸ **TIáº¾P THEO:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+⏱️ **TIẾP THEO:**
+━━━━━━━━━━━━━━━━━━━━━
 
-â€¢ Admin Ä‘ang xÃ¡c nháº­n thanh toÃ¡n
-â€¢ Thá»i gian xá»­ lÃ½: 15-30 phÃºt (giá» hÃ nh chÃ­nh)
-â€¢ NgoÃ i giá»: Trong 2 giá»
+• Admin đang xác nhận thanh toán
+• Thời gian xử lý: 15-30 phút (giờ hành chính)
+• Ngoài giờ: Trong 2 giờ
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ”” **THÃ”NG BÃO:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🔔 **THÔNG BÁO:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… Báº¡n sáº½ nháº­n thÃ´ng bÃ¡o khi Premium Ä‘Æ°á»£c kÃ­ch hoáº¡t
-ðŸ’¬ Má»i tháº¯c máº¯c, liÃªn há»‡ Admin
+✅ Bạn sẽ nhận thông báo khi Premium được kích hoạt
+💬 Mọi thắc mắc, liên hệ Admin
 
-Cáº£m Æ¡n báº¡n Ä‘Ã£ tin tÆ°á»Ÿng Freedom Wallet! ðŸ’Ž
+Cảm ơn bạn đã tin tưởng Freedom Wallet! 💎
 """
         
         keyboard = [
-            [InlineKeyboardButton("ðŸ’¬ LiÃªn há»‡ Admin", callback_data="contact_support")],
-            [InlineKeyboardButton("ðŸ  Vá» trang chá»§", callback_data="start")]
+            [InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")],
+            [InlineKeyboardButton("🏠 Về trang chủ", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
@@ -414,35 +750,35 @@ Cáº£m Æ¡n báº¡n Ä‘Ã£ tin tÆ°á»Ÿng Freedom Wallet! ðŸ’Ž
                 safe_caption = html.escape(caption)
                 
                 admin_message = f"""
-ðŸ”” <b>YÃŠU Cáº¦U XÃC NHáº¬N THANH TOÃN Má»šI</b> ðŸ“¸
+🔔 <b>YÊU CẦU XÁC NHẬN THANH TOÁN MỚI</b> 📸
 
-MÃ£: <code>{verification_id}</code>
+Mã: <code>{verification_id}</code>
 User ID: <code>{user_id}</code>
 Username: @{safe_username}
-TÃªn: {safe_fullname}
-Sá»‘ tiá»n: {amount:,.0f} VND
+Tên: {safe_fullname}
+Số tiền: {amount:,.0f} VND
 
-ðŸ“¸ <b>áº¢nh xÃ¡c nháº­n:</b>
-ÄÃ£ gá»­i áº£nh chuyá»ƒn khoáº£n
+📸 <b>Ảnh xác nhận:</b>
+Đã gửi ảnh chuyển khoản
 Caption: {safe_caption}
 
-â±ï¸ Thá»i gian: {update.message.date.strftime('%d/%m/%Y %H:%M:%S')}
+⏱️ Thời gian: {update.message.date.strftime('%d/%m/%Y %H:%M:%S')}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ <b>HÃ nh Ä‘á»™ng:</b>
+━━━━━━━━━━━━━━━━━━━━━
+💡 <b>Hành động:</b>
 
-â€¢ Xem pending: /payment_pending
-â€¢ Duyá»‡t: /payment_approve {verification_id}
-â€¢ Tá»« chá»‘i: /payment_reject {verification_id} [lÃ½ do]
+• Xem pending: /payment_pending
+• Duyệt: /payment_approve {verification_id}
+• Từ chối: /payment_reject {verification_id} [lý do]
 """
                 
                 # Add inline buttons for quick action
                 keyboard = [
                     [
-                        InlineKeyboardButton("âœ… Duyá»‡t", callback_data=f"admin_approve_{verification_id}"),
-                        InlineKeyboardButton("âŒ Tá»« chá»‘i", callback_data=f"admin_reject_{verification_id}")
+                        InlineKeyboardButton("✅ Duyệt", callback_data=f"admin_approve_{verification_id}"),
+                        InlineKeyboardButton("❌ Từ chối", callback_data=f"admin_reject_{verification_id}")
                     ],
-                    [InlineKeyboardButton("ðŸ“‹ Xem táº¥t cáº£ pending", callback_data="admin_list_pending")]
+                    [InlineKeyboardButton("📋 Xem tất cả pending", callback_data="admin_list_pending")]
                 ]
                 reply_markup = InlineKeyboardMarkup(keyboard)
                 
@@ -461,9 +797,9 @@ Caption: {safe_caption}
     except Exception as e:
         logger.error(f"Error creating payment verification from photo: {e}")
         await update.message.reply_text(
-            "âŒ CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i hoáº·c liÃªn há»‡ Admin.",
+            "❌ Có lỗi xảy ra. Vui lòng thử lại hoặc liên hệ Admin.",
             reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("ðŸ’¬ LiÃªn há»‡ Admin", callback_data="contact_support")
+                InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")
             ]])
         )
 
@@ -530,27 +866,27 @@ async def handle_admin_rejection_reason(update: Update, context: ContextTypes.DE
                     await context.bot.send_message(
                         chat_id=verification.user_id,
                         text=f"""
-âŒ <b>THANH TOÃN Bá»Š Tá»ª CHá»I</b>
+❌ <b>THANH TOÁN BỊ TỪ CHỐI</b>
 
-MÃ£ xÃ¡c nháº­n: <code>{verification_id}</code>
+Mã xác nhận: <code>{verification_id}</code>
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“‹ <b>LÃ DO:</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📋 <b>LÝ DO:</b>
+━━━━━━━━━━━━━━━━━━━━━
 
 {safe_reason}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ <b>HÆ¯á»šNG DáºªN:</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 <b>HƯỚNG DẪN:</b>
+━━━━━━━━━━━━━━━━━━━━━
 
-â€¢ Kiá»ƒm tra láº¡i thÃ´ng tin thanh toÃ¡n
-â€¢ Äáº£m báº£o chuyá»ƒn khoáº£n Ä‘Ãºng:
-  - Sá»‘ tiá»n: 999,000 VND
+• Kiểm tra lại thông tin thanh toán
+• Đảm bảo chuyển khoản đúng:
+  - Số tiền: 999,000 VND
   - Ná»™i dung: FW{verification.user_id} PREMIUM
-â€¢ Gá»­i láº¡i áº£nh/thÃ´ng tin xÃ¡c nháº­n
+• Gửi lại ảnh/thông tin xác nhận
 
-ðŸ’¬ Cáº§n há»— trá»£? DÃ¹ng /support Ä‘á»ƒ liÃªn há»‡ Admin
+💬 Cần hỗ trợ? Dùng /support để liên hệ Admin
 """,
                         parse_mode="HTML"
                     )
@@ -563,25 +899,25 @@ MÃ£ xÃ¡c nháº­n: <code>{verification_id}</code>
             safe_reason_admin = html.escape(reason)
             await update.message.reply_text(
                 f"""
-âœ… <b>ÄÃƒ Tá»ª CHá»I</b>
+✅ <b>ĐÃ TỪ CHỐI</b>
 
-MÃ£: <code>{verification_id}</code>
-LÃ½ do: {safe_reason_admin}
+Mã: <code>{verification_id}</code>
+Lý do: {safe_reason_admin}
 
-User Ä‘Ã£ nháº­n thÃ´ng bÃ¡o.
+User đã nhận thông báo.
 """,
                 parse_mode="HTML"
             )
         else:
             await update.message.reply_text(
-                f"âŒ Lá»—i khi tá»« chá»‘i {verification_id}",
+                f"❌ Lỗi khi từ chối {verification_id}",
                 parse_mode="HTML"
             )
             
     except Exception as e:
         logger.error(f"Error in handle_admin_rejection_reason: {e}", exc_info=True)
         await update.message.reply_text(
-            "âŒ CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i!",
+            "❌ Có lỗi xảy ra. Vui lòng thử lại!",
             parse_mode="HTML"
         )
 

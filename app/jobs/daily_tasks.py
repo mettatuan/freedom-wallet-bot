@@ -20,14 +20,14 @@ async def check_super_vip_decay_job(context: ContextTypes.DEFAULT_TYPE):
     - Warns users after 7 days inactive
     - Downgrades users after 14 days inactive
     """
-    logger.info("ðŸ” Running Super VIP decay check...")
+    logger.info("🔍 Running Super VIP decay check...")
     
     try:
         with StateManager() as sm:
             decay_results = sm.check_all_super_vip_decay()
             
             if not decay_results:
-                logger.info("âœ… No Super VIP decay actions needed")
+                logger.info("✅ No Super VIP decay actions needed")
                 return
             
             # Process each decay action
@@ -41,20 +41,20 @@ async def check_super_vip_decay_job(context: ContextTypes.DEFAULT_TYPE):
                     if action == 'warn':
                         # Send warning message
                         await send_decay_warning(user_id, days, context)
-                        logger.info(f"âš ï¸ Sent decay warning to {username} ({user_id}) - {days} days inactive")
+                        logger.info(f"⚠️ Sent decay warning to {username} ({user_id}) - {days} days inactive")
                     
                     elif action == 'downgrade':
                         # Send downgrade notification
                         await send_downgrade_notification(user_id, days, context)
-                        logger.info(f"ðŸ”» Downgraded {username} ({user_id}) to VIP - {days} days inactive")
+                        logger.info(f"🔻 Downgraded {username} ({user_id}) to VIP - {days} days inactive")
                 
                 except Exception as e:
                     logger.error(f"Failed to process decay for user {user_id}: {e}")
             
-            logger.info(f"âœ… Super VIP decay check complete: {len(decay_results)} actions processed")
+            logger.info(f"✅ Super VIP decay check complete: {len(decay_results)} actions processed")
     
     except Exception as e:
-        logger.error(f"âŒ Super VIP decay job failed: {e}")
+        logger.error(f"❌ Super VIP decay job failed: {e}")
         import traceback
         traceback.print_exc()
 
@@ -68,31 +68,31 @@ async def send_decay_warning(user_id: int, days_inactive: int, context: ContextT
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ  VÃ o Dashboard", callback_data="start")],
-        [InlineKeyboardButton("ðŸ”— Chia sáº» link", callback_data="referral_menu")],
-        [InlineKeyboardButton("ðŸ’¬ Chat vá»›i Admin", callback_data="contact_support")]
+        [InlineKeyboardButton("🏠 Vào Dashboard", callback_data="start")],
+        [InlineKeyboardButton("🔗 Chia sẻ link", callback_data="referral_menu")],
+        [InlineKeyboardButton("💬 Chat với Admin", callback_data="contact_support")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await context.bot.send_message(
         chat_id=user_id,
-        text=f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-             f"âš ï¸ **LÆ¯U Ã QUAN TRá»ŒNG**\n"
-             f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-             f"ðŸ‘‹ ChÃ o báº¡n!\n\n"
-             f"MÃ¬nh tháº¥y báº¡n chÆ°a hoáº¡t Ä‘á»™ng trong **{days_inactive} ngÃ y**.\n\n"
-             f"ðŸŒŸ **Äá»ƒ giá»¯ danh hiá»‡u Super VIP:**\n"
-             f"â€¢ Báº¡n cáº§n duy trÃ¬ hoáº¡t Ä‘á»™ng thÆ°á»ng xuyÃªn\n"
-             f"â€¢ Náº¿u khÃ´ng hoáº¡t Ä‘á»™ng trong **14 ngÃ y**, danh hiá»‡u sáº½ bá»‹ thu há»“i\n"
-             f"â€¢ CÃ²n **{14 - days_inactive} ngÃ y** Ä‘á»ƒ giá»¯ Super VIP\n\n"
-             f"ðŸ’¡ **CÃ¡ch duy trÃ¬ hoáº¡t Ä‘á»™ng:**\n"
-             f"âœ“ Chia sáº» link giá»›i thiá»‡u\n"
-             f"âœ“ Tham gia Group Super VIP\n"
-             f"âœ“ Sá»­ dá»¥ng bot thÆ°á»ng xuyÃªn\n"
-             f"âœ“ TÆ°Æ¡ng tÃ¡c vá»›i Dashboard\n\n"
-             f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-             f"ðŸ¤ ChÃºng mÃ¬nh muá»‘n báº¡n tiáº¿p tá»¥c lÃ  Super VIP!\n"
-             f"HÃ£y quay láº¡i hoáº¡t Ä‘á»™ng Ä‘á»ƒ giá»¯ Ä‘áº·c quyá»n nhÃ©!",
+        text=f"━━━━━━━━━━━━━━━━━━━━━\n"
+             f"⚠️ **LƯU Ý QUAN TRỌNG**\n"
+             f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+             f"👋 Chào bạn!\n\n"
+             f"Mình thấy bạn chưa hoạt động trong **{days_inactive} ngày**.\n\n"
+             f"🌟 **Để giữ danh hiệu Super VIP:**\n"
+             f"• Bạn cần duy trì hoạt động thường xuyên\n"
+             f"• Nếu không hoạt động trong **14 ngày**, danh hiệu sẽ bị thu hồi\n"
+             f"• Còn **{14 - days_inactive} ngày** để giữ Super VIP\n\n"
+             f"💡 **Cách duy trì hoạt động:**\n"
+             f"✓ Chia sẻ link giới thiệu\n"
+             f"✓ Tham gia Group Super VIP\n"
+             f"✓ Sử dụng bot thường xuyên\n"
+             f"✓ Tương tác với Dashboard\n\n"
+             f"━━━━━━━━━━━━━━━━━━━━━\n"
+             f"🤝 Chúng mình muốn bạn tiếp tục là Super VIP!\n"
+             f"Hãy quay lại hoạt động để giữ đặc quyền nhé!",
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
@@ -107,32 +107,32 @@ async def send_downgrade_notification(user_id: int, days_inactive: int, context:
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ  Dashboard", callback_data="start")],
-        [InlineKeyboardButton("ðŸ”— Xem link giá»›i thiá»‡u", callback_data="referral_menu")],
-        [InlineKeyboardButton("ðŸŒŸ LÃ m sao Ä‘á»ƒ lÃªn láº¡i Super VIP?", callback_data="super_vip_benefits")]
+        [InlineKeyboardButton("🏠 Dashboard", callback_data="start")],
+        [InlineKeyboardButton("🔗 Xem link giới thiệu", callback_data="referral_menu")],
+        [InlineKeyboardButton("🌟 Làm sao để lên lại Super VIP?", callback_data="super_vip_benefits")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await context.bot.send_message(
         chat_id=user_id,
-        text=f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-             f"ðŸ“¢ **THÃ”NG BÃO QUAN TRá»ŒNG**\n"
-             f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-             f"Xin chÃ o! ðŸ‘‹\n\n"
-             f"Do báº¡n Ä‘Ã£ khÃ´ng hoáº¡t Ä‘á»™ng trong **{days_inactive} ngÃ y**,\n"
-             f"danh hiá»‡u **Super VIP** cá»§a báº¡n Ä‘Ã£ Ä‘Æ°á»£c chuyá»ƒn vá» **VIP**.\n\n"
-             f"â­ **Báº¡n váº«n lÃ  VIP vá»›i Ä‘áº§y Ä‘á»§ quyá»n lá»£i:**\n"
-             f"âœ“ ToÃ n bá»™ tÃ­nh nÄƒng Freedom Wallet\n"
-             f"âœ“ Templates & Scripts\n"
-             f"âœ“ Group há»— trá»£ VIP\n"
-             f"âœ“ Cáº­p nháº­t miá»…n phÃ­\n\n"
-             f"ðŸŒŸ **Muá»‘n lÃªn láº¡i Super VIP?**\n"
-             f"â€¢ Tiáº¿p tá»¥c giá»›i thiá»‡u thÃªm báº¡n bÃ¨\n"
-             f"â€¢ Duy trÃ¬ hoáº¡t Ä‘á»™ng thÆ°á»ng xuyÃªn\n"
-             f"â€¢ Khi Ä‘áº¡t 50+ refs vÃ  active â†’ Auto lÃªn Super VIP\n\n"
-             f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-             f"ðŸ’™ Cáº£m Æ¡n báº¡n Ä‘Ã£ Ä‘á»“ng hÃ nh cÃ¹ng Freedom Wallet!\n"
-             f"ChÃºng mÃ¬nh luÃ´n chÃ o Ä‘Ã³n báº¡n quay láº¡i! ðŸ™",
+        text=f"━━━━━━━━━━━━━━━━━━━━━\n"
+             f"📢 **THÔNG BÁO QUAN TRỌNG**\n"
+             f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+             f"Xin chào! 👋\n\n"
+             f"Do bạn đã không hoạt động trong **{days_inactive} ngày**,\n"
+             f"danh hiệu **Super VIP** của bạn đã được chuyển về **VIP**.\n\n"
+             f"⭐ **Bạn vẫn là VIP với đầy đủ quyền lợi:**\n"
+             f"✓ Toàn bộ tính năng Freedom Wallet\n"
+             f"✓ Templates & Scripts\n"
+             f"✓ Group hỗ trợ VIP\n"
+             f"✓ Cập nhật miễn phí\n\n"
+             f"🌟 **Muốn lên lại Super VIP?**\n"
+             f"• Tiếp tục giới thiệu thêm bạn bè\n"
+             f"• Duy trì hoạt động thường xuyên\n"
+             f"• Khi đạt 50+ refs và active → Auto lên Super VIP\n\n"
+             f"━━━━━━━━━━━━━━━━━━━━━\n"
+             f"💙 Cảm ơn bạn đã đồng hành cùng Freedom Wallet!\n"
+             f"Chúng mình luôn chào đón bạn quay lại! 🙏",
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
@@ -168,9 +168,9 @@ def setup_daily_jobs(application):
     reminder_scheduler = get_reminder_scheduler(job_queue.scheduler)
     if reminder_scheduler:
         reminder_scheduler.start_daily_reminders(application)
-        logger.info("âœ… Daily reminder system initialized")
+        logger.info("✅ Daily reminder system initialized")
     
-    logger.info("âœ… Daily jobs scheduled:")
+    logger.info("✅ Daily jobs scheduled:")
     logger.info("   - Super VIP decay check: 10:00 AM UTC")
     logger.info("   - Morning reminders: 8:00 AM daily")
     logger.info("   - Evening reminders: 8:00 PM daily")

@@ -1,5 +1,5 @@
 """
-ðŸŽ¯ PROGRAM MANAGER
+🎯 PROGRAM MANAGER
 ==================
 
 Manages user enrollment in educational programs with flexible day-by-day progression.
@@ -95,7 +95,7 @@ class ProgramManager:
         user.program_completed_at = None
         self.session.commit()
         
-        logger.info(f"âœ… User {user_id} enrolled in {program.value}")
+        logger.info(f"✅ User {user_id} enrolled in {program.value}")
         
         # Schedule first day immediately or with delay
         await self._schedule_program_day(
@@ -138,7 +138,7 @@ class ProgramManager:
         user.program_day = next_day
         self.session.commit()
         
-        logger.info(f"ðŸ“ˆ User {user_id} advanced to {program.value} day {next_day}")
+        logger.info(f"📈 User {user_id} advanced to {program.value} day {next_day}")
         
         # Schedule next day
         await self._schedule_program_day(user_id, program, next_day, context)
@@ -162,7 +162,7 @@ class ProgramManager:
         user.program_completed_at = datetime.utcnow()
         self.session.commit()
         
-        logger.info(f"ðŸŽ‰ User {user_id} completed {program}")
+        logger.info(f"🎉 User {user_id} completed {program}")
         
         return True
     
@@ -194,7 +194,7 @@ class ProgramManager:
         user.program_day = 0
         self.session.commit()
         
-        logger.info(f"âŒ Canceled {program} for user {user_id}")
+        logger.info(f"❌ Canceled {program} for user {user_id}")
         
         return True
     
@@ -245,7 +245,7 @@ class ProgramManager:
             name=job_name
         )
         
-        logger.info(f"ðŸ“… Scheduled {program.value} day {day} for user {user_id} at {send_time}")
+        logger.info(f"📅 Scheduled {program.value} day {day} for user {user_id} at {send_time}")
     
     async def _send_program_message(self, context: ContextTypes.DEFAULT_TYPE):
         """

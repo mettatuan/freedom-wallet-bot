@@ -40,7 +40,7 @@ class DailyReminderScheduler:
             replace_existing=True,
             name="Daily Morning Motivation (8:00 AM)"
         )
-        logger.info("âœ… Scheduled morning reminders at 8:00 AM daily")
+        logger.info("✅ Scheduled morning reminders at 8:00 AM daily")
         
         # Evening reminder - 8:00 PM daily
         self.scheduler.add_job(
@@ -51,7 +51,7 @@ class DailyReminderScheduler:
             replace_existing=True,
             name="Daily Evening Check-in (8:00 PM)"
         )
-        logger.info("âœ… Scheduled evening reminders at 8:00 PM daily")
+        logger.info("✅ Scheduled evening reminders at 8:00 PM daily")
         
         # Missed days check - 9:00 PM daily
         self.scheduler.add_job(
@@ -61,7 +61,7 @@ class DailyReminderScheduler:
             replace_existing=True,
             name="Daily Missed Days Check (9:00 PM)"
         )
-        logger.info("âœ… Scheduled missed days check at 9:00 PM daily")
+        logger.info("✅ Scheduled missed days check at 9:00 PM daily")
     
     async def _send_all_morning_reminders(self, context: ContextTypes.DEFAULT_TYPE):
         """Send morning reminders to all eligible users"""
@@ -83,7 +83,7 @@ class DailyReminderScheduler:
                     logger.error(f"Failed to send morning reminder to {user.id}: {e}")
             
             db.close()
-            logger.info(f"âœ… Completed morning reminders for {len(users)} users")
+            logger.info(f"✅ Completed morning reminders for {len(users)} users")
             
         except Exception as e:
             logger.error(f"Error in morning reminder batch: {e}")
@@ -108,7 +108,7 @@ class DailyReminderScheduler:
                     logger.error(f"Failed to send evening reminder to {user.id}: {e}")
             
             db.close()
-            logger.info(f"âœ… Completed evening reminders for {len(users)} users")
+            logger.info(f"✅ Completed evening reminders for {len(users)} users")
             
         except Exception as e:
             logger.error(f"Error in evening reminder batch: {e}")
@@ -127,7 +127,7 @@ class DailyReminderScheduler:
             db.commit()
             db.close()
             
-            logger.info(f"âœ… Enabled daily reminders for user {user_id}")
+            logger.info(f"✅ Enabled daily reminders for user {user_id}")
             return True
             
         except Exception as e:
@@ -148,7 +148,7 @@ class DailyReminderScheduler:
             db.commit()
             db.close()
             
-            logger.info(f"ðŸ”• Disabled daily reminders for user {user_id}")
+            logger.info(f"🔕 Disabled daily reminders for user {user_id}")
             return True
             
         except Exception as e:

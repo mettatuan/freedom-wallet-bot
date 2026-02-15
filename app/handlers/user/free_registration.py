@@ -30,7 +30,7 @@ async def free_step1_intro(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if db_user and db_user.email and db_user.phone and db_user.full_name:
             # Already have info, skip to step 2
             logger.info(f"User {user.id} already has registration info, skipping to step 2")
-            await query.edit_message_text("Äang táº£i...")
+            await query.edit_message_text("Đang tải...")
             
             # Import here to avoid circular dependency
             from app.handlers.user.free_flow import free_step2_show_value
@@ -42,20 +42,20 @@ async def free_step1_intro(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Send intro message with image
     message = """
-ChÃ o báº¡n,
+Chào bạn,
 
-Freedom Wallet khÃ´ng pháº£i má»™t app Ä‘á»ƒ báº¡n táº£i vá».
-ÄÃ¢y lÃ  má»™t há»‡ thá»‘ng báº¡n tá»± sá»Ÿ há»¯u.
+Freedom Wallet không phải một app để bạn tải về.
+Đây là một hệ thống bạn tự sở hữu.
 
-Má»—i ngÆ°á»i dÃ¹ng cÃ³:
-â€¢ Google Sheet riÃªng
-â€¢ Apps Script riÃªng
-â€¢ Web App riÃªng
+Mỗi người dùng có:
+• Google Sheet riêng
+• Apps Script riêng
+• Web App riêng
 
-Dá»¯ liá»‡u náº±m trÃªn Drive cá»§a báº¡n.
-KhÃ´ng phá»¥ thuá»™c vÃ o ai.
+Dữ liệu nằm trên Drive của bạn.
+Không phụ thuộc vào ai.
 
-Äá»ƒ báº¯t Ä‘áº§u, tÃ´i cáº§n vÃ i thÃ´ng tin cÆ¡ báº£n.
+Để bắt đầu, tôi cần vài thông tin cơ bản.
 """
     
     # Send photo first, then ask for info
@@ -69,8 +69,8 @@ KhÃ´ng phá»¥ thuá»™c vÃ o ai.
         )
         
         await query.message.reply_text(
-            "ðŸ“§ **BÆ°á»›c 1/3**: Nháº­p email cá»§a báº¡n\n"
-            "(Äá»ƒ gá»­i hÆ°á»›ng dáº«n vÃ  template)",
+            "📧 **Bước 1/3**: Nhập email của bạn\n"
+            "(Để gửi hướng dẫn và template)",
             parse_mode="Markdown"
         )
         
@@ -82,8 +82,8 @@ KhÃ´ng phá»¥ thuá»™c vÃ o ai.
     except Exception as e:
         logger.error(f"Error sending photo: {e}")
         await query.edit_message_text(
-            message + "\n\nðŸ“§ **BÆ°á»›c 1/3**: Nháº­p email cá»§a báº¡n\n"
-            "(Äá»ƒ gá»­i hÆ°á»›ng dáº«n vÃ  template)",
+            message + "\n\n📧 **Bước 1/3**: Nhập email của bạn\n"
+            "(Để gửi hướng dẫn và template)",
             parse_mode="Markdown"
         )
         return AWAITING_EMAIL
@@ -97,8 +97,8 @@ async def receive_free_email(update: Update, context: ContextTypes.DEFAULT_TYPE)
     email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     if not re.match(email_pattern, email):
         await update.message.reply_text(
-            "âŒ Email khÃ´ng há»£p lá»‡.\n\n"
-            "Vui lÃ²ng nháº­p láº¡i (vÃ­ dá»¥: name@gmail.com):"
+            "❌ Email không hợp lệ.\n\n"
+            "Vui lòng nhập lại (ví dụ: name@gmail.com):"
         )
         return AWAITING_EMAIL
     
@@ -106,10 +106,10 @@ async def receive_free_email(update: Update, context: ContextTypes.DEFAULT_TYPE)
     context.user_data['registration_email'] = email
     
     await update.message.reply_text(
-        f"âœ… Email: {email}\n\n"
-        f"ðŸ“± **BÆ°á»›c 2/3**: Nháº­p sá»‘ Ä‘iá»‡n thoáº¡i\n"
-        f"(Äá»ƒ há»— trá»£ qua Zalo/WhatsApp náº¿u cáº§n)\n\n"
-        f"Hoáº·c gÃµ /skip náº¿u muá»‘n bá» qua.",
+        f"✅ Email: {email}\n\n"
+        f"📱 **Bước 2/3**: Nhập số điện thoại\n"
+        f"(Để hỗ trợ qua Zalo/WhatsApp nếu cần)\n\n"
+        f"Hoặc gõ /skip nếu muốn bỏ qua.",
         parse_mode="Markdown"
     )
     
@@ -123,15 +123,15 @@ async def receive_free_phone(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Allow skip
     if phone.lower() == '/skip':
         context.user_data['registration_phone'] = None
-        phone_display = "Bá» qua"
+        phone_display = "Bỏ qua"
     else:
         # Basic phone validation
         phone = re.sub(r'[^0-9+]', '', phone)
         if len(phone) < 10:
             await update.message.reply_text(
-                "âŒ Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng há»£p lá»‡.\n\n"
-                "Vui lÃ²ng nháº­p láº¡i (VD: 0901234567)\n"
-                "Hoáº·c gÃµ /skip Ä‘á»ƒ bá» qua:"
+                "❌ Số điện thoại không hợp lệ.\n\n"
+                "Vui lòng nhập lại (VD: 0901234567)\n"
+                "Hoặc gõ /skip để bỏ qua:"
             )
             return AWAITING_PHONE
         
@@ -139,10 +139,10 @@ async def receive_free_phone(update: Update, context: ContextTypes.DEFAULT_TYPE)
         phone_display = phone
     
     await update.message.reply_text(
-        f"âœ… Sá»‘ Ä‘iá»‡n thoáº¡i: {phone_display}\n\n"
-        f"ðŸ‘¤ **BÆ°á»›c 3/3**: Nháº­p há» tÃªn cá»§a báº¡n\n"
-        f"(Äá»ƒ cÃ¡ nhÃ¢n hÃ³a hÆ°á»›ng dáº«n)\n\n"
-        f"Hoáº·c gÃµ /skip Ä‘á»ƒ bá» qua.",
+        f"✅ Số điện thoại: {phone_display}\n\n"
+        f"👤 **Bước 3/3**: Nhập họ tên của bạn\n"
+        f"(Để cá nhân hóa hướng dẫn)\n\n"
+        f"Hoặc gõ /skip để bỏ qua.",
         parse_mode="Markdown"
     )
     
@@ -199,14 +199,14 @@ async def receive_free_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     status="ACTIVE",
                     referred_by=None
                 )
-                logger.info(f"âœ… Saved user {user.id} to Google Sheet")
+                logger.info(f"✅ Saved user {user.id} to Google Sheet")
             except Exception as e:
-                logger.error(f"âŒ Failed to save to Google Sheet: {e}")
+                logger.error(f"❌ Failed to save to Google Sheet: {e}")
             
             await update.message.reply_text(
-                f"âœ… Cáº£m Æ¡n {full_name}!\n\n"
-                f"ThÃ´ng tin Ä‘Ã£ Ä‘Æ°á»£c lÆ°u láº¡i.\n"
-                f"BÃ¢y giá», hÃ£y cÃ¹ng táº¡o há»‡ thá»‘ng cá»§a riÃªng báº¡n.",
+                f"✅ Cảm ơn {full_name}!\n\n"
+                f"Thông tin đã được lưu lại.\n"
+                f"Bây giờ, hãy cùng tạo hệ thống của riêng bạn.",
                 parse_mode="Markdown"
             )
             
@@ -228,26 +228,26 @@ async def receive_free_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
             
             # Call step 2 directly
             message = """
-TrÆ°á»›c khi lÃ m báº¥t cá»© bÆ°á»›c ká»¹ thuáº­t nÃ o,
-báº¡n cáº§n biáº¿t mÃ¬nh sáº½ nháº­n Ä‘Æ°á»£c Ä‘iá»u gÃ¬.
+Trước khi làm bất cứ bước kỹ thuật nào,
+bạn cần biết mình sẽ nhận được điều gì.
 
-Khi há»‡ thá»‘ng hoÃ n táº¥t, báº¡n sáº½ tháº¥y:
+Khi hệ thống hoàn tất, bạn sẽ thấy:
 
-â€¢ Tá»•ng tÃ i sáº£n hiá»‡n cÃ³
-â€¢ DÃ²ng tiá»n thu â€“ chi theo thÃ¡ng
-â€¢ 6 HÅ© tiá»n phÃ¢n bá»• tá»± Ä‘á»™ng
-â€¢ Cáº¥p Ä‘á»™ tÃ i chÃ­nh hiá»‡n táº¡i cá»§a báº¡n
-â€¢ TÃ¬nh tráº¡ng Ä‘áº§u tÆ°, ná»£ vÃ  tÃ i sáº£n
+• Tổng tài sản hiện có
+• Dòng tiền thu – chi theo tháng
+• 6 Hũ tiền phân bổ tự động
+• Cấp độ tài chính hiện tại của bạn
+• Tình trạng đầu tư, nợ và tài sản
 
-KhÃ´ng pháº£i Ä‘á»ƒ xem cho vui.
-MÃ  Ä‘á»ƒ báº¡n biáº¿t rÃµ tiá»n cá»§a mÃ¬nh Ä‘ang á»Ÿ Ä‘Ã¢u.
+Không phải để xem cho vui.
+Mà để bạn biết rõ tiền của mình đang ở đâu.
 
-Báº¡n sáºµn sÃ ng táº¡o há»‡ thá»‘ng cá»§a riÃªng mÃ¬nh chÆ°a?
+Bạn sẵn sàng tạo hệ thống của riêng mình chưa?
 """
             
             keyboard = [
-                [InlineKeyboardButton("Táº¡o há»‡ thá»‘ng", callback_data="free_step3_copy_template")],
-                [InlineKeyboardButton("Há»i thÃªm", callback_data="learn_more")]
+                [InlineKeyboardButton("Tạo hệ thống", callback_data="free_step3_copy_template")],
+                [InlineKeyboardButton("Hỏi thêm", callback_data="learn_more")]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
@@ -261,8 +261,8 @@ Báº¡n sáºµn sÃ ng táº¡o há»‡ thá»‘ng cá»§a riÃªng mÃ¬n
     except Exception as e:
         logger.error(f"Error saving user info: {e}", exc_info=True)
         await update.message.reply_text(
-            "ðŸ˜“ Xin lá»—i, cÃ³ lá»—i xáº£y ra khi lÆ°u thÃ´ng tin.\n"
-            "Vui lÃ²ng thá»­ láº¡i sau hoáº·c liÃªn há»‡ /support"
+            "😓 Xin lỗi, có lỗi xảy ra khi lưu thông tin.\n"
+            "Vui lòng thử lại sau hoặc liên hệ /support"
         )
         return ConversationHandler.END
     finally:
@@ -272,8 +272,8 @@ Báº¡n sáºµn sÃ ng táº¡o há»‡ thá»‘ng cá»§a riÃªng mÃ¬n
 async def cancel_free_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Cancel registration"""
     await update.message.reply_text(
-        "ÄÃ£ há»§y Ä‘Äƒng kÃ½.\n"
-        "Báº¡n cÃ³ thá»ƒ báº¯t Ä‘áº§u láº¡i báº¥t cá»© lÃºc nÃ o báº±ng /start"
+        "Đã hủy đăng ký.\n"
+        "Bạn có thể bắt đầu lại bất cứ lúc nào bằng /start"
     )
     return ConversationHandler.END
 

@@ -1,6 +1,6 @@
 """
-Celebration Handler - Milestone celebrations vá»›i hÃ¬nh áº£nh cÃ¡ nhÃ¢n hÃ³a
-Trao thÆ°á»Ÿng khi user Ä‘áº¡t Ä‘Æ°á»£c streak milestones
+Celebration Handler - Milestone celebrations với hình ảnh cá nhân hóa
+Trao thưởng khi user đạt được streak milestones
 """
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -31,7 +31,7 @@ def create_personalized_image(template_path: str, user_name: str, days: int, out
         
         # Try to load custom font, fallback to default
         try:
-            # Sá»­ dá»¥ng font Unicode support Vietnamese
+            # Sử dụng font Unicode support Vietnamese
             font_large = ImageFont.truetype("arial.ttf", 60)
             font_small = ImageFont.truetype("arial.ttf", 40)
         except:
@@ -63,7 +63,7 @@ def create_personalized_image(template_path: str, user_name: str, days: int, out
         
         # Draw days (if milestone specific)
         if days > 0:
-            days_text = f"{days} NGÃ€Y LIÃŠN Tá»¤C!"
+            days_text = f"{days} NGÀY LIÊN TỤC!"
             bbox_days = draw.textbbox((0, 0), days_text, font=font_small)
             days_width = bbox_days[2] - bbox_days[0]
             days_x = (img_width - days_width) // 2
@@ -98,7 +98,7 @@ async def celebrate_7day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: int
             return
         
         # Get user name
-        user_name = user.full_name or user.first_name or "Báº N"
+        user_name = user.full_name or user.first_name or "BẠN"
         
         # Path to template and output
         template_path = "media/images/chuc_mung_7ngay.png"
@@ -121,37 +121,37 @@ async def celebrate_7day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: int
         
         # Celebration message
         message = f"""
-ðŸŽ‰ **CHÃšC Má»ªNG {user_name.upper()}!**
+🎉 **CHÚC MỪNG {user_name.upper()}!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ”¥ **Báº N ÄÃƒ GHI CHÃ‰P LIÃŠN Tá»¤C 7 NGÃ€Y!**
+🔥 **BẠN ĐÃ GHI CHÉP LIÊN TỤC 7 NGÀY!**
 
-âœ¨ ÄÃ¢y lÃ  thÃ nh tÃ­ch tuyá»‡t vá»i! Chá»‰ cÃ³ **15% ngÆ°á»i dÃ¹ng** Ä‘áº¡t Ä‘Æ°á»£c má»‘c nÃ y!
+✨ Đây là thành tích tuyệt vời! Chỉ có **15% người dùng** đạt được mốc này!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“Š **THá»NG KÃŠ Cá»¦A Báº N:**
-â€¢ Tá»•ng giao dá»‹ch: {user.total_transactions or 0}
-â€¢ Streak hiá»‡n táº¡i: 7 ngÃ y
-â€¢ Streak dÃ i nháº¥t: {user.longest_streak or 7} ngÃ y
+📊 **THỐNG KÊ CỦA BẠN:**
+• Tổng giao dịch: {user.total_transactions or 0}
+• Streak hiện tại: 7 ngày
+• Streak dài nhất: {user.longest_streak or 7} ngày
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ† **PHáº¦N THÆ¯á»žNG:**
-â€¢ Badge "7-Day Champion"
-â€¢ Unlock tÃ­nh nÄƒng Reports nÃ¢ng cao
-â€¢ Æ¯u tiÃªn support trong Group VIP
+🏆 **PHẦN THƯỞNG:**
+• Badge "7-Day Champion"
+• Unlock tính năng Reports nâng cao
+• Ưu tiên support trong Group VIP
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’ª **THÃCH THá»¨C TIáº¾P THEO:**
-Äáº¡t 30 ngÃ y liÃªn tá»¥c Ä‘á»ƒ nháº­n:
-â€¢ Huy chÆ°Æ¡ng danh dá»±
-â€¢ ÄÆ°á»£c featured trÃªn Leaderboard
-â€¢ QuÃ  táº·ng Ä‘áº·c biá»‡t tá»« Freedom Wallet
+💪 **THÁCH THỨC TIẾP THEO:**
+Đạt 30 ngày liên tục để nhận:
+• Huy chương danh dự
+• Được featured trên Leaderboard
+• Quà tặng đặc biệt từ Freedom Wallet
 
-ðŸ”¥ **Tiáº¿p tá»¥c phÃ¡ ká»· lá»¥c thÃ´i!**
+🔥 **Tiếp tục phá kỷ lục thôi!**
 """
         
         # Send celebration
@@ -198,7 +198,7 @@ async def celebrate_30day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: in
             return
         
         # Get user name
-        user_name = user.full_name or user.first_name or "Báº N"
+        user_name = user.full_name or user.first_name or "BẠN"
         
         # Path to template and output
         template_path = "media/images/huy_chuong_30ngay.png"
@@ -221,48 +221,48 @@ async def celebrate_30day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: in
         
         # Celebration message
         message = f"""
-ðŸ† **CHÃšC Má»ªNG {user_name.upper()}!**
+🏆 **CHÚC MỪNG {user_name.upper()}!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ‘‘ **Báº N ÄÃƒ GHI CHÃ‰P LIÃŠN Tá»¤C 30 NGÃ€Y!**
+👑 **BẠN ĐÃ GHI CHÉP LIÊN TỤC 30 NGÀY!**
 
-âœ¨ ÄÃ¢y lÃ  thÃ nh tÃ­ch **XUáº¤T Sáº®C**! Chá»‰ cÃ³ **3% ngÆ°á»i dÃ¹ng** Ä‘áº¡t Ä‘Æ°á»£c!
+✨ Đây là thành tích **XUẤT SẮC**! Chỉ có **3% người dùng** đạt được!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“Š **THá»NG KÃŠ Cá»¦A Báº N:**
-â€¢ Tá»•ng giao dá»‹ch: {user.total_transactions or 0}
-â€¢ Streak hiá»‡n táº¡i: 30 ngÃ y
-â€¢ Streak dÃ i nháº¥t: {user.longest_streak or 30} ngÃ y
-â€¢ Thá»i gian kiÃªn trÃ¬: 1 thÃ¡ng
+📊 **THỐNG KÊ CỦA BẠN:**
+• Tổng giao dịch: {user.total_transactions or 0}
+• Streak hiện tại: 30 ngày
+• Streak dài nhất: {user.longest_streak or 30} ngày
+• Thời gian kiên trì: 1 tháng
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŽ–ï¸ **HUY CHÆ¯Æ NG DANH Dá»°:**
-Báº¡n chÃ­nh thá»©c nháº­n:
-â€¢ **Huy chÆ°Æ¡ng "30-Day Legend"**
-â€¢ Featured trÃªn Leaderboard
-â€¢ VIP Support Æ°u tiÃªn cao nháº¥t
-â€¢ Exclusive access to Beta features
-â€¢ QuÃ  táº·ng tá»« Freedom Wallet Team
+🎖️ **HUY CHƯƠNG DANH DỰ:**
+Bạn chính thức nhận:
+• **Huy chương "30-Day Legend"**
+• Featured trên Leaderboard
+• VIP Support ưu tiên cao nhất
+• Exclusive access to Beta features
+• Quà tặng từ Freedom Wallet Team
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’Ž **Báº N ÄÃƒ HÃŒNH THÃ€NH THÃ“I QUEN:**
-NghiÃªn cá»©u chá»‰ ra: 30 ngÃ y lÃ  Ä‘á»§ Ä‘á»ƒ táº¡o thÃ³i quen bá»n vá»¯ng!
+💎 **BẠN ĐÃ HÌNH THÀNH THÓI QUEN:**
+Nghiên cứu chỉ ra: 30 ngày là đủ để tạo thói quen bền vững!
 
-BÃ¢y giá» quáº£n lÃ½ tÃ i chÃ­nh Ä‘Ã£ trá»Ÿ thÃ nh pháº§n tá»± nhiÃªn cá»§a cuá»™c sá»‘ng báº¡n! ðŸŽ¯
+Bây giờ quản lý tài chính đã trở thành phần tự nhiên của cuộc sống bạn! 🎯
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸš€ **THÃCH THá»¨C TIáº¾P THEO:**
-Äáº¡t 90 ngÃ y Ä‘á»ƒ trá»Ÿ thÃ nh **MASTER** vÃ  nháº­n:
-â€¢ Chá»©ng nháº­n Master Certificate
-â€¢ Exclusive merchandise
-â€¢ CÆ¡ há»™i trá»Ÿ thÃ nh Ambassador
+🚀 **THÁCH THỨC TIẾP THEO:**
+Đạt 90 ngày để trở thành **MASTER** và nhận:
+• Chứng nhận Master Certificate
+• Exclusive merchandise
+• Cơ hội trở thành Ambassador
 
-ðŸ’ª **Báº¡n Ä‘Ã£ lÃ m Ä‘Æ°á»£c rá»“i - Tiáº¿p tá»¥c chinh phá»¥c!**
+💪 **Bạn đã làm được rồi - Tiếp tục chinh phục!**
 """
         
         # Send celebration
@@ -314,52 +314,52 @@ async def celebrate_90day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: in
             return
         
         # Get user name
-        user_name = user.full_name or user.first_name or "Báº N"
+        user_name = user.full_name or user.first_name or "BẠN"
         
         # Celebration message
         message = f"""
-ðŸ‘‘ **{user_name.upper()} - Báº N LÃ€ HUYá»€N THOáº I!**
+👑 **{user_name.upper()} - BẠN LÀ HUYỀN THOẠI!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŒŸ **90 NGÃ€Y LIÃŠN Tá»¤C - MASTER LEVEL!**
+🌟 **90 NGÀY LIÊN TỤC - MASTER LEVEL!**
 
-âœ¨ Chá»‰ cÃ³ **1% ngÆ°á»i dÃ¹ng** Ä‘áº¡t Ä‘Æ°á»£c thÃ nh tÃ­ch nÃ y!
+✨ Chỉ có **1% người dùng** đạt được thành tích này!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“Š **Ká»¶ Lá»¤C Cá»¦A Báº N:**
-â€¢ Tá»•ng giao dá»‹ch: {user.total_transactions or 0}
-â€¢ Streak hiá»‡n táº¡i: 90 ngÃ y
-â€¢ Thá»i gian kiÃªn trÃ¬: 3 thÃ¡ng
-â€¢ Xáº¿p háº¡ng: **TOP 1%**
+📊 **KỶ LỤC CỦA BẠN:**
+• Tổng giao dịch: {user.total_transactions or 0}
+• Streak hiện tại: 90 ngày
+• Thời gian kiên trì: 3 tháng
+• Xếp hạng: **TOP 1%**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ… **MASTER CERTIFICATE:**
-â€¢ Chá»©ng nháº­n Master Level
-â€¢ Lifetime VIP Access
-â€¢ Featured as Success Story
-â€¢ Freedom Wallet merchandise
-â€¢ Má»i tham gia Advisory Board
+🏅 **MASTER CERTIFICATE:**
+• Chứng nhận Master Level
+• Lifetime VIP Access
+• Featured as Success Story
+• Freedom Wallet merchandise
+• Mời tham gia Advisory Board
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’° **TÃC Äá»˜NG TÃ€I CHÃNH:**
-Sau 90 ngÃ y, háº§u háº¿t users bÃ¡o cÃ¡o:
-â€¢ Tiáº¿t kiá»‡m Ä‘Æ°á»£c 20-30% chi tiÃªu
-â€¢ TÄƒng Ä‘áº§u tÆ° lÃªn 3-5x
-â€¢ Giáº£m stress tÃ i chÃ­nh Ä‘Ã¡ng ká»ƒ
-â€¢ Äáº¡t Ä‘Æ°á»£c Ã­t nháº¥t 1 má»¥c tiÃªu tÃ i chÃ­nh
+💰 **TÁC ĐỘNG TÀI CHÍNH:**
+Sau 90 ngày, hầu hết users báo cáo:
+• Tiết kiệm được 20-30% chi tiêu
+• Tăng đầu tư lên 3-5x
+• Giảm stress tài chính đáng kể
+• Đạt được ít nhất 1 mục tiêu tài chính
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŽ¯ **Báº N ÄÃƒ THAY Äá»”I CUá»˜C Sá»NG:**
-Quáº£n lÃ½ tÃ i chÃ­nh giá» lÃ  pháº§n khÃ´ng thá»ƒ thiáº¿u cá»§a báº¡n!
+🎯 **BẠN ĐÃ THAY ĐỔI CUỘC SỐNG:**
+Quản lý tài chính giờ là phần không thể thiếu của bạn!
 
-Cáº£m Æ¡n báº¡n Ä‘Ã£ tin tÆ°á»Ÿng Freedom Wallet! ðŸ™
+Cảm ơn bạn đã tin tưởng Freedom Wallet! 🙏
 
-ðŸ’Ž **Háº¹n gáº·p báº¡n á»Ÿ Ä‘á»‰nh cao tiáº¿p theo!**
+💎 **Hẹn gặp bạn ở đỉnh cao tiếp theo!**
 """
         
         # Send celebration

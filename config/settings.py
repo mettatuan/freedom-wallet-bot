@@ -33,13 +33,12 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///data/bot.db")
     
-    # Google Sheets (for support tickets)
+    # Google Sheets Configuration
     GOOGLE_SHEETS_CREDENTIALS: Optional[str] = os.getenv("GOOGLE_SHEETS_CREDENTIALS")
-    SUPPORT_SHEET_ID: Optional[str] = os.getenv("SUPPORT_SHEET_ID")
+    TEMPLATE_SHEET_ID: Optional[str] = os.getenv("TEMPLATE_SHEET_ID")
+    ADMIN_SUPPORT_SHEET_ID: Optional[str] = os.getenv("ADMIN_SUPPORT_SHEET_ID")
+    DEV_TEST_SHEET_ID: Optional[str] = os.getenv("DEV_TEST_SHEET_ID")
     SUPPORT_SHEET_NAME: str = os.getenv("SUPPORT_SHEET_NAME", "Support Tickets")
-    
-    # Freedom Wallet Template
-    YOUR_TEMPLATE_ID: str = os.getenv("YOUR_TEMPLATE_ID", "")
     
     # Redis (for caching - Phase 3)
     REDIS_URL: Optional[str] = os.getenv("REDIS_URL")

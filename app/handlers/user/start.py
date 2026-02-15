@@ -14,6 +14,9 @@ from config.settings import settings
 # Week 2: Import state machine (soft-integration)
 from app.core.state_machine import StateManager, UserState
 
+# Reply Keyboard (persistent main menu)
+from app.handlers.core.reply_keyboard import get_main_reply_keyboard
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start command - Show welcome message with menu"""
@@ -37,7 +40,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Case 1: WEB registration (from freedomwallet.app)
         if code.startswith("WEB_"):
             email_hash = code[4:]  # Remove "WEB_" prefix
-            logger.info(f"ðŸŒ Web registration detected: {email_hash}")
+            logger.info(f"🌐 Web registration detected: {email_hash}")
             
             # Try to sync from Google Sheets
             web_data = await sync_web_registration(user.id, user.username or '', email_hash)
@@ -63,9 +66,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     with StateManager() as state_mgr:
                         new_state = state_mgr.check_and_update_state_by_referrals(user.id)
                         if new_state:
-                            logger.info(f"ðŸŽ¯ User {user.id} auto-upgraded to {new_state.value}")
+                            logger.info(f"🎯 User {user.id} auto-upgraded to {new_state.value}")
                 
-                tier = "ðŸ’Ž PREMIUM" if web_data.get('plan') == 'premium' else "ðŸŽ FREE"
+                tier = "💎 PREMIUM" if web_data.get('plan') == 'premium' else "🎁 FREE"
                 
                 if is_unlocked:
                     # UNLOCKED: Start onboarding calmly
@@ -73,13 +76,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     
                     # Send calm affirmation (not celebration)
                     await update.message.reply_text(
-                        f"ChÃ o {web_data.get('full_name', user.first_name)},\n\n"
-                        f"Báº¡n vá»«a káº¿t ná»‘i Sheet vá»›i Bot thÃ nh cÃ´ng.\n\n"
-                        f"BÃ¢y giá» báº¡n cÃ³ thá»ƒ ghi chi tiÃªu ngay trong chat nÃ y.\n"
-                        f"5 giÃ¢y. KhÃ´ng cáº§n má»Ÿ Sheet.\n\n"
-                        f"Sheet váº«n lÃ  cá»§a báº¡n.\n"
-                        f"Bot chá»‰ lÃ  cáº§u ná»‘i Ä‘á»ƒ báº¡n ghi nhanh hÆ¡n.\n\n"
-                        f"Thá»­ ghi khoáº£n chi tiÃªu Ä‘áº§u tiÃªn nhÃ©.",
+                        f"Chào {web_data.get('full_name', user.first_name)},\n\n"
+                        f"Bạn vừa kết nối Sheet với Bot thành công.\n\n"
+                        f"Bây giờ bạn có thể ghi chi tiêu ngay trong chat này.\n"
+                        f"5 giây. Không cần mở Sheet.\n\n"
+                        f"Sheet vẫn là của bạn.\n"
+                        f"Bot chỉ là cầu nối để bạn ghi nhanh hơn.\n\n"
+                        f"Thử ghi khoản chi tiêu đầu tiên nhé.",
                         parse_mode="Markdown"
                     )
                     
@@ -96,9 +99,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     db_user.reminder_enabled = True
                     db.commit()
                     db.close()
-                    logger.info(f"âœ… Enabled daily reminders for new VIP user {user.id}")
+                    logger.info(f"✅ Enabled daily reminders for new VIP user {user.id}")
                     
-                    logger.info(f"âœ… Web user {user.id} unlocked VIP and started onboarding")
+                    logger.info(f"✅ Web user {user.id} unlocked VIP and started onboarding")
                     return
                     
                 else:
@@ -117,33 +120,33 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     remaining = 2 - referral_count
                     
                     keyboard = [
-                        [InlineKeyboardButton("ðŸ”— Káº¿t ná»‘i Sheet", callback_data="sheets_setup")],
-                        [InlineKeyboardButton("â“ Cáº§n há»— trá»£ setup", callback_data="help_unlock")]
+                        [InlineKeyboardButton("🔗 Kết nối Sheet", callback_data="sheets_setup")],
+                        [InlineKeyboardButton("❓ Cần hỗ trợ setup", callback_data="help_unlock")]
                     ]
                     reply_markup = InlineKeyboardMarkup(keyboard)
                     
                     await update.message.reply_text(
-                        f"ChÃ o {web_data.get('full_name', user.first_name)},\n\n"
-                        f"Báº¡n Ä‘Ã£ setup Sheet thÃ nh cÃ´ng!\n"
-                        f"Há»‡ thá»‘ng quáº£n lÃ½ tÃ i chÃ­nh riÃªng Ä‘Ã£ sáºµn sÃ ng.\n\n"
-                        f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-                        f"ðŸ’¡ **BÃ¢y giá» báº¡n cÃ³ thá»ƒ:**\n"
-                        f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-                        f"âœ… Má»Ÿ Sheet vÃ  báº¯t Ä‘áº§u ghi thu chi\n"
-                        f"âœ… Xem phÃ¢n bá»• 6 hÅ© tiá»n\n"
-                        f"âœ… Kiá»ƒm tra cáº¥p Ä‘á»™ tÃ i chÃ­nh\n"
-                        f"âœ… Xem bÃ¡o cÃ¡o chi tiáº¿t\n\n"
-                        f"Tuáº§n Ä‘áº§u, thá»­ ghi tay vÃ o Sheet.\n"
-                        f"DÃ¹ cháº­m, nhÆ°ng Ä‘Ã¢y lÃ  lÃºc báº¡n \"nhÃ¬n rÃµ tiá»n\".\n\n"
-                        f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-                        f"ðŸ¤ **Muá»‘n ghi nhanh hÆ¡n qua Telegram?**\n\n"
-                        f"Káº¿t ná»‘i Telegram vá»›i Sheet cáº§n cáº¥u hÃ¬nh API,\n"
-                        f"hÆ¡i ká»¹ thuáº­t vÃ  dá»… sai.\n\n"
-                        f"Náº¿u báº¡n giá»›i thiá»‡u 2 ngÆ°á»i báº¡n\n"
-                        f"cÅ©ng tháº­t sá»± muá»‘n quáº£n lÃ½ tÃ i chÃ­nh,\n"
-                        f"tÃ´i sáº½ há»— trá»£ báº¡n setup 1-1,\n"
-                        f"Ä‘áº£m báº£o káº¿t ná»‘i thÃ nh cÃ´ng.\n\n"
-                        f"ðŸ”— Link giá»›i thiá»‡u: `{referral_link}`",
+                        f"Chào {web_data.get('full_name', user.first_name)},\n\n"
+                        f"Bạn đã setup Sheet thành công!\n"
+                        f"Hệ thống quản lý tài chính riêng đã sẵn sàng.\n\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"💡 **Bây giờ bạn có thể:**\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+                        f"✅ Mở Sheet và bắt đầu ghi thu chi\n"
+                        f"✅ Xem phân bổ 6 hũ tiền\n"
+                        f"✅ Kiểm tra cấp độ tài chính\n"
+                        f"✅ Xem báo cáo chi tiết\n\n"
+                        f"Tuần đầu, thử ghi tay vào Sheet.\n"
+                        f"Dù chậm, nhưng đây là lúc bạn \"nhìn rõ tiền\".\n\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+                        f"🤝 **Muốn ghi nhanh hơn qua Telegram?**\n\n"
+                        f"Kết nối Telegram với Sheet cần cấu hình API,\n"
+                        f"hơi kỹ thuật và dễ sai.\n\n"
+                        f"Nếu bạn giới thiệu 2 người bạn\n"
+                        f"cũng thật sự muốn quản lý tài chính,\n"
+                        f"tôi sẽ hỗ trợ bạn setup 1-1,\n"
+                        f"đảm bảo kết nối thành công.\n\n"
+                        f"🔗 Link giới thiệu: `{referral_link}`",
                         parse_mode="Markdown",
                         reply_markup=reply_markup
                     )
@@ -157,11 +160,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 # Email hash not found in Sheets
                 await update.message.reply_text(
-                    "âŒ **Lá»—i xÃ¡c thá»±c**\n\n"
-                    "KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin Ä‘Äƒng kÃ½ cá»§a báº¡n tá»« website.\n\n"
-                    "Vui lÃ²ng:\n"
-                    "1ï¸âƒ£ ÄÄƒng kÃ½ láº¡i táº¡i [freedomwallet.app](https://freedomwallet.app)\n"
-                    "2ï¸âƒ£ Hoáº·c Ä‘Äƒng kÃ½ trá»±c tiáº¿p trong bot: /register",
+                    "❌ **Lỗi xác thực**\n\n"
+                    "Không tìm thấy thông tin đăng ký của bạn từ website.\n\n"
+                    "Vui lòng:\n"
+                    "1️⃣ Đăng ký lại tại [freedomwallet.app](https://freedomwallet.app)\n"
+                    "2️⃣ Hoặc đăng ký trực tiếp trong bot: /register",
                     parse_mode="Markdown"
                 )
                 return
@@ -169,7 +172,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Case 2: Referral link (from Telegram)
         else:
             referral_code = code
-            logger.info(f"ðŸŽ Referral detected: {referral_code}")
+            logger.info(f"🎁 Referral detected: {referral_code}")
             
             # Handle referral (will show special welcome + notify referrer)
             referred = await handle_referral_start(update, context, referral_code)
@@ -189,7 +192,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Welcome message - Different for FREE vs PREMIUM
     from app.services.recommendation import get_greeting
-    greeting = get_greeting(db_user) if db_user else f"ðŸ‘‹ Xin chÃ o {user.first_name}!"
+    greeting = get_greeting(db_user) if db_user else f"👋 Xin chào {user.first_name}!"
     
     # PREMIUM MENU - Calm, supportive
     if subscription_tier == "PREMIUM":
@@ -198,35 +201,35 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         welcome_text = f"""
 {greeting}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’Ž **PREMIUM - Giáº£m táº£i nÃ£o**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💎 **PREMIUM - Giảm tải não**
+━━━━━━━━━━━━━━━━━━━━━
 
-Báº¡n Ä‘Ã£ ghi chi tiÃªu Ä‘Æ°á»£c {days_tracking} ngÃ y.
+Bạn đã ghi chi tiêu được {days_tracking} ngày.
 
-Sheet cá»§a báº¡n Ä‘Ã£ cÃ³ Ä‘áº§y Ä‘á»§ dá»¯ liá»‡u vÃ  bÃ¡o cÃ¡o.
-Premium khÃ´ng thÃªm chart hay dashboard.
+Sheet của bạn đã có đầy đủ dữ liệu và báo cáo.
+Premium không thêm chart hay dashboard.
 
-Premium giÃºp báº¡n:
+Premium giúp bạn:
 
-â€¢ KhÃ´ng pháº£i canh tiá»n má»—i ngÃ y
-â€¢ ÄÆ°á»£c cáº£nh bÃ¡o sá»›m khi cÃ³ rá»§i ro
-â€¢ KhÃ´ng quÃªn khoáº£n Ä‘á»‹nh ká»³
-â€¢ PhÃ¡t hiá»‡n chi tiÃªu báº¥t thÆ°á»ng
+• Không phải canh tiền mỗi ngày
+• Được cảnh báo sớm khi có rủi ro
+• Không quên khoản định kỳ
+• Phát hiện chi tiêu bất thường
 
-ðŸ‘‰ Báº¡n nghÄ© vá» tiá»n ÃT hÆ¡n,
-nhÆ°ng kiá»ƒm soÃ¡t Tá»T hÆ¡n.
+👉 Bạn nghĩ về tiền ÍT hơn,
+nhưng kiểm soát TỐT hơn.
 
-ðŸ’¡ Ghi chi tiÃªu, hoáº·c há»i tÃ´i báº¥t cá»© lÃºc nÃ o.
+💡 Ghi chi tiêu, hoặc hỏi tôi bất cứ lúc nào.
 """
         
         keyboard = [
             [
-                InlineKeyboardButton("ðŸ’¬ Ghi chi tiÃªu", callback_data="quick_record")
+                InlineKeyboardButton("💬 Ghi chi tiêu", callback_data="quick_record")
             ],
             [
-                InlineKeyboardButton("ðŸ“Š Xem tá»•ng quan", callback_data="today_status"),
-                InlineKeyboardButton("ðŸ› ï¸ CÃ i Ä‘áº·t", callback_data="setup")
+                InlineKeyboardButton("📊 Xem tổng quan", callback_data="today_status"),
+                InlineKeyboardButton("🛠️ Cài đặt", callback_data="setup")
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -240,46 +243,46 @@ nhÆ°ng kiá»ƒm soÃ¡t Tá»T hÆ¡n.
             welcome_text = f"""
 {greeting}
 
-Báº¡n Ä‘Ã£ káº¿t ná»‘i Sheet vá»›i Bot thÃ nh cÃ´ng.
+Bạn đã kết nối Sheet với Bot thành công.
 
-BÃ¢y giá» báº¡n cÃ³ thá»ƒ ghi chi tiÃªu ngay trong chat nÃ y.
-5 giÃ¢y. KhÃ´ng cáº§n má»Ÿ Sheet.
+Bây giờ bạn có thể ghi chi tiêu ngay trong chat này.
+5 giây. Không cần mở Sheet.
 
-Sheet váº«n lÃ  cá»§a báº¡n.
-Bot chá»‰ lÃ  cáº§u ná»‘i Ä‘á»ƒ báº¡n ghi nhanh hÆ¡n.
+Sheet vẫn là của bạn.
+Bot chỉ là cầu nối để bạn ghi nhanh hơn.
 
-ðŸ’¡ Ghi chi tiÃªu ngay, hoáº·c há»i tÃ´i náº¿u cáº§n giÃºp.
+💡 Ghi chi tiêu ngay, hoặc hỏi tôi nếu cần giúp.
 """
             
             keyboard = [
-                [InlineKeyboardButton("ðŸ’¬ Ghi chi tiÃªu", callback_data="quick_record")],
-                [InlineKeyboardButton("ðŸ“– HÆ°á»›ng dáº«n", callback_data="help_tutorial")],
-                [InlineKeyboardButton("ðŸ’Ž TÃ¬m hiá»ƒu Premium", callback_data="premium_info")]
+                [InlineKeyboardButton("💬 Ghi chi tiêu", callback_data="quick_record")],
+                [InlineKeyboardButton("📖 Hướng dẫn", callback_data="help_tutorial")],
+                [InlineKeyboardButton("💎 Tìm hiểu Premium", callback_data="premium_info")]
             ]
         else:
             # FREE: Clear positioning first, no sales pressure
             from pathlib import Path
             
             welcome_text = f"""
-ChÃ o {user.first_name}, tÃ´i lÃ  Trá»£ lÃ½ tÃ i chÃ­nh cá»§a báº¡n
-Freedom Wallet khÃ´ng pháº£i má»™t app Ä‘á»ƒ báº¡n táº£i vá».
-ÄÃ¢y lÃ  má»™t há»‡ thá»‘ng quáº£n lÃ½ tá»± do tÃ i chÃ­nh báº¡n tá»± sá»Ÿ há»¯u.
+Chào {user.first_name}, tôi là Trợ lý tài chính của bạn
+Freedom Wallet không phải một app để bạn tải về.
+Đây là một hệ thống quản lý tự do tài chính bạn tự sở hữu.
 
-Má»—i ngÆ°á»i dÃ¹ng cÃ³:
-â€¢ Google Sheet riÃªng
-â€¢ Apps Script riÃªng
-â€¢ Web App riÃªng
+Mỗi người dùng có:
+• Google Sheet riêng
+• Apps Script riêng
+• Web App riêng
 
-Dá»¯ liá»‡u náº±m trÃªn Drive cá»§a báº¡n.
-KhÃ´ng phá»¥ thuá»™c vÃ o ai.
+Dữ liệu nằm trên Drive của bạn.
+Không phụ thuộc vào ai.
 
-Náº¿u báº¡n muá»‘n Ä‘Äƒng kÃ½ sá»Ÿ há»¯u há»‡ thá»‘ng web app nÃ y,
-mÃ¬nh sáº½ hÆ°á»›ng dáº«n tá»«ng bÆ°á»›c, ráº¥t rÃµ rÃ ng.
+Nếu bạn muốn đăng ký sở hữu hệ thống web app này,
+mình sẽ hướng dẫn từng bước, rất rõ ràng.
 """
             
             keyboard = [
-                [InlineKeyboardButton("ðŸ“ ÄÄƒng kÃ½ ngay", callback_data="start_free_registration")],
-                [InlineKeyboardButton("ðŸ“– TÃ¬m hiá»ƒu thÃªm", callback_data="learn_more")]
+                [InlineKeyboardButton("📝 Đăng ký ngay", callback_data="start_free_registration")],
+                [InlineKeyboardButton("📖 Tìm hiểu thêm", callback_data="learn_more")]
             ]
             
             # Send image with message
@@ -290,7 +293,7 @@ mÃ¬nh sáº½ hÆ°á»›ng dáº«n tá»«ng bÆ°á»›c, ráº¥t rÃµ 
                     photo=open(image_path, 'rb'),
                     caption=welcome_text,
                     parse_mode="Markdown",
-                    reply_markup=InlineKeyboardMarkup(keyboard)
+                    reply_markup=get_main_reply_keyboard()
                 )
                 return
             except Exception as e:
@@ -300,11 +303,11 @@ mÃ¬nh sáº½ hÆ°á»›ng dáº«n tá»«ng bÆ°á»›c, ráº¥t rÃµ 
         
         reply_markup = InlineKeyboardMarkup(keyboard)
     
-    # Send welcome message
+    # Send welcome message with Reply Keyboard
     await update.message.reply_text(
         welcome_text,
         parse_mode="Markdown",
-        reply_markup=reply_markup
+        reply_markup=get_main_reply_keyboard()
     )
 
 
@@ -312,29 +315,29 @@ async def help_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /help command - Show help menu"""
     
     help_text = """
-ðŸ“‹ **Danh SÃ¡ch Lá»‡nh**
+📋 **Danh Sách Lệnh**
 
-**/start** - Hiá»‡n menu chÃ­nh
-**/help** - Hiá»‡n menu nÃ y
-**/tutorial** - HÆ°á»›ng dáº«n cÃ³ hÃ¬nh áº£nh
-**/support** - LiÃªn há»‡ support team
-**/tips** - Nháº­n tips tÃ i chÃ­nh hÃ ng ngÃ y
-**/status** - Kiá»ƒm tra tÃ¬nh tráº¡ng app
+**/start** - Hiện menu chính
+**/help** - Hiện menu này
+**/tutorial** - Hướng dẫn có hình ảnh
+**/support** - Liên hệ support team
+**/tips** - Nhận tips tài chính hàng ngày
+**/status** - Kiểm tra tình trạng app
 
-ðŸ’¬ **Hoáº·c chat trá»±c tiáº¿p vá»›i mÃ¬nh:**
-GÃµ cÃ¢u há»i báº±ng tiáº¿ng Viá»‡t hoáº·c English!
+💬 **Hoặc chat trực tiếp với mình:**
+Gõ câu hỏi bằng tiếng Việt hoặc English!
 
-ðŸ“š **VÃ­ dá»¥ cÃ¢u há»i:**
-â€¢ LÃ m sao thÃªm giao dá»‹ch?
-â€¢ 6 hÅ© tiá»n lÃ  gÃ¬?
-â€¢ CÃ¡ch chuyá»ƒn tiá»n giá»¯a hÅ©?
-â€¢ App khÃ´ng load Ä‘Æ°á»£c dá»¯ liá»‡u
+📚 **Ví dụ câu hỏi:**
+• Làm sao thêm giao dịch?
+• 6 hũ tiền là gì?
+• Cách chuyển tiền giữa hũ?
+• App không load được dữ liệu
 
-ðŸ¤– MÃ¬nh sáº½ tráº£ lá»i ngay láº­p tá»©c!
+🤖 Mình sẽ trả lời ngay lập tức!
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ  Vá» trang chá»§", callback_data="start")]
+        [InlineKeyboardButton("🏠 Về trang chủ", callback_data="start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     

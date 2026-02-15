@@ -350,7 +350,7 @@ class FraudDetector:
         self.session.commit()
         
         logger.info(
-            f"â›” Referral {referral_id} rejected by admin {admin_id}"
+            f"⛔ Referral {referral_id} rejected by admin {admin_id}"
             + (f": {reason}" if reason else "")
         )
         

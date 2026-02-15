@@ -12,175 +12,175 @@ import os
 # Web App Setup Guide Content - 3 Steps
 WEBAPP_SETUP_STEPS = {
     0: {
-        "title": "ðŸš€ BÆ¯á»šC 1: Táº O WEB APP",
+        "title": "🚀 BƯỚC 1: TẠO WEB APP",
         "content": """
-ðŸ‘‹ **ChÃ o má»«ng! HÃ£y báº¯t Ä‘áº§u thiáº¿t láº­p Freedom Wallet!**
+👋 **Chào mừng! Hãy bắt đầu thiết lập Freedom Wallet!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“ Báº N ÄANG á»ž ÄÃ‚U?**
+**📍 BẠN ĐANG Ở ĐÂU?**
 
-âž¡ï¸ **BÆ¯á»šC 1: Táº¡o Web App** (báº¡n Ä‘ang á»Ÿ Ä‘Ã¢y)
-    â†’ BÆ°á»›c 2: Há»c cÃ¡ch sá»­ dá»¥ng
+➡️ **BƯỚC 1: Tạo Web App** (bạn đang ở đây)
+    → Bước 2: Học cách sử dụng
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸŽ¯ BÆ¯á»šC 1 - Báº N Sáº¼ LÃ€M GÃŒ?**
+**🎯 BƯỚC 1 - BẠN SẼ LÀM GÌ?**
 
-Trong 10-15 phÃºt tá»›i:
-1ï¸âƒ£ Táº¡o báº£n sao Google Sheets Template
-2ï¸âƒ£ Má»Ÿ Extensions â†’ App Script
-3ï¸âƒ£ Deploy Web App cá»§a riÃªng báº¡n
+Trong 10-15 phút tới:
+1️⃣ Tạo bản sao Google Sheets Template
+2️⃣ Mở Extensions → App Script
+3️⃣ Deploy Web App của riêng bạn
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**âœ… SAU KHI HOÃ€N THÃ€NH:**
-â€¢ Web App cÃ¡ nhÃ¢n (cháº¡y trÃªn Google Sheets cá»§a báº¡n)
-â€¢ Dá»¯ liá»‡u 100% riÃªng tÆ°
-â€¢ Truy cáº­p má»i lÃºc, má»i thiáº¿t bá»‹
-â€¢ KhÃ´ng cáº§n biáº¿t code
+**✅ SAU KHI HOÀN THÀNH:**
+• Web App cá nhân (chạy trên Google Sheets của bạn)
+• Dữ liệu 100% riêng tư
+• Truy cập mọi lúc, mọi thiết bị
+• Không cần biết code
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**â± THá»œI GIAN**: 10-15 phÃºt
-**ðŸ“± THIáº¾T Bá»Š**: Desktop/Laptop (khuyáº¿n nghá»‹)
-**ðŸ”— Cáº¦N**: TÃ i khoáº£n Google
+**⏱ THỜI GIAN**: 10-15 phút
+**📱 THIẾT BỊ**: Desktop/Laptop (khuyến nghị)
+**🔗 CẦN**: Tài khoản Google
 
-ðŸ’¡ *LÃ m cháº­m cÅ©ng á»•n. CÃ³ Group VIP há»— trá»£ náº¿u cáº§n!*
+💡 *Làm chậm cũng ổn. Có Group VIP hỗ trợ nếu cần!*
 """,
         "image": None
     },
     
     1: {
-        "title": "ðŸ“‹ BÆ¯á»šC 1: Táº O Báº¢N SAO TEMPLATE",
+        "title": "📋 BƯỚC 1: TẠO BẢN SAO TEMPLATE",
         "content": """
-**ï¿½ CÃCH LÃ€M:**
+**� CÁCH LÀM:**
 
-1ï¸âƒ£ Click **"ðŸ“‘ Copy Template"** bÃªn dÆ°á»›i
+1️⃣ Click **"📑 Copy Template"** bên dưới
 
-2ï¸âƒ£ Popup "Make a copy" hiá»‡n ra
+2️⃣ Popup "Make a copy" hiện ra
 
-3ï¸âƒ£ Äá»•i tÃªn (hoáº·c giá»¯ nguyÃªn) â†’ Click **"Make a copy"**
+3️⃣ Đổi tên (hoặc giữ nguyên) → Click **"Make a copy"**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━
 
-**âœ… Káº¾T QUáº¢:**
-â€¢ Báº£n sao riÃªng trong Google Drive
-â€¢ File thuá»™c vá» Báº N (100% riÃªng tÆ°)
+**✅ KẾT QUẢ:**
+• Bản sao riêng trong Google Drive
+• File thuộc về BẠN (100% riêng tư)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━
 
-**â“ Lá»–I:**
-â€¢ "You need access" â†’ ÄÄƒng nháº­p Google
-â€¢ KhÃ´ng copy Ä‘Æ°á»£c â†’ Thá»­ Chrome
-â€¢ Cáº§n trá»£ giÃºp â†’ Group VIP
+**❓ LỖI:**
+• "You need access" → Đăng nhập Google
+• Không copy được → Thử Chrome
+• Cần trợ giúp → Group VIP
 
-ðŸ’¡ **Sau khi copy xong, khÃ´ng Ä‘Ã³ng tab! Chuyá»ƒn sang BÆ°á»›c 2 ngay.**
+💡 **Sau khi copy xong, không đóng tab! Chuyển sang Bước 2 ngay.**
 """,
         "image": "docs/make-copy.png"
     },
     
     2: {
-        "title": "âš™ï¸ BÆ¯á»šC 2: Má»ž APP SCRIPT",
+        "title": "⚙️ BƯỚC 2: MỞ APP SCRIPT",
         "content": """
-**ï¿½ CÃCH LÃ€M:**
+**� CÁCH LÀM:**
 
-1ï¸âƒ£ Trong file Sheets vá»«a copy â†’ Menu trÃªn cÃ¹ng
+1️⃣ Trong file Sheets vừa copy → Menu trên cùng
 
-2ï¸âƒ£ Click **"Extensions"** (Tiá»‡n Ã­ch má»Ÿ rá»™ng)
+2️⃣ Click **"Extensions"** (Tiện ích mở rộng)
 
-3ï¸âƒ£ Chá»n **"Apps Script"**
+3️⃣ Chọn **"Apps Script"**
 
-4ï¸âƒ£ Tab má»›i má»Ÿ â†’ Code Editor
-   â€¢ Tháº¥y file `Code.gs` vá»›i nhiá»u code
-   â€¢ **KHÃ”NG Cáº¦N Äá»ŒC/Sá»¬A GÃŒ!**
+4️⃣ Tab mới mở → Code Editor
+   • Thấy file `Code.gs` với nhiều code
+   • **KHÔNG CẦN ĐỌC/SỬA GÌ!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━
 
-**âœ… Káº¾T QUáº¢:**
-â€¢ Äang á»Ÿ Apps Script Editor
-â€¢ URL dáº¡ng: `script.google.com/...`
-â€¢ Sáºµn sÃ ng Deploy (BÆ°á»›c 3)
+**✅ KẾT QUẢ:**
+• Đang ở Apps Script Editor
+• URL dạng: `script.google.com/...`
+• Sẵn sàng Deploy (Bước 3)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━
 
-**â“ KhÃ´ng tháº¥y Extensions?**
-â€¢ Refresh trang
-â€¢ Hoáº·c nháº¥n `Alt + /` â†’ gÃµ "Apps Script"
+**❓ Không thấy Extensions?**
+• Refresh trang
+• Hoặc nhấn `Alt + /` → gõ "Apps Script"
 
-ðŸ’¡ **Äá»«ng sá»£ code! Báº¡n khÃ´ng cáº§n Ä‘á»™ng vÃ o gÃ¬ cáº£.**
+💡 **Đừng sợ code! Bạn không cần động vào gì cả.**
 """,
         "image": "docs/app-script.png"
     },
     
     3: {
-        "title": "ðŸš€ BÆ¯á»šC 3: DEPLOY WEB APP",
+        "title": "🚀 BƯỚC 3: DEPLOY WEB APP",
         "content": """
-**ï¿½ CÃCH LÃ€M:**
+**� CÁCH LÀM:**
 
-1ï¸âƒ£ Apps Script Editor â†’ Click **"Deploy"** (gÃ³c pháº£i) â†’ **"New deployment"**
+1️⃣ Apps Script Editor → Click **"Deploy"** (góc phải) → **"New deployment"**
 
-2ï¸âƒ£ Click âš™ï¸ â†’ Chá»n **"Web app"**
+2️⃣ Click ⚙️ → Chọn **"Web app"**
 
-3ï¸âƒ£ Cáº¥u hÃ¬nh:
-â€¢ **Execute as**: **"Me"**
-â€¢ **Who has access**: **"Anyone"**
+3️⃣ Cấu hình:
+• **Execute as**: **"Me"**
+• **Who has access**: **"Anyone"**
 
-4ï¸âƒ£ Click **"Deploy"**
+4️⃣ Click **"Deploy"**
 
-5ï¸âƒ£ Authorize:
-â†’ **"Authorize access"**
-â†’ Chá»n tÃ i khoáº£n
-â†’ **"Advanced"** â†’ **"Go to... (unsafe)"** â†’ **"Allow"**
+5️⃣ Authorize:
+→ **"Authorize access"**
+→ Chọn tài khoản
+→ **"Advanced"** → **"Go to... (unsafe)"** → **"Allow"**
 
-6ï¸âƒ£ Copy Web App URL â†’ **LÆ¯U Láº I!**
+6️⃣ Copy Web App URL → **LƯU LẠI!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━
 
-**âœ… Káº¾T QUáº¢:**
-â€¢ CÃ³ Web App URL riÃªng
-â€¢ Truy cáº­p má»i thiáº¿t bá»‹
-â€¢ Freedom Wallet Cá»¦A Báº N!
+**✅ KẾT QUẢ:**
+• Có Web App URL riêng
+• Truy cập mọi thiết bị
+• Freedom Wallet CỦA BẠN!
 
-ðŸŽ‰ **Nháº¥n nÃºt "Tiáº¿p theo" Ä‘á»ƒ há»c cÃ¡ch sá»­ dá»¥ng!**
+🎉 **Nhấn nút "Tiếp theo" để học cách sử dụng!**
 """,
         "image": "docs/deploy-app.png"
     },
     
     4: {
-        "title": "âœ… HOÃ€N THÃ€NH: Táº O WEB APP!",
+        "title": "✅ HOÀN THÀNH: TẠO WEB APP!",
         "content": """
-ðŸŽ‰ **XUáº¤T Sáº®C! ÄÃ£ táº¡o xong Freedom Wallet Web App!**
+🎉 **XUẤT SẮC! Đã tạo xong Freedom Wallet Web App!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━
 
-**âœ… HOÃ€N THÃ€NH:**
-â€¢ Google Sheets Template riÃªng
-â€¢ Web App cÃ¡ nhÃ¢n
-â€¢ URL truy cáº­p má»i lÃºc
+**✅ HOÀN THÀNH:**
+• Google Sheets Template riêng
+• Web App cá nhân
+• URL truy cập mọi lúc
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━
 
-**ðŸ’¡ Máº¸O:**
+**💡 MẸO:**
 
-ðŸ“± **Äiá»‡n thoáº¡i:** ThÃªm vÃ o Home Screen
-â€¢ iOS: Safari â†’ Share â†’ Add to Home Screen
-â€¢ Android: Chrome â†’ Menu â†’ Add to Home screen
+📱 **Điện thoại:** Thêm vào Home Screen
+• iOS: Safari → Share → Add to Home Screen
+• Android: Chrome → Menu → Add to Home screen
 
-ðŸ’» **MÃ¡y tÃ­nh:** Bookmark (Ctrl+D)
+💻 **Máy tính:** Bookmark (Ctrl+D)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━
 
-**ðŸš€ TIáº¾P THEO: Há»ŒC CÃCH DÃ™NG**
+**🚀 TIẾP THEO: HỌC CÁCH DÙNG**
 
-Trong BÆ°á»›c 2:
-â€¢ Quáº£n lÃ½ tÃ i khoáº£n & giao dá»‹ch
-â€¢ Ãp dá»¥ng 6 HÅ© Tiá»n
-â€¢ Äáº¡t tá»± do tÃ i chÃ­nh
+Trong Bước 2:
+• Quản lý tài khoản & giao dịch
+• Áp dụng 6 Hũ Tiền
+• Đạt tự do tài chính
 
-â± 15-20 phÃºt
+⏱ 15-20 phút
 
-ðŸ‘‰ **Nháº¥n nÃºt bÃªn dÆ°á»›i!**
+👉 **Nhấn nút bên dưới!**
 """,
         "image": "docs/use-deploy-app.png"
     }
@@ -195,18 +195,18 @@ def get_webapp_setup_keyboard(current_step: int) -> InlineKeyboardMarkup:
     if current_step == 1:
         buttons.append([
             InlineKeyboardButton(
-                "ðŸ“‘ Copy Template", 
-                url=f"https://docs.google.com/spreadsheets/d/{os.getenv('TEMPLATE_SPREADSHEET_ID', '1er6t9JQHLa9eZ1YTIM4aK0IhN37yPq6IUVbOg4-8mXg')}/copy"
+                "📑 Copy Template", 
+                url=f"https://docs.google.com/spreadsheets/d/{os.getenv('TEMPLATE_SHEET_ID', '1Vlq3MAplg_FtpaOqqcvgz1UNMfemHiQcKFcdfE4nOtI')}/copy"
             )
         ])
     
     # Navigation row
     nav_row = []
     if current_step > 0:
-        nav_row.append(InlineKeyboardButton("â¬…ï¸ Quay láº¡i", callback_data=f"webapp_step_{current_step-1}"))
+        nav_row.append(InlineKeyboardButton("⬅️ Quay lại", callback_data=f"webapp_step_{current_step-1}"))
     
     if current_step < 4:
-        nav_row.append(InlineKeyboardButton("Tiáº¿p theo âž¡ï¸", callback_data=f"webapp_step_{current_step+1}"))
+        nav_row.append(InlineKeyboardButton("Tiếp theo ➡️", callback_data=f"webapp_step_{current_step+1}"))
     
     if nav_row:
         buttons.append(nav_row)
@@ -214,22 +214,22 @@ def get_webapp_setup_keyboard(current_step: int) -> InlineKeyboardMarkup:
     # Menu row
     menu_row = []
     if current_step != 0:
-        menu_row.append(InlineKeyboardButton("ðŸ“± Menu", callback_data="webapp_step_0"))
+        menu_row.append(InlineKeyboardButton("📱 Menu", callback_data="webapp_step_0"))
     
     # Step 4 (completion) - add special buttons
     if current_step == 4:
         buttons.append([
-            InlineKeyboardButton("ðŸ“˜ Tiáº¿p theo: HÆ°á»›ng dáº«n sá»­ dá»¥ng âž¡ï¸", callback_data="guide_step_0")
+            InlineKeyboardButton("📘 Tiếp theo: Hướng dẫn sử dụng ➡️", callback_data="guide_step_0")
         ])
         buttons.append([
-            InlineKeyboardButton("ðŸ’¬ Cáº§n trá»£ giÃºp?", url="https://t.me/freedomwalletapp")
+            InlineKeyboardButton("💬 Cần trợ giúp?", url="https://t.me/freedomwalletapp")
         ])
     else:
         # Help row (for steps 0-3)
         if menu_row:
             buttons.append(menu_row)
         buttons.append([
-            InlineKeyboardButton("ðŸ’¬ Cáº§n trá»£ giÃºp?", url="https://t.me/freedomwalletapp")
+            InlineKeyboardButton("💬 Cần trợ giúp?", url="https://t.me/freedomwalletapp")
         ])
     
     return InlineKeyboardMarkup(buttons)
@@ -239,7 +239,7 @@ async def send_webapp_setup_step(update: Update, context: ContextTypes.DEFAULT_T
     """Send a specific webapp setup step"""
     try:
         if step not in WEBAPP_SETUP_STEPS:
-            await update.callback_query.answer("âŒ BÆ°á»›c khÃ´ng há»£p lá»‡!")
+            await update.callback_query.answer("❌ Bước không hợp lệ!")
             return
         
         step_data = WEBAPP_SETUP_STEPS[step]
@@ -310,7 +310,7 @@ async def send_webapp_setup_step(update: Update, context: ContextTypes.DEFAULT_T
     except Exception as e:
         logger.error(f"Error sending webapp setup step {step}: {e}")
         if update.callback_query:
-            await update.callback_query.answer("âŒ CÃ³ lá»—i xáº£y ra!")
+            await update.callback_query.answer("❌ Có lỗi xảy ra!")
 
 
 async def taoweb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -330,7 +330,7 @@ async def webapp_callback_handler(update: Update, context: ContextTypes.DEFAULT_
         
     except Exception as e:
         logger.error(f"Error in webapp callback handler: {e}")
-        await query.answer("âŒ CÃ³ lá»—i xáº£y ra!")
+        await query.answer("❌ Có lỗi xảy ra!")
 
 
 def register_webapp_setup_handlers(application):
@@ -338,5 +338,5 @@ def register_webapp_setup_handlers(application):
     application.add_handler(CommandHandler("taoweb", taoweb_command))
     application.add_handler(CallbackQueryHandler(webapp_callback_handler, pattern="^webapp_"))
     
-    logger.info("âœ… Web App setup handlers registered")
+    logger.info("✅ Web App setup handlers registered")
 

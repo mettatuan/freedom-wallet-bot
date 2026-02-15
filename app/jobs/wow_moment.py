@@ -17,7 +17,7 @@ from config.settings import settings
 class WOWMomentService:
     """Service for sending 24h WOW moment messages"""
     
-    HOURLY_VALUE = 100_000  # VNÄ/hour (user's time value)
+    HOURLY_VALUE = 100_000  # VNĐ/hour (user's time value)
     TIME_PER_MESSAGE = 3  # minutes saved per AI message
     TIME_PER_ANALYSIS = 30  # minutes saved per analysis
     
@@ -45,7 +45,7 @@ class WOWMomentService:
         value = time_saved_hours * WOWMomentService.HOURLY_VALUE
         
         # Premium cost (daily rate)
-        premium_daily_cost = 83_000 / 30  # ~2,767 VNÄ/day
+        premium_daily_cost = 83_000 / 30  # ~2,767 VNĐ/day
         
         # ROI calculation
         profit = value - premium_daily_cost
@@ -86,53 +86,53 @@ class WOWMomentService:
                 return
             
             # Craft message
-            days_remaining = 6 if tier == SubscriptionTier.TRIAL else "nhiá»u"
+            days_remaining = 6 if tier == SubscriptionTier.TRIAL else "nhiều"
             tier_name = "Trial" if tier == SubscriptionTier.TRIAL else "Premium"
             
             message = f"""
-ðŸŽŠ **24 GIá»œ Vá»šI {tier_name.upper()}!**
+🎊 **24 GIỜ VỚI {tier_name.upper()}!**
 
-ChÃºc má»«ng báº¡n Ä‘Ã£ tráº£i nghiá»‡m 24h Ä‘áº§u tiÃªn! ðŸŽ‰
+Chúc mừng bạn đã trải nghiệm 24h đầu tiên! 🎉
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“Š **THá»NG KÃŠ 24H:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📊 **THỐNG KÊ 24H:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¬ **{stats['messages']} cÃ¢u tráº£ lá»i AI**
-   â†’ KhÃ´ng giá»›i háº¡n, khÃ´ng lo háº¿t quota
+💬 **{stats['messages']} câu trả lời AI**
+   → Không giới hạn, không lo hết quota
 
-â±ï¸ **{stats['time_saved_hours']} giá» tiáº¿t kiá»‡m**
-   â†’ TÆ°Æ¡ng Ä‘Æ°Æ¡ng {stats['time_saved_hours']} giá» lÃ m viá»‡c
+⏱️ **{stats['time_saved_hours']} giờ tiết kiệm**
+   → Tương đương {stats['time_saved_hours']} giờ làm việc
 
-ðŸ’° **GiÃ¡ trá»‹ nháº­n Ä‘Æ°á»£c: ~{stats['value']:,} VNÄ**
-   â†’ TÃ­nh theo 100K VNÄ/giá»
+💰 **Giá trị nhận được: ~{stats['value']:,} VNĐ**
+   → Tính theo 100K VNĐ/giờ
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’Ž **ROI HIá»†N Táº I:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💎 **ROI HIỆN TẠI:**
+━━━━━━━━━━━━━━━━━━━━━
 
-Chi: {stats['cost']:,} VNÄ/ngÃ y
-Nháº­n: {stats['value']:,} VNÄ/ngÃ y
+Chi: {stats['cost']:,} VNĐ/ngày
+Nhận: {stats['value']:,} VNĐ/ngày
 
-â†’ **Báº¡n Ä‘ang "lá»i" {stats['profit']:,} VNÄ!** ðŸš€
-â†’ ROI: +{stats['roi_percent']}%
+→ **Bạn đang "lời" {stats['profit']:,} VNĐ!** 🚀
+→ ROI: +{stats['roi_percent']}%
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ **TIáº¾P Tá»¤C:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 **TIẾP TỤC:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… CÃ²n {days_remaining} ngÃ y Ä‘á»ƒ tráº£i nghiá»‡m
-âœ… Táº¥t cáº£ tÃ­nh nÄƒng Premium Ä‘Ã£ má»Ÿ khÃ³a
-âœ… Há»— trá»£ Æ°u tiÃªn trong 30 phÃºt
+✅ Còn {days_remaining} ngày để trải nghiệm
+✅ Tất cả tính năng Premium đã mở khóa
+✅ Hỗ trợ ưu tiên trong 30 phút
 
-ðŸŽ¯ **Tip:** Thá»­ tÃ­nh nÄƒng "ðŸ’¡ Gá»£i Ã½" Ä‘á»ƒ tá»‘i Æ°u tÃ i chÃ­nh hÆ¡n ná»¯a!
+🎯 **Tip:** Thử tính năng "💡 Gợi ý" để tối ưu tài chính hơn nữa!
 """
             
             # Create interactive buttons
             keyboard = [
-                [InlineKeyboardButton("ðŸ“Š Xem ROI chi tiáº¿t", callback_data="view_roi_detail")],
-                [InlineKeyboardButton("ðŸ’¡ Tá»‘i Æ°u hÆ¡n ná»¯a", callback_data="optimization_tips")],
-                [InlineKeyboardButton("âœ… OK, Ä‘Ã£ hiá»ƒu", callback_data="wow_moment_dismiss")]
+                [InlineKeyboardButton("📊 Xem ROI chi tiết", callback_data="view_roi_detail")],
+                [InlineKeyboardButton("💡 Tối ưu hơn nữa", callback_data="optimization_tips")],
+                [InlineKeyboardButton("✅ OK, đã hiểu", callback_data="wow_moment_dismiss")]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             

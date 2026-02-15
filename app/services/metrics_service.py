@@ -43,10 +43,10 @@ class MetricsCalculationService:
         if not force_refresh and cache_key in self.cache:
             cached_data, cached_time = self.cache[cache_key]
             if time.time() - cached_time < self.cache_duration:
-                logger.info("ðŸ“Š Returning cached metrics")
+                logger.info("📊 Returning cached metrics")
                 return cached_data
         
-        logger.info("ðŸ“Š Calculating fresh metrics...")
+        logger.info("📊 Calculating fresh metrics...")
         
         db = next(get_db())
         try:
@@ -63,7 +63,7 @@ class MetricsCalculationService:
             # Cache results
             self.cache[cache_key] = (metrics, time.time())
             
-            logger.info(f"âœ… Metrics calculated: {metrics['overall_status']}")
+            logger.info(f"✅ Metrics calculated: {metrics['overall_status']}")
             return metrics
             
         finally:
@@ -72,8 +72,8 @@ class MetricsCalculationService:
     def _calculate_free_metrics(self, db) -> Dict:
         """
         FREE Tier Metrics:
-        1. 30-day retention â‰¥50%
-        2. Transactions per user â‰¥10/month
+        1. 30-day retention ≥50%
+        2. Transactions per user ≥10/month
         """
         # 1. 30-Day Retention
         # Users created 30+ days ago who were active in last 7 days
@@ -128,13 +128,13 @@ class MetricsCalculationService:
             'active_7d': active_7d,
             'new_this_week': new_this_week,
             'avg_referrals': round(avg_referrals, 1),
-            'status': 'ðŸŸ¢' if (retention_30day >= 50 and avg_transactions >= 10) else 'ðŸŸ¡' if (retention_30day >= 45 or avg_transactions >= 9) else 'ðŸ”´'
+            'status': '🟢' if (retention_30day >= 50 and avg_transactions >= 10) else '🟡' if (retention_30day >= 45 or avg_transactions >= 9) else '🔴'
         }
     
     def _calculate_vip_metrics(self, db) -> Dict:
         """
         VIP Tier Metrics:
-        3. Weekly active rate â‰¥70%
+        3. Weekly active rate ≥70%
         4. Natural Premium conversion ~30% (25-35% OK)
         """
         # 3. Weekly Active Rate
@@ -190,13 +190,13 @@ class MetricsCalculationService:
             'super_vip_count': super_vip_count,
             'legend_count': legend_count,
             'avg_refs_per_vip': round(avg_refs_per_vip, 1),
-            'status': 'ðŸŸ¢' if (weekly_active_pct >= 70 and 25 <= premium_conversion_pct <= 35) else 'ðŸŸ¡' if (weekly_active_pct >= 63 or 20 <= premium_conversion_pct <= 40) else 'ðŸ”´'
+            'status': '🟢' if (weekly_active_pct >= 70 and 25 <= premium_conversion_pct <= 35) else '🟡' if (weekly_active_pct >= 63 or 20 <= premium_conversion_pct <= 40) else '🔴'
         }
     
     def _calculate_premium_metrics(self, db) -> Dict:
         """
         PREMIUM Tier Metrics:
-        5. AI usage â‰¥10 msg/user
+        5. AI usage ≥10 msg/user
         6. 90-day churn <15%
         """
         # 5. AI Usage per User
@@ -257,7 +257,7 @@ class MetricsCalculationService:
             'trial_users': trial_users,
             'active_7d': active_premium_7d,
             'avg_sub_duration_days': round(avg_sub_duration, 0),
-            'status': 'ðŸŸ¢' if (avg_ai_usage >= 10 and churn_90day_pct < 15) else 'ðŸŸ¡' if (avg_ai_usage >= 9 or churn_90day_pct < 17) else 'ðŸ”´'
+            'status': '🟢' if (avg_ai_usage >= 10 and churn_90day_pct < 15) else '🟡' if (avg_ai_usage >= 9 or churn_90day_pct < 17) else '🔴'
         }
     
     def _calculate_overall_status(self, metrics: Dict) -> str:
@@ -297,81 +297,81 @@ class MetricsCalculationService:
         
         # Status emoji
         status_emoji = {
-            'HEALTHY': 'ðŸŸ¢',
-            'WARNING': 'ðŸŸ¡',
-            'CRITICAL': 'ðŸ”´'
+            'HEALTHY': '🟢',
+            'WARNING': '🟡',
+            'CRITICAL': '🔴'
         }
         
         # Status names in Vietnamese
         status_names = {
-            'HEALTHY': 'Tá»T',
-            'WARNING': 'Cáº¢NH BÃO',
-            'CRITICAL': 'NGHIÃŠM TRá»ŒNG'
+            'HEALTHY': 'TỐT',
+            'WARNING': 'CẢNH BÁO',
+            'CRITICAL': 'NGHIÊM TRỌNG'
         }
         
-        message = f"""ðŸ“Š <b>Báº¢NG THEO DÃ•I METRICS PHASE 2</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+        message = f"""📊 <b>BẢNG THEO DÕI METRICS PHASE 2</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“… NgÃ y: {m['timestamp'].strftime('%Y-%m-%d %H:%M')}
-â±ï¸ Cáº­p nháº­t: Thá»§ cÃ´ng
+📅 Ngày: {m['timestamp'].strftime('%Y-%m-%d %H:%M')}
+⏱️ Cập nhật: Thủ công
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸŽ <b>GIAI ÄOáº N FREE</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-Tá»· lá»‡ giá»¯ chÃ¢n 30 ngÃ y: <b>{m['free']['retention_30day']}%</b> {m['free']['status']} (Má»¥c tiÃªu: â‰¥50%)
-Giao dá»‹ch/User: <b>{m['free']['transactions_per_user']}</b> {m['free']['status']} (Má»¥c tiÃªu: â‰¥10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎁 <b>GIAI ĐOẠN FREE</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tỷ lệ giữ chân 30 ngày: <b>{m['free']['retention_30day']}%</b> {m['free']['status']} (Mục tiêu: ≥50%)
+Giao dịch/User: <b>{m['free']['transactions_per_user']}</b> {m['free']['status']} (Mục tiêu: ≥10)
 
-Tá»•ng user FREE: {m['free']['total_users']}
-Hoáº¡t Ä‘á»™ng (7 ngÃ y): {m['free']['active_7d']} ({round(m['free']['active_7d']/m['free']['total_users']*100 if m['free']['total_users'] > 0 else 0, 0):.0f}%)
-Má»›i tuáº§n nÃ y: {m['free']['new_this_week']}
+Tổng user FREE: {m['free']['total_users']}
+Hoạt động (7 ngày): {m['free']['active_7d']} ({round(m['free']['active_7d']/m['free']['total_users']*100 if m['free']['total_users'] > 0 else 0, 0):.0f}%)
+Mới tuần này: {m['free']['new_this_week']}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â­ <b>GIAI ÄOáº N VIP (Táº§ng Danh TÃ­nh)</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-Hoáº¡t Ä‘á»™ng hÃ ng tuáº§n: <b>{m['vip']['weekly_active_pct']}%</b> {m['vip']['status']} (Má»¥c tiÃªu: â‰¥70%)
-Chuyá»ƒn Premium tá»± nhiÃªn: <b>{m['vip']['premium_conversion_pct']}%</b> {m['vip']['status']} (Má»¥c tiÃªu: ~30%)
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+⭐ <b>GIAI ĐOẠN VIP (Tầng Danh Tính)</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Hoạt động hàng tuần: <b>{m['vip']['weekly_active_pct']}%</b> {m['vip']['status']} (Mục tiêu: ≥70%)
+Chuyển Premium tự nhiên: <b>{m['vip']['premium_conversion_pct']}%</b> {m['vip']['status']} (Mục tiêu: ~30%)
 
-Tá»•ng user VIP: {m['vip']['total_vip']}
-â”œâ”€ NgÃ´i Sao Má»›i (10+): {m['vip']['rising_star_count']}
-â”œâ”€ SiÃªu VIP (50+): {m['vip']['super_vip_count']}
-â””â”€ Huyá»n Thoáº¡i (100+): {m['vip']['legend_count']}
+Tổng user VIP: {m['vip']['total_vip']}
+├─ Ngôi Sao Mới (10+): {m['vip']['rising_star_count']}
+├─ Siêu VIP (50+): {m['vip']['super_vip_count']}
+└─ Huyền Thoại (100+): {m['vip']['legend_count']}
 
-Hoáº¡t Ä‘á»™ng (7 ngÃ y): {m['vip']['active_vip']}/{m['vip']['total_vip']}
+Hoạt động (7 ngày): {m['vip']['active_vip']}/{m['vip']['total_vip']}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’Ž <b>GIAI ÄOáº N PREMIUM (Cháº¿ Äá»™ Máº¡nh)</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-Sá»­ dá»¥ng AI: <b>{m['premium']['ai_usage_avg']} tin nháº¯n</b> {m['premium']['status']} (Má»¥c tiÃªu: â‰¥10)
-Rá»i bá» 90 ngÃ y: <b>{m['premium']['churn_90day_pct']}%</b> {m['premium']['status']} (Má»¥c tiÃªu: &lt;15%)
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+💎 <b>GIAI ĐOẠN PREMIUM (Chế Độ Mạnh)</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Sử dụng AI: <b>{m['premium']['ai_usage_avg']} tin nhắn</b> {m['premium']['status']} (Mục tiêu: ≥10)
+Rời bỏ 90 ngày: <b>{m['premium']['churn_90day_pct']}%</b> {m['premium']['status']} (Mục tiêu: &lt;15%)
 
-Tá»•ng Premium: {m['premium']['total_premium']}
-User dÃ¹ng thá»­: {m['premium']['trial_users']}
-Hoáº¡t Ä‘á»™ng (7 ngÃ y): {m['premium']['active_7d']}/{m['premium']['total_premium'] + m['premium']['trial_users']} ({round(m['premium']['active_7d']/(m['premium']['total_premium'] + m['premium']['trial_users'])*100 if (m['premium']['total_premium'] + m['premium']['trial_users']) > 0 else 0, 0):.0f}%)
+Tổng Premium: {m['premium']['total_premium']}
+User dùng thử: {m['premium']['trial_users']}
+Hoạt động (7 ngày): {m['premium']['active_7d']}/{m['premium']['total_premium'] + m['premium']['trial_users']} ({round(m['premium']['active_7d']/(m['premium']['total_premium'] + m['premium']['trial_users'])*100 if (m['premium']['total_premium'] + m['premium']['trial_users']) > 0 else 0, 0):.0f}%)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“ˆ <b>TÃŒNH TRáº NG Tá»”NG QUÃT: {status_emoji[m['overall_status']]} {status_names[m['overall_status']]}</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+📈 <b>TÌNH TRẠNG TỔNG QUÁT: {status_emoji[m['overall_status']]} {status_names[m['overall_status']]}</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
         
         if m['overall_status'] == 'HEALTHY':
-            message += "Táº¥t cáº£ 6 metrics Ä‘áº¡t má»¥c tiÃªu âœ…\n"
+            message += "Tất cả 6 metrics đạt mục tiêu ✅\n"
         elif m['overall_status'] == 'WARNING':
-            message += "1-2 metrics dÆ°á»›i má»¥c tiÃªu âš ï¸\n"
+            message += "1-2 metrics dưới mục tiêu ⚠️\n"
         else:
-            message += "3+ metrics dÆ°á»›i má»¥c tiÃªu ðŸš¨\n"
+            message += "3+ metrics dưới mục tiêu 🚨\n"
         
         message += f"""
-ðŸ”— <b>Dashboard Ä‘áº§y Ä‘á»§:</b>
+🔗 <b>Dashboard đầy đủ:</b>
 https://docs.google.com/spreadsheets/d/1-fruHaSlCKIOpIfU5Qrkns0ze3bx3E-mKUgQ5fUF-Hg/edit
 
-âš ï¸ <b>LÆ¯U Ã:</b>
-â€¢ Theo dÃµi, Ä‘á»«ng tá»‘i Æ°u
-â€¢ Ghi chÃ©p, Ä‘á»«ng sá»­a
-â€¢ Quan sÃ¡t, Ä‘á»«ng can thiá»‡p
-â€¢ Äá»£i Ä‘á»§ 60 ngÃ y trÆ°á»›c khi thay Ä‘á»•i
+⚠️ <b>LƯU Ý:</b>
+• Theo dõi, đừng tối ưu
+• Ghi chép, đừng sửa
+• Quan sát, đừng can thiệp
+• Đợi đủ 60 ngày trước khi thay đổi
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-Cáº­p nháº­t tá»± Ä‘á»™ng tiáº¿p: NgÃ y mai 8:00 sÃ¡ng
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Cập nhật tự động tiếp: Ngày mai 8:00 sáng
 """
         
         return message

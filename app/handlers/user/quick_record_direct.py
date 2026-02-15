@@ -18,9 +18,9 @@ async def handle_quick_expense(update: Update, context: ContextTypes.DEFAULT_TYP
     Parse and record expense from natural language
     
     Examples:
-    - "chi 50k tiá»n Äƒn"
-    - "mua sáº¯m 200k"
-    - "xÄƒng xe 150000 Ä‘á»• xÄƒng Shell"
+    - "chi 50k tiền ăn"
+    - "mua sắm 200k"
+    - "xăng xe 150000 đổ xăng Shell"
     """
     user_id = update.effective_user.id
     user = await get_user_by_id(user_id)
@@ -29,9 +29,9 @@ async def handle_quick_expense(update: Update, context: ContextTypes.DEFAULT_TYP
     # Check Premium
     if tier not in [SubscriptionTier.PREMIUM, SubscriptionTier.TRIAL]:
         await update.message.reply_text(
-            "ðŸ”’ **TÃ­nh nÄƒng Premium**\n\n"
-            "Quick Record chá»‰ dÃ nh cho Premium/Trial.\n\n"
-            "ðŸŽ DÃ¹ng thá»­ 7 ngÃ y FREE: /start"
+            "🔒 **Tính năng Premium**\n\n"
+            "Quick Record chỉ dành cho Premium/Trial.\n\n"
+            "🎁 Dùng thử 7 ngày FREE: /start"
         )
         return
     
@@ -39,11 +39,11 @@ async def handle_quick_expense(update: Update, context: ContextTypes.DEFAULT_TYP
     sheets = await get_user_sheets_writer(user_id)
     if not sheets:
         await update.message.reply_text(
-            "ðŸ“Š **ChÆ°a káº¿t ná»‘i Google Sheets**\n\n"
-            "Äá»ƒ ghi chi tiÃªu tá»± Ä‘á»™ng, hÃ£y:\n"
-            "1. Káº¿t ná»‘i Sheets: /connectsheets\n"
-            "2. Share quyá»n **Editor** (thay vÃ¬ Viewer)\n\n"
-            "âš ï¸ LÆ°u Ã½: Bot cáº§n Editor Ä‘á»ƒ ghi Ä‘Æ°á»£c data!"
+            "📊 **Chưa kết nối Google Sheets**\n\n"
+            "Để ghi chi tiêu tự động, hãy:\n"
+            "1. Kết nối Sheets: /connectsheets\n"
+            "2. Share quyền **Editor** (thay vì Viewer)\n\n"
+            "⚠️ Lưu ý: Bot cần Editor để ghi được data!"
         )
         return
     
@@ -53,12 +53,12 @@ async def handle_quick_expense(update: Update, context: ContextTypes.DEFAULT_TYP
     
     if not parsed:
         await update.message.reply_text(
-            "âŒ **KhÃ´ng hiá»ƒu format!**\n\n"
-            "Thá»­ láº¡i vá»›i format:\n"
-            "â€¢ `chi 50k tiá»n Äƒn`\n"
-            "â€¢ `mua sáº¯m 200k`\n"
-            "â€¢ `xÄƒng xe 150000 Ä‘á»• táº¡i Shell`\n\n"
-            "Hoáº·c dÃ¹ng: /record"
+            "❌ **Không hiểu format!**\n\n"
+            "Thử lại với format:\n"
+            "• `chi 50k tiền ăn`\n"
+            "• `mua sắm 200k`\n"
+            "• `xăng xe 150000 đổ tại Shell`\n\n"
+            "Hoặc dùng: /record"
         )
         return
     
@@ -68,11 +68,11 @@ async def handle_quick_expense(update: Update, context: ContextTypes.DEFAULT_TYP
     
     # Confirm before writing
     await update.message.reply_text(
-        f"ðŸ“ **XÃ¡c nháº­n ghi:**\n\n"
-        f"ðŸ’¸ Sá»‘ tiá»n: {amount:,.0f} VNÄ\n"
-        f"ðŸ“‚ Danh má»¥c: {category}\n"
-        f"ðŸ“Œ Ghi chÃº: {note if note else '(trá»‘ng)'}\n\n"
-        f"ðŸ”„ Äang ghi vÃ o Google Sheets..."
+        f"📝 **Xác nhận ghi:**\n\n"
+        f"💸 Số tiền: {amount:,.0f} VNĐ\n"
+        f"📂 Danh mục: {category}\n"
+        f"📌 Ghi chú: {note if note else '(trống)'}\n\n"
+        f"🔄 Đang ghi vào Google Sheets..."
     )
     
     # Write to Sheets
@@ -86,10 +86,10 @@ async def handle_quick_expense(update: Update, context: ContextTypes.DEFAULT_TYP
         
         if success:
             await update.message.reply_text(
-                f"âœ… **ÄÃ£ ghi thÃ nh cÃ´ng!**\n\n"
-                f"ðŸ’¸ Chi: {amount:,.0f} VNÄ\n"
-                f"ðŸ“‚ {category}\n\n"
-                f"ðŸ“Š Xem sá»‘ dÆ°: /balance"
+                f"✅ **Đã ghi thành công!**\n\n"
+                f"💸 Chi: {amount:,.0f} VNĐ\n"
+                f"📂 {category}\n\n"
+                f"📊 Xem số dư: /balance"
             )
             
             # Track usage
@@ -102,18 +102,18 @@ async def handle_quick_expense(update: Update, context: ContextTypes.DEFAULT_TYP
             logger.info(f"User {user_id} recorded expense: {amount} - {category}")
         else:
             await update.message.reply_text(
-                "âŒ **Lá»—i ghi dá»¯ liá»‡u!**\n\n"
-                "Kiá»ƒm tra:\n"
-                "â€¢ ÄÃ£ share quyá»n Editor chÆ°a?\n"
-                "â€¢ Google Sheets cÃ³ cá»™t Ä‘Ãºng format chÆ°a?\n\n"
-                "LiÃªn há»‡ /support náº¿u váº«n lá»—i"
+                "❌ **Lỗi ghi dữ liệu!**\n\n"
+                "Kiểm tra:\n"
+                "• Đã share quyền Editor chưa?\n"
+                "• Google Sheets có cột đúng format chưa?\n\n"
+                "Liên hệ /support nếu vẫn lỗi"
             )
     
     except Exception as e:
         await update.message.reply_text(
-            f"âŒ **Lá»—i ghi!**\n\n"
-            f"Chi tiáº¿t: {str(e)}\n\n"
-            f"LiÃªn há»‡ /support"
+            f"❌ **Lỗi ghi!**\n\n"
+            f"Chi tiết: {str(e)}\n\n"
+            f"Liên hệ /support"
         )
         logger.error(f"Quick record error for user {user_id}: {e}")
 
@@ -123,18 +123,18 @@ def parse_expense_message(text: str) -> dict:
     Parse natural language expense message
     
     Examples:
-    - "chi 50k tiá»n Äƒn" â†’ {amount: 50000, category: "tiá»n Äƒn"}
-    - "mua sáº¯m 200k quáº§n Ã¡o" â†’ {amount: 200000, category: "mua sáº¯m", note: "quáº§n Ã¡o"}
-    - "150000 xÄƒng xe" â†’ {amount: 150000, category: "xÄƒng xe"}
+    - "chi 50k tiền ăn" → {amount: 50000, category: "tiền ăn"}
+    - "mua sắm 200k quần áo" → {amount: 200000, category: "mua sắm", note: "quần áo"}
+    - "150000 xăng xe" → {amount: 150000, category: "xăng xe"}
     
     Returns:
         dict with amount, category, note or None if parse failed
     """
     text = text.lower().strip()
     
-    # Pattern 1: "chi 50k tiá»n Äƒn"
-    # Pattern 2: "mua sáº¯m 200k"
-    # Pattern 3: "150000 xÄƒng xe"
+    # Pattern 1: "chi 50k tiền ăn"
+    # Pattern 2: "mua sắm 200k"
+    # Pattern 3: "150000 xăng xe"
     
     # Extract amount (with k/K multiplier)
     amount_pattern = r'(\d+(?:[,\.]\d+)?)\s*k?'
@@ -156,7 +156,7 @@ def parse_expense_message(text: str) -> dict:
     remaining = remaining.strip()
     
     # Remove common prefixes
-    prefixes = ['chi', 'mua', 'tráº£', 'thanh toÃ¡n']
+    prefixes = ['chi', 'mua', 'trả', 'thanh toán']
     for prefix in prefixes:
         if remaining.startswith(prefix):
             remaining = remaining[len(prefix):].strip()
@@ -166,7 +166,7 @@ def parse_expense_message(text: str) -> dict:
     parts = remaining.split(maxsplit=2)
     
     if not parts:
-        category = "KhÃ¡c"
+        category = "Khác"
         note = ""
     elif len(parts) == 1:
         category = parts[0]
@@ -177,20 +177,20 @@ def parse_expense_message(text: str) -> dict:
     
     # Map common categories
     category_map = {
-        'Äƒn': 'Ä‚n uá»‘ng',
-        'uá»‘ng': 'Ä‚n uá»‘ng',
-        'cÆ¡m': 'Ä‚n uá»‘ng',
+        'ăn': 'Ăn uống',
+        'uống': 'Ăn uống',
+        'cơm': 'Ăn uống',
         'cafe': 'Cafe',
-        'cÃ  phÃª': 'Cafe',
-        'xÄƒng': 'XÄƒng xe',
-        'xe': 'XÄƒng xe',
-        'Ä‘iá»‡n': 'HÃ³a Ä‘Æ¡n',
-        'nÆ°á»›c': 'HÃ³a Ä‘Æ¡n',
-        'internet': 'HÃ³a Ä‘Æ¡n',
-        'mua': 'Mua sáº¯m',
-        'sáº¯m': 'Mua sáº¯m',
-        'quáº§n': 'Quáº§n Ã¡o',
-        'Ã¡o': 'Quáº§n Ã¡o',
+        'cà phê': 'Cafe',
+        'xăng': 'Xăng xe',
+        'xe': 'Xăng xe',
+        'điện': 'Hóa đơn',
+        'nước': 'Hóa đơn',
+        'internet': 'Hóa đơn',
+        'mua': 'Mua sắm',
+        'sắm': 'Mua sắm',
+        'quần': 'Quần áo',
+        'áo': 'Quần áo',
     }
     
     for key, value in category_map.items():
@@ -210,13 +210,13 @@ def register_quick_record_direct_handler(application):
     """Register Quick Record handler (direct write)"""
     from telegram.ext import MessageHandler, filters
     
-    # Match messages like "chi 50k tiá»n Äƒn"
-    expense_pattern = r'(?:chi|mua|tráº£|thanh toÃ¡n)?\s*\d+(?:[,\.]\d+)?\s*k?\s*.+'
+    # Match messages like "chi 50k tiền ăn"
+    expense_pattern = r'(?:chi|mua|trả|thanh toán)?\s*\d+(?:[,\.]\d+)?\s*k?\s*.+'
     
     application.add_handler(MessageHandler(
         filters.TEXT & filters.Regex(expense_pattern, re.IGNORECASE),
         handle_quick_expense
     ))
     
-    logger.info("âœ… Quick Record (direct write) handler registered")
+    logger.info("✅ Quick Record (direct write) handler registered")
 

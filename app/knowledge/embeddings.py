@@ -56,5 +56,5 @@ def search_documents(query: str):
     #     n_results=3
     # )
     
-    return "ÄÃ¢y lÃ  má»™t tÃ i liá»‡u máº«u vá» " + query
+    return "Đây là một tài liệu mẫu về " + query
 

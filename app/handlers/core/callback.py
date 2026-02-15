@@ -28,8 +28,8 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.error(f"Error handling callback {callback_data}: {e}", exc_info=True)
         try:
             await query.edit_message_text(
-                "ðŸ˜“ Xin lá»—i, cÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i sau!\n"
-                "Náº¿u váº¥n Ä‘á» tiáº¿p diá»…n, dÃ¹ng /support Ä‘á»ƒ liÃªn há»‡.",
+                "😓 Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau!\n"
+                "Nếu vấn đề tiếp diễn, dùng /support để liên hệ.",
                 parse_mode="Markdown"
             )
         except:
@@ -126,8 +126,8 @@ async def _handle_callback_internal(update: Update, context: ContextTypes.DEFAUL
         except Exception as e:
             logger.error(f"Error in Premium callback {callback_data}: {e}", exc_info=True)
             await query.edit_message_text(
-                f"ðŸ˜“ Xin lá»—i, cÃ³ lá»—i khi xá»­ lÃ½ '{callback_data}'. Vui lÃ²ng thá»­ láº¡i!\n\n"
-                f"Náº¿u váº¥n Ä‘á» tiáº¿p diá»…n, dÃ¹ng /support Ä‘á»ƒ liÃªn há»‡.",
+                f"😓 Xin lỗi, có lỗi khi xử lý '{callback_data}'. Vui lòng thử lại!\n\n"
+                f"Nếu vấn đề tiếp diễn, dùng /support để liên hệ.",
                 parse_mode="Markdown"
             )
         return
@@ -145,175 +145,238 @@ async def _handle_callback_internal(update: Update, context: ContextTypes.DEFAUL
     
     # Route to appropriate handler based on callback_data
     if callback_data == "start" or callback_data == "back_home":
-        # Back to home
-        from app.handlers.user.start import start
-        # Create mock update for start command
-        update.message = query.message
+        # Back to home - Show main menu directly from callback
+        from app.utils.database import get_user_by_id
+        from app.services.recommendation import get_greeting
+        
         try:
-            await start(update, context)
+            user_id = query.from_user.id
+            db_user = await get_user_by_id(user_id)
+            
+            if not db_user:
+                await query.edit_message_text(
+                    "❌ User not found. Please /start first.",
+                    parse_mode="Markdown"
+                )
+                return
+            
+            # Simple unified menu for all users (100% FREE model)
+            greeting = get_greeting(db_user)
+            first_name = query.from_user.first_name
+            
+            welcome_text = f"""
+{greeting}
+
+🎯 **FREEDOM WALLET**
+
+App quản lý tài chính 100% miễn phí.
+Nếu thấy hữu ích, bạn có thể:
+• Đóng góp tài chính để duy trì
+• Chia sẻ cho bạn bè cùng dùng
+
+💡 Khám phá các tính năng hoặc hỏi tôi bất kỳ điều gì!
+"""
+            keyboard = [
+                [InlineKeyboardButton("📖 Hướng dẫn", callback_data="help_tutorial")],
+                [InlineKeyboardButton("💝 Đóng góp", callback_data="show_contribution")],
+                [InlineKeyboardButton("🎁 Giới thiệu bạn bè", callback_data="show_referral")]
+            ]
+            
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            # Check if message has photo (can't edit text in photo message)
+            if query.message.photo:
+                # Delete photo message and send new text message
+                try:
+                    await query.message.delete()
+                except:
+                    pass
+                
+                await context.bot.send_message(
+                    chat_id=query.message.chat_id,
+                    text=welcome_text,
+                    parse_mode="Markdown",
+                    reply_markup=reply_markup
+                )
+            else:
+                # Edit text message
+                await query.edit_message_text(
+                    text=welcome_text,
+                    parse_mode="Markdown",
+                    reply_markup=reply_markup
+                )
+            
         except Exception as e:
-            logger.error(f"Error calling start handler: {e}", exc_info=True)
-            await query.edit_message_text(
-                "ðŸ˜“ Xin lá»—i, cÃ³ lá»—i khi quay vá» trang chá»§. Vui lÃ²ng gÃµ /start Ä‘á»ƒ thá»­ láº¡i!",
-                parse_mode="Markdown"
-            )
+            logger.error(f"Error showing start menu: {e}", exc_info=True)
+            try:
+                await query.edit_message_text(
+                    "😓 Xin lỗi, có lỗi khi quay về trang chủ. Vui lòng gõ /start để thử lại!",
+                    parse_mode="Markdown"
+                )
+            except:
+                # If edit fails, send new message
+                await context.bot.send_message(
+                    chat_id=query.message.chat_id,
+                    text="😓 Xin lỗi, có lỗi khi quay về trang chủ. Vui lòng gõ /start để thử lại!",
+                    parse_mode="Markdown"
+                )
         return
     
     elif callback_data == "help_tutorial":
         text = """
-ðŸ“š **HÆ°á»›ng Dáº«n Sá»­ Dá»¥ng Freedom Wallet**
+📚 **Hướng Dẫn Sử Dụng Freedom Wallet**
 
-ðŸŒ **Xem hÆ°á»›ng dáº«n Ä‘áº§y Ä‘á»§ táº¡i:**
-ðŸ‘‰ [eliroxbot.notion.site/freedomwallet](https://eliroxbot.notion.site/freedomwallet)
+🌐 **Xem hướng dẫn đầy đủ tại:**
+👉 [eliroxbot.notion.site/freedomwallet](https://eliroxbot.notion.site/freedomwallet)
 
-ðŸ“– **Ná»™i dung bao gá»“m:**
-â€¢ HÆ°á»›ng dáº«n báº¯t Ä‘áº§u (Getting Started)
-â€¢ CÃ i Ä‘áº·t Web App trÃªn Ä‘iá»‡n thoáº¡i
-â€¢ 6 HÅ© tiá»n lÃ  gÃ¬ & cÃ¡ch sá»­ dá»¥ng
-â€¢ Ghi chÃ©p giao dá»‹ch nhanh
-â€¢ PhÃ¢n tÃ­ch tÃ i chÃ­nh & ROI
-â€¢ Gá»£i Ã½ thÃ´ng minh
+📖 **Nội dung bao gồm:**
+• Hướng dẫn bắt đầu (Getting Started)
+• Cài đặt Web App trên điện thoại
+• 6 Hũ tiền là gì & cách sử dụng
+• Ghi chép giao dịch nhanh
+• Phân tích tài chính & ROI
+• Gợi ý thông minh
 
-ðŸ’¡ **Hoáº·c há»i mÃ¬nh trá»±c tiáº¿p:**
-"LÃ m sao thÃªm giao dá»‹ch?"
-"6 hÅ© tiá»n lÃ  gÃ¬?"
-"CÃ¡ch cÃ i Web App?"
+💡 **Hoặc hỏi mình trực tiếp:**
+"Làm sao thêm giao dịch?"
+"6 hũ tiền là gì?"
+"Cách cài Web App?"
 """
         keyboard = [
-            [InlineKeyboardButton("ðŸŒ Má»Ÿ hÆ°á»›ng dáº«n", url="https://eliroxbot.notion.site/freedomwallet")],
-            [InlineKeyboardButton("ðŸ  Quay láº¡i", callback_data="back_home")]
+            [InlineKeyboardButton("🌐 Mở hướng dẫn", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("🏠 Quay lại", callback_data="back_home")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         await query.edit_message_text(text, parse_mode="Markdown", reply_markup=reply_markup)
     
     elif callback_data == "help_faq":
         text = """
-â“ **CÃ¢u Há»i ThÆ°á»ng Gáº·p (FAQ)**
+❓ **Câu Hỏi Thường Gặp (FAQ)**
 
-**ðŸ“ Giao dá»‹ch:**
-â€¢ ThÃªm / Sá»­a / XÃ³a giao dá»‹ch
-â€¢ Lá»c vÃ  tÃ¬m kiáº¿m
+**📝 Giao dịch:**
+• Thêm / Sửa / Xóa giao dịch
+• Lọc và tìm kiếm
 
-**ðŸº 6 HÅ© Tiá»n:**
-â€¢ PhÆ°Æ¡ng phÃ¡p 6 Jars lÃ  gÃ¬?
-â€¢ Chuyá»ƒn tiá»n giá»¯a hÅ©
-â€¢ Táº¡i sao sá»‘ dÆ° hÅ© sai?
+**🏺 6 Hũ Tiền:**
+• Phương pháp 6 Jars là gì?
+• Chuyển tiền giữa hũ
+• Tại sao số dư hũ sai?
 
-**ðŸ“ˆ Äáº§u tÆ°:**
-â€¢ ThÃªm khoáº£n Ä‘áº§u tÆ°
-â€¢ TÃ­nh ROI & lá»£i nhuáº­n
-â€¢ BÃ¡n Ä‘áº§u tÆ°
+**📈 Đầu tư:**
+• Thêm khoản đầu tư
+• Tính ROI & lợi nhuận
+• Bán đầu tư
 
-**ðŸ”§ Kháº¯c phá»¥c lá»—i:**
-â€¢ App khÃ´ng load
-â€¢ Äá»“ng bá»™ cháº­m
-â€¢ ÄÄƒng nháº­p lá»—i
+**🔧 Khắc phục lỗi:**
+• App không load
+• Đồng bộ chậm
+• Đăng nhập lỗi
 
-ðŸ’¬ **GÃµ cÃ¢u há»i cá»§a báº¡n Ä‘á»ƒ mÃ¬nh tráº£ lá»i chi tiáº¿t!**
+💬 **Gõ câu hỏi của bạn để mình trả lời chi tiết!**
 """
         await query.edit_message_text(text, parse_mode="Markdown")
     
     elif callback_data == "help_troubleshoot":
         text = """
-ðŸ”§ **Kháº¯c Phá»¥c Lá»—i ThÆ°á»ng Gáº·p**
+🔧 **Khắc Phục Lỗi Thường Gặp**
 
-**1ï¸âƒ£ App khÃ´ng load dá»¯ liá»‡u:**
-â€¢ Click nÃºt ðŸ”„ Ä‘á»ƒ refresh
-â€¢ Clear browser cache (Ctrl+Shift+Delete)
-â€¢ Thá»­ browser khÃ¡c
+**1️⃣ App không load dữ liệu:**
+• Click nút 🔄 để refresh
+• Clear browser cache (Ctrl+Shift+Delete)
+• Thử browser khác
 
-**2ï¸âƒ£ Sá»‘ dÆ° hÅ© khÃ´ng Ä‘Ãºng:**
-â€¢ Kiá»ƒm tra danh má»¥c gáº¯n hÅ© nÃ o
-â€¢ Äáº£m báº£o Auto Allocate báº­t
-â€¢ Reload data (ðŸ”„)
+**2️⃣ Số dư hũ không đúng:**
+• Kiểm tra danh mục gắn hũ nào
+• Đảm bảo Auto Allocate bật
+• Reload data (🔄)
 
-**3ï¸âƒ£ Äá»“ng bá»™ cháº­m:**
-â€¢ BÃ¬nh thÆ°á»ng! Optimistic UI sync 1-2s
-â€¢ Äá»£i background sync hoÃ n táº¥t
-â€¢ Náº¿u quÃ¡ 10s â†’ F12 console check lá»—i
+**3️⃣ Đồng bộ chậm:**
+• Bình thường! Optimistic UI sync 1-2s
+• Đợi background sync hoàn tất
+• Nếu quá 10s → F12 console check lỗi
 
-ðŸ’¬ **Náº¿u váº«n lá»—i:** DÃ¹ng /support Ä‘á»ƒ bÃ¡o chi tiáº¿t!
+💬 **Nếu vẫn lỗi:** Dùng /support để báo chi tiết!
 """
         await query.edit_message_text(text, parse_mode="Markdown")
     
     elif callback_data == "help_tips":
         text = """
-ðŸ’¡ **Tips TÃ i ChÃ­nh**
+💡 **Tips Tài Chính**
 
-**ðŸº 6 Jars Method:**
-PhÃ¢n chia thu nháº­p thÃ nh 6 pháº§n:
-â€¢ NEC (55%): Nhu cáº§u thiáº¿t yáº¿u
-â€¢ LTS (10%): Tiáº¿t kiá»‡m dÃ i háº¡n
-â€¢ EDU (10%): GiÃ¡o dá»¥c
-â€¢ PLAY (10%): Giáº£i trÃ­
-â€¢ FFA (10%): Tá»± do tÃ i chÃ­nh (Ä‘áº§u tÆ°)
-â€¢ GIVE (5%): Cho Ä‘i
+**🏺 6 Jars Method:**
+Phân chia thu nhập thành 6 phần:
+• NEC (55%): Nhu cầu thiết yếu
+• LTS (10%): Tiết kiệm dài hạn
+• EDU (10%): Giáo dục
+• PLAY (10%): Giải trí
+• FFA (10%): Tự do tài chính (đầu tư)
+• GIVE (5%): Cho đi
 
-ðŸ’° **NguyÃªn táº¯c vÃ ng:**
-1. Tráº£ tiá»n cho báº£n thÃ¢n trÆ°á»›c (LTS + FFA)
-2. Äáº§u tÆ° Ä‘á»u Ä‘áº·n má»—i thÃ¡ng
-3. Review bÃ¡o cÃ¡o cuá»‘i thÃ¡ng
-4. Äiá»u chá»‰nh tá»· lá»‡ phÃ¹ há»£p báº£n thÃ¢n
+💰 **Nguyên tắc vàng:**
+1. Trả tiền cho bản thân trước (LTS + FFA)
+2. Đầu tư đều đặn mỗi tháng
+3. Review báo cáo cuối tháng
+4. Điều chỉnh tỷ lệ phù hợp bản thân
 
-ðŸ“š Äá»c thÃªm: "6 HÅ© Tiá»n - BÃ­ Máº­t TÆ° Duy Triá»‡u PhÃº"
+📚 Đọc thêm: "6 Hũ Tiền - Bí Mật Tư Duy Triệu Phú"
 """
         await query.edit_message_text(text, parse_mode="Markdown")
     
     elif callback_data == "contact_support":
         text = """
-ðŸ†˜ **LiÃªn Há»‡ Há»— Trá»£**
+🆘 **Liên Hệ Hỗ Trợ**
 
-Gáº·p váº¥n Ä‘á» cáº§n há»— trá»£?
+Gặp vấn đề cần hỗ trợ?
 
-ðŸ“ DÃ¹ng lá»‡nh: **/support**
+📝 Dùng lệnh: **/support**
 
-Hoáº·c liÃªn há»‡ trá»±c tiáº¿p:
-ðŸ“§ Email: support@freedomwallet.com
-ðŸ’¬ Telegram: @FreedomWalletSupport
+Hoặc liên hệ trực tiếp:
+📧 Email: support@freedomwallet.com
+💬 Telegram: @FreedomWalletSupport
 
-â±ï¸ *Pháº£n há»“i trong 24h lÃ m viá»‡c*
+⏱️ *Phản hồi trong 24h làm việc*
 """
         await query.edit_message_text(text, parse_mode="Markdown")
     
     elif callback_data == "feedback_solved":
         await query.edit_message_text(
-            "ðŸŽ‰ **Tuyá»‡t vá»i! Váº¥n Ä‘á» Ä‘Ã£ Ä‘Æ°á»£c giáº£i quyáº¿t!**\n\n"
-            "Náº¿u cáº§n gÃ¬ thÃªm, cá»© há»i mÃ¬nh nhÃ©! ðŸ’¬",
+            "🎉 **Tuyệt vời! Vấn đề đã được giải quyết!**\n\n"
+            "Nếu cần gì thêm, cứ hỏi mình nhé! 💬",
             parse_mode="Markdown"
         )
     
     elif callback_data == "feedback_unsolved":
         text = """
-ðŸ˜” **Xin lá»—i, cÃ¢u tráº£ lá»i chÆ°a giáº£i quyáº¿t Ä‘Æ°á»£c váº¥n Ä‘á» cá»§a báº¡n.**
+😔 **Xin lỗi, câu trả lời chưa giải quyết được vấn đề của bạn.**
 
-ðŸ†˜ **HÃ£y liÃªn há»‡ support team:**
-DÃ¹ng /support Ä‘á»ƒ táº¡o ticket, team sáº½ há»— trá»£ chi tiáº¿t hÆ¡n!
+🆘 **Hãy liên hệ support team:**
+Dùng /support để tạo ticket, team sẽ hỗ trợ chi tiết hơn!
 
-Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ gáº¯ng giÃºp!
+Hoặc mô tả lại vấn đề, mình sẽ cố gắng giúp!
 """
         await query.edit_message_text(text, parse_mode="Markdown")
     
     elif callback_data == "ask_more":
         await query.edit_message_text(
-            "ðŸ’¬ **Há»i thÃªm cÃ¢u khÃ¡c Ä‘i!**\n\nGÃµ cÃ¢u há»i cá»§a báº¡n, mÃ¬nh sáºµn sÃ ng tráº£ lá»i! ðŸ˜Š",
+            "💬 **Hỏi thêm câu khác đi!**\n\nGõ câu hỏi của bạn, mình sẵn sàng trả lời! 😊",
             parse_mode="Markdown"
         )
     
     elif callback_data == "cancel_support":
         await query.edit_message_text(
-            "âŒ **ÄÃ£ há»§y táº¡o ticket.**\n\nNáº¿u cáº§n há»— trá»£, dÃ¹ng /support báº¥t cá»© lÃºc nÃ o!",
+            "❌ **Đã hủy tạo ticket.**\n\nNếu cần hỗ trợ, dùng /support bất cứ lúc nào!",
             parse_mode="Markdown"
         )
     
     elif callback_data == "start_register":
         # Start registration flow
         await query.edit_message_text(
-            "ðŸ“ **Báº®T Äáº¦U ÄÄ‚NG KÃ**\n\n"
-            "Báº¡n sáº½ nháº­n:\n"
-            "âœ… Template Google Sheet miá»…n phÃ­\n"
-            "âœ… HÆ°á»›ng dáº«n setup chi tiáº¿t\n"
-            "âœ… Quyá»n unlock FREE tier (náº¿u Ä‘Æ°á»£c giá»›i thiá»‡u)\n\n"
-            "ðŸ‘‰ GÃµ **/register** Ä‘á»ƒ báº¯t Ä‘áº§u!",
+            "📝 **BẮT ĐẦU ĐĂNG KÝ**\n\n"
+            "Bạn sẽ nhận:\n"
+            "✅ Template Google Sheet miễn phí\n"
+            "✅ Hướng dẫn setup chi tiết\n"
+            "✅ Quyền unlock FREE tier (nếu được giới thiệu)\n\n"
+            "👉 Gõ **/register** để bắt đầu!",
             parse_mode="Markdown"
         )
     
@@ -326,7 +389,7 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
         db_user = await get_user_by_id(user.id)
         
         if not db_user:
-            await query.edit_message_text("âŒ Lá»—i: KhÃ´ng tÃ¬m tháº¥y user. Vui lÃ²ng /start láº¡i.")
+            await query.edit_message_text("❌ Lỗi: Không tìm thấy user. Vui lòng /start lại.")
             return
         
         # Get referral stats
@@ -343,38 +406,38 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
         
         # Status message
         if is_unlocked:
-            status_msg = "âœ… **FREE FOREVER Ä‘Ã£ má»Ÿ khÃ³a!**\n\n"
+            status_msg = "✅ **FREE FOREVER đã mở khóa!**\n\n"
         else:
             remaining = 2 - referral_count
-            status_msg = f"ðŸŽ¯ **CÃ²n {remaining} ngÆ°á»i ná»¯a Ä‘á»ƒ má»Ÿ khÃ³a FREE!**\n\n"
+            status_msg = f"🎯 **Còn {remaining} người nữa để mở khóa FREE!**\n\n"
         
         # Build message
         message = f"""
-ðŸŽ **Há»† THá»NG GIá»šI THIá»†U Báº N BÃˆ**
+🎁 **HỆ THỐNG GIỚI THIỆU BẠN BÈ**
 
-{status_msg}ðŸ“Š **Thá»‘ng KÃª Cá»§a Báº¡n:**
-â€¢ MÃ£ giá»›i thiá»‡u: `{referral_code}`
-â€¢ ÄÃ£ giá»›i thiá»‡u: {referral_count} ngÆ°á»i
-â€¢ Tráº¡ng thÃ¡i: {"âœ… FREE Unlocked" if is_unlocked else "ðŸ”’ Äang khÃ³a"}
+{status_msg}📊 **Thống Kê Của Bạn:**
+• Mã giới thiệu: `{referral_code}`
+• Đã giới thiệu: {referral_count} người
+• Trạng thái: {"✅ FREE Unlocked" if is_unlocked else "🔒 Đang khóa"}
 
-ðŸ”— **Link giá»›i thiá»‡u:**
+🔗 **Link giới thiệu:**
 `{referral_link}`
 
-ðŸ“± **CÃ¡ch sá»­ dá»¥ng:**
-1. Copy link trÃªn
-2. Gá»­i cho báº¡n bÃ¨/gia Ä‘Ã¬nh
-3. Khi 2 ngÆ°á»i Ä‘Äƒng kÃ½ â†’ **FREE FOREVER**!
+📱 **Cách sử dụng:**
+1. Copy link trên
+2. Gửi cho bạn bè/gia đình
+3. Khi 2 người đăng ký → **FREE FOREVER**!
 
-ðŸ’Ž **Quyá»n lá»£i FREE:**
-âœ“ Bot khÃ´ng giá»›i háº¡n
-âœ“ Template Ä‘áº§y Ä‘á»§
-âœ“ HÆ°á»›ng dáº«n chi tiáº¿t
-âœ“ Cá»™ng Ä‘á»“ng support
+💎 **Quyền lợi FREE:**
+✓ Bot không giới hạn
+✓ Template đầy đủ
+✓ Hướng dẫn chi tiết
+✓ Cộng đồng support
 """
         
         # Show referred users list
         if referred_users:
-            message += f"\nðŸ‘¥ **ÄÃ£ giá»›i thiá»‡u:**\n"
+            message += f"\n👥 **Đã giới thiệu:**\n"
             for idx, ref_user in enumerate(referred_users[:5], 1):  # Max 5
                 name = ref_user['name']
                 date = ref_user['date'].strftime("%d/%m/%Y")
@@ -382,9 +445,9 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
         
         # Keyboard
         keyboard = [
-            [InlineKeyboardButton("ðŸ“¢ Chia sáº» ngay", 
-                                 url=f"https://t.me/share/url?url={referral_link}&text=Tham gia Freedom Wallet Bot - Quáº£n lÃ½ tÃ i chÃ­nh thÃ´ng minh!")],
-            [InlineKeyboardButton("Â« Quay láº¡i", callback_data="start")]
+            [InlineKeyboardButton("📢 Chia sẻ ngay", 
+                                 url=f"https://t.me/share/url?url={referral_link}&text=Tham gia Freedom Wallet Bot - Quản lý tài chính thông minh!")],
+            [InlineKeyboardButton("« Quay lại", callback_data="start")]
         ]
         
         await query.edit_message_text(
@@ -406,24 +469,24 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     elif callback_data == "vip_gifts":
         # Show VIP gift menu (6 gift options)
         keyboard = [
-            [InlineKeyboardButton("ðŸŽ Nháº­n Google Sheet 3.2", callback_data="gift_sheet")],
-            [InlineKeyboardButton("âš™ï¸ Nháº­n Google Apps Script", callback_data="gift_script")],
-            [InlineKeyboardButton("ðŸŒ HÆ°á»›ng dáº«n táº¡o Web App", url="https://eliroxbot.notion.site/freedomwallet")],
-            [InlineKeyboardButton("ðŸŽ¥ Xem video hÆ°á»›ng dáº«n", callback_data="gift_video")],
-            [InlineKeyboardButton("ðŸ’¬ Tham gia Group VIP", url="https://t.me/freedomwalletapp")],
-            [InlineKeyboardButton("ðŸ  VÃ o Dashboard", callback_data="start")]
+            [InlineKeyboardButton("🎁 Nhận Google Sheet 3.2", callback_data="gift_sheet")],
+            [InlineKeyboardButton("⚙️ Nhận Google Apps Script", callback_data="gift_script")],
+            [InlineKeyboardButton("🌐 Hướng dẫn tạo Web App", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("🎥 Xem video hướng dẫn", callback_data="gift_video")],
+            [InlineKeyboardButton("💬 Tham gia Group VIP", url="https://t.me/freedomwalletapp")],
+            [InlineKeyboardButton("🏠 Vào Dashboard", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            "ðŸŽ **MENU NHáº¬N QUÃ€**\n\n"
-            "Chá»n tá»«ng má»¥c bÃªn dÆ°á»›i Ä‘á»ƒ nháº­n quÃ  cá»§a báº¡n:\n\n"
-            "ðŸŽ **Google Sheet 3.2** - CÃ´ng cá»¥ quáº£n lÃ½ tÃ i chÃ­nh\n"
-            "âš™ï¸ **Apps Script** - Code tá»± Ä‘á»™ng hÃ³a\n"
-            "ðŸŒ **Web App Guide** - HÆ°á»›ng dáº«n deploy\n"
-            "ðŸŽ¥ **Video Tutorials** - Há»c tá»«ng bÆ°á»›c\n"
-            "ðŸ’¬ **VIP Group** - Cá»™ng Ä‘á»“ng Ä‘á»™c quyá»n\n\n"
-            "ðŸ’¡ Báº¡n cÃ³ thá»ƒ quay láº¡i menu nÃ y báº¥t cá»© lÃºc nÃ o!",
+            "🎁 **MENU NHẬN QUÀ**\n\n"
+            "Chọn từng mục bên dưới để nhận quà của bạn:\n\n"
+            "🎁 **Google Sheet 3.2** - Công cụ quản lý tài chính\n"
+            "⚙️ **Apps Script** - Code tự động hóa\n"
+            "🌐 **Web App Guide** - Hướng dẫn deploy\n"
+            "🎥 **Video Tutorials** - Học từng bước\n"
+            "💬 **VIP Group** - Cộng đồng độc quyền\n\n"
+            "💡 Bạn có thể quay lại menu này bất cứ lúc nào!",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
@@ -437,56 +500,56 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
         
         if success:
             await query.edit_message_text(
-                "ðŸŽ“ **HÃ€NH TRÃŒNH 7 NGÃ€Y Báº®T Äáº¦U!**\n\n"
-                "ChÃºc má»«ng! Báº¡n vá»«a Ä‘Äƒng kÃ½ hÃ nh trÃ¬nh há»c táº­p 7 ngÃ y.\n\n"
-                "ðŸ“… **Lá»‹ch trÃ¬nh:**\n"
-                "â€¢ Day 1: Giá»›i thiá»‡u 6 HÅ© Tiá»n\n"
-                "â€¢ Day 2: Setup Google Sheet cÆ¡ báº£n\n"
-                "â€¢ Day 3: Quáº£n lÃ½ thu chi hÃ ng ngÃ y\n"
-                "â€¢ Day 4: Apps Script & Automation\n"
-                "â€¢ Day 5: PhÃ¢n tÃ­ch tÃ i chÃ­nh\n"
-                "â€¢ Day 6: Má»¥c tiÃªu & Káº¿ hoáº¡ch\n"
-                "â€¢ Day 7: Dashboard & BÃ¡o cÃ¡o\n\n"
-                "ðŸ“¬ Má»—i ngÃ y báº¡n sáº½ nháº­n Ä‘Æ°á»£c:\n"
-                "âœ… 1 bÃ i há»c ngáº¯n (3-5 phÃºt)\n"
-                "âœ… Video hÆ°á»›ng dáº«n chi tiáº¿t\n"
-                "âœ… BÃ i táº­p thá»±c hÃ nh\n\n"
-                "ðŸ’¡ Tin nháº¯n Ä‘áº§u tiÃªn sáº½ Ä‘áº¿n trong vÃ i phÃºt!\n\n"
-                "ChÃºc báº¡n há»c táº­p hiá»‡u quáº£! ðŸš€",
+                "🎓 **HÀNH TRÌNH 7 NGÀY BẮT ĐẦU!**\n\n"
+                "Chúc mừng! Bạn vừa đăng ký hành trình học tập 7 ngày.\n\n"
+                "📅 **Lịch trình:**\n"
+                "• Day 1: Giới thiệu 6 Hũ Tiền\n"
+                "• Day 2: Setup Google Sheet cơ bản\n"
+                "• Day 3: Quản lý thu chi hàng ngày\n"
+                "• Day 4: Apps Script & Automation\n"
+                "• Day 5: Phân tích tài chính\n"
+                "• Day 6: Mục tiêu & Kế hoạch\n"
+                "• Day 7: Dashboard & Báo cáo\n\n"
+                "📬 Mỗi ngày bạn sẽ nhận được:\n"
+                "✅ 1 bài học ngắn (3-5 phút)\n"
+                "✅ Video hướng dẫn chi tiết\n"
+                "✅ Bài tập thực hành\n\n"
+                "💡 Tin nhắn đầu tiên sẽ đến trong vài phút!\n\n"
+                "Chúc bạn học tập hiệu quả! 🚀",
                 parse_mode="Markdown"
             )
         else:
             await query.edit_message_text(
-                "âŒ **Lá»—i**\n\n"
-                "KhÃ´ng thá»ƒ báº¯t Ä‘áº§u hÃ nh trÃ¬nh. Vui lÃ²ng thá»­ láº¡i sau.",
+                "❌ **Lỗi**\n\n"
+                "Không thể bắt đầu hành trình. Vui lòng thử lại sau.",
                 parse_mode="Markdown"
             )
     
     elif callback_data == "gift_sheet":
         # Send Google Sheet template link
         keyboard = [
-            [InlineKeyboardButton("ðŸŽ Nháº­n thÃªm quÃ  khÃ¡c", callback_data="vip_gifts")],
-            [InlineKeyboardButton("ðŸŽ“ Báº¯t Ä‘áº§u hÃ nh trÃ¬nh 7 ngÃ y", callback_data="onboarding_start")],
-            [InlineKeyboardButton("ðŸ  Vá» Dashboard", callback_data="start")]
+            [InlineKeyboardButton("🎁 Nhận thêm quà khác", callback_data="vip_gifts")],
+            [InlineKeyboardButton("🎓 Bắt đầu hành trình 7 ngày", callback_data="onboarding_start")],
+            [InlineKeyboardButton("🏠 Về Dashboard", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            "ðŸ“„ **GOOGLE SHEET TEMPLATE 3.2**\n\n"
-            "ÄÃ¢y lÃ  bá»™ cÃ´ng cá»¥ quáº£n lÃ½ tÃ i chÃ­nh cÃ¡ nhÃ¢n hoÃ n chá»‰nh:\n\n"
-            "âœ… 6 HÅ© Tiá»n tá»± Ä‘á»™ng\n"
-            "âœ… Dashboard trá»±c quan\n"
-            "âœ… Theo dÃµi 5 Cáº¥p Báº­c TÃ i ChÃ­nh\n"
-            "âœ… Quáº£n lÃ½ Ä‘áº§u tÆ° & ROI\n"
-            "âœ… BÃ¡o cÃ¡o thÃ¡ng/nÄƒm\n\n"
-            "ðŸ‘‰ **Link Template:**\n"
-            f"[Click Ä‘á»ƒ copy Template](https://docs.google.com/spreadsheets/d/{settings.YOUR_TEMPLATE_ID})\n\n"
-            "ðŸ“š **HÆ°á»›ng dáº«n sá»­ dá»¥ng:**\n"
-            "1. Click link trÃªn\n"
-            "2. File â†’ Make a copy\n"
-            "3. Äá»•i tÃªn theo Ã½ báº¡n\n"
-            "4. Báº¯t Ä‘áº§u dÃ¹ng ngay!\n\n"
-            "ðŸ’¡ Xem thÃªm: /help",
+            "📄 **GOOGLE SHEET TEMPLATE 3.2**\n\n"
+            "Đây là bộ công cụ quản lý tài chính cá nhân hoàn chỉnh:\n\n"
+            "✅ 6 Hũ Tiền tự động\n"
+            "✅ Dashboard trực quan\n"
+            "✅ Theo dõi 5 Cấp Bậc Tài Chính\n"
+            "✅ Quản lý đầu tư & ROI\n"
+            "✅ Báo cáo tháng/năm\n\n"
+            "👉 **Link Template:**\n"
+            f"[Click để copy Template](https://docs.google.com/spreadsheets/d/{settings.YOUR_TEMPLATE_ID})\n\n"
+            "📚 **Hướng dẫn sử dụng:**\n"
+            "1. Click link trên\n"
+            "2. File → Make a copy\n"
+            "3. Đổi tên theo ý bạn\n"
+            "4. Bắt đầu dùng ngay!\n\n"
+            "💡 Xem thêm: /help",
             parse_mode="Markdown",
             disable_web_page_preview=False,
             reply_markup=reply_markup
@@ -495,27 +558,27 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     elif callback_data == "gift_script":
         # Send Apps Script code snippet
         keyboard = [
-            [InlineKeyboardButton("ðŸŽ Nháº­n thÃªm quÃ  khÃ¡c", callback_data="vip_gifts")],
-            [InlineKeyboardButton("ðŸŽ“ Báº¯t Ä‘áº§u hÃ nh trÃ¬nh 7 ngÃ y", callback_data="onboarding_start")],
-            [InlineKeyboardButton("ðŸ  Vá» Dashboard", callback_data="start")]
+            [InlineKeyboardButton("🎁 Nhận thêm quà khác", callback_data="vip_gifts")],
+            [InlineKeyboardButton("🎓 Bắt đầu hành trình 7 ngày", callback_data="onboarding_start")],
+            [InlineKeyboardButton("🏠 Về Dashboard", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            "âš™ï¸ **GOOGLE APPS SCRIPT**\n\n"
-            "Script nÃ y tá»± Ä‘á»™ng hÃ³a viá»‡c Ä‘á»“ng bá»™ dá»¯ liá»‡u:\n\n"
-            "âœ… Auto sync Sheet â†’ Web App\n"
-            "âœ… Calculate 6 Jars balance\n"
-            "âœ… Update ROI dashboard\n"
-            "âœ… Generate reports\n\n"
-            "ðŸ“‹ **CÃ¡ch cÃ i Ä‘áº·t:**\n"
-            "1. Má»Ÿ Google Sheet cá»§a báº¡n\n"
-            "2. Extensions â†’ Apps Script\n"
-            "3. Copy paste code tá»« Notion guide\n"
+            "⚙️ **GOOGLE APPS SCRIPT**\n\n"
+            "Script này tự động hóa việc đồng bộ dữ liệu:\n\n"
+            "✅ Auto sync Sheet → Web App\n"
+            "✅ Calculate 6 Jars balance\n"
+            "✅ Update ROI dashboard\n"
+            "✅ Generate reports\n\n"
+            "📋 **Cách cài đặt:**\n"
+            "1. Mở Google Sheet của bạn\n"
+            "2. Extensions → Apps Script\n"
+            "3. Copy paste code từ Notion guide\n"
             "4. Deploy as Web App\n\n"
-            "ðŸŒ **Full guide:**\n"
-            "[Notion - HÆ°á»›ng dáº«n chi tiáº¿t](https://eliroxbot.notion.site/freedomwallet)\n\n"
-            "ðŸ’¡ Cáº§n há»— trá»£? Há»i mÃ¬nh báº¥t cá»© lÃºc nÃ o!",
+            "🌐 **Full guide:**\n"
+            "[Notion - Hướng dẫn chi tiết](https://eliroxbot.notion.site/freedomwallet)\n\n"
+            "💡 Cần hỗ trợ? Hỏi mình bất cứ lúc nào!",
             parse_mode="Markdown",
             disable_web_page_preview=False,
             reply_markup=reply_markup
@@ -524,30 +587,30 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     elif callback_data == "gift_video":
         # Send video tutorial links
         keyboard = [
-            [InlineKeyboardButton("ðŸŽ Nháº­n thÃªm quÃ  khÃ¡c", callback_data="vip_gifts")],
-            [InlineKeyboardButton("ðŸŽ“ Báº¯t Ä‘áº§u hÃ nh trÃ¬nh 7 ngÃ y", callback_data="onboarding_start")],
-            [InlineKeyboardButton("ðŸ  Vá» Dashboard", callback_data="start")]
+            [InlineKeyboardButton("🎁 Nhận thêm quà khác", callback_data="vip_gifts")],
+            [InlineKeyboardButton("🎓 Bắt đầu hành trình 7 ngày", callback_data="onboarding_start")],
+            [InlineKeyboardButton("🏠 Về Dashboard", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            "ðŸŽ¥ **VIDEO TUTORIALS**\n\n"
-            "Series video hÆ°á»›ng dáº«n tá»«ng bÆ°á»›c:\n\n"
-            "ðŸ“¹ **Video 1: Setup cÆ¡ báº£n (3 phÃºt)**\n"
-            "â€¢ Copy Google Sheet Template\n"
-            "â€¢ Cáº¥u hÃ¬nh cÆ¡ báº£n\n"
-            "â€¢ ThÃªm giao dá»‹ch Ä‘áº§u tiÃªn\n\n"
-            "ðŸ“¹ **Video 2: Apps Script & Web App (5 phÃºt)**\n"
-            "â€¢ Deploy Apps Script\n"
-            "â€¢ Táº¡o Web App URL\n"
-            "â€¢ Test Ä‘á»“ng bá»™\n\n"
-            "ðŸ“¹ **Video 3: Advanced features (7 phÃºt)**\n"
-            "â€¢ 6 HÅ© Tiá»n chi tiáº¿t\n"
-            "â€¢ Quáº£n lÃ½ Ä‘áº§u tÆ°\n"
-            "â€¢ ROI tracking\n\n"
-            "ðŸ”— **Link playlist:**\n"
+            "🎥 **VIDEO TUTORIALS**\n\n"
+            "Series video hướng dẫn từng bước:\n\n"
+            "📹 **Video 1: Setup cơ bản (3 phút)**\n"
+            "• Copy Google Sheet Template\n"
+            "• Cấu hình cơ bản\n"
+            "• Thêm giao dịch đầu tiên\n\n"
+            "📹 **Video 2: Apps Script & Web App (5 phút)**\n"
+            "• Deploy Apps Script\n"
+            "• Tạo Web App URL\n"
+            "• Test đồng bộ\n\n"
+            "📹 **Video 3: Advanced features (7 phút)**\n"
+            "• 6 Hũ Tiền chi tiết\n"
+            "• Quản lý đầu tư\n"
+            "• ROI tracking\n\n"
+            "🔗 **Link playlist:**\n"
             "[YouTube - Freedom Wallet Tutorials](https://youtube.com/@freedomwallet)\n\n"
-            "ðŸ’¬ Xem xong mÃ  cÃ²n tháº¯c máº¯c? Há»i mÃ¬nh nhÃ©!",
+            "💬 Xem xong mà còn thắc mắc? Hỏi mình nhé!",
             parse_mode="Markdown",
             disable_web_page_preview=False,
             reply_markup=reply_markup
@@ -559,25 +622,25 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     
     elif callback_data == "onboard_copy_template":
         # Send template link when user clicks Copy Template
-        await query.answer("ðŸ“‘ Äang gá»­i link template...")
+        await query.answer("📑 Đang gửi link template...")
         
         keyboard = [
-            [InlineKeyboardButton("ðŸŒ HÆ°á»›ng dáº«n Web App", url="https://eliroxbot.notion.site/freedomwallet")],
-            [InlineKeyboardButton("âœ… ÄÃ£ copy xong", callback_data="onboard_complete_1")],
-            [InlineKeyboardButton("â“ Cáº§n há»— trá»£", callback_data="onboard_help_1")]
+            [InlineKeyboardButton("🌐 Hướng dẫn Web App", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("✅ Đã copy xong", callback_data="onboard_complete_1")],
+            [InlineKeyboardButton("❓ Cần hỗ trợ", callback_data="onboard_help_1")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await context.bot.send_message(
             chat_id=query.from_user.id,
-            text=f"ðŸ“‘ **FREEDOM WALLET TEMPLATE**\n\n"
-                 f"ðŸ‘‰ **Link template:** [Click Ä‘á»ƒ má»Ÿ]({settings.YOUR_TEMPLATE_ID})\n\n"
-                 f"**CÃ¡ch sá»­ dá»¥ng:**\n"
-                 f"1. Click link á»Ÿ trÃªn\n"
-                 f"2. File â†’ Make a copy\n"
-                 f"3. Äáº·t tÃªn: 'My Freedom Wallet'\n"
-                 f"4. Click 'âœ… ÄÃ£ copy xong' bÃªn dÆ°á»›i\n\n"
-                 f"ðŸ’¡ Template sáº½ má»Ÿ trong Google Drive cá»§a báº¡n!",
+            text=f"📑 **FREEDOM WALLET TEMPLATE**\n\n"
+                 f"👉 **Link template:** [Click để mở]({settings.YOUR_TEMPLATE_ID})\n\n"
+                 f"**Cách sử dụng:**\n"
+                 f"1. Click link ở trên\n"
+                 f"2. File → Make a copy\n"
+                 f"3. Đặt tên: 'My Freedom Wallet'\n"
+                 f"4. Click '✅ Đã copy xong' bên dưới\n\n"
+                 f"💡 Template sẽ mở trong Google Drive của bạn!",
             parse_mode="Markdown",
             disable_web_page_preview=False,
             reply_markup=reply_markup
@@ -585,25 +648,25 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     
     elif callback_data == "onboard_video_day1":
         # Send Day 1 video tutorial
-        await query.answer("ðŸŽ¥ Äang gá»­i video tutorial...")
+        await query.answer("🎥 Đang gửi video tutorial...")
         
         keyboard = [
-            [InlineKeyboardButton("ðŸ“‘ Copy Template", callback_data="onboard_copy_template")],
-            [InlineKeyboardButton("ðŸŒ HÆ°á»›ng dáº«n Web App", url="https://eliroxbot.notion.site/freedomwallet")],
-            [InlineKeyboardButton("âœ… ÄÃ£ xem xong", callback_data="onboard_complete_1")]
+            [InlineKeyboardButton("📑 Copy Template", callback_data="onboard_copy_template")],
+            [InlineKeyboardButton("🌐 Hướng dẫn Web App", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("✅ Đã xem xong", callback_data="onboard_complete_1")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await context.bot.send_message(
             chat_id=query.from_user.id,
-            text="ðŸŽ¥ **VIDEO HÆ¯á»šNG DáºªN SETUP (3 PHÃšT)**\n\n"
-                 "ðŸ“¹ **Ná»™i dung video:**\n"
-                 "â€¢ CÃ¡ch copy template\n"
-                 "â€¢ Setup Google Apps Script\n"
-                 "â€¢ Deploy Web App\n"
-                 "â€¢ ThÃªm dá»¯ liá»‡u Ä‘áº§u tiÃªn\n\n"
-                 "ðŸ‘‰ **Link video:** [Xem trÃªn YouTube](https://youtube.com/@freedomwallet)\n\n"
-                 "ðŸ’¬ Xem xong mÃ  chÆ°a hiá»ƒu? Click 'Cáº§n há»— trá»£' nhÃ©!",
+            text="🎥 **VIDEO HƯỚNG DẪN SETUP (3 PHÚT)**\n\n"
+                 "📹 **Nội dung video:**\n"
+                 "• Cách copy template\n"
+                 "• Setup Google Apps Script\n"
+                 "• Deploy Web App\n"
+                 "• Thêm dữ liệu đầu tiên\n\n"
+                 "👉 **Link video:** [Xem trên YouTube](https://youtube.com/@freedomwallet)\n\n"
+                 "💬 Xem xong mà chưa hiểu? Click 'Cần hỗ trợ' nhé!",
             parse_mode="Markdown",
             disable_web_page_preview=False,
             reply_markup=reply_markup
@@ -611,41 +674,41 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     
     elif callback_data == "onboard_roadmap":
         # Show 7-day roadmap overview
-        await query.answer("ðŸ“‹ Äang gá»­i lá»™ trÃ¬nh...")
+        await query.answer("📋 Đang gửi lộ trình...")
         
         keyboard = [
-            [InlineKeyboardButton("ðŸ  Vá» Dashboard", callback_data="start")],
-            [InlineKeyboardButton("ðŸ’¬ Tham gia Group VIP", url="https://t.me/freedomwalletapp")]
+            [InlineKeyboardButton("🏠 Về Dashboard", callback_data="start")],
+            [InlineKeyboardButton("💬 Tham gia Group VIP", url="https://t.me/freedomwalletapp")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            "ðŸ“‹ **Lá»˜ TRÃŒNH 7 NGÃ€Y - FREEDOM WALLET**\n\n"
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-            "ðŸŽ **BÆ°á»›c Ä‘áº§u tiÃªn:** Thiáº¿t láº­p Freedom Wallet\n"
-            "   â€¢ Copy template, táº¡o Web App, nháº­p dá»¯ liá»‡u Ä‘áº§u tiÃªn\n"
-            "   â€¢ Thá»i gian: 10-15 phÃºt\n\n"
-            "ðŸ’° **NgÃ y 2:** Hiá»ƒu vá» 6 HÅ© Tiá»n\n"
-            "   â€¢ Chi tiÃªu thiáº¿t yáº¿u, HÆ°á»Ÿng thá»¥, Äáº§u tÆ°...\n"
-            "   â€¢ PhÃ¢n bá»• % thu nháº­p há»£p lÃ½\n\n"
-            "ðŸŽ¯ **NgÃ y 3:** 5 Cáº¥p Báº­c TÃ i ChÃ­nh\n"
-            "   â€¢ Tá»« Survival â†’ Financial Freedom\n"
-            "   â€¢ XÃ¡c Ä‘á»‹nh vá»‹ trÃ­ hiá»‡n táº¡i cá»§a báº¡n\n\n"
-            "âš¡ **NgÃ y 4:** ThÃªm giao dá»‹ch & Tracking\n"
-            "   â€¢ ThÃ³i quen ghi chÃ©p hÃ ng ngÃ y\n"
-            "   â€¢ Tips Ä‘á»ƒ tracking hiá»‡u quáº£\n\n"
-            "ðŸ“ˆ **NgÃ y 5:** TÃ­nh nÄƒng nÃ¢ng cao\n"
-            "   â€¢ Budget planning, ROI tracking\n"
-            "   â€¢ Automation vá»›i Apps Script\n\n"
-            "ðŸ‘¥ **NgÃ y 6:** Tham gia cá»™ng Ä‘á»“ng\n"
-            "   â€¢ Káº¿t ná»‘i vá»›i VIPs khÃ¡c\n"
-            "   â€¢ Chia sáº» & há»c há»i kinh nghiá»‡m\n\n"
-            "ðŸŽŠ **NgÃ y 7:** Ã”n táº­p & Káº¿ hoáº¡ch dÃ i háº¡n\n"
-            "   â€¢ Review toÃ n bá»™ há»‡ thá»‘ng\n"
-            "   â€¢ LÃªn káº¿ hoáº¡ch 30-90 ngÃ y tá»›i\n\n"
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-            "ðŸ’¡ Má»—i ngÃ y chá»‰ máº¥t 5-10 phÃºt.\n"
-            "Báº¡n sáº½ nháº­n tin nháº¯n vÃ o 10h sÃ¡ng má»—i ngÃ y!",
+            "📋 **LỘ TRÌNH 7 NGÀY - FREEDOM WALLET**\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "🎁 **Bước đầu tiên:** Thiết lập Freedom Wallet\n"
+            "   • Copy template, tạo Web App, nhập dữ liệu đầu tiên\n"
+            "   • Thời gian: 10-15 phút\n\n"
+            "💰 **Ngày 2:** Hiểu về 6 Hũ Tiền\n"
+            "   • Chi tiêu thiết yếu, Hưởng thụ, Đầu tư...\n"
+            "   • Phân bổ % thu nhập hợp lý\n\n"
+            "🎯 **Ngày 3:** 5 Cấp Bậc Tài Chính\n"
+            "   • Từ Survival → Financial Freedom\n"
+            "   • Xác định vị trí hiện tại của bạn\n\n"
+            "⚡ **Ngày 4:** Thêm giao dịch & Tracking\n"
+            "   • Thói quen ghi chép hàng ngày\n"
+            "   • Tips để tracking hiệu quả\n\n"
+            "📈 **Ngày 5:** Tính năng nâng cao\n"
+            "   • Budget planning, ROI tracking\n"
+            "   • Automation với Apps Script\n\n"
+            "👥 **Ngày 6:** Tham gia cộng đồng\n"
+            "   • Kết nối với VIPs khác\n"
+            "   • Chia sẻ & học hỏi kinh nghiệm\n\n"
+            "🎊 **Ngày 7:** Ôn tập & Kế hoạch dài hạn\n"
+            "   • Review toàn bộ hệ thống\n"
+            "   • Lên kế hoạch 30-90 ngày tới\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "💡 Mỗi ngày chỉ mất 5-10 phút.\n"
+            "Bạn sẽ nhận tin nhắn vào 10h sáng mỗi ngày!",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
@@ -655,23 +718,23 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
         day = callback_data.split("_")[-1]
         
         congratulations = {
-            "1": "ðŸŽ‰ **HOÃ€N THÃ€NH DAY 1!**\n\nXuáº¥t sáº¯c! Báº¡n Ä‘Ã£ setup xong Foundation.\n\nðŸ“… **NgÃ y mai:** TÃ¬m hiá»ƒu vá» 6 HÅ© Tiá»n\nðŸ’¬ MÃ¬nh sáº½ nháº¯n báº¡n khoáº£ng 10h sÃ¡ng!",
-            "2": "ðŸ’° **HOÃ€N THÃ€NH DAY 2!**\n\nBáº¡n Ä‘Ã£ hiá»ƒu vá» 6 HÅ© Tiá»n rá»“i Ä‘áº¥y!\n\nðŸ“… **NgÃ y mai:** 5 Cáº¥p Báº­c TÃ i ChÃ­nh",
-            "3": "ðŸŽ¯ **HOÃ€N THÃ€NH DAY 3!**\n\nÄÃ£ biáº¿t mÃ¬nh Ä‘ang á»Ÿ cáº¥p nÃ o chÆ°a?\n\nðŸ“… **NgÃ y mai:** ThÃªm giao dá»‹ch Ä‘áº§u tiÃªn",
-            "4": "âš¡ **HOÃ€N THÃ€NH DAY 4!**\n\nTracking tá»‘t! Tiáº¿p tá»¥c duy trÃ¬ nhÃ©.\n\nðŸ“… **NgÃ y mai:** TÃ­nh nÄƒng nÃ¢ng cao",
-            "5": "ðŸ“ˆ **HOÃ€N THÃ€NH DAY 5!**\n\nBáº¡n Ä‘Ã£ master Freedom Wallet rá»“i!\n\nðŸ“… **NgÃ y mai:** Challenge 30 ngÃ y",
-            "6": "ðŸ’ª **HOÃ€N THÃ€NH DAY 6!**\n\nReady for challenge?\n\nðŸ“… **NgÃ y mai:** Wrap up & next steps",
-            "7": "ðŸ† **HOÃ€N THÃ€NH 7-DAY JOURNEY!**\n\nChÃºc má»«ng! Báº¡n Ä‘Ã£ hoÃ n thÃ nh hÃ nh trÃ¬nh!\n\nðŸš€ Giá» lÃ  lÃºc Ã¡p dá»¥ng vÃ o thá»±c táº¿!"
+            "1": "🎉 **HOÀN THÀNH DAY 1!**\n\nXuất sắc! Bạn đã setup xong Foundation.\n\n📅 **Ngày mai:** Tìm hiểu về 6 Hũ Tiền\n💬 Mình sẽ nhắn bạn khoảng 10h sáng!",
+            "2": "💰 **HOÀN THÀNH DAY 2!**\n\nBạn đã hiểu về 6 Hũ Tiền rồi đấy!\n\n📅 **Ngày mai:** 5 Cấp Bậc Tài Chính",
+            "3": "🎯 **HOÀN THÀNH DAY 3!**\n\nĐã biết mình đang ở cấp nào chưa?\n\n📅 **Ngày mai:** Thêm giao dịch đầu tiên",
+            "4": "⚡ **HOÀN THÀNH DAY 4!**\n\nTracking tốt! Tiếp tục duy trì nhé.\n\n📅 **Ngày mai:** Tính năng nâng cao",
+            "5": "📈 **HOÀN THÀNH DAY 5!**\n\nBạn đã master Freedom Wallet rồi!\n\n📅 **Ngày mai:** Challenge 30 ngày",
+            "6": "💪 **HOÀN THÀNH DAY 6!**\n\nReady for challenge?\n\n📅 **Ngày mai:** Wrap up & next steps",
+            "7": "🏆 **HOÀN THÀNH 7-DAY JOURNEY!**\n\nChúc mừng! Bạn đã hoàn thành hành trình!\n\n🚀 Giờ là lúc áp dụng vào thực tế!"
         }
         
         keyboard = [
-            [InlineKeyboardButton("ðŸ’¬ Tham gia Group VIP", url="https://t.me/freedomwalletapp")],
-            [InlineKeyboardButton("ðŸ  Vá» Dashboard", callback_data="start")]
+            [InlineKeyboardButton("💬 Tham gia Group VIP", url="https://t.me/freedomwalletapp")],
+            [InlineKeyboardButton("🏠 Về Dashboard", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            congratulations.get(day, "âœ… HoÃ n thÃ nh!"),
+            congratulations.get(day, "✅ Hoàn thành!"),
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
@@ -684,26 +747,26 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
         day = callback_data.split("_")[-1]
         
         keyboard = [
-            [InlineKeyboardButton("ï¿½ HÆ°á»›ng dáº«n chi tiáº¿t (Notion)", url="https://eliroxbot.notion.site/freedomwallet")],
-            [InlineKeyboardButton("ðŸ’¬ Group VIP", url="https://t.me/freedomwalletapp")],
-            [InlineKeyboardButton("ðŸ“ž LiÃªn há»‡ Admin", url=f"https://t.me/{settings.BOT_USERNAME.replace('Bot', '')}")],
-            [InlineKeyboardButton("ðŸ”™ Quay láº¡i", callback_data=f"onboard_replay_{day}")]
+            [InlineKeyboardButton("� Hướng dẫn chi tiết (Notion)", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("💬 Group VIP", url="https://t.me/freedomwalletapp")],
+            [InlineKeyboardButton("📞 Liên hệ Admin", url=f"https://t.me/{settings.BOT_USERNAME.replace('Bot', '')}")],
+            [InlineKeyboardButton("🔙 Quay lại", callback_data=f"onboard_replay_{day}")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            f"â“ **Cáº¦N Há»– TRá»¢?**\n\n"
-            f"KhÃ´ng sao cáº£! MÃ¬nh á»Ÿ Ä‘Ã¢y Ä‘á»ƒ giÃºp báº¡n.\n\n"
-            f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-            f"**Báº¡n cÃ³ thá»ƒ:**\n\n"
-            f"ðŸ“– **Xem hÆ°á»›ng dáº«n chi tiáº¿t** (cÃ³ áº£nh tá»«ng bÆ°á»›c)\n"
-            f"ðŸ’¬ **Há»i trong Group VIP** (community ráº¥t nhiá»‡t tÃ¬nh)\n"
-            f"ðŸ“ž **Nháº¯n Admin** (há»— trá»£ 1-1)\n\n"
-            f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-            f"â° **Thá»i gian há»— trá»£:**\n"
-            f"â€¢ Thá»© 2-6: 9h-21h\n"
-            f"â€¢ Thá»© 7-CN: 10h-18h\n\n"
-            f"ðŸ’¬ Hoáº·c gÃµ trá»±c tiáº¿p cÃ¢u há»i Ä‘á»ƒ mÃ¬nh tráº£ lá»i nhÃ©!",
+            f"❓ **CẦN HỖ TRỢ?**\n\n"
+            f"Không sao cả! Mình ở đây để giúp bạn.\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"**Bạn có thể:**\n\n"
+            f"📖 **Xem hướng dẫn chi tiết** (có ảnh từng bước)\n"
+            f"💬 **Hỏi trong Group VIP** (community rất nhiệt tình)\n"
+            f"📞 **Nhắn Admin** (hỗ trợ 1-1)\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"⏰ **Thời gian hỗ trợ:**\n"
+            f"• Thứ 2-6: 9h-21h\n"
+            f"• Thứ 7-CN: 10h-18h\n\n"
+            f"💬 Hoặc gõ trực tiếp câu hỏi để mình trả lời nhé!",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
@@ -714,18 +777,18 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     
     elif callback_data == "vip_continue":
         # Message 3B: Action menu after user sees benefits
-        await query.answer("âœ¨ Xuáº¥t sáº¯c!")
+        await query.answer("✨ Xuất sắc!")
         
         keyboard_3b = [
-            [InlineKeyboardButton("âœ… TÃ´i Ä‘Ã£ táº¡o xong", callback_data="webapp_ready")],
-            [InlineKeyboardButton("ðŸ“– Xem hÆ°á»›ng dáº«n 3 bÆ°á»›c", callback_data="webapp_setup_guide")]
+            [InlineKeyboardButton("✅ Tôi đã tạo xong", callback_data="webapp_ready")],
+            [InlineKeyboardButton("📖 Xem hướng dẫn 3 bước", callback_data="webapp_setup_guide")]
         ]
         reply_markup_3b = InlineKeyboardMarkup(keyboard_3b)
         
         await query.edit_message_text(
-            "ðŸš€ **Äá»ƒ sá»­ dá»¥ng Freedom Wallet,**\n"
-            "báº¡n cáº§n táº¡o Web App (3â€“5 phÃºt).\n\n"
-            "Báº¡n Ä‘Ã£ táº¡o xong chÆ°a?",
+            "🚀 **Để sử dụng Freedom Wallet,**\n"
+            "bạn cần tạo Web App (3–5 phút).\n\n"
+            "Bạn đã tạo xong chưa?",
             parse_mode="Markdown",
             reply_markup=reply_markup_3b
         )
@@ -736,43 +799,43 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     
     elif callback_data == "webapp_ready":
         # User confirmed they completed Web App setup
-        await query.answer("ðŸŽ‰ Tuyá»‡t vá»i! ChÃºc má»«ng báº¡n!")
+        await query.answer("🎉 Tuyệt vời! Chúc mừng bạn!")
         
         keyboard = [
-            [InlineKeyboardButton("ðŸ“Š Xem hÆ°á»›ng dáº«n sá»­ dá»¥ng", callback_data="onboard_complete_1")],
-            [InlineKeyboardButton("ðŸŽ Nháº­n thÃªm quÃ  VIP", callback_data="vip_gifts")],
-            [InlineKeyboardButton("ðŸ’¬ Tham gia Group", url="https://t.me/freedomwalletapp")],
-            [InlineKeyboardButton("ðŸ  Dashboard", callback_data="start")]
+            [InlineKeyboardButton("📊 Xem hướng dẫn sử dụng", callback_data="onboard_complete_1")],
+            [InlineKeyboardButton("🎁 Nhận thêm quà VIP", callback_data="vip_gifts")],
+            [InlineKeyboardButton("💬 Tham gia Group", url="https://t.me/freedomwalletapp")],
+            [InlineKeyboardButton("🏠 Dashboard", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            "ðŸŽ‰ **XUáº¤T Sáº®C! Báº N ÄÃƒ HOÃ€N THÃ€NH SETUP!**\n\n"
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-            "âœ… Web App Freedom Wallet cá»§a báº¡n Ä‘Ã£ sáºµn sÃ ng!\n\n"
-            "ðŸš€ **BÆ¯á»šC TIáº¾P THEO:**\n\n"
-            "1ï¸âƒ£ **ThÃªm giao dá»‹ch Ä‘áº§u tiÃªn**\n"
-            "   â€¢ Má»Ÿ Web App cá»§a báº¡n\n"
-            "   â€¢ Click 'ThÃªm giao dá»‹ch'\n"
-            "   â€¢ Nháº­p thu/chi hÃ´m nay\n\n"
-            "2ï¸âƒ£ **KhÃ¡m phÃ¡ 6 HÅ© Tiá»n**\n"
-            "   â€¢ Xem phÃ¢n bá»• tá»± Ä‘á»™ng\n"
-            "   â€¢ Äiá»u chá»‰nh % theo nhu cáº§u\n\n"
-            "3ï¸âƒ£ **Theo dÃµi dashboard**\n"
-            "   â€¢ Biá»ƒu Ä‘á»“ thu chi\n"
-            "   â€¢ ROI tracking\n"
-            "   â€¢ Financial Level\n\n"
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-            "ðŸ’¡ **Lá»i khuyÃªn:**\n"
-            "Track má»—i ngÃ y trong 7 ngÃ y Ä‘áº§u Ä‘á»ƒ hÃ¬nh thÃ nh thÃ³i quen!\n\n"
-            "ðŸ“š Cáº§n há»— trá»£? Há»i trong Group VIP nhÃ©!",
+            "🎉 **XUẤT SẮC! BẠN ĐÃ HOÀN THÀNH SETUP!**\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "✅ Web App Freedom Wallet của bạn đã sẵn sàng!\n\n"
+            "🚀 **BƯỚC TIẾP THEO:**\n\n"
+            "1️⃣ **Thêm giao dịch đầu tiên**\n"
+            "   • Mở Web App của bạn\n"
+            "   • Click 'Thêm giao dịch'\n"
+            "   • Nhập thu/chi hôm nay\n\n"
+            "2️⃣ **Khám phá 6 Hũ Tiền**\n"
+            "   • Xem phân bổ tự động\n"
+            "   • Điều chỉnh % theo nhu cầu\n\n"
+            "3️⃣ **Theo dõi dashboard**\n"
+            "   • Biểu đồ thu chi\n"
+            "   • ROI tracking\n"
+            "   • Financial Level\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "💡 **Lời khuyên:**\n"
+            "Track mỗi ngày trong 7 ngày đầu để hình thành thói quen!\n\n"
+            "📚 Cần hỗ trợ? Hỏi trong Group VIP nhé!",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
     
     elif callback_data == "webapp_setup_guide":
         # Send step-by-step setup guide with images
-        await query.answer("ðŸ“– Äang gá»­i hÆ°á»›ng dáº«n chi tiáº¿t...")
+        await query.answer("📖 Đang gửi hướng dẫn chi tiết...")
         
         from pathlib import Path
         import asyncio
@@ -784,12 +847,12 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
                 await context.bot.send_photo(
                     chat_id=query.from_user.id,
                     photo=photo,
-                    caption="ðŸ“‹ **BÆ¯á»šC 1: Táº O Báº¢N SAO**\n\n"
-                            "1ï¸âƒ£ Click link template: [v3.2] Freedom Wallet\n"
-                            "2ï¸âƒ£ VÃ o **File** â†’ **Make a copy**\n"
-                            "3ï¸âƒ£ Äáº·t tÃªn: 'My Freedom Wallet'\n"
-                            "4ï¸âƒ£ LÆ°u vÃ o Google Drive cá»§a báº¡n\n\n"
-                            "âœ… Done? Chá» BÆ°á»›c 2...",
+                    caption="📋 **BƯỚC 1: TẠO BẢN SAO**\n\n"
+                            "1️⃣ Click link template: [v3.2] Freedom Wallet\n"
+                            "2️⃣ Vào **File** → **Make a copy**\n"
+                            "3️⃣ Đặt tên: 'My Freedom Wallet'\n"
+                            "4️⃣ Lưu vào Google Drive của bạn\n\n"
+                            "✅ Done? Chờ Bước 2...",
                     parse_mode="Markdown"
                 )
         
@@ -802,13 +865,13 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
                 await context.bot.send_photo(
                     chat_id=query.from_user.id,
                     photo=photo,
-                    caption="âš™ï¸ **BÆ¯á»šC 2: Má»ž APPS SCRIPT**\n\n"
-                            "1ï¸âƒ£ Trong Google Sheet vá»«a copy\n"
-                            "2ï¸âƒ£ Click **Extensions** (thanh menu trÃªn)\n"
-                            "3ï¸âƒ£ Chá»n **Apps Script**\n"
-                            "4ï¸âƒ£ Cá»­a sá»• má»›i sáº½ má»Ÿ ra\n\n"
-                            "ðŸ’¡ Náº¿u khÃ´ng tháº¥y Extensions, báº¥m vÃ o 3 cháº¥m (...) á»Ÿ menu\n\n"
-                            "âœ… ÄÃ£ má»Ÿ Apps Script? Chá» BÆ°á»›c 3...",
+                    caption="⚙️ **BƯỚC 2: MỞ APPS SCRIPT**\n\n"
+                            "1️⃣ Trong Google Sheet vừa copy\n"
+                            "2️⃣ Click **Extensions** (thanh menu trên)\n"
+                            "3️⃣ Chọn **Apps Script**\n"
+                            "4️⃣ Cửa sổ mới sẽ mở ra\n\n"
+                            "💡 Nếu không thấy Extensions, bấm vào 3 chấm (...) ở menu\n\n"
+                            "✅ Đã mở Apps Script? Chờ Bước 3...",
                     parse_mode="Markdown"
                 )
         
@@ -821,17 +884,17 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
                 await context.bot.send_photo(
                     chat_id=query.from_user.id,
                     photo=photo,
-                    caption="ðŸš€ **BÆ¯á»šC 3: DEPLOY WEB APP**\n\n"
-                            "1ï¸âƒ£ Trong Apps Script editor\n"
-                            "2ï¸âƒ£ Click nÃºt **Deploy** (gÃ³c trÃªn bÃªn pháº£i)\n"
-                            "3ï¸âƒ£ Chá»n **New deployment**\n"
-                            "4ï¸âƒ£ Type: **Web app**\n"
-                            "5ï¸âƒ£ Execute as: **Me**\n"
-                            "6ï¸âƒ£ Who has access: **Anyone**\n"
-                            "7ï¸âƒ£ Click **Deploy**\n"
-                            "8ï¸âƒ£ Copy **Web app URL** â†’ Save láº¡i!\n\n"
-                            "âš ï¸ **LÆ°u Ã½:** Láº§n Ä‘áº§u sáº½ cáº§n authorize (cho phÃ©p quyá»n)\n\n"
-                            "âœ… ÄÃ£ deploy xong? Xem BÆ°á»›c 4...",
+                    caption="🚀 **BƯỚC 3: DEPLOY WEB APP**\n\n"
+                            "1️⃣ Trong Apps Script editor\n"
+                            "2️⃣ Click nút **Deploy** (góc trên bên phải)\n"
+                            "3️⃣ Chọn **New deployment**\n"
+                            "4️⃣ Type: **Web app**\n"
+                            "5️⃣ Execute as: **Me**\n"
+                            "6️⃣ Who has access: **Anyone**\n"
+                            "7️⃣ Click **Deploy**\n"
+                            "8️⃣ Copy **Web app URL** → Save lại!\n\n"
+                            "⚠️ **Lưu ý:** Lần đầu sẽ cần authorize (cho phép quyền)\n\n"
+                            "✅ Đã deploy xong? Xem Bước 4...",
                     parse_mode="Markdown"
                 )
         
@@ -840,10 +903,10 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
         # Step 4: Completed
         step4_image = Path("media/images/buoc-4-completed.jpg")
         keyboard = [
-            [InlineKeyboardButton("âœ… ÄÃ£ lÃ m xong!", callback_data="webapp_ready")],
-            [InlineKeyboardButton("ðŸŒ HÆ°á»›ng dáº«n chi tiáº¿t", url="https://eliroxbot.notion.site/freedomwallet")],
-            [InlineKeyboardButton("â“ Cáº§n há»— trá»£", callback_data="webapp_need_help")],
-            [InlineKeyboardButton("ðŸ”™ Xem láº¡i tá»« Ä‘áº§u", callback_data="webapp_setup_guide")]
+            [InlineKeyboardButton("✅ Đã làm xong!", callback_data="webapp_ready")],
+            [InlineKeyboardButton("🌐 Hướng dẫn chi tiết", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("❓ Cần hỗ trợ", callback_data="webapp_need_help")],
+            [InlineKeyboardButton("🔙 Xem lại từ đầu", callback_data="webapp_setup_guide")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
@@ -852,38 +915,38 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
                 await context.bot.send_photo(
                     chat_id=query.from_user.id,
                     photo=photo,
-                    caption="ðŸŽ‰ **HOÃ€N Táº¤T! WEB APP Cá»¦A Báº N Sáº´N SÃ€NG!**\n\n"
-                            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-                            "ðŸŒ **Web App URL** Ä‘Ã£ Ä‘Æ°á»£c táº¡o!\n\n"
-                            "ðŸ“± **CÃ¡ch sá»­ dá»¥ng:**\n"
-                            "â€¢ Má»Ÿ URL trÃªn Ä‘iá»‡n thoáº¡i/mÃ¡y tÃ­nh\n"
-                            "â€¢ Add to Home Screen (náº¿u dÃ¹ng mobile)\n"
-                            "â€¢ Báº¯t Ä‘áº§u thÃªm giao dá»‹ch!\n\n"
-                            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-                            "ðŸ’¡ **Máº¹o:**\n"
-                            "â€¢ Bookmark URL Ä‘á»ƒ truy cáº­p nhanh\n"
-                            "â€¢ Äá»“ng bá»™ tá»± Ä‘á»™ng má»—i khi báº¡n cáº­p nháº­t\n"
-                            "â€¢ Dá»¯ liá»‡u lÆ°u trong Google Sheet cá»§a báº¡n\n\n"
-                            "ðŸŽ¯ **Báº¡n Ä‘Ã£ lÃ m xong chÆ°a?**",
+                    caption="🎉 **HOÀN TẤT! WEB APP CỦA BẠN SẴN SÀNG!**\n\n"
+                            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                            "🌐 **Web App URL** đã được tạo!\n\n"
+                            "📱 **Cách sử dụng:**\n"
+                            "• Mở URL trên điện thoại/máy tính\n"
+                            "• Add to Home Screen (nếu dùng mobile)\n"
+                            "• Bắt đầu thêm giao dịch!\n\n"
+                            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                            "💡 **Mẹo:**\n"
+                            "• Bookmark URL để truy cập nhanh\n"
+                            "• Đồng bộ tự động mỗi khi bạn cập nhật\n"
+                            "• Dữ liệu lưu trong Google Sheet của bạn\n\n"
+                            "🎯 **Bạn đã làm xong chưa?**",
                     parse_mode="Markdown",
                     reply_markup=reply_markup
                 )
         else:
             await context.bot.send_message(
                 chat_id=query.from_user.id,
-                text="ðŸŽ‰ **HOÃ€N Táº¤T! WEB APP Cá»¦A Báº N Sáº´N SÃ€NG!**\n\n"
-                     "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-                     "ðŸŒ **Web App URL** Ä‘Ã£ Ä‘Æ°á»£c táº¡o!\n\n"
-                     "ðŸ“± **CÃ¡ch sá»­ dá»¥ng:**\n"
-                     "â€¢ Má»Ÿ URL trÃªn Ä‘iá»‡n thoáº¡i/mÃ¡y tÃ­nh\n"
-                     "â€¢ Add to Home Screen (náº¿u dÃ¹ng mobile)\n"
-                     "â€¢ Báº¯t Ä‘áº§u thÃªm giao dá»‹ch!\n\n"
-                     "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-                     "ðŸ’¡ **Máº¹o:**\n"
-                     "â€¢ Bookmark URL Ä‘á»ƒ truy cáº­p nhanh\n"
-                     "â€¢ Äá»“ng bá»™ tá»± Ä‘á»™ng má»—i khi báº¡n cáº­p nháº­t\n"
-                     "â€¢ Dá»¯ liá»‡u lÆ°u trong Google Sheet cá»§a báº¡n\n\n"
-                     "ðŸŽ¯ **Báº¡n Ä‘Ã£ lÃ m xong chÆ°a?**",
+                text="🎉 **HOÀN TẤT! WEB APP CỦA BẠN SẴN SÀNG!**\n\n"
+                     "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                     "🌐 **Web App URL** đã được tạo!\n\n"
+                     "📱 **Cách sử dụng:**\n"
+                     "• Mở URL trên điện thoại/máy tính\n"
+                     "• Add to Home Screen (nếu dùng mobile)\n"
+                     "• Bắt đầu thêm giao dịch!\n\n"
+                     "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                     "💡 **Mẹo:**\n"
+                     "• Bookmark URL để truy cập nhanh\n"
+                     "• Đồng bộ tự động mỗi khi bạn cập nhật\n"
+                     "• Dữ liệu lưu trong Google Sheet của bạn\n\n"
+                     "🎯 **Bạn đã làm xong chưa?**",
                 parse_mode="Markdown",
                 reply_markup=reply_markup
             )
@@ -891,36 +954,36 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     elif callback_data == "webapp_need_help":
         # User needs help with Web App setup
         keyboard = [
-            [InlineKeyboardButton("ðŸ”™ Xem láº¡i hÆ°á»›ng dáº«n", callback_data="webapp_setup_guide")],
-            [InlineKeyboardButton("ðŸŒ Notion chi tiáº¿t", url="https://eliroxbot.notion.site/freedomwallet")],
-            [InlineKeyboardButton("ðŸ’¬ Há»i trong Group", url="https://t.me/freedomwalletapp")],
-            [InlineKeyboardButton("ðŸ“ž LiÃªn há»‡ Admin", url=f"https://t.me/{settings.BOT_USERNAME.replace('Bot', '')}")]
+            [InlineKeyboardButton("🔙 Xem lại hướng dẫn", callback_data="webapp_setup_guide")],
+            [InlineKeyboardButton("🌐 Notion chi tiết", url="https://eliroxbot.notion.site/freedomwallet")],
+            [InlineKeyboardButton("💬 Hỏi trong Group", url="https://t.me/freedomwalletapp")],
+            [InlineKeyboardButton("📞 Liên hệ Admin", url=f"https://t.me/{settings.BOT_USERNAME.replace('Bot', '')}")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            "â“ **Cáº¦N Há»– TRá»¢ SETUP WEB APP?**\n\n"
-            "MÃ¬nh sáºµn sÃ ng giÃºp báº¡n!\n\n"
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-            "**ðŸ’¬ CÃC CÃCH ÄÆ¯á»¢C Há»– TRá»¢:**\n\n"
-            "1ï¸âƒ£ **Xem láº¡i hÆ°á»›ng dáº«n**\n"
-            "   â€¢ Click 'Xem láº¡i hÆ°á»›ng dáº«n'\n"
-            "   â€¢ Follow tá»«ng bÆ°á»›c cáº©n tháº­n\n\n"
-            "2ï¸âƒ£ **Äá»c Notion chi tiáº¿t**\n"
-            "   â€¢ HÆ°á»›ng dáº«n cÃ³ áº£nh chá»¥p mÃ n hÃ¬nh\n"
-            "   â€¢ Video demo\n"
-            "   â€¢ FAQ troubleshooting\n\n"
-            "3ï¸âƒ£ **Há»i Group VIP**\n"
-            "   â€¢ Response nhanh tá»« community\n"
-            "   â€¢ Nhiá»u ngÆ°á»i Ä‘Ã£ setup thÃ nh cÃ´ng\n\n"
-            "4ï¸âƒ£ **LiÃªn há»‡ Admin trá»±c tiáº¿p**\n"
-            "   â€¢ 1-1 support\n"
-            "   â€¢ Screen share náº¿u cáº§n\n\n"
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-            "â° **Thá»i gian há»— trá»£:**\n"
-            "â€¢ Thá»© 2-6: 9h-21h\n"
-            "â€¢ Thá»© 7-CN: 10h-18h\n\n"
-            "**Gáº·p váº¥n Ä‘á» gÃ¬ cá»¥ thá»ƒ?**\nGÃµ mÃ´ táº£ Ä‘á»ƒ mÃ¬nh há»— trá»£!",
+            "❓ **CẦN HỖ TRỢ SETUP WEB APP?**\n\n"
+            "Mình sẵn sàng giúp bạn!\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "**💬 CÁC CÁCH ĐƯỢC HỖ TRỢ:**\n\n"
+            "1️⃣ **Xem lại hướng dẫn**\n"
+            "   • Click 'Xem lại hướng dẫn'\n"
+            "   • Follow từng bước cẩn thận\n\n"
+            "2️⃣ **Đọc Notion chi tiết**\n"
+            "   • Hướng dẫn có ảnh chụp màn hình\n"
+            "   • Video demo\n"
+            "   • FAQ troubleshooting\n\n"
+            "3️⃣ **Hỏi Group VIP**\n"
+            "   • Response nhanh từ community\n"
+            "   • Nhiều người đã setup thành công\n\n"
+            "4️⃣ **Liên hệ Admin trực tiếp**\n"
+            "   • 1-1 support\n"
+            "   • Screen share nếu cần\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "⏰ **Thời gian hỗ trợ:**\n"
+            "• Thứ 2-6: 9h-21h\n"
+            "• Thứ 7-CN: 10h-18h\n\n"
+            "**Gặp vấn đề gì cụ thể?**\nGõ mô tả để mình hỗ trợ!",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
@@ -928,44 +991,44 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     elif callback_data == "super_vip_benefits":
         # Show Super VIP benefits details
         keyboard = [
-            [InlineKeyboardButton("ðŸ† Xem Báº£ng xáº¿p háº¡ng", callback_data="leaderboard")],
-            [InlineKeyboardButton("ðŸŽ Nháº­n quÃ  Ä‘áº·c biá»‡t", callback_data="super_vip_gifts")],
-            [InlineKeyboardButton("ðŸ  Dashboard", callback_data="start")]
+            [InlineKeyboardButton("🏆 Xem Bảng xếp hạng", callback_data="leaderboard")],
+            [InlineKeyboardButton("🎁 Nhận quà đặc biệt", callback_data="super_vip_gifts")],
+            [InlineKeyboardButton("🏠 Dashboard", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-            "ðŸŒŸ **Äáº¶C QUYá»€N SUPER VIP**\n"
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-            "**âœ¨ Táº¥t cáº£ quyá»n lá»£i VIP PLUS:**\n\n"
-            "ðŸŽ¯ **Há»— trá»£ Æ°u tiÃªn cáº¥p cao 24/7**\n"
-            "   â€¢ Response time < 30 phÃºt\n"
-            "   â€¢ Dedicated support team\n"
-            "   â€¢ Direct line vá»›i Admin\n\n"
-            "ðŸŽ **QuÃ  táº·ng Ä‘á»™c quyá»n hÃ ng thÃ¡ng**\n"
-            "   â€¢ Templates má»›i nháº¥t\n"
-            "   â€¢ Scripts nÃ¢ng cao\n"
-            "   â€¢ Exclusive features\n\n"
-            "ðŸ† **Hiá»ƒn thá»‹ trÃªn Báº£ng xáº¿p háº¡ng**\n"
-            "   â€¢ Top Referrers public\n"
-            "   â€¢ Badge Ä‘áº·c biá»‡t\n"
-            "   â€¢ Recognition tá»« cá»™ng Ä‘á»“ng\n\n"
-            "ðŸ’¬ **Group Super VIP Private**\n"
-            "   â€¢ Networking vá»›i top performers\n"
-            "   â€¢ Share strategies & tips\n"
-            "   â€¢ Early access features\n\n"
-            "ðŸŽ“ **Workshop & Training Ä‘á»™c quyá»n**\n"
-            "   â€¢ Monthly masterclasses\n"
-            "   â€¢ Advanced techniques\n"
-            "   â€¢ One-on-one coaching\n\n"
-            "ðŸ’° **Commission cao hÆ¡n** (Coming soon)\n"
-            "   â€¢ Affiliate program\n"
-            "   â€¢ Revenue sharing\n"
-            "   â€¢ Partnership opportunities\n\n"
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-            "âš¡ **LÆ°u Ã½:** Super VIP cáº§n duy trÃ¬\n"
-            "hoáº¡t Ä‘á»™ng thÆ°á»ng xuyÃªn Ä‘á»ƒ giá»¯ danh hiá»‡u.",
+            "━━━━━━━━━━━━━━━━━━━━━\n"
+            "🌟 **ĐẶC QUYỀN SUPER VIP**\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "**✨ Tất cả quyền lợi VIP PLUS:**\n\n"
+            "🎯 **Hỗ trợ ưu tiên cấp cao 24/7**\n"
+            "   • Response time < 30 phút\n"
+            "   • Dedicated support team\n"
+            "   • Direct line với Admin\n\n"
+            "🎁 **Quà tặng độc quyền hàng tháng**\n"
+            "   • Templates mới nhất\n"
+            "   • Scripts nâng cao\n"
+            "   • Exclusive features\n\n"
+            "🏆 **Hiển thị trên Bảng xếp hạng**\n"
+            "   • Top Referrers public\n"
+            "   • Badge đặc biệt\n"
+            "   • Recognition từ cộng đồng\n\n"
+            "💬 **Group Super VIP Private**\n"
+            "   • Networking với top performers\n"
+            "   • Share strategies & tips\n"
+            "   • Early access features\n\n"
+            "🎓 **Workshop & Training độc quyền**\n"
+            "   • Monthly masterclasses\n"
+            "   • Advanced techniques\n"
+            "   • One-on-one coaching\n\n"
+            "💰 **Commission cao hơn** (Coming soon)\n"
+            "   • Affiliate program\n"
+            "   • Revenue sharing\n"
+            "   • Partnership opportunities\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n"
+            "⚡ **Lưu ý:** Super VIP cần duy trì\n"
+            "hoạt động thường xuyên để giữ danh hiệu.",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
@@ -983,30 +1046,30 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
                 User.referral_count.desc()
             ).limit(10).all()
             
-            leaderboard_text = "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-            leaderboard_text += "ðŸ† **Báº¢NG Xáº¾P Háº NG TOP REFERRERS**\n"
-            leaderboard_text += "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
+            leaderboard_text = "━━━━━━━━━━━━━━━━━━━━━\n"
+            leaderboard_text += "🏆 **BẢNG XẾP HẠNG TOP REFERRERS**\n"
+            leaderboard_text += "━━━━━━━━━━━━━━━━━━━━━\n\n"
             
-            medals = ["ðŸ¥‡", "ðŸ¥ˆ", "ðŸ¥‰"]
+            medals = ["🥇", "🥈", "🥉"]
             for idx, user in enumerate(top_users, 1):
-                medal = medals[idx-1] if idx <= 3 else f"{idx}ï¸âƒ£"
+                medal = medals[idx-1] if idx <= 3 else f"{idx}️⃣"
                 name = user.username or user.full_name or "Anonymous"
                 refs = user.referral_count
                 
                 # Show Super VIP badge
-                badge = "ðŸŒŸ" if refs >= 50 else "â­" if refs >= 2 else ""
+                badge = "🌟" if refs >= 50 else "⭐" if refs >= 2 else ""
                 
                 leaderboard_text += f"{medal} **{name}** {badge}\n"
-                leaderboard_text += f"     {refs} lÆ°á»£t giá»›i thiá»‡u\n\n"
+                leaderboard_text += f"     {refs} lượt giới thiệu\n\n"
             
-            leaderboard_text += "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-            leaderboard_text += "ðŸ’¡ Báº¡n muá»‘n lÃªn top? Share link ngay!\n"
-            leaderboard_text += "/referral Ä‘á»ƒ xem link cá»§a báº¡n"
+            leaderboard_text += "━━━━━━━━━━━━━━━━━━━━━\n"
+            leaderboard_text += "💡 Bạn muốn lên top? Share link ngay!\n"
+            leaderboard_text += "/referral để xem link của bạn"
             
             keyboard = [
-                [InlineKeyboardButton("ðŸ”— Xem link giá»›i thiá»‡u", callback_data="referral_menu")],
-                [InlineKeyboardButton("ðŸŒŸ Äáº·c quyá»n Super VIP", callback_data="super_vip_benefits")],
-                [InlineKeyboardButton("ðŸ  Dashboard", callback_data="start")]
+                [InlineKeyboardButton("🔗 Xem link giới thiệu", callback_data="referral_menu")],
+                [InlineKeyboardButton("🌟 Đặc quyền Super VIP", callback_data="super_vip_benefits")],
+                [InlineKeyboardButton("🏠 Dashboard", callback_data="start")]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
@@ -1021,37 +1084,37 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
     elif callback_data == "super_vip_gifts":
         # Show Super VIP exclusive gifts
         keyboard = [
-            [InlineKeyboardButton("ðŸ“Š Advanced Templates", callback_data="super_gift_templates")],
-            [InlineKeyboardButton("âš™ï¸ Premium Scripts", callback_data="super_gift_scripts")],
-            [InlineKeyboardButton("ðŸŽ“ Exclusive Training", url="https://freedomwallet.com/super-vip-training")],
-            [InlineKeyboardButton("ðŸ’¬ Join Super VIP Group", url="https://t.me/freedomwallet_supervip")],
-            [InlineKeyboardButton("ðŸ  Dashboard", callback_data="start")]
+            [InlineKeyboardButton("📊 Advanced Templates", callback_data="super_gift_templates")],
+            [InlineKeyboardButton("⚙️ Premium Scripts", callback_data="super_gift_scripts")],
+            [InlineKeyboardButton("🎓 Exclusive Training", url="https://freedomwallet.com/super-vip-training")],
+            [InlineKeyboardButton("💬 Join Super VIP Group", url="https://t.me/freedomwallet_supervip")],
+            [InlineKeyboardButton("🏠 Dashboard", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-            "ðŸŽ **QUÃ€ Táº¶NG SUPER VIP**\n"
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-            "**Chá»n quÃ  báº¡n muá»‘n nháº­n:**\n\n"
-            "ðŸ“Š **Advanced Templates**\n"
-            "   â€¢ Multiple portfolios support\n"
-            "   â€¢ Advanced analytics dashboard\n"
-            "   â€¢ Custom reporting tools\n\n"
-            "âš™ï¸ **Premium Scripts**\n"
-            "   â€¢ Auto-sync enhancements\n"
-            "   â€¢ Bank integration (beta)\n"
-            "   â€¢ Advanced automation\n\n"
-            "ðŸŽ“ **Exclusive Training**\n"
-            "   â€¢ Monthly webinars\n"
-            "   â€¢ Strategy sessions\n"
-            "   â€¢ Private consultations\n\n"
-            "ðŸ’¬ **Super VIP Group**\n"
-            "   â€¢ Network vá»›i top users\n"
-            "   â€¢ Share best practices\n"
-            "   â€¢ Early feature access\n\n"
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-            "ðŸŽ‰ Táº¥t cáº£ Ä‘á»u MIá»„N PHÃ cho Super VIP!",
+            "━━━━━━━━━━━━━━━━━━━━━\n"
+            "🎁 **QUÀ TẶNG SUPER VIP**\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "**Chọn quà bạn muốn nhận:**\n\n"
+            "📊 **Advanced Templates**\n"
+            "   • Multiple portfolios support\n"
+            "   • Advanced analytics dashboard\n"
+            "   • Custom reporting tools\n\n"
+            "⚙️ **Premium Scripts**\n"
+            "   • Auto-sync enhancements\n"
+            "   • Bank integration (beta)\n"
+            "   • Advanced automation\n\n"
+            "🎓 **Exclusive Training**\n"
+            "   • Monthly webinars\n"
+            "   • Strategy sessions\n"
+            "   • Private consultations\n\n"
+            "💬 **Super VIP Group**\n"
+            "   • Network với top users\n"
+            "   • Share best practices\n"
+            "   • Early feature access\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n"
+            "🎉 Tất cả đều MIỄN PHÍ cho Super VIP!",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
@@ -1060,7 +1123,7 @@ Hoáº·c mÃ´ táº£ láº¡i váº¥n Ä‘á», mÃ¬nh sáº½ cá»‘ 
         # Unknown callback
         logger.warning(f"Unknown callback: {callback_data}")
         await query.edit_message_text(
-            "âš ï¸ Lá»‡nh khÃ´ng há»£p lá»‡. DÃ¹ng /help Ä‘á»ƒ xem menu!",
+            "⚠️ Lệnh không hợp lệ. Dùng /help để xem menu!",
             parse_mode="Markdown"
         )
 
@@ -1074,40 +1137,40 @@ async def handle_webapp_setup_guide(update: Update, context: ContextTypes.DEFAUL
     await query.answer()
     
     message = """
-ðŸ“± **CÃ€I Äáº¶T WEB APP (30 GIÃ‚Y)**
+📱 **CÀI ĐẶT WEB APP (30 GIÂY)**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**BÆ¯á»šC 1: Má»Ÿ freedomwallet.vn**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+**BƯỚC 1: Mở freedomwallet.vn**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŒ Truy cáº­p: freedomwallet.vn
-ðŸ“± DÃ¹ng Safari (iOS) / Chrome (Android)
+🌐 Truy cập: freedomwallet.vn
+📱 Dùng Safari (iOS) / Chrome (Android)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**BÆ¯á»šC 2: CÃ i lÃªn Home Screen**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+**BƯỚC 2: Cài lên Home Screen**
+━━━━━━━━━━━━━━━━━━━━━
 
 **iPhone:** 
-Share (â¬†ï¸) â†’ Add to Home Screen â†’ Add
+Share (⬆️) → Add to Home Screen → Add
 
 **Android:**
-Menu (â‹®) â†’ Add to Home screen â†’ Add
+Menu (⋮) → Add to Home screen → Add
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**BÆ¯á»šC 3: Má»Ÿ App**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+**BƯỚC 3: Mở App**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŽ¯ TÃ¬m icon Freedom Wallet
-ðŸ“² Má»Ÿ nhÆ° app bÃ¬nh thÆ°á»ng
-ðŸš€ Báº¯t Ä‘áº§u quáº£n lÃ½ tÃ i chÃ­nh!
+🎯 Tìm icon Freedom Wallet
+📲 Mở như app bình thường
+🚀 Bắt đầu quản lý tài chính!
 
-ðŸ’¡ **LÆ°u Ã½:** Láº§n Ä‘áº§u hÆ¡i lÃ¢u (10s), sau Ä‘Ã³ mÆ°á»£t mÃ !
+💡 **Lưu ý:** Lần đầu hơi lâu (10s), sau đó mượt mà!
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ“– HÆ°á»›ng dáº«n sá»­ dá»¥ng", callback_data="premium_usage_guide")],
-        [InlineKeyboardButton("ðŸŒ Má»Ÿ Web App", url="https://freedomwallet.vn")],
-        [InlineKeyboardButton("ðŸ  Menu Premium", callback_data="premium_menu")]
+        [InlineKeyboardButton("📖 Hướng dẫn sử dụng", callback_data="premium_usage_guide")],
+        [InlineKeyboardButton("🌐 Mở Web App", url="https://freedomwallet.vn")],
+        [InlineKeyboardButton("🏠 Menu Premium", callback_data="premium_menu")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -1119,9 +1182,9 @@ Menu (â‹®) â†’ Add to Home screen â†’ Add
 
 
 async def handle_wow_moment_dismiss(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle WOW moment dismiss - User clicked 'OK, Ä‘Ã£ hiá»ƒu'"""
+    """Handle WOW moment dismiss - User clicked 'OK, đã hiểu'"""
     query = update.callback_query
-    await query.answer("Tuyá»‡t vá»i! Tiáº¿p tá»¥c sá»­ dá»¥ng Premium nhÃ©! ðŸš€")
+    await query.answer("Tuyệt vời! Tiếp tục sử dụng Premium nhé! 🚀")
     
     user_id = update.effective_user.id
     
@@ -1129,9 +1192,9 @@ async def handle_wow_moment_dismiss(update: Update, context: ContextTypes.DEFAUL
     Analytics.track_event(user_id, 'wow_moment_dismissed')
     
     await query.edit_message_text(
-        "âœ… **ÄÃ£ ghi nháº­n!**\n\n"
-        "Báº¡n cÃ³ thá»ƒ xem láº¡i ROI báº¥t ká»³ lÃºc nÃ o báº±ng lá»‡nh /mystatus\n\n"
-        "ðŸ’¡ Tip: Sá»­ dá»¥ng nhiá»u Ä‘á»ƒ tá»‘i Ä‘a hÃ³a giÃ¡ trá»‹ Premium nhÃ©!",
+        "✅ **Đã ghi nhận!**\n\n"
+        "Bạn có thể xem lại ROI bất kỳ lúc nào bằng lệnh /mystatus\n\n"
+        "💡 Tip: Sử dụng nhiều để tối đa hóa giá trị Premium nhé!",
         parse_mode="Markdown"
     )
 
@@ -1149,7 +1212,7 @@ async def handle_trial_reminder_viewed(update: Update, context: ContextTypes.DEF
     
 
 async def handle_why_premium_from_reminder(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle 'Táº¡i sao nÃªn Premium?' click from trial reminder"""
+    """Handle 'Tại sao nên Premium?' click from trial reminder"""
     query = update.callback_query
     await query.answer()
     
@@ -1159,62 +1222,62 @@ async def handle_why_premium_from_reminder(update: Update, context: ContextTypes
     Analytics.track_event(user_id, 'trial_reminder_upgrade_clicked', {'source': 'why_premium'})
     
     message = """
-ðŸ¤” **Táº I SAO NÃŠN PREMIUM?**
+🤔 **TẠI SAO NÊN PREMIUM?**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’Ž **GIÃ TRá»Š VÆ¯á»¢T TRá»˜I:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💎 **GIÁ TRỊ VƯỢT TRỘI:**
+━━━━━━━━━━━━━━━━━━━━━
 
-**1ï¸âƒ£ TIáº¾T KIá»†M THá»œI GIAN**
-â±ï¸ Má»—i ngÃ y tiáº¿t kiá»‡m ~1-2 giá»
-   â†’ KhÃ´ng cáº§n tá»± tÃ­nh toÃ¡n
-   â†’ KhÃ´ng cáº§n tá»•ng há»£p thá»§ cÃ´ng
-   â†’ KhÃ´ng cáº§n lÃªn káº¿ hoáº¡ch
+**1️⃣ TIẾT KIỆM THỜI GIAN**
+⏱️ Mỗi ngày tiết kiệm ~1-2 giờ
+   → Không cần tự tính toán
+   → Không cần tổng hợp thủ công
+   → Không cần lên kế hoạch
 
-**2ï¸âƒ£ TÄ‚NG HIá»†U QUáº¢ TÃ€I CHÃNH**
-ðŸ“Š PhÃ¢n tÃ­ch thÃ´ng minh 24/7
-   â†’ PhÃ¡t hiá»‡n Ä‘iá»ƒm lÃ£ng phÃ­
-   â†’ Tá»‘i Æ°u ngÃ¢n sÃ¡ch
-   â†’ TÄƒng tá»· lá»‡ tiáº¿t kiá»‡m
+**2️⃣ TĂNG HIỆU QUẢ TÀI CHÍNH**
+📊 Phân tích thông minh 24/7
+   → Phát hiện điểm lãng phí
+   → Tối ưu ngân sách
+   → Tăng tỷ lệ tiết kiệm
 
-**3ï¸âƒ£ Äáº¦U TÆ¯ NHá»Ž, Lá»¢I NHUáº¬N Lá»šN**
-ðŸ’° ~2,750 VNÄ/ngÃ y
-   â†’ GiÃ¡ 1 ly cÃ  phÃª
-   â†’ NhÆ°ng giÃ¡ trá»‹ gáº¥p 5-10 láº§n
-   â†’ ROI trung bÃ¬nh +200%
+**3️⃣ ĐẦU TƯ NHỎ, LỢI NHUẬN LỚN**
+💰 ~2,750 VNĐ/ngày
+   → Giá 1 ly cà phê
+   → Nhưng giá trị gấp 5-10 lần
+   → ROI trung bình +200%
 
-**4ï¸âƒ£ KHÃ”NG QUáº¢NG CÃO**
-âœ¨ Tráº£i nghiá»‡m premium thá»±c sá»±
-   â†’ Táº­p trung 100%
-   â†’ KhÃ´ng giÃ¡n Ä‘oáº¡n
-   â†’ KhÃ´ng lÃ m phiá»n
+**4️⃣ KHÔNG QUẢNG CÁO**
+✨ Trải nghiệm premium thực sự
+   → Tập trung 100%
+   → Không gián đoạn
+   → Không làm phiền
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸŽ¯ **Äá»‚ Äáº T ROI +200%:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🎯 **ĐỂ ĐẠT ROI +200%:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… Chat vá»›i AI má»—i ngÃ y (10+ tin)
-âœ… Check dashboard 2-3 láº§n/tuáº§n
-âœ… Äá»c gá»£i Ã½ má»—i sÃ¡ng
-âœ… DÃ¹ng phÃ¢n tÃ­ch khi cáº§n
+✅ Chat với AI mỗi ngày (10+ tin)
+✅ Check dashboard 2-3 lần/tuần
+✅ Đọc gợi ý mỗi sáng
+✅ Dùng phân tích khi cần
 
-â†’ Thá»i gian tiáº¿t kiá»‡m: ~8-10 giá»/thÃ¡ng
-â†’ GiÃ¡ trá»‹: ~800K - 1M VNÄ
-â†’ Chi phÃ­: ~83K VNÄ/thÃ¡ng
-â†’ **Lá»i: ~700K - 900K VNÄ!**
+→ Thời gian tiết kiệm: ~8-10 giờ/tháng
+→ Giá trị: ~800K - 1M VNĐ
+→ Chi phí: ~83K VNĐ/tháng
+→ **Lời: ~700K - 900K VNĐ!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ **Káº¾T LUáº¬N:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 **KẾT LUẬN:**
+━━━━━━━━━━━━━━━━━━━━━
 
-Premium khÃ´ng pháº£i chi phÃ­,
-mÃ  lÃ  **Ä‘áº§u tÆ° sinh lá»i**! ðŸš€
+Premium không phải chi phí,
+mà là **đầu tư sinh lời**! 🚀
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ’Ž NÃ¢ng cáº¥p ngay", callback_data="upgrade_to_premium")],
-        [InlineKeyboardButton("ðŸ“Š Xem ROI cá»§a tÃ´i", callback_data="view_roi_detail")],
-        [InlineKeyboardButton("ðŸ  Menu", callback_data="start")]
+        [InlineKeyboardButton("💎 Nâng cấp ngay", callback_data="upgrade_to_premium")],
+        [InlineKeyboardButton("📊 Xem ROI của tôi", callback_data="view_roi_detail")],
+        [InlineKeyboardButton("🏠 Menu", callback_data="start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -1248,11 +1311,11 @@ async def handle_upgrade_to_premium(update: Update, context: ContextTypes.DEFAUL
         message = PaymentService.format_payment_message(payment_info)
         
         keyboard = [
-            [InlineKeyboardButton("âœ… ÄÃ£ thanh toÃ¡n", callback_data="confirm_payment")],
-            [InlineKeyboardButton("ðŸ’¬ LiÃªn há»‡ Admin", callback_data="contact_support")],
-            [InlineKeyboardButton("ðŸ“Š Xem ROI chi tiáº¿t", callback_data="view_roi_detail")],
-            [InlineKeyboardButton("ðŸ¤” Táº¡i sao nÃªn Premium?", callback_data="why_premium")],
-            [InlineKeyboardButton("Â« Quay láº¡i", callback_data="start")]
+            [InlineKeyboardButton("✅ Đã thanh toán", callback_data="confirm_payment")],
+            [InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")],
+            [InlineKeyboardButton("📊 Xem ROI chi tiết", callback_data="view_roi_detail")],
+            [InlineKeyboardButton("🤔 Tại sao nên Premium?", callback_data="why_premium")],
+            [InlineKeyboardButton("« Quay lại", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
@@ -1277,8 +1340,8 @@ async def handle_upgrade_to_premium(update: Update, context: ContextTypes.DEFAUL
     except Exception as e:
         logger.error(f"Error in handle_upgrade_to_premium: {e}", exc_info=True)
         await query.edit_message_text(
-            "ðŸ˜“ Xin lá»—i, cÃ³ lá»—i khi táº£i thÃ´ng tin thanh toÃ¡n. Vui lÃ²ng thá»­ láº¡i sau!\n\n"
-            "Hoáº·c liÃªn há»‡ Admin Ä‘á»ƒ Ä‘Æ°á»£c há»— trá»£: /support",
+            "😓 Xin lỗi, có lỗi khi tải thông tin thanh toán. Vui lòng thử lại sau!\n\n"
+            "Hoặc liên hệ Admin để được hỗ trợ: /support",
             parse_mode="Markdown"
         )
 
@@ -1298,40 +1361,40 @@ async def handle_confirm_payment(update: Update, context: ContextTypes.DEFAULT_T
     context.user_data['payment_amount'] = 999000  # Premium price
     
     message = """
-âœ… **XÃC NHáº¬N THANH TOÃN**
+✅ **XÁC NHẬN THANH TOÁN**
 
-Cáº£m Æ¡n báº¡n Ä‘Ã£ thanh toÃ¡n! Äá»ƒ xÃ¡c nháº­n nhanh chÃ³ng, vui lÃ²ng:
+Cảm ơn bạn đã thanh toán! Để xác nhận nhanh chóng, vui lòng:
 
-**ðŸ“¸ Gá»­i áº£nh chá»¥p mÃ n hÃ¬nh:**
-â€¢ ThÃ´ng bÃ¡o chuyá»ƒn khoáº£n thÃ nh cÃ´ng
-â€¢ Hoáº·c lá»‹ch sá»­ giao dá»‹ch trong app ngÃ¢n hÃ ng
+**📸 Gửi ảnh chụp màn hình:**
+• Thông báo chuyển khoản thành công
+• Hoặc lịch sử giao dịch trong app ngân hàng
 
-**âœï¸ Hoáº·c gá»­i thÃ´ng tin:**
-â€¢ Sá»‘ tiá»n Ä‘Ã£ chuyá»ƒn
-â€¢ Thá»i gian chuyá»ƒn khoáº£n
-â€¢ 4 sá»‘ cuá»‘i STK cá»§a báº¡n (náº¿u cÃ³)
+**✍️ Hoặc gửi thông tin:**
+• Số tiền đã chuyển
+• Thời gian chuyển khoản
+• 4 số cuối STK của bạn (nếu có)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â±ï¸ **THá»œI GIAN Xá»¬ LÃ:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+⏱️ **THỜI GIAN XỬ LÝ:**
+━━━━━━━━━━━━━━━━━━━━━
 
-â€¢ Tá»± Ä‘á»™ng: 5-10 phÃºt
-â€¢ Thá»§ cÃ´ng: 15-30 phÃºt (giá» hÃ nh chÃ­nh)
-â€¢ NgoÃ i giá»: Trong 2 giá»
+• Tự động: 5-10 phút
+• Thủ công: 15-30 phút (giờ hành chính)
+• Ngoài giờ: Trong 2 giờ
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ **LÆ¯U Ã:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 **LƯU Ý:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… ÄÃ£ chuyá»ƒn Ä‘Ãºng ná»™i dung? â†’ Tá»± Ä‘á»™ng kÃ­ch hoáº¡t
-âš ï¸ Chuyá»ƒn sai ná»™i dung? â†’ Cáº§n xÃ¡c nháº­n thá»§ cÃ´ng
+✅ Đã chuyển đúng nội dung? → Tự động kích hoạt
+⚠️ Chuyển sai nội dung? → Cần xác nhận thủ công
 
-ðŸ“ž **Cáº§n há»— trá»£?** Nháº¥n "LiÃªn há»‡ Admin" bÃªn dÆ°á»›i
+📞 **Cần hỗ trợ?** Nhấn "Liên hệ Admin" bên dưới
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ’¬ LiÃªn há»‡ Admin", callback_data="contact_support")],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data="start")]
+        [InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")],
+        [InlineKeyboardButton("« Quay lại", callback_data="start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -1385,70 +1448,70 @@ async def handle_view_roi_detail(update: Update, context: ContextTypes.DEFAULT_T
     tier_name = tier.value if tier else "FREE"
     
     message = f"""
-ðŸ“Š **ROI DASHBOARD CHI TIáº¾T**
+📊 **ROI DASHBOARD CHI TIẾT**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“ˆ **PHÃ‚ N TÃCH Sá»¬ Dá»¤NG:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📈 **PHÂ N TÍCH SỬ DỤNG:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¬ **{roi['messages']} tin nháº¯n** vá»›i AI
-   â†’ Tiáº¿t kiá»‡m: {roi['messages'] * 3} phÃºt
+💬 **{roi['messages']} tin nhắn** với AI
+   → Tiết kiệm: {roi['messages'] * 3} phút
    
-ðŸ“Š **{roi['analyses']} phÃ¢n tÃ­ch** tÃ i chÃ­nh
-   â†’ Tiáº¿t kiá»‡m: {roi['analyses'] * 30} phÃºt
+📊 **{roi['analyses']} phân tích** tài chính
+   → Tiết kiệm: {roi['analyses'] * 30} phút
    
-ðŸ’¡ **{roi['recommendations']} gá»£i Ã½** cÃ¡ nhÃ¢n
-   â†’ Tiáº¿t kiá»‡m: {roi['recommendations'] * 15} phÃºt
+💡 **{roi['recommendations']} gợi ý** cá nhân
+   → Tiết kiệm: {roi['recommendations'] * 15} phút
    
-ðŸ“ˆ **{roi['dashboard_views']} láº§n** xem dashboard
-   â†’ Tiáº¿t kiá»‡m: {roi['dashboard_views'] * 20} phÃºt
+📈 **{roi['dashboard_views']} lần** xem dashboard
+   → Tiết kiệm: {roi['dashboard_views'] * 20} phút
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â±ï¸ **Tá»”NG THá»œI GIAN:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+⏱️ **TỔNG THỜI GIAN:**
+━━━━━━━━━━━━━━━━━━━━━
 
-Tiáº¿t kiá»‡m: **{roi['time_saved']} giá»**
-GiÃ¡ trá»‹: **{roi['value']:,} VNÄ**
-(TÃ­nh theo 100K VNÄ/giá»)
+Tiết kiệm: **{roi['time_saved']} giờ**
+Giá trị: **{roi['value']:,} VNĐ**
+(Tính theo 100K VNĐ/giờ)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’° **TÃNH TOÃN ROI:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💰 **TÍNH TOÁN ROI:**
+━━━━━━━━━━━━━━━━━━━━━
 
-Chi phÃ­ {tier_name}: {roi['cost']:,} VNÄ/thÃ¡ng
-GiÃ¡ trá»‹ nháº­n: {roi['value']:,} VNÄ/thÃ¡ng
+Chi phí {tier_name}: {roi['cost']:,} VNĐ/tháng
+Giá trị nhận: {roi['value']:,} VNĐ/tháng
 
-â†’ **Lá»i/Lá»—: {roi['profit']:,} VNÄ**
-â†’ **ROI: {roi['roi_percent']:+.0f}%**
+→ **Lời/Lỗ: {roi['profit']:,} VNĐ**
+→ **ROI: {roi['roi_percent']:+.0f}%**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ **CÃCH Tá»I Æ¯U:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 **CÁCH TỐI ƯU:**
+━━━━━━━━━━━━━━━━━━━━━
 
-â€¢ Sá»­ dá»¥ng nhiá»u hÆ¡n = ROI cao hÆ¡n
-â€¢ Má»¥c tiÃªu: â‰¥+200% ROI
-â€¢ Chat vá»›i AI má»—i ngÃ y
-â€¢ DÃ¹ng tÃ­nh nÄƒng PhÃ¢n tÃ­ch thÆ°á»ng xuyÃªn
+• Sử dụng nhiều hơn = ROI cao hơn
+• Mục tiêu: ≥+200% ROI
+• Chat với AI mỗi ngày
+• Dùng tính năng Phân tích thường xuyên
 """
     
     if tier == SubscriptionTier.FREE:
-        message += "\n\nðŸ’Ž NÃ¢ng cáº¥p Premium Ä‘á»ƒ unlock ROI cao hÆ¡n!"
+        message += "\n\n💎 Nâng cấp Premium để unlock ROI cao hơn!"
         keyboard = [
-            [InlineKeyboardButton("ðŸŽ DÃ¹ng thá»­ 7 ngÃ y FREE", callback_data="start_trial")],
-            [InlineKeyboardButton("ðŸ’Ž Xem gÃ³i Premium", callback_data="view_premium")],
-            [InlineKeyboardButton("Â« Quay láº¡i", callback_data="start")]
+            [InlineKeyboardButton("🎁 Dùng thử 7 ngày FREE", callback_data="start_trial")],
+            [InlineKeyboardButton("💎 Xem gói Premium", callback_data="view_premium")],
+            [InlineKeyboardButton("« Quay lại", callback_data="start")]
         ]
     elif tier == SubscriptionTier.TRIAL:
         keyboard = [
-            [InlineKeyboardButton("ðŸ’Ž NÃ¢ng cáº¥p Premium ngay", callback_data="upgrade_to_premium")],
-            [InlineKeyboardButton("ðŸ’¡ Tips tá»‘i Æ°u", callback_data="optimization_tips")],
-            [InlineKeyboardButton("Â« Quay láº¡i", callback_data="start")]
+            [InlineKeyboardButton("💎 Nâng cấp Premium ngay", callback_data="upgrade_to_premium")],
+            [InlineKeyboardButton("💡 Tips tối ưu", callback_data="optimization_tips")],
+            [InlineKeyboardButton("« Quay lại", callback_data="start")]
         ]
     else:  # PREMIUM
         keyboard = [
-            [InlineKeyboardButton("ðŸ’¡ Tips tá»‘i Æ°u ROI", callback_data="optimization_tips")],
-            [InlineKeyboardButton("ðŸ“Š Xem status", callback_data="my_status")],
-            [InlineKeyboardButton("Â« Quay láº¡i", callback_data="start")]
+            [InlineKeyboardButton("💡 Tips tối ưu ROI", callback_data="optimization_tips")],
+            [InlineKeyboardButton("📊 Xem status", callback_data="my_status")],
+            [InlineKeyboardButton("« Quay lại", callback_data="start")]
         ]
     
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -1469,69 +1532,69 @@ async def handle_optimization_tips(update: Update, context: ContextTypes.DEFAULT
     Analytics.track_event(query.from_user.id, 'optimization_tips_viewed')
     
     message = """
-ðŸ’¡ **TIPS Tá»I Æ¯U ROI PREMIUM**
+💡 **TIPS TỐI ƯU ROI PREMIUM**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸŽ¯ **Má»¤C TIÃŠU: ROI â‰¥ +200%**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🎯 **MỤC TIÊU: ROI ≥ +200%**
+━━━━━━━━━━━━━━━━━━━━━
 
-**1ï¸âƒ£ Sá»¬ Dá»¤NG AI Má»–I NGÃ€Y**
+**1️⃣ SỬ DỤNG AI MỖI NGÀY**
 
-ðŸ’¬ Chat vá»›i bot Ã­t nháº¥t 10 tin/ngÃ y
-   â†’ Há»i vá» financial planning
-   â†’ TÆ° váº¥n tiáº¿t kiá»‡m
-   â†’ PhÃ¢n tÃ­ch thÃ³i quen chi tiÃªu
+💬 Chat với bot ít nhất 10 tin/ngày
+   → Hỏi về financial planning
+   → Tư vấn tiết kiệm
+   → Phân tích thói quen chi tiêu
 
-**2ï¸âƒ£ DÃ™NG TÃNH NÄ‚NG PHÃ‚N TÃCH**
+**2️⃣ DÙNG TÍNH NĂNG PHÂN TÍCH**
 
-ðŸ“Š Xem dashboard 2-3 láº§n/tuáº§n
-   â†’ Theo dÃµi xu hÆ°á»›ng chi tiÃªu
-   â†’ PhÃ¡t hiá»‡n Ä‘iá»ƒm báº¥t thÆ°á»ng
-   â†’ Äiá»u chá»‰nh ká»‹p thá»i
+📊 Xem dashboard 2-3 lần/tuần
+   → Theo dõi xu hướng chi tiêu
+   → Phát hiện điểm bất thường
+   → Điều chỉnh kịp thời
 
-**3ï¸âƒ£ NHáº¬N Gá»¢I Ã CÃ NHÃ‚N**
+**3️⃣ NHẬN GỢI Ý CÁ NHÂN**
 
-ðŸ’¡ Check gá»£i Ã½ má»—i sÃ¡ng
-   â†’ Lá»i khuyÃªn tá»‘i Æ°u tÃ i chÃ­nh
-   â†’ Tips tiáº¿t kiá»‡m theo ngá»¯ cáº£nh
-   â†’ Nháº¯c nhá»Ÿ quan trá»ng
+💡 Check gợi ý mỗi sáng
+   → Lời khuyên tối ưu tài chính
+   → Tips tiết kiệm theo ngữ cảnh
+   → Nhắc nhở quan trọng
 
-**4ï¸âƒ£ THIáº¾T Láº¬P Má»¤C TIÃŠU**
+**4️⃣ THIẾT LẬP MỤC TIÊU**
 
-âš™ï¸ CÃ i Ä‘áº·t má»¥c tiÃªu tÃ i chÃ­nh
-   â†’ Tiáº¿t kiá»‡m thÃ¡ng
-   â†’ Káº¿ hoáº¡ch Ä‘áº§u tÆ°
-   â†’ Budget cho tá»«ng danh má»¥c
+⚙️ Cài đặt mục tiêu tài chính
+   → Tiết kiệm tháng
+   → Kế hoạch đầu tư
+   → Budget cho từng danh mục
 
-**5ï¸âƒ£ Há»ŽI THÃ”NG MINH**
+**5️⃣ HỎI THÔNG MINH**
 
-ðŸ§  Há»i nhá»¯ng cÃ¢u há»i cá»¥ thá»ƒ:
-   â€¢ "PhÃ¢n tÃ­ch chi tiÃªu thÃ¡ng nÃ y"
-   â€¢ "TÃ´i nÃªn tiáº¿t kiá»‡m á»Ÿ Ä‘Ã¢u?"
-   â€¢ "ROI Ä‘áº§u tÆ° nÃ y bao nhiÃªu?"
-   â€¢ "CÃ¡ch tá»‘i Æ°u 6 hÅ© tiá»n?"
+🧠 Hỏi những câu hỏi cụ thể:
+   • "Phân tích chi tiêu tháng này"
+   • "Tôi nên tiết kiệm ở đâu?"
+   • "ROI đầu tư này bao nhiêu?"
+   • "Cách tối ưu 6 hũ tiền?"
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“ˆ **Káº¾T QUáº¢ Ká»² Vá»ŒNG:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📈 **KẾT QUẢ KỲ VỌNG:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… 10+ messages/day = +150% ROI
-âœ… 20+ messages/day = +300% ROI
-âœ… Active usage = +500% ROI
+✅ 10+ messages/day = +150% ROI
+✅ 20+ messages/day = +300% ROI
+✅ Active usage = +500% ROI
 
-â†’ **Premium tráº£ lá»i báº£n thÃ¢n!** ðŸš€
+→ **Premium trả lời bản thân!** 🚀
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’ª **Báº®T Äáº¦U NGAY HÃ”M NAY!**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💪 **BẮT ĐẦU NGAY HÔM NAY!**
+━━━━━━━━━━━━━━━━━━━━━
 
-GÃµ cÃ¢u há»i Ä‘áº§u tiÃªn vá» tÃ i chÃ­nh cá»§a báº¡n ðŸ‘‡
+Gõ câu hỏi đầu tiên về tài chính của bạn 👇
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ’¬ Chat vá»›i AI ngay", callback_data="start")],
-        [InlineKeyboardButton("ðŸ“Š Xem ROI hiá»‡n táº¡i", callback_data="view_roi_detail")],
-        [InlineKeyboardButton("ðŸ  Menu", callback_data="start")]
+        [InlineKeyboardButton("💬 Chat với AI ngay", callback_data="start")],
+        [InlineKeyboardButton("📊 Xem ROI hiện tại", callback_data="view_roi_detail")],
+        [InlineKeyboardButton("🏠 Menu", callback_data="start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -1548,64 +1611,64 @@ async def handle_premium_usage_guide(update: Update, context: ContextTypes.DEFAU
     await query.answer()
     
     message = """
-ðŸ“– **HÆ¯á»šNG DáºªN Sá»¬ Dá»¤NG PREMIUM**
+📖 **HƯỚNG DẪN SỬ DỤNG PREMIUM**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-âœ¨ **6 TÃNH NÄ‚NG CHÃNH**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+✨ **6 TÍNH NĂNG CHÍNH**
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“ 1. Ghi chi tiÃªu nhanh**
-â€¢ Gá»­i: "50k cafe" â†’ Tá»± Ä‘á»™ng ghi
-â€¢ Há»— trá»£ nhiá»u Ä‘á»‹nh dáº¡ng
-â€¢ KhÃ´ng cáº§n form phá»©c táº¡p
+**📝 1. Ghi chi tiêu nhanh**
+• Gửi: "50k cafe" → Tự động ghi
+• Hỗ trợ nhiều định dạng
+• Không cần form phức tạp
 
-**ðŸ“Š 2. TÃ¬nh hÃ¬nh tÃ i chÃ­nh**
-â€¢ Xem dashboard real-time
-â€¢ Thu chi theo ngÃ y/tuáº§n/thÃ¡ng
-â€¢ Biá»ƒu Ä‘á»“ trá»±c quan
+**📊 2. Tình hình tài chính**
+• Xem dashboard real-time
+• Thu chi theo ngày/tuần/tháng
+• Biểu đồ trực quan
 
-**ðŸ” 3. PhÃ¢n tÃ­ch thÃ´ng minh**
-â€¢ AI phÃ¢n tÃ­ch thÃ³i quen chi tiÃªu
-â€¢ PhÃ¡t hiá»‡n chi tiÃªu báº¥t thÆ°á»ng
-â€¢ Dá»± bÃ¡o xu hÆ°á»›ng
+**🔍 3. Phân tích thông minh**
+• AI phân tích thói quen chi tiêu
+• Phát hiện chi tiêu bất thường
+• Dự báo xu hướng
 
-**ðŸ’¡ 4. Gá»£i Ã½ cÃ¡ nhÃ¢n hÃ³a**
-â€¢ Gá»£i Ã½ tiáº¿t kiá»‡m hÃ ng ngÃ y
-â€¢ Nháº¯c nhá»Ÿ khi chÆ°a ghi chÃ©p
-â€¢ Tips tá»‘i Æ°u tÃ i chÃ­nh
+**💡 4. Gợi ý cá nhân hóa**
+• Gợi ý tiết kiệm hàng ngày
+• Nhắc nhở khi chưa ghi chép
+• Tips tối ưu tài chính
 
-**âš™ï¸ 5. Setup nÃ¢ng cao**
-â€¢ TÃ¹y chá»‰nh 6 hÅ© tiá»n theo nhu cáº§u
-â€¢ Thiáº¿t láº­p má»¥c tiÃªu tÃ i chÃ­nh
-â€¢ Sync dá»¯ liá»‡u tá»± Ä‘á»™ng
+**⚙️ 5. Setup nâng cao**
+• Tùy chỉnh 6 hũ tiền theo nhu cầu
+• Thiết lập mục tiêu tài chính
+• Sync dữ liệu tự động
 
-**ðŸ†˜ 6. Há»— trá»£ Æ°u tiÃªn**
-â€¢ Response trong 30 phÃºt
-â€¢ Chat trá»±c tiáº¿p vá»›i founder
-â€¢ Há»— trá»£ 1-1 qua call náº¿u cáº§n
+**🆘 6. Hỗ trợ ưu tiên**
+• Response trong 30 phút
+• Chat trực tiếp với founder
+• Hỗ trợ 1-1 qua call nếu cần
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸŽ¯ **Báº®T Äáº¦U NGAY:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🎯 **BẮT ĐẦU NGAY:**
+━━━━━━━━━━━━━━━━━━━━━
 
-1ï¸âƒ£ Thá»­ ghi 1 giao dá»‹ch: "20k trÃ  sá»¯a"
-2ï¸âƒ£ Xem dashboard: Báº¥m "ðŸ“Š TÃ¬nh hÃ¬nh"
-3ï¸âƒ£ Nháº­n gá»£i Ã½: Báº¥m "ðŸ’¡ Gá»£i Ã½"
+1️⃣ Thử ghi 1 giao dịch: "20k trà sữa"
+2️⃣ Xem dashboard: Bấm "📊 Tình hình"
+3️⃣ Nhận gợi ý: Bấm "💡 Gợi ý"
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“š **TÃ€I LIá»†U CHI TIáº¾T:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📚 **TÀI LIỆU CHI TIẾT:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŒ Xem full guide táº¡i:
-ðŸ‘‰ [eliroxbot.notion.site/freedomwallet](https://eliroxbot.notion.site/freedomwallet)
+🌐 Xem full guide tại:
+👉 [eliroxbot.notion.site/freedomwallet](https://eliroxbot.notion.site/freedomwallet)
 
-ðŸŽŠ **ChÃºc báº¡n quáº£n lÃ½ tÃ i chÃ­nh hiá»‡u quáº£!**
+🎊 **Chúc bạn quản lý tài chính hiệu quả!**
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸŒ Xem guide Ä‘áº§y Ä‘á»§", url="https://eliroxbot.notion.site/freedomwallet")],
-        [InlineKeyboardButton("ðŸ“± CÃ i Web App", callback_data="webapp_setup_guide")],
-        [InlineKeyboardButton("ðŸ  Menu Premium", callback_data="premium_menu")]
+        [InlineKeyboardButton("🌐 Xem guide đầy đủ", url="https://eliroxbot.notion.site/freedomwallet")],
+        [InlineKeyboardButton("📱 Cài Web App", callback_data="webapp_setup_guide")],
+        [InlineKeyboardButton("🏠 Menu Premium", callback_data="premium_menu")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -1628,25 +1691,25 @@ async def handle_free_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     Analytics.track_event(user_id, 'free_chat_clicked')
     
     message = """
-ðŸ’¬ **CHAT Vá»šI BOT (FREE)**
+💬 **CHAT VỚI BOT (FREE)**
 
-HÃ£y gÃµ cÃ¢u há»i cá»§a báº¡n, tÃ´i sáº½ tráº£ lá»i ngay! ðŸ˜Š
+Hãy gõ câu hỏi của bạn, tôi sẽ trả lời ngay! 😊
 
-ðŸ“‹ **CÃ¡c chá»§ Ä‘á» tÃ´i cÃ³ thá»ƒ giÃºp:**
-â€¢ HÆ°á»›ng dáº«n sá»­ dá»¥ng Freedom Wallet
-â€¢ CÃ¡ch thÃªm/xÃ³a/sá»­a giao dá»‹ch
-â€¢ Giáº£i thÃ­ch vá» 6 HÅ© Tiá»n
-â€¢ CÃ¡ch setup Google Sheet
-â€¢ Kháº¯c phá»¥c lá»—i thÆ°á»ng gáº·p
-â€¢ Tips quáº£n lÃ½ tÃ i chÃ­nh
+📋 **Các chủ đề tôi có thể giúp:**
+• Hướng dẫn sử dụng Freedom Wallet
+• Cách thêm/xóa/sửa giao dịch
+• Giải thích về 6 Hũ Tiền
+• Cách setup Google Sheet
+• Khắc phục lỗi thường gặp
+• Tips quản lý tài chính
 
-ðŸ’¬ **Giá»›i háº¡n hÃ´m nay:** 5 tin nháº¯n
+💬 **Giới hạn hôm nay:** 5 tin nhắn
 
-GÃµ cÃ¢u há»i cá»§a báº¡n bÃªn dÆ°á»›i! ðŸ‘‡
+Gõ câu hỏi của bạn bên dưới! 👇
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ  Quay vá» Menu", callback_data="start")]
+        [InlineKeyboardButton("🏠 Quay về Menu", callback_data="start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -1668,53 +1731,53 @@ async def handle_upgrade_premium_from_start(update: Update, context: ContextType
     Analytics.track_event(user_id, 'upgrade_premium_clicked_from_start')
     
     message = """
-ðŸŽ **DÃ™NG THá»¬ PREMIUM 7 NGÃ€Y MIá»„N PHÃ**
+🎁 **DÙNG THỬ PREMIUM 7 NGÀY MIỄN PHÍ**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-âœ¨ **Báº N Sáº¼ NHáº¬N ÄÆ¯á»¢C:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+✨ **BẠN SẼ NHẬN ĐƯỢC:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¬ **Unlimited Chat vá»›i AI**
-   â†’ KhÃ´ng giá»›i háº¡n tin nháº¯n
-   â†’ Tráº£ lá»i 24/7 trong vÃ i giÃ¢y
+💬 **Unlimited Chat với AI**
+   → Không giới hạn tin nhắn
+   → Trả lời 24/7 trong vài giây
 
-ðŸ“Š **PhÃ¢n TÃ­ch TÃ i ChÃ­nh ThÃ´ng Minh**
-   â†’ AI phÃ¢n tÃ­ch chi tiÃªu cá»§a báº¡n
-   â†’ PhÃ¡t hiá»‡n Ä‘iá»ƒm lÃ£ng phÃ­
-   â†’ Äá» xuáº¥t tá»‘i Æ°u hÃ³a
+📊 **Phân Tích Tài Chính Thông Minh**
+   → AI phân tích chi tiêu của bạn
+   → Phát hiện điểm lãng phí
+   → Đề xuất tối ưu hóa
 
-ðŸ’¡ **Gá»£i Ã CÃ¡ NhÃ¢n HÃ³a**
-   â†’ Má»—i ngÃ y nháº­n 1 tips má»›i
-   â†’ Dá»±a trÃªn thÃ³i quen chi tiÃªu
-   â†’ GiÃºp tiáº¿t kiá»‡m tá»‘i Ä‘a
+💡 **Gợi Ý Cá Nhân Hóa**
+   → Mỗi ngày nhận 1 tips mới
+   → Dựa trên thói quen chi tiêu
+   → Giúp tiết kiệm tối đa
 
-ðŸ“ˆ **ROI Dashboard**
-   â†’ Xem giÃ¡ trá»‹ Premium mang láº¡i
-   â†’ Thá»‘ng kÃª thá»i gian tiáº¿t kiá»‡m
-   â†’ TÃ­nh toÃ¡n lá»£i nhuáº­n Ä‘áº§u tÆ°
+📈 **ROI Dashboard**
+   → Xem giá trị Premium mang lại
+   → Thống kê thời gian tiết kiệm
+   → Tính toán lợi nhuận đầu tư
 
-ðŸš€ **Há»— Trá»£ Æ¯u TiÃªn**
-   â†’ Pháº£n há»“i trong 30 phÃºt
-   â†’ Há»— trá»£ 1-1 qua chat
-   â†’ Setup & troubleshooting
+🚀 **Hỗ Trợ Ưu Tiên**
+   → Phản hồi trong 30 phút
+   → Hỗ trợ 1-1 qua chat
+   → Setup & troubleshooting
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸŽ¯ **SAU 7 NGÃ€Y:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🎯 **SAU 7 NGÀY:**
+━━━━━━━━━━━━━━━━━━━━━
 
-Náº¿u thÃ­ch â†’ NÃ¢ng cáº¥p Premium
-Náº¿u khÃ´ng â†’ Quay vá» FREE (5 msg/ngÃ y)
+Nếu thích → Nâng cấp Premium
+Nếu không → Quay về FREE (5 msg/ngày)
 
-**100% khÃ´ng máº¥t phÃ­, khÃ´ng cáº§n tháº» tÃ­n dá»¥ng!**
+**100% không mất phí, không cần thẻ tín dụng!**
 
-Báº¯t Ä‘áº§u ngay? ðŸ‘‡
+Bắt đầu ngay? 👇
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸŽ Báº¯t Ä‘áº§u dÃ¹ng thá»­ NGAY", callback_data="start_trial")],
-        [InlineKeyboardButton("ðŸ’° Xem gÃ³i Premium", callback_data="view_premium")],
-        [InlineKeyboardButton("â“ Táº¡i sao nÃªn Premium?", callback_data="why_premium")],
-        [InlineKeyboardButton("ðŸ  Quay vá» Menu", callback_data="start")]
+        [InlineKeyboardButton("🎁 Bắt đầu dùng thử NGAY", callback_data="start_trial")],
+        [InlineKeyboardButton("💰 Xem gói Premium", callback_data="view_premium")],
+        [InlineKeyboardButton("❓ Tại sao nên Premium?", callback_data="why_premium")],
+        [InlineKeyboardButton("🏠 Quay về Menu", callback_data="start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     

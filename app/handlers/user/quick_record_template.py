@@ -1,6 +1,6 @@
 """
 Quick Record Handler (Option 3 - Template Integration)
-Parse "chi 50k tiá»n Äƒn" vÃ  gá»i API Ä‘á»ƒ ghi vÃ o Google Sheets
+Parse "chi 50k tiền ăn" và gọi API để ghi vào Google Sheets
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, MessageHandler, filters, ApplicationHandlerStop, CallbackQueryHandler
@@ -14,21 +14,21 @@ logger = logging.getLogger(__name__)
 
 # Transaction type keywords
 # Grammar keywords - Always remove (they're just markers)
-GRAMMAR_EXPENSE_KEYWORDS = ['chi', 'tráº£', 'tiÃªu', 'tá»‘n', 'Ä‘Ã³ng', 'náº¡p']
-GRAMMAR_INCOME_KEYWORDS = ['thu', 'nháº­n', 'Ä‘Æ°á»£c']
+GRAMMAR_EXPENSE_KEYWORDS = ['chi', 'trả', 'tiêu', 'tốn', 'đóng', 'nạp']
+GRAMMAR_INCOME_KEYWORDS = ['thu', 'nhận', 'được']
 
 # Semantic keywords - Keep as part of note (they're the category itself)  
-SEMANTIC_EXPENSE_KEYWORDS = ['mua']  # Keep if part of phrase like "mua sáº¯m"
-SEMANTIC_INCOME_KEYWORDS = ['lÆ°Æ¡ng', 'thÆ°á»Ÿng', 'bÃ¡n']
-SEMANTIC_INVESTMENT_KEYWORDS = ['Ä‘áº§u tÆ°']  # Investment transactions
+SEMANTIC_EXPENSE_KEYWORDS = ['mua']  # Keep if part of phrase like "mua sắm"
+SEMANTIC_INCOME_KEYWORDS = ['lương', 'thưởng', 'bán']
+SEMANTIC_INVESTMENT_KEYWORDS = ['đầu tư']  # Investment transactions
 
 # Combined for detection
 EXPENSE_KEYWORDS = GRAMMAR_EXPENSE_KEYWORDS + SEMANTIC_EXPENSE_KEYWORDS
 INCOME_KEYWORDS = GRAMMAR_INCOME_KEYWORDS + SEMANTIC_INCOME_KEYWORDS
 INVESTMENT_KEYWORDS = SEMANTIC_INVESTMENT_KEYWORDS
 
-# Amount pattern - Prioritize longer units first (triá»‡u before tr)
-AMOUNT_PATTERN = r'(\d+(?:[,.\d]*)?)\s*(triá»‡u|nghÃ¬n|nghin|tr|k)?'
+# Amount pattern - Prioritize longer units first (triệu before tr)
+AMOUNT_PATTERN = r'(\d+(?:[,.\d]*)?)\s*(triệu|nghìn|nghin|tr|k)?'
 
 
 def parse_amount(amount_str: str) -> float:
@@ -38,9 +38,9 @@ def parse_amount(amount_str: str) -> float:
     Examples:
         "50" -> 50000
         "50k" -> 50000
-        "50 nghÃ¬n" -> 50000
+        "50 nghìn" -> 50000
         "1.5tr" -> 1500000
-        "1,5 triá»‡u" -> 1500000
+        "1,5 triệu" -> 1500000
         "1,500,000" -> 1500000
     """
     # Remove spaces
@@ -48,12 +48,12 @@ def parse_amount(amount_str: str) -> float:
     
     # Determine multiplier - Longest matches first!
     multiplier = 1
-    if 'triá»‡u' in amount_str or 'trieu' in amount_str:
+    if 'triệu' in amount_str or 'trieu' in amount_str:
         multiplier = 1000000
-        amount_str = re.sub(r'(triá»‡u|trieu)', '', amount_str)
-    elif 'nghÃ¬n' in amount_str or 'nghin' in amount_str:
+        amount_str = re.sub(r'(triệu|trieu)', '', amount_str)
+    elif 'nghìn' in amount_str or 'nghin' in amount_str:
         multiplier = 1000
-        amount_str = re.sub(r'(nghÃ¬n|nghin)', '', amount_str)
+        amount_str = re.sub(r'(nghìn|nghin)', '', amount_str)
     elif 'tr' in amount_str:
         multiplier = 1000000
         amount_str = amount_str.replace('tr', '')
@@ -108,37 +108,37 @@ def match_category_smart(note: str, transaction_type: str, categories: list) -> 
     # Keyword matching for common phrases
     keywords = {
         # Income keywords (Thu)
-        'lÆ°Æ¡ng': 'LÆ°Æ¡ng',
-        'luong': 'LÆ°Æ¡ng',
-        'salary': 'LÆ°Æ¡ng',
-        'thÆ°á»Ÿng': 'LÆ°Æ¡ng',
-        'thuong': 'LÆ°Æ¡ng',
-        'bonus': 'LÆ°Æ¡ng',
+        'lương': 'Lương',
+        'luong': 'Lương',
+        'salary': 'Lương',
+        'thưởng': 'Lương',
+        'thuong': 'Lương',
+        'bonus': 'Lương',
         'kinh doanh': 'Kinh doanh',
-        'bÃ¡n hÃ ng': 'BÃ¡n hÃ ng',
-        'ban hang': 'BÃ¡n hÃ ng',
-        'cho thuÃª': 'Cho thuÃª',
-        'cho thue': 'Cho thuÃª',
-        'rent': 'Cho thuÃª',
-        'lÃ£i': 'LÃ£i Ä‘áº§u tÆ°',
-        'lai': 'LÃ£i Ä‘áº§u tÆ°',
-        'cá»• tá»©c': 'LÃ£i Ä‘áº§u tÆ°',
-        'co tuc': 'LÃ£i Ä‘áº§u tÆ°',
-        'dividend': 'LÃ£i Ä‘áº§u tÆ°',
+        'bán hàng': 'Bán hàng',
+        'ban hang': 'Bán hàng',
+        'cho thuê': 'Cho thuê',
+        'cho thue': 'Cho thuê',
+        'rent': 'Cho thuê',
+        'lãi': 'Lãi đầu tư',
+        'lai': 'Lãi đầu tư',
+        'cổ tức': 'Lãi đầu tư',
+        'co tuc': 'Lãi đầu tư',
+        'dividend': 'Lãi đầu tư',
         
         # Investment products
-        'sp500': 'Chá»©ng khoÃ¡n',
-        's&p500': 'Chá»©ng khoÃ¡n',
-        's&p': 'Chá»©ng khoÃ¡n',
-        'vn30': 'Chá»©ng khoÃ¡n',
-        'vnindex': 'Chá»©ng khoÃ¡n',
-        'nasdaq': 'Chá»©ng khoÃ¡n',
-        'dow jones': 'Chá»©ng khoÃ¡n',
-        'vti': 'Quá»¹ Ä‘áº§u tÆ°',
-        'voo': 'Quá»¹ Ä‘áº§u tÆ°',
-        'etf': 'Quá»¹ ETF',
-        'quá»¹': 'Quá»¹ Ä‘áº§u tÆ°',
-        'quy': 'Quá»¹ Ä‘áº§u tÆ°',
+        'sp500': 'Chứng khoán',
+        's&p500': 'Chứng khoán',
+        's&p': 'Chứng khoán',
+        'vn30': 'Chứng khoán',
+        'vnindex': 'Chứng khoán',
+        'nasdaq': 'Chứng khoán',
+        'dow jones': 'Chứng khoán',
+        'vti': 'Quỹ đầu tư',
+        'voo': 'Quỹ đầu tư',
+        'etf': 'Quỹ ETF',
+        'quỹ': 'Quỹ đầu tư',
+        'quy': 'Quỹ đầu tư',
         'btc': 'Crypto',
         'bitcoin': 'Crypto',
         'eth': 'Crypto',
@@ -146,67 +146,67 @@ def match_category_smart(note: str, transaction_type: str, categories: list) -> 
         'usdt': 'Crypto',
         'crypto': 'Crypto',
         'coin': 'Crypto',
-        'tiá»n Ä‘iá»‡n tá»­': 'Crypto',
+        'tiền điện tử': 'Crypto',
         'tien dien tu': 'Crypto',
-        'cá»• phiáº¿u': 'Cá»• phiáº¿u',
-        'co phieu': 'Cá»• phiáº¿u',
-        'cp': 'Cá»• phiáº¿u',
-        'chá»©ng khoÃ¡n': 'Chá»©ng khoÃ¡n',
-        'chung khoan': 'Chá»©ng khoÃ¡n',
-        'ck': 'Chá»©ng khoÃ¡n',
-        'vÃ ng': 'VÃ ng Ä‘áº§u tÆ°',
-        'vang': 'VÃ ng Ä‘áº§u tÆ°',
-        'gold': 'VÃ ng Ä‘áº§u tÆ°',
+        'cổ phiếu': 'Cổ phiếu',
+        'co phieu': 'Cổ phiếu',
+        'cp': 'Cổ phiếu',
+        'chứng khoán': 'Chứng khoán',
+        'chung khoan': 'Chứng khoán',
+        'ck': 'Chứng khoán',
+        'vàng': 'Vàng đầu tư',
+        'vang': 'Vàng đầu tư',
+        'gold': 'Vàng đầu tư',
         
         # Expense keywords
-        'Äƒn': 'Ä‚n uá»‘ng',
-        'an': 'Ä‚n uá»‘ng',
-        'cÆ¡m': 'Ä‚n uá»‘ng',
-        'com': 'Ä‚n uá»‘ng',
-        'cÃ  phÃª': 'Ä‚n uá»‘ng',
-        'ca phe': 'Ä‚n uá»‘ng',
-        'cafe': 'Ä‚n uá»‘ng',
-        'trÃ ': 'Ä‚n uá»‘ng',
-        'tra': 'Ä‚n uá»‘ng',
-        'nhÃ  hÃ ng': 'Ä‚n uá»‘ng',
-        'nha hang': 'Ä‚n uá»‘ng',
-        'mua': 'Mua sáº¯m',
-        'Ã¡o': 'Mua sáº¯m',
-        'ao': 'Mua sáº¯m',
-        'quáº§n': 'Mua sáº¯m',
-        'quan': 'Mua sáº¯m',
-        'giÃ y': 'Mua sáº¯m',
-        'giay': 'Mua sáº¯m',
-        'phim': 'Giáº£i trÃ­',
-        'game': 'Giáº£i trÃ­',
-        'du lá»‹ch': 'Giáº£i trÃ­',
-        'du lich': 'Giáº£i trÃ­',
-        'travel': 'Giáº£i trÃ­',
-        'bá»‡nh': 'Y táº¿',
-        'benh': 'Y táº¿',
-        'thuá»‘c': 'Y táº¿',
-        'thuoc': 'Y táº¿',
-        'khÃ¡m': 'Y táº¿',
-        'kham': 'Y táº¿',
-        'há»c': 'GiÃ¡o dá»¥c',
-        'hoc': 'GiÃ¡o dá»¥c',
-        'sÃ¡ch': 'GiÃ¡o dá»¥c',
-        'sach': 'GiÃ¡o dá»¥c',
-        'khoÃ¡ há»c': 'GiÃ¡o dá»¥c',
-        'khoa hoc': 'GiÃ¡o dá»¥c',
-        'course': 'GiÃ¡o dá»¥c',
-        'Ä‘iá»‡n': 'Äiá»‡n nÆ°á»›c',
-        'dien': 'Äiá»‡n nÆ°á»›c',
-        'nÆ°á»›c': 'Äiá»‡n nÆ°á»›c',
-        'nuoc': 'Äiá»‡n nÆ°á»›c',
-        'internet': 'Äiá»‡n nÆ°á»›c',
-        'xÄƒng': 'XÄƒng xe',
-        'xang': 'XÄƒng xe',
-        'gas': 'XÄƒng xe',
-        'xe': 'XÄƒng xe',
-        'quÃ ': 'QuÃ  táº·ng',
-        'qua': 'QuÃ  táº·ng',
-        'gift': 'QuÃ  táº·ng',
+        'ăn': 'Ăn uống',
+        'an': 'Ăn uống',
+        'cơm': 'Ăn uống',
+        'com': 'Ăn uống',
+        'cà phê': 'Ăn uống',
+        'ca phe': 'Ăn uống',
+        'cafe': 'Ăn uống',
+        'trà': 'Ăn uống',
+        'tra': 'Ăn uống',
+        'nhà hàng': 'Ăn uống',
+        'nha hang': 'Ăn uống',
+        'mua': 'Mua sắm',
+        'áo': 'Mua sắm',
+        'ao': 'Mua sắm',
+        'quần': 'Mua sắm',
+        'quan': 'Mua sắm',
+        'giày': 'Mua sắm',
+        'giay': 'Mua sắm',
+        'phim': 'Giải trí',
+        'game': 'Giải trí',
+        'du lịch': 'Giải trí',
+        'du lich': 'Giải trí',
+        'travel': 'Giải trí',
+        'bệnh': 'Y tế',
+        'benh': 'Y tế',
+        'thuốc': 'Y tế',
+        'thuoc': 'Y tế',
+        'khám': 'Y tế',
+        'kham': 'Y tế',
+        'học': 'Giáo dục',
+        'hoc': 'Giáo dục',
+        'sách': 'Giáo dục',
+        'sach': 'Giáo dục',
+        'khoá học': 'Giáo dục',
+        'khoa hoc': 'Giáo dục',
+        'course': 'Giáo dục',
+        'điện': 'Điện nước',
+        'dien': 'Điện nước',
+        'nước': 'Điện nước',
+        'nuoc': 'Điện nước',
+        'internet': 'Điện nước',
+        'xăng': 'Xăng xe',
+        'xang': 'Xăng xe',
+        'gas': 'Xăng xe',
+        'xe': 'Xăng xe',
+        'quà': 'Quà tặng',
+        'qua': 'Quà tặng',
+        'gift': 'Quà tặng',
     }
     
     for keyword, cat_name in keywords.items():
@@ -222,33 +222,33 @@ def get_popular_categories() -> list:
     """Get popular fallback categories when API fails"""
     return [
         # Income
-        {'id': 'CAT031', 'name': 'LÆ°Æ¡ng', 'type': 'Thu', 'icon': 'ðŸ’¼', 'jarId': '', 'autoAllocate': True},
-        {'id': 'CAT032', 'name': 'Kinh doanh', 'type': 'Thu', 'icon': 'ðŸ’¼', 'jarId': '', 'autoAllocate': True},
-        {'id': 'CAT033', 'name': 'Cho thuÃª', 'type': 'Thu', 'icon': 'ðŸ ', 'jarId': 'FFA', 'autoAllocate': False},
-        {'id': 'CAT034', 'name': 'LÃ£i Ä‘áº§u tÆ°', 'type': 'Thu', 'icon': 'ðŸ“ˆ', 'jarId': 'FFA', 'autoAllocate': False},
-        {'id': 'CAT037', 'name': 'BÃ¡n hÃ ng', 'type': 'Thu', 'icon': 'ðŸ’°', 'jarId': '', 'autoAllocate': True},
+        {'id': 'CAT031', 'name': 'Lương', 'type': 'Thu', 'icon': '💼', 'jarId': '', 'autoAllocate': True},
+        {'id': 'CAT032', 'name': 'Kinh doanh', 'type': 'Thu', 'icon': '💼', 'jarId': '', 'autoAllocate': True},
+        {'id': 'CAT033', 'name': 'Cho thuê', 'type': 'Thu', 'icon': '🏠', 'jarId': 'FFA', 'autoAllocate': False},
+        {'id': 'CAT034', 'name': 'Lãi đầu tư', 'type': 'Thu', 'icon': '📈', 'jarId': 'FFA', 'autoAllocate': False},
+        {'id': 'CAT037', 'name': 'Bán hàng', 'type': 'Thu', 'icon': '💰', 'jarId': '', 'autoAllocate': True},
         
         # Expense
-        {'id': 'CAT021', 'name': 'Ä‚n uá»‘ng', 'type': 'Chi', 'icon': 'ðŸ½ï¸', 'jarId': 'NEC', 'autoAllocate': False},
-        {'id': 'CAT022', 'name': 'Mua sáº¯m', 'type': 'Chi', 'icon': 'ðŸ›’', 'jarId': 'NEC', 'autoAllocate': False},
-        {'id': 'CAT023', 'name': 'Giáº£i trÃ­', 'type': 'Chi', 'icon': 'ðŸŽ¬', 'jarId': 'PLAY', 'autoAllocate': False},
-        {'id': 'CAT024', 'name': 'Y táº¿', 'type': 'Chi', 'icon': 'ðŸ¥', 'jarId': 'NEC', 'autoAllocate': False},
-        {'id': 'CAT025', 'name': 'GiÃ¡o dá»¥c', 'type': 'Chi', 'icon': 'ðŸ“š', 'jarId': 'EDU', 'autoAllocate': False},
-        {'id': 'CAT026', 'name': 'Äiá»‡n nÆ°á»›c', 'type': 'Chi', 'icon': 'ðŸ’¡', 'jarId': 'NEC', 'autoAllocate': False},
-        {'id': 'CAT027', 'name': 'XÄƒng xe', 'type': 'Chi', 'icon': 'â›½', 'jarId': 'NEC', 'autoAllocate': False},
-        {'id': 'CAT029', 'name': 'QuÃ  táº·ng', 'type': 'Chi', 'icon': 'ðŸŽ', 'jarId': 'GIVE', 'autoAllocate': False},
+        {'id': 'CAT021', 'name': 'Ăn uống', 'type': 'Chi', 'icon': '🍽️', 'jarId': 'NEC', 'autoAllocate': False},
+        {'id': 'CAT022', 'name': 'Mua sắm', 'type': 'Chi', 'icon': '🛒', 'jarId': 'NEC', 'autoAllocate': False},
+        {'id': 'CAT023', 'name': 'Giải trí', 'type': 'Chi', 'icon': '🎬', 'jarId': 'PLAY', 'autoAllocate': False},
+        {'id': 'CAT024', 'name': 'Y tế', 'type': 'Chi', 'icon': '🏥', 'jarId': 'NEC', 'autoAllocate': False},
+        {'id': 'CAT025', 'name': 'Giáo dục', 'type': 'Chi', 'icon': '📚', 'jarId': 'EDU', 'autoAllocate': False},
+        {'id': 'CAT026', 'name': 'Điện nước', 'type': 'Chi', 'icon': '💡', 'jarId': 'NEC', 'autoAllocate': False},
+        {'id': 'CAT027', 'name': 'Xăng xe', 'type': 'Chi', 'icon': '⛽', 'jarId': 'NEC', 'autoAllocate': False},
+        {'id': 'CAT029', 'name': 'Quà tặng', 'type': 'Chi', 'icon': '🎁', 'jarId': 'GIVE', 'autoAllocate': False},
     ]
 
 
 def get_jar_name(jar_id: str) -> str:
     """Get jar display name from ID"""
     jar_names = {
-        'NEC': 'ðŸ  Nhu cáº§u thiáº¿t yáº¿u',
-        'LTSS': 'ðŸ’Ž Tiáº¿t kiá»‡m dÃ i háº¡n',
-        'EDU': 'ðŸŽ“ Há»c táº­p & PhÃ¡t triá»ƒn',
-        'PLAY': 'ðŸŽ‰ Giáº£i trÃ­ & Táº­n hÆ°á»Ÿng',
-        'FFA': 'ðŸ“ˆ Äáº§u tÆ° & Tá»± do tÃ i chÃ­nh',
-        'GIVE': 'â¤ï¸ Cho Ä‘i & Cá»™ng Ä‘á»“ng'
+        'NEC': '🏠 Nhu cầu thiết yếu',
+        'LTSS': '💎 Tiết kiệm dài hạn',
+        'EDU': '🎓 Học tập & Phát triển',
+        'PLAY': '🎉 Giải trí & Tận hưởng',
+        'FFA': '📈 Đầu tư & Tự do tài chính',
+        'GIVE': '❤️ Cho đi & Cộng đồng'
     }
     return jar_names.get(jar_id, jar_id)
 
@@ -271,9 +271,9 @@ def parse_quick_record_message(text: str) -> tuple[str, float, str]:
         "chi xem phim 150k" -> ("Chi", 150000, "xem phim")
         "xem phim 150k" -> ("Chi", 150000, "xem phim")
         "150k xem phim" -> ("Chi", 150000, "xem phim")
-        "thu lÆ°Æ¡ng 5tr" -> ("Thu", 5000000, "lÆ°Æ¡ng")
-        "nháº­n 500k thÆ°á»Ÿng" -> ("Thu", 500000, "thÆ°á»Ÿng")
-        "lÆ°Æ¡ng 5 triá»‡u" -> ("Thu", 5000000, "lÆ°Æ¡ng")
+        "thu lương 5tr" -> ("Thu", 5000000, "lương")
+        "nhận 500k thưởng" -> ("Thu", 500000, "thưởng")
+        "lương 5 triệu" -> ("Thu", 5000000, "lương")
     """
     text = text.strip()
     text_lower = text.lower()
@@ -285,7 +285,7 @@ def parse_quick_record_message(text: str) -> tuple[str, float, str]:
     # Check for investment keywords first (highest priority)
     for keyword in INVESTMENT_KEYWORDS:
         if keyword in text_lower:
-            transaction_type = "Äáº§u tÆ°"
+            transaction_type = "Đầu tư"
             type_keyword = keyword
             break
     
@@ -323,7 +323,7 @@ def parse_quick_record_message(text: str) -> tuple[str, float, str]:
             valid_matches.append(match)
         
         if valid_matches:
-            # Prioritize matches with units (triá»‡u, tr, k) over raw numbers
+            # Prioritize matches with units (triệu, tr, k) over raw numbers
             matches_with_units = [m for m in valid_matches if m.group(2)]
             if matches_with_units:
                 # Use the first match with unit
@@ -334,7 +334,7 @@ def parse_quick_record_message(text: str) -> tuple[str, float, str]:
             
             if amount_match:
                 amount_str = amount_match.group(1)  # Number part
-                unit_str = amount_match.group(2) or ''  # Unit part (k, tr, triá»‡u, nghÃ¬n)
+                unit_str = amount_match.group(2) or ''  # Unit part (k, tr, triệu, nghìn)
                 
                 # Combine for parsing
                 full_amount_str = amount_str + unit_str
@@ -353,25 +353,25 @@ def parse_quick_record_message(text: str) -> tuple[str, float, str]:
         if keyword_match:
             should_remove = False
             
-            # Always remove grammar keywords (chi, thu, nháº­n, tráº£, etc.)
+            # Always remove grammar keywords (chi, thu, nhận, trả, etc.)
             if type_keyword in GRAMMAR_EXPENSE_KEYWORDS or type_keyword in GRAMMAR_INCOME_KEYWORDS:
                 should_remove = True
             
-            # Investment keywords (Ä‘áº§u tÆ°) - Never remove, they ARE the category
+            # Investment keywords (đầu tư) - Never remove, they ARE the category
             elif type_keyword in SEMANTIC_INVESTMENT_KEYWORDS:
                 should_remove = False
             
             # For semantic keywords, only remove in specific cases
             elif type_keyword in SEMANTIC_EXPENSE_KEYWORDS:  # "mua"
                 # Remove "mua" only if it's immediately before amount
-                # e.g., "mua 50k" â†’ remove "mua"
-                # but "mua sáº¯m 50k" â†’ keep "mua" as part of "mua sáº¯m"
+                # e.g., "mua 50k" → remove "mua"
+                # but "mua sắm 50k" → keep "mua" as part of "mua sắm"
                 if amount_match:
                     text_between = text[keyword_match.end():amount_match.start()].strip()
                     if len(text_between) == 0:  # Nothing between "mua" and amount
                         should_remove = True
             
-            # Semantic income keywords (lÆ°Æ¡ng, thÆ°á»Ÿng, bÃ¡n) - Never remove
+            # Semantic income keywords (lương, thưởng, bán) - Never remove
             # They ARE the category/note itself
             
             if should_remove:
@@ -394,12 +394,12 @@ def parse_quick_record_message(text: str) -> tuple[str, float, str]:
     note = re.sub(r'\s+', ' ', note)  # Collapse multiple spaces
     
     if not note:
-        note = "Giao dá»‹ch"  # Default note if empty
+        note = "Giao dịch"  # Default note if empty
     
     # Step 4: Default to "Chi" if no type keyword found but has amount
     if not transaction_type:
         # Check if note contains income-related words for smart defaulting
-        income_hints = ['lÆ°Æ¡ng', 'thÆ°á»Ÿng', 'bÃ¡n', 'nháº­n', 'thu nháº­p', 'tiá»n vá»']
+        income_hints = ['lương', 'thưởng', 'bán', 'nhận', 'thu nhập', 'tiền về']
         if any(hint in text_lower for hint in income_hints):
             transaction_type = "Thu"
         else:
@@ -411,10 +411,14 @@ def parse_quick_record_message(text: str) -> tuple[str, float, str]:
 
 async def handle_quick_record(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    Handler for quick record messages like "chi 50k tiá»n Äƒn"
+    Handler for quick record messages like "chi 50k tiền ăn"
     """
     user_id = update.effective_user.id
     message_text = update.message.text
+    
+    # CRITICAL: Skip if user is in connection flow
+    if context.user_data.get('waiting_for_sheet_url') or context.user_data.get('waiting_for_webapp_url'):
+        return  # Let message handler process it
     
     # Parse message
     transaction_type, amount, note = parse_quick_record_message(message_text)
@@ -430,8 +434,8 @@ async def handle_quick_record(update: Update, context: ContextTypes.DEFAULT_TYPE
     if not user or not user.spreadsheet_id:
         # User not connected
         await update.message.reply_text(
-            "âš ï¸ Báº¡n chÆ°a káº¿t ná»‘i Google Sheets!\n\n"
-            "DÃ¹ng /connectsheets Ä‘á»ƒ káº¿t ná»‘i trÆ°á»›c nhÃ©. ðŸ˜Š"
+            "⚠️ Bạn chưa kết nối Google Sheets!\n\n"
+            "Dùng /connectsheets để kết nối trước nhé. 😊"
         )
         return
     
@@ -445,16 +449,16 @@ async def handle_quick_record(update: Update, context: ContextTypes.DEFAULT_TYPE
             categories = []
         else:
             categories = categories_result.get("categories", [])
-            logger.info(f"âœ… Loaded {len(categories)} categories for user {user.id}")
+            logger.info(f"✅ Loaded {len(categories)} categories for user {user.id}")
             if categories:
                 logger.debug(f"Categories preview: {[c.get('name') for c in categories[:5]]}")
     except Exception as e:
-        logger.error(f"âŒ Error getting categories: {e}")
+        logger.error(f"❌ Error getting categories: {e}")
         categories = []
     
     # Fallback: Use popular categories if API fails
     if not categories:
-        logger.warning(f"âš ï¸ No categories from API. Using popular fallback for user {user.id}")
+        logger.warning(f"⚠️ No categories from API. Using popular fallback for user {user.id}")
         categories = get_popular_categories()
     
     # Try smart matching
@@ -472,7 +476,7 @@ async def handle_quick_record(update: Update, context: ContextTypes.DEFAULT_TYPE
             'note': note,
             'category': matched_category['name'],
             'category_id': matched_category.get('id'),
-            'category_icon': matched_category.get('icon', 'ðŸ“'),
+            'category_icon': matched_category.get('icon', '📝'),
             'jar': suggested_jar,
             'account': suggested_account,
             'timestamp': datetime.now().isoformat()
@@ -480,26 +484,26 @@ async def handle_quick_record(update: Update, context: ContextTypes.DEFAULT_TYPE
         
         # Show confirmation with edit options
         keyboard = [
-            [InlineKeyboardButton("âœ… XÃ¡c nháº­n vÃ  ghi", callback_data="qr_confirm")],
+            [InlineKeyboardButton("✅ Xác nhận và ghi", callback_data="qr_confirm")],
             [
-                InlineKeyboardButton("âœï¸ Sá»­a danh má»¥c", callback_data="qr_edit_category"),
-                InlineKeyboardButton("âœï¸ Sá»­a hÅ©", callback_data="qr_edit_jar"),
+                InlineKeyboardButton("✏️ Sửa danh mục", callback_data="qr_edit_category"),
+                InlineKeyboardButton("✏️ Sửa hũ", callback_data="qr_edit_jar"),
             ],
             [
-                InlineKeyboardButton("ðŸ’³ Äá»•i tÃ i khoáº£n", callback_data="qr_edit_account"),
-                InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")
+                InlineKeyboardButton("💳 Đổi tài khoản", callback_data="qr_edit_account"),
+                InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await update.message.reply_text(
-            f"ðŸ“ **PhÃ¢n loáº¡i tá»± Ä‘á»™ng**\n\n"
-            f"â€¢ {transaction_type}: **{amount:,.0f} â‚«**\n"
-            f"â€¢ Danh má»¥c: {matched_category.get('icon', 'ðŸ“')} **{matched_category['name']}**\n"
-            f"â€¢ HÅ©: **{suggested_jar}** - {get_jar_name(suggested_jar)}\n"
-            f"â€¢ TÃ i khoáº£n: **{suggested_account}**\n"
-            f"â€¢ Ghi chÃº: {note}\n\n"
-            f"ðŸ’¡ **ÄÃºng khÃ´ng? XÃ¡c nháº­n hoáº·c chá»‰nh sá»­a:**",
+            f"📝 **Phân loại tự động**\n\n"
+            f"• {transaction_type}: **{amount:,.0f} ₫**\n"
+            f"• Danh mục: {matched_category.get('icon', '📝')} **{matched_category['name']}**\n"
+            f"• Hũ: **{suggested_jar}** - {get_jar_name(suggested_jar)}\n"
+            f"• Tài khoản: **{suggested_account}**\n"
+            f"• Ghi chú: {note}\n\n"
+            f"💡 **Đúng không? Xác nhận hoặc chỉnh sửa:**",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
@@ -526,13 +530,13 @@ async def handle_quick_record(update: Update, context: ContextTypes.DEFAULT_TYPE
         
         if transaction_type == "Thu":
             # Income: Show popular income categories
-            income_cats = [c for c in filtered_cats if c.get('name') in ['LÆ°Æ¡ng', 'Kinh doanh', 'Cho thuÃª', 'LÃ£i Ä‘áº§u tÆ°', 'BÃ¡n hÃ ng', 'QuÃ  táº·ng']]
+            income_cats = [c for c in filtered_cats if c.get('name') in ['Lương', 'Kinh doanh', 'Cho thuê', 'Lãi đầu tư', 'Bán hàng', 'Quà tặng']]
             
             # Add category buttons (max 6, 2 per row)
             for i in range(0, min(6, len(income_cats)), 2):
                 row = []
                 for cat in income_cats[i:i+2]:
-                    icon = cat.get('icon', 'ðŸ’°')
+                    icon = cat.get('icon', '💰')
                     name = cat['name']
                     cat_id = cat.get('id', '')
                     row.append(InlineKeyboardButton(
@@ -543,17 +547,17 @@ async def handle_quick_record(update: Update, context: ContextTypes.DEFAULT_TYPE
             
             # Add "Auto allocate 6 jars" button for income with autoAllocate
             keyboard.append([
-                InlineKeyboardButton("ðŸº Tá»± Ä‘á»™ng phÃ¢n bá»• 6 hÅ©", callback_data="qr_auto_allocate")
+                InlineKeyboardButton("🏺 Tự động phân bổ 6 hũ", callback_data="qr_auto_allocate")
             ])
         else:
             # Expense: Show popular expense categories
-            expense_cats = [c for c in filtered_cats if c.get('name') in ['Ä‚n uá»‘ng', 'Mua sáº¯m', 'Giáº£i trÃ­', 'Y táº¿', 'GiÃ¡o dá»¥c', 'Äiá»‡n nÆ°á»›c']]
+            expense_cats = [c for c in filtered_cats if c.get('name') in ['Ăn uống', 'Mua sắm', 'Giải trí', 'Y tế', 'Giáo dục', 'Điện nước']]
             
             # Add category buttons (max 6, 2 per row)
             for i in range(0, min(6, len(expense_cats)), 2):
                 row = []
                 for cat in expense_cats[i:i+2]:
-                    icon = cat.get('icon', 'ðŸ’¸')
+                    icon = cat.get('icon', '💸')
                     name = cat['name']
                     cat_id = cat.get('id', '')
                     row.append(InlineKeyboardButton(
@@ -564,28 +568,28 @@ async def handle_quick_record(update: Update, context: ContextTypes.DEFAULT_TYPE
         
         # Add "Other category..." button
         keyboard.append([
-            InlineKeyboardButton("ðŸ“ Chá»n danh má»¥c khÃ¡c...", callback_data="qr_show_all_cats")
+            InlineKeyboardButton("📝 Chọn danh mục khác...", callback_data="qr_show_all_cats")
         ])
         
         # Add Cancel button
         keyboard.append([
-            InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")
+            InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")
         ])
         
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         # Build message
         message_text = (
-            f"ðŸ“ **Giao dá»‹ch má»›i**\n\n"
-            f"â€¢ Loáº¡i: **{transaction_type}**\n"
-            f"â€¢ Sá»‘ tiá»n: **{amount:,.0f} â‚«**\n"
-            f"â€¢ Ghi chÃº: {note}\n\n"
+            f"📝 **Giao dịch mới**\n\n"
+            f"• Loại: **{transaction_type}**\n"
+            f"• Số tiền: **{amount:,.0f} ₫**\n"
+            f"• Ghi chú: {note}\n\n"
         )
         
         if filtered_cats:
-            message_text += f"ðŸ’¡ **Chá»n danh má»¥c phÃ¹ há»£p:**"
+            message_text += f"💡 **Chọn danh mục phù hợp:**"
         else:
-            message_text += f"âš ï¸ KhÃ´ng tÃ¬m tháº¥y danh má»¥c. Táº¡o giao dá»‹ch vá»›i tá»± Ä‘á»™ng phÃ¢n bá»• hoáº·c chá»n hÅ©:"
+            message_text += f"⚠️ Không tìm thấy danh mục. Tạo giao dịch với tự động phân bổ hoặc chọn hũ:"
         
         await update.message.reply_text(
             message_text,
@@ -606,7 +610,7 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
     
     # Check if pending transaction exists
     if 'pending_transaction' not in context.user_data:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch. Vui lÃ²ng thá»­ láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy giao dịch. Vui lòng thử lại.")
         return
     
     # Get selected category ID
@@ -617,7 +621,7 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
     user = db.query(User).filter(User.id == user_id).first()
     
     if not user or not user.spreadsheet_id:
-        await query.edit_message_text("âš ï¸ Báº¡n chÆ°a káº¿t ná»‘i Google Sheets!")
+        await query.edit_message_text("⚠️ Bạn chưa kết nối Google Sheets!")
         return
     
     try:
@@ -636,13 +640,13 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
     selected_cat = next((c for c in categories if c.get('id') == cat_id), None)
     
     if not selected_cat:
-        await query.edit_message_text("âš ï¸ Danh má»¥c khÃ´ng tá»“n táº¡i. Vui lÃ²ng thá»­ láº¡i.")
+        await query.edit_message_text("⚠️ Danh mục không tồn tại. Vui lòng thử lại.")
         return
     
     # Save category to pending transaction
     context.user_data['pending_transaction']['category'] = selected_cat['name']
     context.user_data['pending_transaction']['category_id'] = cat_id
-    context.user_data['pending_transaction']['category_icon'] = selected_cat.get('icon', 'ðŸ“')
+    context.user_data['pending_transaction']['category_icon'] = selected_cat.get('icon', '📝')
     
     # Check if auto allocate
     if selected_cat.get('autoAllocate'):
@@ -653,23 +657,23 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
         # Show confirmation
         transaction = context.user_data['pending_transaction']
         keyboard = [
-            [InlineKeyboardButton("âœ… XÃ¡c nháº­n vÃ  ghi", callback_data="qr_confirm")],
+            [InlineKeyboardButton("✅ Xác nhận và ghi", callback_data="qr_confirm")],
             [
-                InlineKeyboardButton("âœï¸ Sá»­a danh má»¥c", callback_data="qr_edit_category"),
-                InlineKeyboardButton("ðŸ’³ Äá»•i tÃ i khoáº£n", callback_data="qr_edit_account"),
+                InlineKeyboardButton("✏️ Sửa danh mục", callback_data="qr_edit_category"),
+                InlineKeyboardButton("💳 Đổi tài khoản", callback_data="qr_edit_account"),
             ],
-            [InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")]
+            [InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            f"ðŸ“ **PhÃ¢n loáº¡i tá»± Ä‘á»™ng**\n\n"
-            f"â€¢ {transaction['type']}: **{transaction['amount']:,.0f} â‚«**\n"
-            f"â€¢ Danh má»¥c: {selected_cat.get('icon', 'ðŸ“')} **{selected_cat['name']}**\n"
-            f"â€¢ PhÃ¢n bá»•: **Tá»± Ä‘á»™ng 6 hÅ©** ðŸº\n"
-            f"â€¢ TÃ i khoáº£n: **Cash**\n"
-            f"â€¢ Ghi chÃº: {transaction['note']}\n\n"
-            f"ðŸ’¡ **ÄÃºng khÃ´ng? XÃ¡c nháº­n hoáº·c chá»‰nh sá»­a:**",
+            f"📝 **Phân loại tự động**\n\n"
+            f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
+            f"• Danh mục: {selected_cat.get('icon', '📝')} **{selected_cat['name']}**\n"
+            f"• Phân bổ: **Tự động 6 hũ** 🏺\n"
+            f"• Tài khoản: **Cash**\n"
+            f"• Ghi chú: {transaction['note']}\n\n"
+            f"💡 **Đúng không? Xác nhận hoặc chỉnh sửa:**",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
@@ -682,26 +686,26 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
         # Show confirmation
         transaction = context.user_data['pending_transaction']
         keyboard = [
-            [InlineKeyboardButton("âœ… XÃ¡c nháº­n vÃ  ghi", callback_data="qr_confirm")],
+            [InlineKeyboardButton("✅ Xác nhận và ghi", callback_data="qr_confirm")],
             [
-                InlineKeyboardButton("âœï¸ Sá»­a danh má»¥c", callback_data="qr_edit_category"),
-                InlineKeyboardButton("âœï¸ Sá»­a hÅ©", callback_data="qr_edit_jar"),
+                InlineKeyboardButton("✏️ Sửa danh mục", callback_data="qr_edit_category"),
+                InlineKeyboardButton("✏️ Sửa hũ", callback_data="qr_edit_jar"),
             ],
             [
-                InlineKeyboardButton("ðŸ’³ Äá»•i tÃ i khoáº£n", callback_data="qr_edit_account"),
-                InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")
+                InlineKeyboardButton("💳 Đổi tài khoản", callback_data="qr_edit_account"),
+                InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            f"ðŸ“ **PhÃ¢n loáº¡i tá»± Ä‘á»™ng**\n\n"
-            f"â€¢ {transaction['type']}: **{transaction['amount']:,.0f} â‚«**\n"
-            f"â€¢ Danh má»¥c: {selected_cat.get('icon', 'ðŸ“')} **{selected_cat['name']}**\n"
-            f"â€¢ HÅ©: **{jar_id}** - {get_jar_name(jar_id)}\n"
-            f"â€¢ TÃ i khoáº£n: **Cash**\n"
-            f"â€¢ Ghi chÃº: {transaction['note']}\n\n"
-            f"ðŸ’¡ **ÄÃºng khÃ´ng? XÃ¡c nháº­n hoáº·c chá»‰nh sá»­a:**",
+            f"📝 **Phân loại tự động**\n\n"
+            f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
+            f"• Danh mục: {selected_cat.get('icon', '📝')} **{selected_cat['name']}**\n"
+            f"• Hũ: **{jar_id}** - {get_jar_name(jar_id)}\n"
+            f"• Tài khoản: **Cash**\n"
+            f"• Ghi chú: {transaction['note']}\n\n"
+            f"💡 **Đúng không? Xác nhận hoặc chỉnh sửa:**",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
@@ -714,7 +718,7 @@ async def handle_auto_allocate(update: Update, context: ContextTypes.DEFAULT_TYP
     
     # Check if pending transaction exists
     if 'pending_transaction' not in context.user_data:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch. Vui lÃ²ng thá»­ láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy giao dịch. Vui lòng thử lại.")
         return
     
     # Set auto allocate mode
@@ -725,26 +729,26 @@ async def handle_auto_allocate(update: Update, context: ContextTypes.DEFAULT_TYP
     # Show confirmation
     transaction = context.user_data['pending_transaction']
     keyboard = [
-        [InlineKeyboardButton("âœ… XÃ¡c nháº­n vÃ  ghi", callback_data="qr_confirm")],
+        [InlineKeyboardButton("✅ Xác nhận và ghi", callback_data="qr_confirm")],
         [
-            InlineKeyboardButton("âœï¸ Chá»n láº¡i danh má»¥c", callback_data="qr_back_category"),
-            InlineKeyboardButton("ðŸ’³ Äá»•i tÃ i khoáº£n", callback_data="qr_edit_account"),
+            InlineKeyboardButton("✏️ Chọn lại danh mục", callback_data="qr_back_category"),
+            InlineKeyboardButton("💳 Đổi tài khoản", callback_data="qr_edit_account"),
         ],
-        [InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")]
+        [InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await query.edit_message_text(
-        f"ðŸ“ **Giao dá»‹ch má»›i**\n\n"
-        f"â€¢ Loáº¡i: **{transaction['type']}**\n"
-        f"â€¢ Sá»‘ tiá»n: **{transaction['amount']:,.0f} â‚«**\n"
-        f"â€¢ Ghi chÃº: {transaction['note']}\n"
-        f"â€¢ PhÃ¢n bá»•: **Tá»± Ä‘á»™ng 6 hÅ©** ðŸº\n"
-        f"â€¢ TÃ i khoáº£n: **Cash**\n\n"
-        f"ðŸ’¡ Thu nháº­p sáº½ Ä‘Æ°á»£c phÃ¢n bá»• theo tá»· lá»‡:\n"
-        f"   ðŸ  NEC (55%) â€¢ ðŸ’Ž LTSS (10%) â€¢ ðŸŽ“ EDU (10%)\n"
-        f"   ðŸŽ‰ PLAY (10%) â€¢ ðŸ“ˆ FFA (10%) â€¢ â¤ï¸ GIVE (5%)\n\n"
-        f"**XÃ¡c nháº­n Ä‘á»ƒ ghi:**",
+        f"📝 **Giao dịch mới**\n\n"
+        f"• Loại: **{transaction['type']}**\n"
+        f"• Số tiền: **{transaction['amount']:,.0f} ₫**\n"
+        f"• Ghi chú: {transaction['note']}\n"
+        f"• Phân bổ: **Tự động 6 hũ** 🏺\n"
+        f"• Tài khoản: **Cash**\n\n"
+        f"💡 Thu nhập sẽ được phân bổ theo tỷ lệ:\n"
+        f"   🏠 NEC (55%) • 💎 LTSS (10%) • 🎓 EDU (10%)\n"
+        f"   🎉 PLAY (10%) • 📈 FFA (10%) • ❤️ GIVE (5%)\n\n"
+        f"**Xác nhận để ghi:**",
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
@@ -759,7 +763,7 @@ async def handle_show_all_categories(update: Update, context: ContextTypes.DEFAU
     
     # Check if pending transaction exists
     if 'pending_transaction' not in context.user_data:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch. Vui lÃ²ng thá»­ láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy giao dịch. Vui lòng thử lại.")
         return
     
     transaction = context.user_data['pending_transaction']
@@ -770,7 +774,7 @@ async def handle_show_all_categories(update: Update, context: ContextTypes.DEFAU
     user = db.query(User).filter(User.id == user_id).first()
     
     if not user or not user.spreadsheet_id:
-        await query.edit_message_text("âš ï¸ Báº¡n chÆ°a káº¿t ná»‘i Google Sheets!")
+        await query.edit_message_text("⚠️ Bạn chưa kết nối Google Sheets!")
         return
     
     try:
@@ -790,8 +794,8 @@ async def handle_show_all_categories(update: Update, context: ContextTypes.DEFAU
     
     if not filtered_cats:
         await query.edit_message_text(
-            f"âš ï¸ KhÃ´ng cÃ³ danh má»¥c {transaction_type} nÃ o.\n"
-            f"Vui lÃ²ng thÃªm danh má»¥c vÃ o Google Sheets cá»§a báº¡n."
+            f"⚠️ Không có danh mục {transaction_type} nào.\n"
+            f"Vui lòng thêm danh mục vào Google Sheets của bạn."
         )
         return
     
@@ -800,7 +804,7 @@ async def handle_show_all_categories(update: Update, context: ContextTypes.DEFAU
     for i in range(0, len(filtered_cats), 3):
         row = []
         for cat in filtered_cats[i:i+3]:
-            icon = cat.get('icon', 'ðŸ“')
+            icon = cat.get('icon', '📝')
             name = cat['name']
             # Shorten name if too long
             if len(name) > 8:
@@ -814,16 +818,16 @@ async def handle_show_all_categories(update: Update, context: ContextTypes.DEFAU
     
     # Add cancel button
     keyboard.append([
-        InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")
+        InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")
     ])
     
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await query.edit_message_text(
-        f"ðŸ“ **Chá»n danh má»¥c {transaction_type}**\n\n"
-        f"â€¢ Sá»‘ tiá»n: **{transaction['amount']:,.0f} â‚«**\n"
-        f"â€¢ Ghi chÃº: {transaction['note']}\n\n"
-        f"ðŸ’¡ **Chá»n danh má»¥c:**",
+        f"📝 **Chọn danh mục {transaction_type}**\n\n"
+        f"• Số tiền: **{transaction['amount']:,.0f} ₫**\n"
+        f"• Ghi chú: {transaction['note']}\n\n"
+        f"💡 **Chọn danh mục:**",
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
@@ -838,7 +842,7 @@ async def handle_jar_selection(update: Update, context: ContextTypes.DEFAULT_TYP
     
     # Check if cancelled
     if query.data == "qr_cancel":
-        await query.edit_message_text("âŒ ÄÃ£ há»§y giao dá»‹ch.")
+        await query.edit_message_text("❌ Đã hủy giao dịch.")
         context.user_data.pop('pending_transaction', None)
         return
     
@@ -847,7 +851,7 @@ async def handle_jar_selection(update: Update, context: ContextTypes.DEFAULT_TYP
     
     # Check if pending transaction exists
     if 'pending_transaction' not in context.user_data:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch. Vui lÃ²ng thá»­ láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy giao dịch. Vui lòng thử lại.")
         return
     
     # Save jar to pending transaction
@@ -856,32 +860,32 @@ async def handle_jar_selection(update: Update, context: ContextTypes.DEFAULT_TYP
     # Show account selection keyboard
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ’µ Cash", callback_data="qr_acc_Cash"),
-            InlineKeyboardButton("ðŸ¦ Vietcombank", callback_data="qr_acc_VCB"),
+            InlineKeyboardButton("💵 Cash", callback_data="qr_acc_Cash"),
+            InlineKeyboardButton("🏦 Vietcombank", callback_data="qr_acc_VCB"),
         ],
         [
-            InlineKeyboardButton("ðŸ¦ Techcombank", callback_data="qr_acc_TCB"),
-            InlineKeyboardButton("ðŸ¦ OCB", callback_data="qr_acc_OCB"),
+            InlineKeyboardButton("🏦 Techcombank", callback_data="qr_acc_TCB"),
+            InlineKeyboardButton("🏦 OCB", callback_data="qr_acc_OCB"),
         ],
         [
-            InlineKeyboardButton("ðŸ’° ZALO", callback_data="qr_acc_ZALO"),
-            InlineKeyboardButton("ðŸ’° KhÃ¡c", callback_data="qr_acc_Other"),
+            InlineKeyboardButton("💰 ZALO", callback_data="qr_acc_ZALO"),
+            InlineKeyboardButton("💰 Khác", callback_data="qr_acc_Other"),
         ],
         [
-            InlineKeyboardButton("Â« Quay láº¡i", callback_data="qr_back_jar"),
-            InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")
+            InlineKeyboardButton("« Quay lại", callback_data="qr_back_jar"),
+            InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     transaction = context.user_data['pending_transaction']
     await query.edit_message_text(
-        f"ðŸ“ **Giao dá»‹ch má»›i**\n\n"
-        f"â€¢ Loáº¡i: **{transaction['type']}**\n"
-        f"â€¢ Sá»‘ tiá»n: **{transaction['amount']:,.0f} â‚«**\n"
-        f"â€¢ Ghi chÃº: {transaction['note']}\n"
-        f"â€¢ HÅ©: **{jar_id}**\n\n"
-        f"ðŸ’³ **Chá»n tÃ i khoáº£n nguá»“n:**",
+        f"📝 **Giao dịch mới**\n\n"
+        f"• Loại: **{transaction['type']}**\n"
+        f"• Số tiền: **{transaction['amount']:,.0f} ₫**\n"
+        f"• Ghi chú: {transaction['note']}\n"
+        f"• Hũ: **{jar_id}**\n\n"
+        f"💳 **Chọn tài khoản nguồn:**",
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
@@ -896,7 +900,7 @@ async def handle_account_selection(update: Update, context: ContextTypes.DEFAULT
     
     # Check if cancelled
     if query.data == "qr_cancel":
-        await query.edit_message_text("âŒ ÄÃ£ há»§y giao dá»‹ch.")
+        await query.edit_message_text("❌ Đã hủy giao dịch.")
         context.user_data.pop('pending_transaction', None)
         return
     
@@ -905,30 +909,30 @@ async def handle_account_selection(update: Update, context: ContextTypes.DEFAULT
         # Show jar selection again
         keyboard = [
             [
-                InlineKeyboardButton("ðŸ’° NEC - Necessities", callback_data="qr_jar_NEC"),
-                InlineKeyboardButton("ðŸŽ¯ FFA - Play", callback_data="qr_jar_FFA"),
+                InlineKeyboardButton("💰 NEC - Necessities", callback_data="qr_jar_NEC"),
+                InlineKeyboardButton("🎯 FFA - Play", callback_data="qr_jar_FFA"),
             ],
             [
-                InlineKeyboardButton("ðŸŽ® PLAY - Giáº£i trÃ­", callback_data="qr_jar_PLAY"),
-                InlineKeyboardButton("ðŸ“š LTS - Há»c táº­p", callback_data="qr_jar_LTS"),
+                InlineKeyboardButton("🎮 PLAY - Giải trí", callback_data="qr_jar_PLAY"),
+                InlineKeyboardButton("📚 LTS - Học tập", callback_data="qr_jar_LTS"),
             ],
             [
-                InlineKeyboardButton("ðŸŽ“ EDU - GiÃ¡o dá»¥c", callback_data="qr_jar_EDU"),
-                InlineKeyboardButton("ðŸ’ GIVE - Cho Ä‘i", callback_data="qr_jar_GIVE"),
+                InlineKeyboardButton("🎓 EDU - Giáo dục", callback_data="qr_jar_EDU"),
+                InlineKeyboardButton("💝 GIVE - Cho đi", callback_data="qr_jar_GIVE"),
             ],
             [
-                InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")
+                InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         transaction = context.user_data['pending_transaction']
         await query.edit_message_text(
-            f"ðŸ“ **Giao dá»‹ch má»›i**\n\n"
-            f"â€¢ Loáº¡i: **{transaction['type']}**\n"
-            f"â€¢ Sá»‘ tiá»n: **{transaction['amount']:,.0f} â‚«**\n"
-            f"â€¢ Ghi chÃº: {transaction['note']}\n\n"
-            f"ðŸº **Chá»n hÅ© tiá»n Ä‘á»ƒ ghi:**",
+            f"📝 **Giao dịch mới**\n\n"
+            f"• Loại: **{transaction['type']}**\n"
+            f"• Số tiền: **{transaction['amount']:,.0f} ₫**\n"
+            f"• Ghi chú: {transaction['note']}\n\n"
+            f"🏺 **Chọn hũ tiền để ghi:**",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
@@ -939,7 +943,7 @@ async def handle_account_selection(update: Update, context: ContextTypes.DEFAULT
     
     # Check if pending transaction exists
     if 'pending_transaction' not in context.user_data:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch. Vui lÃ²ng thá»­ láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy giao dịch. Vui lòng thử lại.")
         return
     
     transaction = context.user_data['pending_transaction']
@@ -947,13 +951,13 @@ async def handle_account_selection(update: Update, context: ContextTypes.DEFAULT
     
     # Show processing message
     await query.edit_message_text(
-        f"ðŸ”„ **Äang ghi giao dá»‹ch...**\n\n"
-        f"â€¢ Loáº¡i: **{transaction['type']}**\n"
-        f"â€¢ Sá»‘ tiá»n: **{transaction['amount']:,.0f} â‚«**\n"
-        f"â€¢ Ghi chÃº: {transaction['note']}\n"
-        f"â€¢ HÅ©: **{transaction['jar']}**\n"
-        f"â€¢ TÃ i khoáº£n: **{account_id}**\n\n"
-        f"â³ Vui lÃ²ng Ä‘á»£i...",
+        f"🔄 **Đang ghi giao dịch...**\n\n"
+        f"• Loại: **{transaction['type']}**\n"
+        f"• Số tiền: **{transaction['amount']:,.0f} ₫**\n"
+        f"• Ghi chú: {transaction['note']}\n"
+        f"• Hũ: **{transaction['jar']}**\n"
+        f"• Tài khoản: **{account_id}**\n\n"
+        f"⏳ Vui lòng đợi...",
         parse_mode="Markdown"
     )
     
@@ -962,26 +966,26 @@ async def handle_account_selection(update: Update, context: ContextTypes.DEFAULT
     user = db.query(User).filter(User.id == user_id).first()
     
     if not user or not user.spreadsheet_id:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y spreadsheet ID. Vui lÃ²ng /connectsheets láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy spreadsheet ID. Vui lòng /connectsheets lại.")
         context.user_data.pop('pending_transaction', None)
         return
     
     # Call API to write to sheet
     try:
-        # âœ… FIX: Pass user's Web App URL to client
-        logger.info(f"ðŸ”§ [Account] Creating SheetsAPIClient for user {user_id}")
-        logger.info(f"ðŸ“Š [Account] Spreadsheet ID: {user.spreadsheet_id[:20]}...")
+        # ✅ FIX: Pass user's Web App URL to client
+        logger.info(f"🔧 [Account] Creating SheetsAPIClient for user {user_id}")
+        logger.info(f"📊 [Account] Spreadsheet ID: {user.spreadsheet_id[:20]}...")
         webapp_url_display = user.web_app_url[:80] if user.web_app_url else 'NOT SET'
-        logger.info(f"ðŸŒ [Account] Web App URL: {webapp_url_display}")
+        logger.info(f"🌐 [Account] Web App URL: {webapp_url_display}")
         
         client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
         
-        logger.info(f"ðŸ“¤ [Account] Calling add_transaction: type={transaction['type']}, amount={transaction['amount']}")
+        logger.info(f"📤 [Account] Calling add_transaction: type={transaction['type']}, amount={transaction['amount']}")
         result = await client.add_transaction(
             amount=transaction['amount'],
             category=transaction['category'],
             note=transaction['note'],
-            transaction_type=transaction['type'],  # âœ… FIX: Pass transaction type
+            transaction_type=transaction['type'],  # ✅ FIX: Pass transaction type
             from_jar=transaction['jar'],
             from_account=account_id,
             to_account=""  # Not used for expense
@@ -991,33 +995,33 @@ async def handle_account_selection(update: Update, context: ContextTypes.DEFAULT
             # Success!
             category = result.get("category", transaction['note'])
             await query.edit_message_text(
-                f"âœ… **ÄÃ£ ghi thÃ nh cÃ´ng!**\n\n"
-                f"â€¢ {transaction['type']}: **{transaction['amount']:,.0f} â‚«**\n"
-                f"â€¢ Danh má»¥c: **{category}**\n"
-                f"â€¢ HÅ©: **{transaction['jar']}**\n"
-                f"â€¢ TÃ i khoáº£n: **{account_id}**\n"
-                f"â€¢ Ghi chÃº: {transaction['note']}\n"
-                f"â€¢ Thá»i gian: {result.get('timestamp', 'N/A')}\n\n"
-                f"ðŸ’¡ DÃ¹ng /balance Ä‘á»ƒ xem sá»‘ dÆ° nhÃ©!",
+                f"✅ **Đã ghi thành công!**\n\n"
+                f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
+                f"• Danh mục: **{category}**\n"
+                f"• Hũ: **{transaction['jar']}**\n"
+                f"• Tài khoản: **{account_id}**\n"
+                f"• Ghi chú: {transaction['note']}\n"
+                f"• Thời gian: {result.get('timestamp', 'N/A')}\n\n"
+                f"💡 Dùng /balance để xem số dư nhé!",
                 parse_mode="Markdown"
             )
-            logger.info(f"âœ… User {user_id} quick record: {transaction['type']} {transaction['amount']:,.0f} - {category} - {transaction['jar']}")
+            logger.info(f"✅ User {user_id} quick record: {transaction['type']} {transaction['amount']:,.0f} - {category} - {transaction['jar']}")
         else:
             # Failed
             error_msg = result.get("error", "Unknown error")
             await query.edit_message_text(
-                f"âŒ **KhÃ´ng ghi Ä‘Æ°á»£c giao dá»‹ch**\n\n"
+                f"❌ **Không ghi được giao dịch**\n\n"
                 f"Lá»—i: {error_msg}\n\n"
-                f"Vui lÃ²ng thá»­ láº¡i hoáº·c liÃªn há»‡ admin. ðŸ˜¢"
+                f"Vui lòng thử lại hoặc liên hệ admin. 😢"
             )
-            logger.error(f"âŒ User {user_id} quick record failed: {error_msg}")
+            logger.error(f"❌ User {user_id} quick record failed: {error_msg}")
     
     except Exception as e:
-        logger.error(f"âŒ Error writing transaction: {e}")
+        logger.error(f"❌ Error writing transaction: {e}")
         await query.edit_message_text(
-            f"âŒ **Lá»—i khi ghi giao dá»‹ch**\n\n"
-            f"Chi tiáº¿t: {str(e)}\n\n"
-            f"Vui lÃ²ng thá»­ láº¡i sau. ðŸ˜¢"
+            f"❌ **Lỗi khi ghi giao dịch**\n\n"
+            f"Chi tiết: {str(e)}\n\n"
+            f"Vui lòng thử lại sau. 😢"
         )
     
     # Clear pending transaction
@@ -1033,19 +1037,19 @@ async def handle_confirm_transaction(update: Update, context: ContextTypes.DEFAU
     
     # Check if pending transaction exists
     if 'pending_transaction' not in context.user_data:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch. Vui lÃ²ng thá»­ láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy giao dịch. Vui lòng thử lại.")
         return
     
     transaction = context.user_data['pending_transaction']
     
     # Show processing message
     await query.edit_message_text(
-        f"ðŸ”„ **Äang ghi giao dá»‹ch...**\n\n"
-        f"â€¢ {transaction['type']}: **{transaction['amount']:,.0f} â‚«**\n"
-        f"â€¢ Danh má»¥c: {transaction.get('category_icon', 'ðŸ“')} {transaction['category']}\n"
-        f"â€¢ HÅ©: **{transaction['jar']}**\n"
-        f"â€¢ TÃ i khoáº£n: **{transaction['account']}**\n\n"
-        f"â³ Vui lÃ²ng Ä‘á»£i...",
+        f"🔄 **Đang ghi giao dịch...**\n\n"
+        f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
+        f"• Danh mục: {transaction.get('category_icon', '📝')} {transaction['category']}\n"
+        f"• Hũ: **{transaction['jar']}**\n"
+        f"• Tài khoản: **{transaction['account']}**\n\n"
+        f"⏳ Vui lòng đợi...",
         parse_mode="Markdown"
     )
     
@@ -1054,27 +1058,27 @@ async def handle_confirm_transaction(update: Update, context: ContextTypes.DEFAU
     user = db.query(User).filter(User.id == user_id).first()
     
     if not user or not user.spreadsheet_id:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y spreadsheet ID. Vui lÃ²ng /connectsheets láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy spreadsheet ID. Vui lòng /connectsheets lại.")
         context.user_data.pop('pending_transaction', None)
         return
     
     # Call API to write to sheet
     try:
-        # âœ… FIX: Pass user's Web App URL to client
-        logger.info(f"ðŸ”§ Creating SheetsAPIClient for user {user_id}")
-        logger.info(f"ðŸ“Š Spreadsheet ID: {user.spreadsheet_id[:20]}...")
+        # ✅ FIX: Pass user's Web App URL to client
+        logger.info(f"🔧 Creating SheetsAPIClient for user {user_id}")
+        logger.info(f"📊 Spreadsheet ID: {user.spreadsheet_id[:20]}...")
         webapp_url_display = user.web_app_url[:80] if user.web_app_url else 'NOT SET'
-        logger.info(f"ðŸŒ Web App URL: {webapp_url_display}")
+        logger.info(f"🌐 Web App URL: {webapp_url_display}")
         logger.info(f"DEBUG - web_app_url type: {type(user.web_app_url)}, value: {user.web_app_url is not None}")
         
         client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
         
-        logger.info(f"ðŸ“¤ Calling add_transaction: type={transaction['type']}, amount={transaction['amount']}, category={transaction['category']}")
+        logger.info(f"📤 Calling add_transaction: type={transaction['type']}, amount={transaction['amount']}, category={transaction['category']}")
         result = await client.add_transaction(
             amount=transaction['amount'],
             category=transaction['category'],
             note=transaction['note'],
-            transaction_type=transaction['type'],  # âœ… FIX: Pass transaction type
+            transaction_type=transaction['type'],  # ✅ FIX: Pass transaction type
             from_jar=transaction['jar'],
             from_account=transaction['account'],
             to_account=""
@@ -1083,33 +1087,33 @@ async def handle_confirm_transaction(update: Update, context: ContextTypes.DEFAU
         if result.get("success"):
             # Success!
             await query.edit_message_text(
-                f"âœ… **ÄÃ£ ghi thÃ nh cÃ´ng!**\n\n"
-                f"â€¢ {transaction['type']}: **{transaction['amount']:,.0f} â‚«**\n"
-                f"â€¢ Danh má»¥c: {transaction.get('category_icon', 'ðŸ“')} **{transaction['category']}**\n"
-                f"â€¢ HÅ©: **{transaction['jar']}** - {get_jar_name(transaction['jar'])}\n"
-                f"â€¢ TÃ i khoáº£n: **{transaction['account']}**\n"
-                f"â€¢ Ghi chÃº: {transaction['note']}\n"
-                f"â€¢ Thá»i gian: {result.get('timestamp', 'N/A')}\n\n"
-                f"ðŸ’¡ DÃ¹ng /balance Ä‘á»ƒ xem sá»‘ dÆ° nhÃ©!",
+                f"✅ **Đã ghi thành công!**\n\n"
+                f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
+                f"• Danh mục: {transaction.get('category_icon', '📝')} **{transaction['category']}**\n"
+                f"• Hũ: **{transaction['jar']}** - {get_jar_name(transaction['jar'])}\n"
+                f"• Tài khoản: **{transaction['account']}**\n"
+                f"• Ghi chú: {transaction['note']}\n"
+                f"• Thời gian: {result.get('timestamp', 'N/A')}\n\n"
+                f"💡 Dùng /balance để xem số dư nhé!",
                 parse_mode="Markdown"
             )
-            logger.info(f"âœ… User {user_id} confirmed quick record: {transaction['type']} {transaction['amount']:,.0f} - {transaction['category']} - {transaction['jar']}")
+            logger.info(f"✅ User {user_id} confirmed quick record: {transaction['type']} {transaction['amount']:,.0f} - {transaction['category']} - {transaction['jar']}")
         else:
             # Failed
             error_msg = result.get("error", "Unknown error")
             await query.edit_message_text(
-                f"âŒ **KhÃ´ng ghi Ä‘Æ°á»£c giao dá»‹ch**\n\n"
+                f"❌ **Không ghi được giao dịch**\n\n"
                 f"Lá»—i: {error_msg}\n\n"
-                f"Vui lÃ²ng thá»­ láº¡i hoáº·c liÃªn há»‡ admin. ðŸ˜¢"
+                f"Vui lòng thử lại hoặc liên hệ admin. 😢"
             )
-            logger.error(f"âŒ User {user_id} quick record failed: {error_msg}")
+            logger.error(f"❌ User {user_id} quick record failed: {error_msg}")
     
     except Exception as e:
-        logger.error(f"âŒ Error writing transaction: {e}")
+        logger.error(f"❌ Error writing transaction: {e}")
         await query.edit_message_text(
-            f"âŒ **Lá»—i khi ghi giao dá»‹ch**\n\n"
-            f"Chi tiáº¿t: {str(e)}\n\n"
-            f"Vui lÃ²ng thá»­ láº¡i sau. ðŸ˜¢"
+            f"❌ **Lỗi khi ghi giao dịch**\n\n"
+            f"Chi tiết: {str(e)}\n\n"
+            f"Vui lòng thử lại sau. 😢"
         )
     
     # Clear pending transaction
@@ -1123,37 +1127,37 @@ async def handle_edit_jar_from_confirmation(update: Update, context: ContextType
     
     # Check if pending transaction exists
     if 'pending_transaction' not in context.user_data:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch. Vui lÃ²ng thá»­ láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy giao dịch. Vui lòng thử lại.")
         return
     
     # Show jar selection
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ’° NEC - Necessities", callback_data="qr_jar_edit_NEC"),
-            InlineKeyboardButton("ðŸŽ¯ FFA - Tá»± do tÃ i chÃ­nh", callback_data="qr_jar_edit_FFA"),
+            InlineKeyboardButton("💰 NEC - Necessities", callback_data="qr_jar_edit_NEC"),
+            InlineKeyboardButton("🎯 FFA - Tự do tài chính", callback_data="qr_jar_edit_FFA"),
         ],
         [
-            InlineKeyboardButton("ðŸŽ® PLAY - Giáº£i trÃ­", callback_data="qr_jar_edit_PLAY"),
-            InlineKeyboardButton("ðŸ“š LTSS - Tiáº¿t kiá»‡m", callback_data="qr_jar_edit_LTSS"),
+            InlineKeyboardButton("🎮 PLAY - Giải trí", callback_data="qr_jar_edit_PLAY"),
+            InlineKeyboardButton("📚 LTSS - Tiết kiệm", callback_data="qr_jar_edit_LTSS"),
         ],
         [
-            InlineKeyboardButton("ðŸŽ“ EDU - GiÃ¡o dá»¥c", callback_data="qr_jar_edit_EDU"),
-            InlineKeyboardButton("ðŸ’ GIVE - Cho Ä‘i", callback_data="qr_jar_edit_GIVE"),
+            InlineKeyboardButton("🎓 EDU - Giáo dục", callback_data="qr_jar_edit_EDU"),
+            InlineKeyboardButton("💝 GIVE - Cho đi", callback_data="qr_jar_edit_GIVE"),
         ],
         [
-            InlineKeyboardButton("Â« Quay láº¡i", callback_data="qr_back_to_confirm"),
-            InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")
+            InlineKeyboardButton("« Quay lại", callback_data="qr_back_to_confirm"),
+            InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     transaction = context.user_data['pending_transaction']
     await query.edit_message_text(
-        f"ðŸ“ **Chá»n hÅ© má»›i**\n\n"
-        f"â€¢ {transaction['type']}: **{transaction['amount']:,.0f} â‚«**\n"
-        f"â€¢ Danh má»¥c: {transaction.get('category_icon', 'ðŸ“')} {transaction['category']}\n"
-        f"â€¢ HÅ© hiá»‡n táº¡i: **{transaction['jar']}**\n\n"
-        f"ðŸº **Chá»n hÅ© khÃ¡c:**",
+        f"📝 **Chọn hũ mới**\n\n"
+        f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
+        f"• Danh mục: {transaction.get('category_icon', '📝')} {transaction['category']}\n"
+        f"• Hũ hiện tại: **{transaction['jar']}**\n\n"
+        f"🏺 **Chọn hũ khác:**",
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
@@ -1169,7 +1173,7 @@ async def handle_jar_edit_selection(update: Update, context: ContextTypes.DEFAUL
     
     # Check if pending transaction exists
     if 'pending_transaction' not in context.user_data:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch. Vui lÃ²ng thá»­ láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy giao dịch. Vui lòng thử lại.")
         return
     
     # Update jar in pending transaction
@@ -1178,26 +1182,26 @@ async def handle_jar_edit_selection(update: Update, context: ContextTypes.DEFAUL
     # Show updated confirmation
     transaction = context.user_data['pending_transaction']
     keyboard = [
-        [InlineKeyboardButton("âœ… XÃ¡c nháº­n vÃ  ghi", callback_data="qr_confirm")],
+        [InlineKeyboardButton("✅ Xác nhận và ghi", callback_data="qr_confirm")],
         [
-            InlineKeyboardButton("âœï¸ Sá»­a danh má»¥c", callback_data="qr_edit_category"),
-            InlineKeyboardButton("âœï¸ Sá»­a hÅ©", callback_data="qr_edit_jar"),
+            InlineKeyboardButton("✏️ Sửa danh mục", callback_data="qr_edit_category"),
+            InlineKeyboardButton("✏️ Sửa hũ", callback_data="qr_edit_jar"),
         ],
         [
-            InlineKeyboardButton("ðŸ’³ Äá»•i tÃ i khoáº£n", callback_data="qr_edit_account"),
-            InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")
+            InlineKeyboardButton("💳 Đổi tài khoản", callback_data="qr_edit_account"),
+            InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await query.edit_message_text(
-        f"ðŸ“ **PhÃ¢n loáº¡i tá»± Ä‘á»™ng** (Ä‘Ã£ cáº­p nháº­t)\n\n"
-        f"â€¢ {transaction['type']}: **{transaction['amount']:,.0f} â‚«**\n"
-        f"â€¢ Danh má»¥c: {transaction.get('category_icon', 'ðŸ“')} **{transaction['category']}**\n"
-        f"â€¢ HÅ©: **{jar_id}** - {get_jar_name(jar_id)}\n"
-        f"â€¢ TÃ i khoáº£n: **{transaction['account']}**\n"
-        f"â€¢ Ghi chÃº: {transaction['note']}\n\n"
-        f"ðŸ’¡ **ÄÃºng khÃ´ng? XÃ¡c nháº­n hoáº·c chá»‰nh sá»­a:**",
+        f"📝 **Phân loại tự động** (đã cập nhật)\n\n"
+        f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
+        f"• Danh mục: {transaction.get('category_icon', '📝')} **{transaction['category']}**\n"
+        f"• Hũ: **{jar_id}** - {get_jar_name(jar_id)}\n"
+        f"• Tài khoản: **{transaction['account']}**\n"
+        f"• Ghi chú: {transaction['note']}\n\n"
+        f"💡 **Đúng không? Xác nhận hoặc chỉnh sửa:**",
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
@@ -1210,32 +1214,32 @@ async def handle_back_to_confirm(update: Update, context: ContextTypes.DEFAULT_T
     
     # Check if pending transaction exists
     if 'pending_transaction' not in context.user_data:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch. Vui lÃ²ng thá»­ láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy giao dịch. Vui lòng thử lại.")
         return
     
     # Show confirmation screen again
     transaction = context.user_data['pending_transaction']
     keyboard = [
-        [InlineKeyboardButton("âœ… XÃ¡c nháº­n vÃ  ghi", callback_data="qr_confirm")],
+        [InlineKeyboardButton("✅ Xác nhận và ghi", callback_data="qr_confirm")],
         [
-            InlineKeyboardButton("âœï¸ Sá»­a danh má»¥c", callback_data="qr_edit_category"),
-            InlineKeyboardButton("âœï¸ Sá»­a hÅ©", callback_data="qr_edit_jar"),
+            InlineKeyboardButton("✏️ Sửa danh mục", callback_data="qr_edit_category"),
+            InlineKeyboardButton("✏️ Sửa hũ", callback_data="qr_edit_jar"),
         ],
         [
-            InlineKeyboardButton("ðŸ’³ Äá»•i tÃ i khoáº£n", callback_data="qr_edit_account"),
-            InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")
+            InlineKeyboardButton("💳 Đổi tài khoản", callback_data="qr_edit_account"),
+            InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await query.edit_message_text(
-        f"ðŸ“ **PhÃ¢n loáº¡i tá»± Ä‘á»™ng**\n\n"
-        f"â€¢ {transaction['type']}: **{transaction['amount']:,.0f} â‚«**\n"
-        f"â€¢ Danh má»¥c: {transaction.get('category_icon', 'ðŸ“')} **{transaction['category']}**\n"
-        f"â€¢ HÅ©: **{transaction['jar']}** - {get_jar_name(transaction['jar'])}\n"
-        f"â€¢ TÃ i khoáº£n: **{transaction['account']}**\n"
-        f"â€¢ Ghi chÃº: {transaction['note']}\n\n"
-        f"ðŸ’¡ **ÄÃºng khÃ´ng? XÃ¡c nháº­n hoáº·c chá»‰nh sá»­a:**",
+        f"📝 **Phân loại tự động**\n\n"
+        f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
+        f"• Danh mục: {transaction.get('category_icon', '📝')} **{transaction['category']}**\n"
+        f"• Hũ: **{transaction['jar']}** - {get_jar_name(transaction['jar'])}\n"
+        f"• Tài khoản: **{transaction['account']}**\n"
+        f"• Ghi chú: {transaction['note']}\n\n"
+        f"💡 **Đúng không? Xác nhận hoặc chỉnh sửa:**",
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
@@ -1248,36 +1252,36 @@ async def handle_edit_account_from_confirmation(update: Update, context: Context
     
     # Check if pending transaction exists
     if 'pending_transaction' not in context.user_data:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch. Vui lÃ²ng thá»­ láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy giao dịch. Vui lòng thử lại.")
         return
     
     # Show account selection
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ’µ Cash", callback_data="qr_acc_edit_Cash"),
-            InlineKeyboardButton("ðŸ¦ Vietcombank", callback_data="qr_acc_edit_VCB"),
+            InlineKeyboardButton("💵 Cash", callback_data="qr_acc_edit_Cash"),
+            InlineKeyboardButton("🏦 Vietcombank", callback_data="qr_acc_edit_VCB"),
         ],
         [
-            InlineKeyboardButton("ðŸ¦ Techcombank", callback_data="qr_acc_edit_TCB"),
-            InlineKeyboardButton("ðŸ¦ OCB", callback_data="qr_acc_edit_OCB"),
+            InlineKeyboardButton("🏦 Techcombank", callback_data="qr_acc_edit_TCB"),
+            InlineKeyboardButton("🏦 OCB", callback_data="qr_acc_edit_OCB"),
         ],
         [
-            InlineKeyboardButton("ðŸ’° ZALO", callback_data="qr_acc_edit_ZALO"),
-            InlineKeyboardButton("ðŸ’° KhÃ¡c", callback_data="qr_acc_edit_Other"),
+            InlineKeyboardButton("💰 ZALO", callback_data="qr_acc_edit_ZALO"),
+            InlineKeyboardButton("💰 Khác", callback_data="qr_acc_edit_Other"),
         ],
         [
-            InlineKeyboardButton("Â« Quay láº¡i", callback_data="qr_back_to_confirm"),
-            InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")
+            InlineKeyboardButton("« Quay lại", callback_data="qr_back_to_confirm"),
+            InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     transaction = context.user_data['pending_transaction']
     await query.edit_message_text(
-        f"ðŸ“ **Chá»n tÃ i khoáº£n má»›i**\n\n"
-        f"â€¢ {transaction['type']}: **{transaction['amount']:,.0f} â‚«**\n"
-        f"â€¢ TÃ i khoáº£n hiá»‡n táº¡i: **{transaction['account']}**\n\n"
-        f"ðŸ’³ **Chá»n tÃ i khoáº£n khÃ¡c:**",
+        f"📝 **Chọn tài khoản mới**\n\n"
+        f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
+        f"• Tài khoản hiện tại: **{transaction['account']}**\n\n"
+        f"💳 **Chọn tài khoản khác:**",
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
@@ -1293,7 +1297,7 @@ async def handle_account_edit_selection(update: Update, context: ContextTypes.DE
     
     # Check if pending transaction exists
     if 'pending_transaction' not in context.user_data:
-        await query.edit_message_text("âš ï¸ KhÃ´ng tÃ¬m tháº¥y giao dá»‹ch. Vui lÃ²ng thá»­ láº¡i.")
+        await query.edit_message_text("⚠️ Không tìm thấy giao dịch. Vui lòng thử lại.")
         return
     
     # Update account in pending transaction
@@ -1302,26 +1306,26 @@ async def handle_account_edit_selection(update: Update, context: ContextTypes.DE
     # Show updated confirmation
     transaction = context.user_data['pending_transaction']
     keyboard = [
-        [InlineKeyboardButton("âœ… XÃ¡c nháº­n vÃ  ghi", callback_data="qr_confirm")],
+        [InlineKeyboardButton("✅ Xác nhận và ghi", callback_data="qr_confirm")],
         [
-            InlineKeyboardButton("âœï¸ Sá»­a danh má»¥c", callback_data="qr_edit_category"),
-            InlineKeyboardButton("âœï¸ Sá»­a hÅ©", callback_data="qr_edit_jar"),
+            InlineKeyboardButton("✏️ Sửa danh mục", callback_data="qr_edit_category"),
+            InlineKeyboardButton("✏️ Sửa hũ", callback_data="qr_edit_jar"),
         ],
         [
-            InlineKeyboardButton("ðŸ’³ Äá»•i tÃ i khoáº£n", callback_data="qr_edit_account"),
-            InlineKeyboardButton("âŒ Há»§y", callback_data="qr_cancel")
+            InlineKeyboardButton("💳 Đổi tài khoản", callback_data="qr_edit_account"),
+            InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await query.edit_message_text(
-        f"ðŸ“ **PhÃ¢n loáº¡i tá»± Ä‘á»™ng** (Ä‘Ã£ cáº­p nháº­t)\n\n"
-        f"â€¢ {transaction['type']}: **{transaction['amount']:,.0f} â‚«**\n"
-        f"â€¢ Danh má»¥c: {transaction.get('category_icon', 'ðŸ“')} **{transaction['category']}**\n"
-        f"â€¢ HÅ©: **{transaction['jar']}** - {get_jar_name(transaction['jar'])}\n"
-        f"â€¢ TÃ i khoáº£n: **{account_id}**\n"
-        f"â€¢ Ghi chÃº: {transaction['note']}\n\n"
-        f"ðŸ’¡ **ÄÃºng khÃ´ng? XÃ¡c nháº­n hoáº·c chá»‰nh sá»­a:**",
+        f"📝 **Phân loại tự động** (đã cập nhật)\n\n"
+        f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
+        f"• Danh mục: {transaction.get('category_icon', '📝')} **{transaction['category']}**\n"
+        f"• Hũ: **{transaction['jar']}** - {get_jar_name(transaction['jar'])}\n"
+        f"• Tài khoản: **{account_id}**\n"
+        f"• Ghi chú: {transaction['note']}\n\n"
+        f"💡 **Đúng không? Xác nhận hoặc chỉnh sửa:**",
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
@@ -1333,12 +1337,12 @@ def register_quick_record_handlers(application):
     # Handler for messages matching quick record patterns
     # High priority (group=0) to process before AI handler
     # Match any text containing amount patterns:
-    # - 50k, 1.5tr, 200 nghÃ¬n, 1,5 triá»‡u, 1,500,000
+    # - 50k, 1.5tr, 200 nghìn, 1,5 triệu, 1,500,000
     # - With or without keywords (chi, mua, thu, etc.)
     application.add_handler(
         MessageHandler(
             filters.TEXT & ~filters.COMMAND & filters.Regex(
-                r'\d+(?:[,.\d]*)?(?:\s*(?:k|tr|triá»‡u|nghÃ¬n|nghin)\b|(?:,\d{3})+)'
+                r'\d+(?:[,.\d]*)?(?:\s*(?:k|tr|triệu|nghìn|nghin)\b|(?:,\d{3})+)'
             ),
             handle_quick_record
         ),
@@ -1387,5 +1391,5 @@ def register_quick_record_handlers(application):
         CallbackQueryHandler(handle_jar_selection, pattern=r'^qr_cancel$')  # Handle cancel in any flow
     )
     
-    logger.info("âœ… Quick Record (Template) handlers registered")
+    logger.info("✅ Quick Record (Template) handlers registered")
 

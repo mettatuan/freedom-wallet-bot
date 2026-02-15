@@ -1,8 +1,8 @@
 """
-ðŸ” STATE & PROGRAM DEFINITIONS
+🔐 STATE & PROGRAM DEFINITIONS
 ================================
 
-TÃ¡ch riÃªng USER STATE (báº£n cháº¥t) vÃ  CURRENT PROGRAM (chÆ°Æ¡ng trÃ¬nh tham gia)
+Tách riêng USER STATE (bản chất) và CURRENT PROGRAM (chương trình tham gia)
 
 Author: Freedom Wallet Team
 Version: 2.0 (Improved Architecture)
@@ -12,33 +12,33 @@ from enum import Enum, auto
 from typing import Set, Dict
 
 # ============================================================================
-# USER STATES - Báº£n cháº¥t ngÆ°á»i dÃ¹ng (Ã­t thay Ä‘á»•i)
+# USER STATES - Bản chất người dùng (ít thay đổi)
 # ============================================================================
 
 class UserState(Enum):
     """
     Core user states - Identity & tier
     
-    NguyÃªn táº¯c:
-    - State pháº£n Ã¡nh VALUE cá»§a user (visitor â†’ VIP â†’ advocate)
-    - KHÃ”NG pháº£n Ã¡nh chÆ°Æ¡ng trÃ¬nh Ä‘ang tham gia
-    - State chá»‰ Ä‘i lÃªn, KHÃ”NG Ä‘i xuá»‘ng (trá»« churn)
+    Nguyên tắc:
+    - State phản ánh VALUE của user (visitor → VIP → advocate)
+    - KHÔNG phản ánh chương trình đang tham gia
+    - State chỉ đi lên, KHÔNG đi xuống (trừ churn)
     """
     
     VISITOR = "VISITOR"
-    # ChÆ°a Ä‘Äƒng kÃ½, má»›i click link
+    # Chưa đăng ký, mới click link
     
     REGISTERED = "REGISTERED"
-    # ÄÃ£ Ä‘Äƒng kÃ½, 0-1 referrals
+    # Đã đăng ký, 0-1 referrals
     
     VIP = "VIP"
-    # ÄÃ£ unlock VIP (2+ referrals)
+    # Đã unlock VIP (2+ referrals)
     
     SUPER_VIP = "SUPER_VIP"
-    # ÄÃ£ unlock Super VIP (50+ referrals)
+    # Đã unlock Super VIP (50+ referrals)
     
     ADVOCATE = "ADVOCATE"
-    # Super VIP + active coach (100+ referrals hoáº·c revenue > threshold)
+    # Super VIP + active coach (100+ referrals hoặc revenue > threshold)
     
     CHURNED = "CHURNED"
     # Inactive 90+ days, re-engagement failed
@@ -46,12 +46,12 @@ class UserState(Enum):
 
 class ProgramType(Enum):
     """
-    Programs - ChÆ°Æ¡ng trÃ¬nh ngÆ°á»i dÃ¹ng cÃ³ thá»ƒ tham gia
+    Programs - Chương trình người dùng có thể tham gia
     
-    Äáº·c Ä‘iá»ƒm:
-    - User cÃ³ thá»ƒ tham gia nhiá»u programs (VIP + mentor + affiliate)
-    - Program cÃ³ start/end date
-    - Program cÃ³ progression (day 1, 2, 3...)
+    Đặc điểm:
+    - User có thể tham gia nhiều programs (VIP + mentor + affiliate)
+    - Program có start/end date
+    - Program có progression (day 1, 2, 3...)
     """
     
     # Nurture campaigns
@@ -78,12 +78,12 @@ class ProgramType(Enum):
 
 
 # ============================================================================
-# STATE MACHINE - Logic chuyá»ƒn state
+# STATE MACHINE - Logic chuyển state
 # ============================================================================
 
 class StateMachine:
     """
-    Quáº£n lÃ½ state transitions vá»›i validation
+    Quản lý state transitions với validation
     """
     
     # Valid transitions map
@@ -102,7 +102,7 @@ class StateMachine:
         },
         UserState.SUPER_VIP: {
             UserState.ADVOCATE,
-            UserState.VIP,  # Decay: Super VIP â†’ VIP if inactive
+            UserState.VIP,  # Decay: Super VIP → VIP if inactive
             UserState.CHURNED
         },
         UserState.ADVOCATE: {
@@ -117,7 +117,7 @@ class StateMachine:
     @classmethod
     def is_valid_transition(cls, from_state: UserState, to_state: UserState) -> bool:
         """
-        Kiá»ƒm tra xem transition cÃ³ há»£p lá»‡ khÃ´ng
+        Kiểm tra xem transition có hợp lệ không
         
         Args:
             from_state: Current state
@@ -135,12 +135,12 @@ class StateMachine:
 
 
 # ============================================================================
-# PROGRAM REQUIREMENTS - Äiá»u kiá»‡n join program
+# PROGRAM REQUIREMENTS - Điều kiện join program
 # ============================================================================
 
 class ProgramRequirements:
     """
-    Äá»‹nh nghÄ©a requirements Ä‘á»ƒ tham gia program
+    Định nghĩa requirements để tham gia program
     """
     
     REQUIREMENTS = {
@@ -180,7 +180,7 @@ class ProgramRequirements:
     @classmethod
     def can_join(cls, program: ProgramType, user) -> bool:
         """
-        Kiá»ƒm tra user cÃ³ Ä‘á»§ Ä‘iá»u kiá»‡n join program khÃ´ng
+        Kiểm tra user có đủ điều kiện join program không
         
         Args:
             program: Program type
@@ -264,13 +264,13 @@ if __name__ == "__main__":
         UserState.REGISTERED,
         UserState.VIP
     )
-    print(f"REGISTERED â†’ VIP: {can_upgrade}")  # True
+    print(f"REGISTERED → VIP: {can_upgrade}")  # True
     
     invalid_jump = StateMachine.is_valid_transition(
         UserState.REGISTERED,
         UserState.SUPER_VIP
     )
-    print(f"REGISTERED â†’ SUPER_VIP: {invalid_jump}")  # False (must go through VIP)
+    print(f"REGISTERED → SUPER_VIP: {invalid_jump}")  # False (must go through VIP)
     
     
     # Example 2: Program eligibility

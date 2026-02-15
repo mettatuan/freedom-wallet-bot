@@ -4,7 +4,7 @@ User must complete registration to verify referral
 Week 2: Soft-integrated with State Machine
 Week 5: Integrated with Fraud Detection
 """
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler
 import re
 from typing import List
@@ -22,40 +22,98 @@ AWAITING_EMAIL, AWAITING_PHONE, AWAITING_NAME, CONFIRM = range(4)
 async def start_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Start registration process"""
     user = update.effective_user
-    logger.info(f"ðŸŽ¯ start_registration called for user {user.id} ({user.username})")
+    logger.info(f"🎯 start_registration called for user {user.id} ({user.username})")
     
     # Handle both callback query (from button) and command (from /register)
     is_callback = bool(update.callback_query)
-    logger.info(f"  â†’ is_callback: {is_callback}")
+    logger.info(f"  → is_callback: {is_callback}")
     
     # Check if already registered
     db_user = await get_user_by_id(user.id)
     if db_user and hasattr(db_user, 'email') and db_user.email:
-        message_text = (
-            "âœ… Báº¡n Ä‘Ã£ Ä‘Äƒng kÃ½ rá»“i!\n\n"
-            "DÃ¹ng /help Ä‘á»ƒ xem cÃ¡c tÃ­nh nÄƒng."
-        )
+        # User đã đăng ký rồi - Check xem đã setup Web App chưa
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        
+        if db_user.web_app_url:
+            # ĐÃ có Web App - Hiển thị menu hành động
+            message_text = (
+                "✅ **Bạn đã đăng ký & kết nối Web App rồi!**\n\n"
+                f"📧 Email: `{db_user.email}`\n"
+                f"📱 Phone: `{db_user.phone or 'Chưa có'}`\n"
+                f"🔗 Web App: Đã kết nối ✅\n\n"
+                "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                "🎯 **BẮT ĐẦU SỬ DỤNG NGAY:**\n\n"
+                "💬 **Ghi nhanh:** Gửi tin nhắn `Cà phê 35k` → Tự động lưu!\n"
+                "🤖 **Hỏi bất cứ lúc nào:** \"Tôi chi bao nhiêu tháng này?\"\n\n"
+                "👇 **Hoặc chọn menu bên dưới:**"
+            )
+            # Menu hành động theo behavior của user
+            keyboard = [
+                [InlineKeyboardButton("📌 Ghi nhanh thu chi", callback_data="quick_record_menu")],
+                [InlineKeyboardButton("📊 Báo cáo nhanh", callback_data="quick_report_menu")],
+                [InlineKeyboardButton("📁 Hệ thống của tôi", callback_data="my_system_menu")],
+                [InlineKeyboardButton("📖 Hướng dẫn sử dụng", callback_data="show_guide_choice"), 
+                 InlineKeyboardButton("⚙️ Cài đặt", callback_data="settings_menu")]
+            ]
+        else:
+            # CHƯA có Web App - Hướng dẫn tạo
+            message_text = (
+                "✅ **Bạn đã đăng ký thành công!**\n\n"
+                f"📧 Email: `{db_user.email}`\n"
+                f"📱 Phone: `{db_user.phone or 'Chưa có'}`\n\n"
+                "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                "🎯 **Bước tiếp theo quan trọng:**\n\n"
+                "Bạn cần **tạo Web App** để sở hữu Freedom Wallet riêng của mình!\n\n"
+                "**🌟 Lợi ích khi kết nối Web App với Bot:**\n\n"
+                "1️⃣ **Ghi chi tiêu siêu nhanh** qua Telegram\n"
+                "   • Không cần mở Sheet\n"
+                "   • Gửi tin nhắn là xong\n"
+                "   • VD: \"Cà phê 35k\"\n\n"
+                "2️⃣ **Xem báo cáo real-time**\n"
+                "   • Tổng thu/chi trong tháng\n"
+                "   • Chi tiêu theo danh mục\n"
+                "   • Xu hướng tiêu dùng\n\n"
+                "3️⃣ **AI phân tích thông minh**\n"
+                "   • Tư vấn tiết kiệm\n"
+                "   • Phát hiện chi phí bất thường\n"
+                "   • Dự báo tài chính\n\n"
+                "4️⃣ **Nhắc nhở tự động**\n"
+                "   • Nhắc ghi chi tiêu hàng ngày\n"
+                "   • Cảnh báo vượt ngân sách\n"
+                "   • Động viên streak\n\n"
+                "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                "**📱 Bạn đã tạo Web App chưa?**"
+            )
+            keyboard = [
+                [InlineKeyboardButton("❌ Chưa, hướng dẫn tôi tạo", callback_data="show_deploy_guide")],
+                [InlineKeyboardButton("✅ Rồi, tôi muốn kết nối ngay", callback_data="connect_webapp_now")],
+                [InlineKeyboardButton("⏭️ Để sau, tôi tự tạo", callback_data="skip_webapp_setup")]
+            ]
+        
+        reply_markup = InlineKeyboardMarkup(keyboard)
         
         if is_callback:
             await update.callback_query.answer()
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=message_text,
-                reply_markup=ReplyKeyboardRemove()
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
             )
         else:
             await update.message.reply_text(
                 message_text,
-                reply_markup=ReplyKeyboardRemove()
+                reply_markup=reply_markup,
+                parse_mode="Markdown"
             )
         return ConversationHandler.END
     
     registration_text = (
-        "ðŸ“ **ÄÄ‚NG KÃ Sá»ž Há»®U FREEDOM WALLET**\n\n"
-        "Äá»ƒ nháº­n Template Google Sheet vÃ  hÆ°á»›ng dáº«n setup,\n"
-        "vui lÃ²ng Ä‘iá»n thÃ´ng tin sau:\n\n"
-        "ðŸ‘‰ **BÆ°á»›c 1/3:** Nháº­p **Email** cá»§a báº¡n\n"
-        "(ChÃºng tÃ´i sáº½ gá»­i link Template qua email nÃ y)"
+        "📝 **ĐĂNG KÝ SỞ HỮU FREEDOM WALLET**\n\n"
+        "Để nhận Template Google Sheet và hướng dẫn setup,\n"
+        "vui lòng điền thông tin sau:\n\n"
+        "👉 **Bước 1/3:** Nhập **Email** của bạn\n"
+        "(Chúng tôi sẽ gửi link Template qua email này)"
     )
     
     if is_callback:
@@ -74,13 +132,13 @@ async def start_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     # Set conversation state flag to prevent AI chat handler interference
     context.user_data['conversation_state'] = 'registration'
-    logger.info(f"  â†’ Returning AWAITING_EMAIL state (value: {AWAITING_EMAIL})")
+    logger.info(f"  → Returning AWAITING_EMAIL state (value: {AWAITING_EMAIL})")
     return AWAITING_EMAIL
 
 
 async def receive_email(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Receive and validate email"""
-    logger.info(f"ðŸ” receive_email called for user {update.effective_user.id}")
+    logger.info(f"🔍 receive_email called for user {update.effective_user.id}")
     # Maintain conversation state
     context.user_data['conversation_state'] = 'registration'
     email = update.message.text.strip()
@@ -89,22 +147,22 @@ async def receive_email(update: Update, context: ContextTypes.DEFAULT_TYPE):
     email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     if not re.match(email_pattern, email):
         await update.message.reply_text(
-            "âŒ Email khÃ´ng há»£p lá»‡!\n\n"
-            "Vui lÃ²ng nháº­p láº¡i email (vÃ­ dá»¥: name@gmail.com):"
+            "❌ Email không hợp lệ!\n\n"
+            "Vui lòng nhập lại email (ví dụ: name@gmail.com):"
         )
         return AWAITING_EMAIL
     
     # Save to context
     context.user_data['email'] = email
-    logger.info(f"âœ… Email saved: {email}")
+    logger.info(f"✅ Email saved: {email}")
     
     # Request phone
     keyboard = [["/skip"]]
     await update.message.reply_text(
-        f"âœ… Email: **{email}**\n\n"
-        f"ðŸ‘‰ **BÆ°á»›c 2/3:** Nháº­p **Sá»‘ Ä‘iá»‡n thoáº¡i** cá»§a báº¡n\n"
-        f"(Äá»ƒ há»— trá»£ qua Zalo/WhatsApp náº¿u cáº§n)\n\n"
-        f"Hoáº·c gÃµ /skip Ä‘á»ƒ bá» qua.",
+        f"✅ Email: **{email}**\n\n"
+        f"👉 **Bước 2/3:** Nhập **Số điện thoại** của bạn\n"
+        f"(Để hỗ trợ qua Zalo/WhatsApp nếu cần)\n\n"
+        f"Hoặc gõ /skip để bỏ qua.",
         parse_mode="Markdown",
         reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
     )
@@ -126,9 +184,9 @@ async def receive_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
         phone = re.sub(r'[^0-9+]', '', phone)  # Remove non-digits except +
         if len(phone) < 10:
             await update.message.reply_text(
-                "âŒ Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng há»£p lá»‡!\n\n"
-                "Vui lÃ²ng nháº­p láº¡i (VD: 0901234567 hoáº·c +84901234567)\n"
-                "Hoáº·c gÃµ /skip Ä‘á»ƒ bá» qua:"
+                "❌ Số điện thoại không hợp lệ!\n\n"
+                "Vui lòng nhập lại (VD: 0901234567 hoặc +84901234567)\n"
+                "Hoặc gõ /skip để bỏ qua:"
             )
             return AWAITING_PHONE
         
@@ -137,10 +195,10 @@ async def receive_phone(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Request full name
     keyboard = [["/skip"]]
     await update.message.reply_text(
-        f"âœ… SÄT: **{context.user_data.get('phone', 'Bá» qua')}**\n\n"
-        f"ðŸ‘‰ **BÆ°á»›c 3/3:** Nháº­p **Há» tÃªn** cá»§a báº¡n\n"
-        f"(Äá»ƒ cÃ¡ nhÃ¢n hÃ³a hÆ°á»›ng dáº«n)\n\n"
-        f"Hoáº·c gÃµ /skip Ä‘á»ƒ bá» qua.",
+        f"✅ SĐT: **{context.user_data.get('phone', 'Bỏ qua')}**\n\n"
+        f"👉 **Bước 3/3:** Nhập **Họ tên** của bạn\n"
+        f"(Để cá nhân hóa hướng dẫn)\n\n"
+        f"Hoặc gõ /skip để bỏ qua.",
         parse_mode="Markdown",
         reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
     )
@@ -162,24 +220,24 @@ async def receive_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Show confirmation
     email = context.user_data['email']
-    phone = context.user_data.get('phone', 'KhÃ´ng cung cáº¥p')
+    phone = context.user_data.get('phone', 'Không cung cấp')
     full_name = context.user_data['full_name']
     
     # Use InlineKeyboardButton instead of ReplyKeyboardMarkup
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     
     keyboard = [
-        [InlineKeyboardButton("âœ… XÃ¡c nháº­n", callback_data="confirm_registration_yes")],
-        [InlineKeyboardButton("âœï¸ Nháº­p láº¡i email", callback_data="confirm_registration_retry")]
+        [InlineKeyboardButton("✅ Xác nhận", callback_data="confirm_registration_yes")],
+        [InlineKeyboardButton("✏️ Nhập lại email", callback_data="confirm_registration_retry")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
-        "ðŸ“‹ **XÃC NHáº¬N THÃ”NG TIN**\n\n"
-        f"ðŸ‘¤ Há» tÃªn: **{full_name}**\n"
-        f"ðŸ“§ Email: **{email}**\n"
-        f"ðŸ“± SÄT: **{phone}**\n\n"
-        f"ThÃ´ng tin cÃ³ chÃ­nh xÃ¡c khÃ´ng?",
+        "📋 **XÁC NHẬN THÔNG TIN**\n\n"
+        f"👤 Họ tên: **{full_name}**\n"
+        f"📧 Email: **{email}**\n"
+        f"📱 SĐT: **{phone}**\n\n"
+        f"Thông tin có chính xác không?",
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
@@ -197,14 +255,14 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
     
     if callback_data == "confirm_registration_retry":
         await query.message.edit_text(
-            "ðŸ‘‰ Nháº­p láº¡i **Email** cá»§a báº¡n:",
+            "👉 Nhập lại **Email** của bạn:",
             parse_mode="Markdown"
         )
         return AWAITING_EMAIL
     
     if callback_data != "confirm_registration_yes":
         await query.message.reply_text(
-            "âŒ Vui lÃ²ng chá»n 'âœ… XÃ¡c nháº­n' hoáº·c 'âœï¸ Nháº­p láº¡i email'",
+            "❌ Vui lòng chọn '✅ Xác nhận' hoặc '✏️ Nhập lại email'",
             parse_mode="Markdown"
         )
         return CONFIRM
@@ -291,7 +349,7 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                     referral.device_fingerprint = generate_device_fingerprint(user_agent, user.id)
                 
                 logger.info(
-                    f"ðŸ›¡ï¸ Fraud check: referral_id={referral.id}, "
+                    f"🛡️ Fraud check: referral_id={referral.id}, "
                     f"score={fraud_score}, status={review_status}, flags={fraud_flags}"
                 )
                 
@@ -322,7 +380,7 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                             with StateManager() as state_mgr:
                                 new_state = state_mgr.check_and_update_state_by_referrals(referrer.id)
                                 if new_state == UserState.SUPER_VIP:
-                                    logger.info(f"ðŸŒŸ User {referrer.id} promoted to SUPER VIP! ({referrer.referral_count} refs)")
+                                    logger.info(f"🌟 User {referrer.id} promoted to SUPER VIP! ({referrer.referral_count} refs)")
                                     # Send Super VIP notification
                                     try:
                                         await send_super_vip_notification(referrer.id, referrer.referral_count, full_name, context)
@@ -341,7 +399,7 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                                     UserState.VIP, 
                                     f"Unlocked by 2nd referral: {full_name}"
                                 )
-                                logger.info(f"ðŸŽ¯ Referrer {referrer.id} â†’ VIP: {msg}")
+                                logger.info(f"🎯 Referrer {referrer.id} → VIP: {msg}")
                             
                             # UNLOCK FLOW v3.0 (Feb 2026) - Ownership-first, Identity-driven
                             try:
@@ -353,35 +411,35 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                                 from app.handlers.unlock_flow_v3 import send_unlock_message_1
                                 await send_unlock_message_1(referrer.id, context)
                                 
-                                logger.info(f"âœ… Sent unlock flow v3.0 Message 1 to user {referrer.id}")
+                                logger.info(f"✅ Sent unlock flow v3.0 Message 1 to user {referrer.id}")
                                 
                             except Exception as e:
                                 logger.error(f"Failed to send unlock flow to {referrer.id}: {e}")
                         else:
-                            # GIAI ÄOáº N 3: Cáº¬P NHáº¬T KHI CÃ“ NGÆ¯á»œI ÄÄ‚NG KÃ (1/2)
+                            # GIAI ĐOẠN 3: CẬP NHẬT KHI CÓ NGƯỜI ĐĂNG KÝ (1/2)
                             remaining = 2 - referrer.referral_count
                             try:
                                 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
                                 
                                 keyboard = [
-                                    [InlineKeyboardButton("ðŸ”— Chia sáº» tiáº¿p", callback_data="share_link")],
-                                    [InlineKeyboardButton("ðŸ“Š Xem tiáº¿n Ä‘á»™", callback_data="check_progress")]
+                                    [InlineKeyboardButton("🔗 Chia sẻ tiếp", callback_data="share_link")],
+                                    [InlineKeyboardButton("📊 Xem tiến độ", callback_data="check_progress")]
                                 ]
                                 reply_markup = InlineKeyboardMarkup(keyboard)
                                 
                                 await context.bot.send_message(
                                     chat_id=referrer.id,
-                                    text=f"âœ… **ChÃºc má»«ng!**\n\n"
-                                         f"**{full_name}** vá»«a Ä‘Äƒng kÃ½ thÃ nh cÃ´ng qua link cá»§a báº¡n\n\n"
-                                         f"ðŸ“Š **Tiáº¿n Ä‘á»™ hiá»‡n táº¡i:** {referrer.referral_count} / 2 ngÆ°á»i\n\n"
-                                         f"ðŸ‘‰ **Chá»‰ cÃ²n {remaining} ngÆ°á»i ná»¯a** Ä‘á»ƒ má»Ÿ khÃ³a toÃ n bá»™ quÃ  ðŸŽ\n\n"
-                                         f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-                                         f"ðŸŽ **Báº¡n sáº½ nháº­n Ä‘Æ°á»£c:**\n"
-                                         f"âœ… Full Google Sheet 3.2\n"
-                                         f"âœ… Full Apps Script\n"
-                                         f"âœ… Full HÆ°á»›ng dáº«n Notion\n"
-                                         f"âœ… Video tutorials\n"
-                                         f"âœ… Sá»­ dá»¥ng trá»n Ä‘á»i",
+                                    text=f"✅ **Chúc mừng!**\n\n"
+                                         f"**{full_name}** vừa đăng ký thành công qua link của bạn\n\n"
+                                         f"📊 **Tiến độ hiện tại:** {referrer.referral_count} / 2 người\n\n"
+                                         f"👉 **Chỉ còn {remaining} người nữa** để mở khóa toàn bộ quà 🎁\n\n"
+                                         f"━━━━━━━━━━━━━━━━━━━━━\n"
+                                         f"🎁 **Bạn sẽ nhận được:**\n"
+                                         f"✅ Full Google Sheet 3.2\n"
+                                         f"✅ Full Apps Script\n"
+                                         f"✅ Full Hướng dẫn Notion\n"
+                                         f"✅ Video tutorials\n"
+                                         f"✅ Sử dụng trọn đời",
                                     parse_mode="Markdown",
                                     reply_markup=reply_markup
                                 )
@@ -392,16 +450,16 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                     # Medium risk - Flag for manual review, but keep referral pending
                     referral.status = "PENDING"  # Keep as pending until admin reviews
                     logger.warning(
-                        f"âš ï¸ Referral {referral.id} flagged for review: "
+                        f"⚠️ Referral {referral.id} flagged for review: "
                         f"score={fraud_score}, flags={fraud_flags}"
                     )
                     
                     # Notify referred user (transparent communication)
                     await update.message.reply_text(
-                        "âœ… ÄÄƒng kÃ½ thÃ nh cÃ´ng!\n\n"
-                        "â³ LÆ°á»£t giá»›i thiá»‡u cá»§a báº¡n Ä‘ang Ä‘Æ°á»£c xÃ¡c minh.\n"
-                        "ChÃºng tÃ´i sáº½ thÃ´ng bÃ¡o káº¿t quáº£ trong 24-48 giá».\n\n"
-                        "ðŸ’¡ Äiá»u nÃ y giÃºp báº£o vá»‡ cá»™ng Ä‘á»“ng khá»i spam vÃ  láº¡m dá»¥ng.",
+                        "✅ Đăng ký thành công!\n\n"
+                        "⏳ Lượt giới thiệu của bạn đang được xác minh.\n"
+                        "Chúng tôi sẽ thông báo kết quả trong 24-48 giờ.\n\n"
+                        "💡 Điều này giúp bảo vệ cộng đồng khỏi spam và lạm dụng.",
                         parse_mode="Markdown"
                     )
                     
@@ -412,16 +470,16 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                     # High risk - Requires immediate admin review
                     referral.status = "PENDING"
                     logger.error(
-                        f"ðŸš¨ HIGH RISK referral {referral.id}: "
+                        f"🚨 HIGH RISK referral {referral.id}: "
                         f"score={fraud_score}, flags={fraud_flags}"
                     )
                     
                     # Notify referred user
                     await update.message.reply_text(
-                        "âœ… ÄÄƒng kÃ½ hoÃ n táº¥t!\n\n"
-                        "âš ï¸ LÆ°á»£t giá»›i thiá»‡u cá»§a báº¡n cáº§n Ä‘Æ°á»£c xÃ¡c minh thá»§ cÃ´ng.\n"
-                        "Team chÃºng tÃ´i sáº½ kiá»ƒm tra vÃ  thÃ´ng bÃ¡o káº¿t quáº£ sá»›m nháº¥t.\n\n"
-                        "â“ Náº¿u báº¡n nghÄ© Ä‘Ã¢y lÃ  nháº§m láº«n, vui lÃ²ng liÃªn há»‡ /support",
+                        "✅ Đăng ký hoàn tất!\n\n"
+                        "⚠️ Lượt giới thiệu của bạn cần được xác minh thủ công.\n"
+                        "Team chúng tôi sẽ kiểm tra và thông báo kết quả sớm nhất.\n\n"
+                        "❓ Nếu bạn nghĩ đây là nhầm lẫn, vui lòng liên hệ /support",
                         parse_mode="Markdown"
                     )
                     
@@ -463,7 +521,7 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                 status="ACTIVE",
                 referred_by=None
             )
-            logger.info(f"âœ… Saved user {user.id} to FreedomWallet_Registrations sheet")
+            logger.info(f"✅ Saved user {user.id} to FreedomWallet_Registrations sheet")
         except Exception as e:
             logger.error(f"Failed to save to registration sheet: {e}")
         
@@ -475,8 +533,8 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
         
         # Success message - Calm, no FOMO
         await query.message.reply_text(
-            "âœ… **Cáº£m Æ¡n báº¡n!**\n\n"
-            "ThÃ´ng tin Ä‘Ã£ Ä‘Æ°á»£c lÆ°u láº¡i.",
+            "✅ **Cảm ơn bạn!**\n\n"
+            "Thông tin đã được lưu lại.",
             parse_mode="Markdown"
         )
         
@@ -491,28 +549,28 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
         import os
         image_path = os.path.join(os.path.dirname(__file__), '..', '..', 'media', 'images', 'hu_tien.jpg')
         
-        message = """Khi báº¡n cÃ i Ä‘áº·t vÃ  sá»­ dá»¥ng Freedom Wallet,
-báº¡n khÃ´ng chá»‰ dÃ¹ng má»™t á»©ng dá»¥ng.
+        message = """Khi bạn cài đặt và sử dụng Freedom Wallet,
+bạn không chỉ dùng một ứng dụng.
 
-Báº¡n Ä‘ang táº¡o má»™t há»‡ thá»‘ng tÃ i chÃ­nh cÃ¡ nhÃ¢n
-thuá»™c vá» riÃªng báº¡n.
+Bạn đang tạo một hệ thống tài chính cá nhân
+thuộc về riêng bạn.
 
-Sau khi hoÃ n táº¥t cÃ i Ä‘áº·t, báº¡n sáº½ cÃ³:
+Sau khi hoàn tất cài đặt, bạn sẽ có:
 
-â€¢ Má»™t Google Sheet náº±m trÃªn Drive cá»§a báº¡n  
-â€¢ Má»™t Web App riÃªng, cháº¡y tá»« chÃ­nh dá»¯ liá»‡u cá»§a báº¡n  
-â€¢ Há»‡ thá»‘ng 6 HÅ© tiá»n phÃ¢n bá»• tá»± Ä‘á»™ng  
-â€¢ BÃ¡o cÃ¡o thu â€“ chi theo thÃ¡ng  
-â€¢ Theo dÃµi tÃ i sáº£n, Ä‘áº§u tÆ°, ná»£ vÃ  dÃ²ng tiá»n  
-â€¢ Cáº¥p Ä‘á»™ tÃ i chÃ­nh hiá»‡n táº¡i cá»§a báº¡n
+• Một Google Sheet nằm trên Drive của bạn  
+• Một Web App riêng, chạy từ chính dữ liệu của bạn  
+• Hệ thống 6 Hũ tiền phân bổ tự động  
+• Báo cáo thu – chi theo tháng  
+• Theo dõi tài sản, đầu tư, nợ và dòng tiền  
+• Cấp độ tài chính hiện tại của bạn
 
-Báº¡n sáºµn sÃ ng táº¡o há»‡ thá»‘ng cá»§a riÃªng mÃ¬nh chÆ°a?"""
+Bạn sẵn sàng tạo hệ thống của riêng mình chưa?"""
         
         from telegram import InlineKeyboardButton, InlineKeyboardMarkup
         
         keyboard = [
-            [InlineKeyboardButton("ðŸ“‹ Táº¡o Google Sheet", callback_data="free_step3_copy_template")],
-            [InlineKeyboardButton("â“ Há»i thÃªm", callback_data="learn_more")]
+            [InlineKeyboardButton("📋 Tạo Google Sheet", callback_data="free_step3_copy_template")],
+            [InlineKeyboardButton("❓ Hỏi thêm", callback_data="learn_more")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
@@ -555,18 +613,18 @@ async def send_super_vip_notification(user_id: int, ref_count: int, new_ref_name
                 await context.bot.send_photo(
                     chat_id=user_id,
                     photo=photo,
-                    caption=f"ðŸŒŸ **CHÃšC Má»ªNG THÃ€NH Tá»°U Äáº¶C BIá»†T!** ðŸŒŸ\n\n"
-                            f"**{new_ref_name}** vá»«a hoÃ n táº¥t Ä‘Äƒng kÃ½!\n\n"
-                            f"Báº¡n Ä‘Ã£ Ä‘áº¡t **{ref_count} LÆ¯á»¢T GIá»šI THIá»†U THÃ€NH CÃ”NG!**",
+                    caption=f"🌟 **CHÚC MỪNG THÀNH TỰU ĐẶC BIỆT!** 🌟\n\n"
+                            f"**{new_ref_name}** vừa hoàn tất đăng ký!\n\n"
+                            f"Bạn đã đạt **{ref_count} LƯỢT GIỚI THIỆU THÀNH CÔNG!**",
                     parse_mode="Markdown"
                 )
         else:
             # Fallback if no image
             await context.bot.send_message(
                 chat_id=user_id,
-                text=f"ðŸŒŸ **CHÃšC Má»ªNG THÃ€NH Tá»°U Äáº¶C BIá»†T!** ðŸŒŸ\n\n"
-                     f"**{new_ref_name}** vá»«a hoÃ n táº¥t Ä‘Äƒng kÃ½!\n\n"
-                     f"Báº¡n Ä‘Ã£ Ä‘áº¡t **{ref_count} LÆ¯á»¢T GIá»šI THIá»†U THÃ€NH CÃ”NG!**",
+                text=f"🌟 **CHÚC MỪNG THÀNH TỰU ĐẶC BIỆT!** 🌟\n\n"
+                     f"**{new_ref_name}** vừa hoàn tất đăng ký!\n\n"
+                     f"Bạn đã đạt **{ref_count} LƯỢT GIỚI THIỆU THÀNH CÔNG!**",
                 parse_mode="Markdown"
             )
         
@@ -575,13 +633,13 @@ async def send_super_vip_notification(user_id: int, ref_count: int, new_ref_name
         # Send Super VIP announcement
         await context.bot.send_message(
             chat_id=user_id,
-            text="â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-                 "ðŸ‘‘âœ¨ **Báº N CHÃNH THá»¨C TRá»ž THÃ€NH**\n"
-                 "**SUPER VIP â€“ FREEDOM WALLET**\n"
-                 "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-                 "ðŸŽ‰ Danh hiá»‡u cao quÃ½ nháº¥t dÃ nh cho\n"
-                 "nhá»¯ng ngÆ°á»i Ä‘á»“ng hÃ nh xuáº¥t sáº¯c!\n\n"
-                 "ðŸ† **50+ LÆ¯á»¢T GIá»šI THIá»†U THÃ€NH CÃ”NG**",
+            text="━━━━━━━━━━━━━━━━━━━━━\n"
+                 "👑✨ **BẠN CHÍNH THỨC TRỞ THÀNH**\n"
+                 "**SUPER VIP – FREEDOM WALLET**\n"
+                 "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                 "🎉 Danh hiệu cao quý nhất dành cho\n"
+                 "những người đồng hành xuất sắc!\n\n"
+                 "🏆 **50+ LƯỢT GIỚI THIỆU THÀNH CÔNG**",
             parse_mode="Markdown"
         )
         
@@ -589,48 +647,175 @@ async def send_super_vip_notification(user_id: int, ref_count: int, new_ref_name
         
         # Send exclusive Super VIP benefits menu
         keyboard = [
-            [InlineKeyboardButton("ðŸŒŸ Xem Ä‘áº·c quyá»n Super VIP", callback_data="super_vip_benefits")],
-            [InlineKeyboardButton("ðŸ† Báº£ng xáº¿p háº¡ng Top Referrers", callback_data="leaderboard")],
-            [InlineKeyboardButton("ðŸ’¬ Group Super VIP Private", url="https://t.me/freedomwallet_supervip")],
-            [InlineKeyboardButton("ðŸŽ Nháº­n quÃ  Ä‘áº·c biá»‡t", callback_data="super_vip_gifts")],
-            [InlineKeyboardButton("ðŸ  Dashboard", callback_data="start")]
+            [InlineKeyboardButton("🌟 Xem đặc quyền Super VIP", callback_data="super_vip_benefits")],
+            [InlineKeyboardButton("🏆 Bảng xếp hạng Top Referrers", callback_data="leaderboard")],
+            [InlineKeyboardButton("💬 Group Super VIP Private", url="https://t.me/freedomwallet_supervip")],
+            [InlineKeyboardButton("🎁 Nhận quà đặc biệt", callback_data="super_vip_gifts")],
+            [InlineKeyboardButton("🏠 Dashboard", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await context.bot.send_message(
             chat_id=user_id,
-            text="â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-                 "ðŸ’Ž **Äáº¶C QUYá»€N SUPER VIP:**\n"
-                 "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-                 "âœ¨ **Táº¥t cáº£ quyá»n lá»£i VIP PLUS:**\n\n"
-                 "ðŸŽ¯ Há»— trá»£ Æ°u tiÃªn cáº¥p cao 24/7\n"
-                 "ðŸŽ QuÃ  táº·ng Ä‘á»™c quyá»n hÃ ng thÃ¡ng\n"
-                 "ðŸ† Hiá»ƒn thá»‹ trÃªn Báº£ng xáº¿p háº¡ng\n"
-                 "ðŸ’¬ Group Super VIP riÃªng biá»‡t\n"
-                 "ðŸŽ“ Workshop & Training Ä‘á»™c quyá»n\n"
-                 "ðŸ’° Commission cao hÆ¡n (coming soon)\n"
-                 "ðŸŒŸ Badge Ä‘áº·c biá»‡t trÃªn profile\n\n"
-                 "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-                 "âš¡ **LÆ¯U Ã:** Äá»ƒ giá»¯ danh hiá»‡u Super VIP,\n"
-                 "báº¡n cáº§n duy trÃ¬ hoáº¡t Ä‘á»™ng thÆ°á»ng xuyÃªn.\n"
-                 "Bot sáº½ nháº¯c nhá»Ÿ náº¿u báº¡n khÃ´ng hoáº¡t Ä‘á»™ng trong 7 ngÃ y.",
+            text="━━━━━━━━━━━━━━━━━━━━━\n"
+                 "💎 **ĐẶC QUYỀN SUPER VIP:**\n"
+                 "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                 "✨ **Tất cả quyền lợi VIP PLUS:**\n\n"
+                 "🎯 Hỗ trợ ưu tiên cấp cao 24/7\n"
+                 "🎁 Quà tặng độc quyền hàng tháng\n"
+                 "🏆 Hiển thị trên Bảng xếp hạng\n"
+                 "💬 Group Super VIP riêng biệt\n"
+                 "🎓 Workshop & Training độc quyền\n"
+                 "💰 Commission cao hơn (coming soon)\n"
+                 "🌟 Badge đặc biệt trên profile\n\n"
+                 "━━━━━━━━━━━━━━━━━━━━━\n"
+                 "⚡ **LƯU Ý:** Để giữ danh hiệu Super VIP,\n"
+                 "bạn cần duy trì hoạt động thường xuyên.\n"
+                 "Bot sẽ nhắc nhở nếu bạn không hoạt động trong 7 ngày.",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
         
-        logger.info(f"âœ… Sent Super VIP notification to user {user_id}")
+        logger.info(f"✅ Sent Super VIP notification to user {user_id}")
         
     except Exception as e:
         logger.error(f"Failed to send Super VIP notification to {user_id}: {e}")
         raise
 
 
+async def connect_webapp_now(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler: User đã có Web App và muốn kết nối - BƯỚC 1: Hỏi Sheet URL"""
+    query = update.callback_query
+    await query.answer()
+    
+    # Set state: waiting for Sheet URL
+    context.user_data['waiting_for_sheet_url'] = True
+    context.user_data['waiting_for_webapp_url'] = False
+    
+    message = """
+🔗 **KẾT NỐI WEB APP VỚI BOT**
+
+**BƯỚC 1/2: Gửi Link Google Sheet** 📋
+
+Vui lòng gửi link Google Sheet của bạn:
+
+**Ví dụ:**
+`https://docs.google.com/spreadsheets/d/1Vlq3MAplg_FtpaOqqcvgz1UNM.../edit`
+
+━━━━━━━━━━━━━━━━━━━━━
+
+💡 **Cách lấy link:**
+1. Mở Google Sheet của bạn
+2. Copy toàn bộ URL trên thanh địa chỉ
+3. Gửi cho tôi
+
+✨ **Tip:** Chỉ cần copy paste link là xong!
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("❌ Chưa có, hướng dẫn tôi", callback_data="show_deploy_guide")],
+        [InlineKeyboardButton("« Quay lại", callback_data="start_free_registration")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        text=message,
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
+
+
+async def update_webapp_url(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler: User muốn cập nhật Web App URL"""
+    query = update.callback_query
+    await query.answer()
+    
+    user = update.effective_user
+    db_user = await get_user_by_id(user.id)
+    
+    message = f"""
+🔄 **CẬP NHẬT WEB APP**
+
+**Thông tin hiện tại:**
+📊 Sheet ID: `{db_user.spreadsheet_id or 'Chưa có'}`
+🔗 Web App: `{db_user.web_app_url[:50]}...` (đã kết nối)
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**Muốn cập nhật?**
+Gửi thông tin mới theo format:
+
+```
+SHEET: [Sheet ID mới]
+WEBAPP: [Web App URL mới]
+```
+
+💡 Hoặc nếu chỉ muốn đổi 1 trong 2:
+```
+SHEET: [ID mới]
+```
+hoặc
+```
+WEBAPP: [URL mới]
+```
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("« Quay lại", callback_data="start_free_registration")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        text=message,
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
+
+
+async def skip_webapp_setup(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handler: User muốn bỏ qua setup Web App"""
+    query = update.callback_query
+    await query.answer()
+    
+    message = """
+⏭️ **ĐÃ BỎ QUA SETUP WEB APP**
+
+Không sao! Bạn có thể setup sau bất cứ lúc nào.
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**🤖 Các tính năng hiện tại:**
+• Xem hướng dẫn: /help
+• Đăng ký lại: /register
+• Giới thiệu bạn bè: /referral
+
+**🌟 Để unlock đầy đủ tính năng:**
+Khi nào bạn đã tạo Web App, quay lại bấm /register để kết nối nhé!
+
+━━━━━━━━━━━━━━━━━━━━━
+
+💬 Cần hỗ trợ? Dùng /support
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("📖 Xem hướng dẫn tạo Web App", callback_data="show_deploy_guide")],
+        [InlineKeyboardButton("🏠 Menu chính", callback_data="back_to_start")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await query.edit_message_text(
+        text=message,
+        reply_markup=reply_markup,
+        parse_mode="Markdown"
+    )
+
+
 async def cancel_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Cancel registration"""
     context.user_data.clear()
     await update.message.reply_text(
-        "âŒ ÄÃ£ há»§y Ä‘Äƒng kÃ½.\n\n"
-        "DÃ¹ng /register báº¥t cá»© lÃºc nÃ o Ä‘á»ƒ Ä‘Äƒng kÃ½!",
+        "❌ Đã hủy đăng ký.\n\n"
+        "Dùng /register bất cứ lúc nào để đăng ký!",
         reply_markup=ReplyKeyboardRemove()
     )
     return ConversationHandler.END
@@ -682,7 +867,7 @@ async def notify_admin_fraud_review(
         session.close()
         
         # Build notification message
-        emoji = "ðŸš¨" if urgent else "âš ï¸"
+        emoji = "🚨" if urgent else "⚠️"
         risk_level = "HIGH RISK" if urgent else "PENDING REVIEW"
         
         message = (
@@ -693,10 +878,10 @@ async def notify_admin_fraud_review(
             f"**Referrer:** {referrer_name} (ID: {referral.referrer_id})\n"
             f"**Referred:** {referred_name} (ID: {referral.referred_id})\n\n"
             f"**Review Actions:**\n"
-            f"â€¢ /fraud_review {referral_id} - View details\n"
-            f"â€¢ /fraud_approve {referral_id} - Approve\n"
-            f"â€¢ /fraud_reject {referral_id} - Reject\n\n"
-            f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”"
+            f"• /fraud_review {referral_id} - View details\n"
+            f"• /fraud_approve {referral_id} - Approve\n"
+            f"• /fraud_reject {referral_id} - Reject\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━"
         )
         
         await context.bot.send_message(
@@ -705,7 +890,7 @@ async def notify_admin_fraud_review(
             parse_mode="Markdown"
         )
         
-        logger.info(f"âœ… Sent fraud notification to admin {admin_id} for referral {referral_id}")
+        logger.info(f"✅ Sent fraud notification to admin {admin_id} for referral {referral_id}")
         
     except Exception as e:
         logger.error(f"Failed to notify admin about fraud: {e}")

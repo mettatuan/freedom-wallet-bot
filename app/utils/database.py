@@ -35,6 +35,8 @@ def get_db():
         db.close()
 
 
+
+
 class User(Base):
     """User model - Store Telegram user info"""
     __tablename__ = "users"
@@ -48,7 +50,7 @@ class User(Base):
     # - Preserves 100+ existing code references across 50+ files
     # - Avoids high-risk mechanical refactor with zero functional benefit
     # - Standard ORM compatibility adapter pattern
-    # - Database schema remains unchanged
+    # - Database schema unchanged (migration restored full 56-column schema)
     #
     # This is NOT a hack - it's an intentional design decision.
     # See: ARCHITECTURE_DECISION.md for full context
@@ -123,11 +125,15 @@ class User(Base):
     sheets_connected_at = Column(DateTime, nullable=True)  # When sheets connected
     sheets_last_sync = Column(DateTime, nullable=True)  # Last data sync timestamp
     webhook_url = Column(String(500), nullable=True)  # Apps Script webhook URL for Quick Record
-    web_app_url = Column(String(500), nullable=True)  # Freedom Wallet Web App URL for manual entry
+    
+    # Column mapping: web_app_url → webapp_url (database schema uses webapp_url without underscore)
+    web_app_url = Column("webapp_url", String(500), nullable=True)  # Freedom Wallet Web App URL for manual entry
     milestone_30day_achieved = Column(Boolean, default=False)  # 30-day milestone
     milestone_90day_achieved = Column(Boolean, default=False)  # 90-day milestone
     last_reminder_sent = Column(DateTime, nullable=True)  # Last reminder timestamp
     reminder_enabled = Column(Boolean, default=True)  # User preference for reminders
+    alert_enabled = Column(Boolean, default=True)  # Alert system toggle
+    notifications_enabled = Column(Boolean, default=True)  # All notifications toggle
     
     # UNLOCK FLOW TRACKING (Feb 2026)
     unlock_offered = Column(Boolean, default=False)  # Whether UNLOCKoffer was sent
@@ -375,7 +381,7 @@ async def create_referral(referrer_id: int, referred_id: int, code: str):
         ).first()
         
         if existing:
-            return None, "Báº¡n Ä‘Ã£ Ä‘Æ°á»£c giá»›i thiá»‡u bá»Ÿi ngÆ°á»i khÃ¡c rá»“i!"
+            return None, "Bạn đã được giới thiệu bởi người khác rồi!"
         
         # Create referral with PENDING status
         referral = Referral(
@@ -503,17 +509,17 @@ async def update_user_registration(user_id: int, email: str, phone: str = None, 
         # Update referral count if provided (from Google Sheets sync)
         if referral_count is not None:
             user.referral_count = referral_count
-            print(f"ðŸ“Š Updated referral_count to {referral_count} for user {user_id}")
+            print(f"📊 Updated referral_count to {referral_count} for user {user_id}")
         
         session.commit()
         session.refresh(user)
         session.expunge(user)
         
-        print(f"âœ… Updated user {user_id} registration: {email} (source: {source})")
+        print(f"✅ Updated user {user_id} registration: {email} (source: {source})")
         return user
     except Exception as e:
         session.rollback()
-        print(f"âŒ Error updating user registration: {e}")
+        print(f"❌ Error updating user registration: {e}")
         return None
     finally:
         session.close()

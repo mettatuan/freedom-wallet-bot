@@ -29,8 +29,8 @@ class SubscriptionManager:
     - All advanced features
     """
     
-    # FREE tier limits
-    FREE_DAILY_MESSAGES = 5
+    # FREE tier limits (UNLIMITED for 3-month market testing)
+    FREE_DAILY_MESSAGES = 999  # Effectively unlimited for testing phase
     
     # Feature flags
     PREMIUM_FEATURES = {
@@ -63,7 +63,7 @@ class SubscriptionManager:
             if user.premium_expires_at and user.premium_expires_at > now:
                 return SubscriptionTier.PREMIUM
             else:
-                # Expired premium â†’ auto-downgrade to FREE
+                # Expired premium → auto-downgrade to FREE
                 logger.warning(f"User {user.id} Premium expired, downgrading to FREE")
                 user.subscription_tier = 'FREE'
                 db = SessionLocal()
@@ -77,7 +77,7 @@ class SubscriptionManager:
             if user.trial_ends_at and user.trial_ends_at > now:
                 return SubscriptionTier.TRIAL
             else:
-                # Expired trial â†’ auto-downgrade to FREE
+                # Expired trial → auto-downgrade to FREE
                 logger.warning(f"User {user.id} Trial expired, downgrading to FREE")
                 user.subscription_tier = 'FREE'
                 db = SessionLocal()
@@ -118,7 +118,7 @@ class SubscriptionManager:
         # Check limit
         if user.bot_chat_count >= SubscriptionManager.FREE_DAILY_MESSAGES:
             remaining = SubscriptionManager.FREE_DAILY_MESSAGES - user.bot_chat_count
-            return False, f"âš ï¸ Báº¡n Ä‘Ã£ háº¿t {SubscriptionManager.FREE_DAILY_MESSAGES} tin nháº¯n hÃ´m nay!\n\nCÃ²n láº¡i: {max(0, remaining)}/{SubscriptionManager.FREE_DAILY_MESSAGES}"
+            return False, f"⚠️ Bạn đã hết {SubscriptionManager.FREE_DAILY_MESSAGES} tin nhắn hôm nay!\n\nCòn lại: {max(0, remaining)}/{SubscriptionManager.FREE_DAILY_MESSAGES}"
         
         return True, ""
     
@@ -166,7 +166,7 @@ class SubscriptionManager:
         
         # Check if feature is premium-only
         if feature in SubscriptionManager.PREMIUM_FEATURES:
-            return False, f"ðŸ”’ TÃ­nh nÄƒng Premium\n\nNÃ¢ng cáº¥p Ä‘á»ƒ sá»­ dá»¥ng '{feature}'"
+            return False, f"🔒 Tính năng Premium\n\nNâng cấp để sử dụng '{feature}'"
         
         return True, ""
     

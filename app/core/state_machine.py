@@ -1,5 +1,5 @@
 """
-ðŸŽ¯ STATE MACHINE MANAGER
+🎯 STATE MACHINE MANAGER
 ========================
 
 Manages user state transitions with DUAL-RUN strategy for Week 2 soft-integration.
@@ -7,7 +7,7 @@ Manages user state transitions with DUAL-RUN strategy for Week 2 soft-integratio
 Strategy:
 - LEGACY users: Use existing referral_count logic (backward compatible)
 - NEW users: Use state machine with proper transitions
-- Gradually migrate LEGACY â†’ new states as they interact
+- Gradually migrate LEGACY → new states as they interact
 
 Author: Freedom Wallet Team
 Version: 2.0 (Week 2 - Soft Integration)
@@ -88,8 +88,8 @@ class StateManager:
         Infer state from old referral_count logic (backward compatible)
         
         Old logic:
-        - referral_count >= 2 â†’ VIP
-        - referral_count < 2 â†’ REGISTERED
+        - referral_count >= 2 → VIP
+        - referral_count < 2 → REGISTERED
         """
         if user.is_free_unlocked or user.referral_count >= 2:
             return UserState.VIP
@@ -126,21 +126,21 @@ class StateManager:
         
         # Auto-migrate LEGACY users on first transition
         if is_legacy and auto_migrate_legacy:
-            logger.info(f"Auto-migrating LEGACY user {user_id} from inferred {current_state} â†’ {new_state}")
+            logger.info(f"Auto-migrating LEGACY user {user_id} from inferred {current_state} → {new_state}")
             user.user_state = new_state.value
             self.session.commit()
-            return (True, f"Migrated from LEGACY â†’ {new_state.value}")
+            return (True, f"Migrated from LEGACY → {new_state.value}")
         
         # Validate transition
         if new_state not in self.VALID_TRANSITIONS.get(current_state, set()):
-            return (False, f"Invalid transition: {current_state.value} â†’ {new_state.value}")
+            return (False, f"Invalid transition: {current_state.value} → {new_state.value}")
         
         # Perform transition
         old_state = current_state.value
         user.user_state = new_state.value
         self.session.commit()
         
-        log_msg = f"State transition: {old_state} â†’ {new_state.value}"
+        log_msg = f"State transition: {old_state} → {new_state.value}"
         if reason:
             log_msg += f" (reason: {reason})"
         logger.info(f"User {user_id}: {log_msg}")
@@ -152,8 +152,8 @@ class StateManager:
         Auto-update state based on referral milestones (Week 2 compatible)
         
         This maintains backward compatibility with existing referral logic:
-        - 2+ refs â†’ VIP
-        - 50+ refs â†’ SUPER_VIP (Week 4)
+        - 2+ refs → VIP
+        - 50+ refs → SUPER_VIP (Week 4)
         
         Returns:
             New state if changed, None if no change
@@ -260,14 +260,14 @@ class StateManager:
             if success:
                 user.super_vip_decay_warned = False  # Reset flag
                 self.session.commit()
-                logger.info(f"ðŸ”» Super VIP decay: User {user_id} downgraded to VIP ({days_inactive} days inactive)")
+                logger.info(f"🔻 Super VIP decay: User {user_id} downgraded to VIP ({days_inactive} days inactive)")
                 return {'action': 'downgrade', 'days_inactive': days_inactive}
         
         # Check for warning (7+ days, not warned yet)
         elif days_inactive >= 7 and not user.super_vip_decay_warned:
             user.super_vip_decay_warned = True
             self.session.commit()
-            logger.info(f"âš ï¸ Super VIP decay warning: User {user_id} ({days_inactive} days inactive)")
+            logger.info(f"⚠️ Super VIP decay warning: User {user_id} ({days_inactive} days inactive)")
             return {'action': 'warn', 'days_inactive': days_inactive}
         
         return None
@@ -300,13 +300,13 @@ class StateManager:
     def get_state_display_name(self, state: UserState) -> str:
         """Get user-friendly state name (Vietnamese)"""
         display_names = {
-            UserState.LEGACY: "ðŸ”„ NgÆ°á»i dÃ¹ng cÅ©",
-            UserState.VISITOR: "ðŸ‘‹ KhÃ¡ch",
-            UserState.REGISTERED: "ðŸ“ ÄÃ£ Ä‘Äƒng kÃ½",
-            UserState.VIP: "â­ VIP",
-            UserState.SUPER_VIP: "ðŸŒŸ Super VIP",
-            UserState.ADVOCATE: "ðŸ‘‘ Advocate",
-            UserState.CHURNED: "ðŸ˜´ KhÃ´ng hoáº¡t Ä‘á»™ng",
+            UserState.LEGACY: "🔄 Người dùng cũ",
+            UserState.VISITOR: "👋 Khách",
+            UserState.REGISTERED: "📝 Đã đăng ký",
+            UserState.VIP: "⭐ VIP",
+            UserState.SUPER_VIP: "🌟 Super VIP",
+            UserState.ADVOCATE: "👑 Advocate",
+            UserState.CHURNED: "😴 Không hoạt động",
         }
         return display_names.get(state, state.value)
     

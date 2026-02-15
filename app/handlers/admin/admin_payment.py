@@ -26,7 +26,7 @@ async def payment_pending_command(update: Update, context: ContextTypes.DEFAULT_
     user_id = update.effective_user.id
     
     if not is_admin(user_id):
-        await update.message.reply_text("âŒ Báº¡n khÃ´ng cÃ³ quyá»n sá»­ dá»¥ng lá»‡nh nÃ y.")
+        await update.message.reply_text("❌ Bạn không có quyền sử dụng lệnh này.")
         return
     
     db = next(get_db())
@@ -37,12 +37,12 @@ async def payment_pending_command(update: Update, context: ContextTypes.DEFAULT_
         ).order_by(PaymentVerification.created_at.desc()).all()
         
         if not pending:
-            await update.message.reply_text("âœ… KhÃ´ng cÃ³ yÃªu cáº§u xÃ¡c nháº­n thanh toÃ¡n nÃ o.")
+            await update.message.reply_text("✅ Không có yêu cầu xác nhận thanh toán nào.")
             return
         
         # Send header
         await update.message.reply_text(
-            f"<b>ðŸ” YÃŠU Cáº¦U XÃC NHáº¬N THANH TOÃN</b>\n\nTÃ¬m tháº¥y {len(pending)} yÃªu cáº§u Ä‘ang chá»:\n",
+            f"<b>🔍 YÊU CẦU XÁC NHẬN THANH TOÁN</b>\n\nTìm thấy {len(pending)} yêu cầu đang chờ:\n",
             parse_mode="HTML"
         )
         
@@ -59,23 +59,23 @@ async def payment_pending_command(update: Update, context: ContextTypes.DEFAULT_
             transaction_preview = verification.transaction_info[:150].replace('\n', ' ').replace('\r', ' ')
             safe_transaction_info = html.escape(transaction_preview)
             
-            message = f"""â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+            message = f"""━━━━━━━━━━━━━━━━━━━━━
 <b>VER{verification.id}</b>
 
-ðŸ‘¤ User: {full_name} (@{safe_username})
-ðŸ†” ID: {verification.user_id}
-ðŸ’° Sá»‘ tiá»n: <b>{verification.amount:,.0f} VNÄ</b>
-â±ï¸ {time_ago:.0f} phÃºt trÆ°á»›c
+👤 User: {full_name} (@{safe_username})
+🆔 ID: {verification.user_id}
+💰 Số tiền: <b>{verification.amount:,.0f} VNĐ</b>
+⏱️ {time_ago:.0f} phút trước
 
-ðŸ“ ThÃ´ng tin:
+📝 Thông tin:
 {safe_transaction_info}...
 """
             
             # Inline buttons for this verification
             keyboard = [
                 [
-                    InlineKeyboardButton("âœ… Duyá»‡t", callback_data=f"admin_approve_VER{verification.id}"),
-                    InlineKeyboardButton("âŒ Tá»« chá»‘i", callback_data=f"admin_reject_VER{verification.id}")
+                    InlineKeyboardButton("✅ Duyệt", callback_data=f"admin_approve_VER{verification.id}"),
+                    InlineKeyboardButton("❌ Từ chối", callback_data=f"admin_reject_VER{verification.id}")
                 ]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
@@ -83,12 +83,12 @@ async def payment_pending_command(update: Update, context: ContextTypes.DEFAULT_
             await update.message.reply_text(message, parse_mode="HTML", reply_markup=reply_markup)
         
         if len(pending) > 10:
-            await update.message.reply_text(f"\n... vÃ  {len(pending) - 10} yÃªu cáº§u khÃ¡c", parse_mode="HTML")
+            await update.message.reply_text(f"\n... và {len(pending) - 10} yêu cầu khác", parse_mode="HTML")
         
     except Exception as e:
         logger.error(f"Error getting pending payments: {e}")
         safe_error = html.escape(str(e))
-        await update.message.reply_text(f"âŒ Lá»—i: {safe_error}", parse_mode="HTML")
+        await update.message.reply_text(f"❌ Lỗi: {safe_error}", parse_mode="HTML")
     finally:
         db.close()
 
@@ -101,13 +101,13 @@ async def payment_approve_command(update: Update, context: ContextTypes.DEFAULT_
     user_id = update.effective_user.id
     
     if not is_admin(user_id):
-        await update.message.reply_text("âŒ Báº¡n khÃ´ng cÃ³ quyá»n sá»­ dá»¥ng lá»‡nh nÃ y.")
+        await update.message.reply_text("❌ Bạn không có quyền sử dụng lệnh này.")
         return
     
     # Get verification ID from command args
     if not context.args or len(context.args) < 1:
         await update.message.reply_text(
-            "âŒ Sá»­ dá»¥ng: <code>/payment_approve VER123</code>",
+            "❌ Sử dụng: <code>/payment_approve VER123</code>",
             parse_mode="HTML"
         )
         return
@@ -140,33 +140,33 @@ async def payment_approve_command(update: Update, context: ContextTypes.DEFAULT_
                     await context.bot.send_message(
                         chat_id=verification.user_id,
                         text=f"""
-ðŸŽ‰ <b>CHÃšC Má»ªNG! PREMIUM ÄÃ£ KÃ­ch Hoáº¡t</b>
+🎉 <b>CHÚC MỪNG! PREMIUM Đã Kích Hoạt</b>
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-âœ… <b>THANH TOÃN ÄÃƒ XÃC NHáº¬N:</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+✅ <b>THANH TOÁN ĐÃ XÁC NHẬN:</b>
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’° Sá»‘ tiá»n: {verification.amount:,.0f} VNÄ
-â±ï¸ Thá»i gian: {datetime.now().strftime('%H:%M %d/%m/%Y')}
+💰 Số tiền: {verification.amount:,.0f} VNĐ
+⏱️ Thời gian: {datetime.now().strftime('%H:%M %d/%m/%Y')}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’Ž <b>TÃ€I KHOáº¢N PREMIUM:</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💎 <b>TÀI KHOẢN PREMIUM:</b>
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… KÃ­ch hoáº¡t: Ngay bÃ¢y giá»
-ðŸ“… Háº¿t háº¡n: {payment_user.premium_expires_at.strftime('%d/%m/%Y') if payment_user.premium_expires_at else '365 ngÃ y'}
+✅ Kích hoạt: Ngay bây giờ
+📅 Hết hạn: {payment_user.premium_expires_at.strftime('%d/%m/%Y') if payment_user.premium_expires_at else '365 ngày'}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸŽ <b>Báº®T Äáº¦U Sá»¬ Dá»¤NG:</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🎁 <b>BẮT ĐẦU SỬ DỤNG:</b>
+━━━━━━━━━━━━━━━━━━━━━
 
-â€¢ Gá»­i tin nháº¯n khÃ´ng giá»›i háº¡n
-â€¢ Sá»­ dá»¥ng táº¥t cáº£ tÃ­nh nÄƒng Premium
-â€¢ Há»— trá»£ Æ°u tiÃªn tá»« Admin
+• Gửi tin nhắn không giới hạn
+• Sử dụng tất cả tính năng Premium
+• Hỗ trợ ưu tiên từ Admin
 
-ðŸ“ž Cáº§n há»— trá»£? Gá»­i tin nháº¯n trá»±c tiáº¿p cho mÃ¬nh!
+📞 Cần hỗ trợ? Gửi tin nhắn trực tiếp cho mình!
 
-Cáº£m Æ¡n báº¡n Ä‘Ã£ tin tÆ°á»Ÿng Freedom Wallet! ðŸ’–
+Cảm ơn bạn đã tin tưởng Freedom Wallet! 💖
 """,
                         parse_mode="HTML"
                     )
@@ -176,21 +176,21 @@ Cáº£m Æ¡n báº¡n Ä‘Ã£ tin tÆ°á»Ÿng Freedom Wallet! ðŸ’–
                 # Confirm to admin
                 safe_username = html.escape(payment_user.username if payment_user else 'Unknown')
                 await update.message.reply_text(
-                    f"âœ… ÄÃ£ phÃª duyá»‡t {verification_id}\n"
-                    f"ðŸ‘¤ User: {safe_username} (ID: {verification.user_id})\n"
-                    f"ðŸ’° Sá»‘ tiá»n: {verification.amount:,.0f} VNÄ\n"
-                    f"ðŸ“… Premium Ä‘áº¿n: {payment_user.premium_expires_at.strftime('%d/%m/%Y') if payment_user and payment_user.premium_expires_at else 'N/A'}\n"
-                    f"âœ… ÄÃ£ gá»­i thÃ´ng bÃ¡o cho user",
+                    f"✅ Đã phê duyệt {verification_id}\n"
+                    f"👤 User: {safe_username} (ID: {verification.user_id})\n"
+                    f"💰 Số tiền: {verification.amount:,.0f} VNĐ\n"
+                    f"📅 Premium đến: {payment_user.premium_expires_at.strftime('%d/%m/%Y') if payment_user and payment_user.premium_expires_at else 'N/A'}\n"
+                    f"✅ Đã gửi thông báo cho user",
                     parse_mode="HTML"
                 )
             else:
-                await update.message.reply_text(f"âœ… ÄÃ£ phÃª duyá»‡t {verification_id}")
+                await update.message.reply_text(f"✅ Đã phê duyệt {verification_id}")
                 
         finally:
             db.close()
     else:
         await update.message.reply_text(
-            f"âŒ KhÃ´ng thá»ƒ phÃª duyá»‡t {verification_id}. Kiá»ƒm tra láº¡i ID hoáº·c log.",
+            f"❌ Không thể phê duyệt {verification_id}. Kiểm tra lại ID hoặc log.",
             parse_mode="HTML"
         )
 
@@ -203,19 +203,19 @@ async def payment_reject_command(update: Update, context: ContextTypes.DEFAULT_T
     user_id = update.effective_user.id
     
     if not is_admin(user_id):
-        await update.message.reply_text("âŒ Báº¡n khÃ´ng cÃ³ quyá»n sá»­ dá»¥ng lá»‡nh nÃ y.")
+        await update.message.reply_text("❌ Bạn không có quyền sử dụng lệnh này.")
         return
     
     # Get verification ID from command args
     if not context.args or len(context.args) < 1:
         await update.message.reply_text(
-            "âŒ Sá»­ dá»¥ng: <code>/payment_reject VER123 [lÃ½ do]</code>",
+            "❌ Sử dụng: <code>/payment_reject VER123 [lý do]</code>",
             parse_mode="HTML"
         )
         return
     
     verification_id = context.args[0]
-    reason = " ".join(context.args[1:]) if len(context.args) > 1 else "KhÃ´ng rÃµ lÃ½ do"
+    reason = " ".join(context.args[1:]) if len(context.args) > 1 else "Không rõ lý do"
     
     db = next(get_db())
     try:
@@ -226,12 +226,12 @@ async def payment_reject_command(update: Update, context: ContextTypes.DEFAULT_T
         ).first()
         
         if not verification:
-            await update.message.reply_text(f"âŒ KhÃ´ng tÃ¬m tháº¥y {verification_id}")
+            await update.message.reply_text(f"❌ Không tìm thấy {verification_id}")
             return
         
         if verification.status != "PENDING":
             await update.message.reply_text(
-                f"âŒ {verification_id} Ä‘Ã£ Ä‘Æ°á»£c xá»­ lÃ½: {verification.status}"
+                f"❌ {verification_id} đã được xử lý: {verification.status}"
             )
             return
         
@@ -248,32 +248,32 @@ async def payment_reject_command(update: Update, context: ContextTypes.DEFAULT_T
             await context.bot.send_message(
                 chat_id=verification.user_id,
                 text=f"""
-âŒ <b>YÃŠU Cáº¦U XÃC NHáº¬N Bá»Š Tá»ª CHá»I</b>
+❌ <b>YÊU CẦU XÁC NHẬN BỊ TỪ CHỐI</b>
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“‹ <b>THÃ”NG TIN:</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📋 <b>THÔNG TIN:</b>
+━━━━━━━━━━━━━━━━━━━━━
 
-MÃ£: {verification_id}
-ðŸ’° Sá»‘ tiá»n: {verification.amount:,.0f} VNÄ
+Mã: {verification_id}
+💰 Số tiền: {verification.amount:,.0f} VNĐ
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“ <b>LÃ DO:</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📝 <b>LÝ DO:</b>
+━━━━━━━━━━━━━━━━━━━━━
 
 {safe_reason}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ <b>TIáº¾P THEO:</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 <b>TIẾP THEO:</b>
+━━━━━━━━━━━━━━━━━━━━━
 
-Vui lÃ²ng kiá»ƒm tra láº¡i thÃ´ng tin thanh toÃ¡n vÃ  liÃªn há»‡ Admin Ä‘á»ƒ Ä‘Æ°á»£c há»— trá»£.
+Vui lòng kiểm tra lại thông tin thanh toán và liên hệ Admin để được hỗ trợ.
 
-ðŸ’¬ LiÃªn há»‡: Gá»­i tin nháº¯n trá»±c tiáº¿p trong bot
+💬 Liên hệ: Gửi tin nhắn trực tiếp trong bot
 """,
                 parse_mode="HTML",
                 reply_markup=InlineKeyboardMarkup([[
-                    InlineKeyboardButton("ðŸ’¬ LiÃªn há»‡ Admin", callback_data="contact_support")
+                    InlineKeyboardButton("💬 Liên hệ Admin", callback_data="contact_support")
                 ]])
             )
         except Exception as e:
@@ -282,10 +282,10 @@ Vui lÃ²ng kiá»ƒm tra láº¡i thÃ´ng tin thanh toÃ¡n vÃ  liÃªn há�
         # Confirm to admin
         safe_reason_admin = html.escape(reason)
         await update.message.reply_text(
-            f"âœ… ÄÃ£ tá»« chá»‘i {verification_id}\n"
-            f"ðŸ‘¤ User ID: {verification.user_id}\n"
-            f"ðŸ“ LÃ½ do: {safe_reason_admin}\n"
-            f"âœ… ÄÃ£ gá»­i thÃ´ng bÃ¡o cho user",
+            f"✅ Đã từ chối {verification_id}\n"
+            f"👤 User ID: {verification.user_id}\n"
+            f"📝 Lý do: {safe_reason_admin}\n"
+            f"✅ Đã gửi thông báo cho user",
             parse_mode="HTML"
         )
         
@@ -293,7 +293,7 @@ Vui lÃ²ng kiá»ƒm tra láº¡i thÃ´ng tin thanh toÃ¡n vÃ  liÃªn há�
         
     except Exception as e:
         logger.error(f"Error rejecting payment {verification_id}: {e}")
-        await update.message.reply_text(f"âŒ Lá»—i: {e}")
+        await update.message.reply_text(f"❌ Lỗi: {e}")
         db.rollback()
     finally:
         db.close()
@@ -307,7 +307,7 @@ async def payment_stats_command(update: Update, context: ContextTypes.DEFAULT_TY
     user_id = update.effective_user.id
     
     if not is_admin(user_id):
-        await update.message.reply_text("âŒ Báº¡n khÃ´ng cÃ³ quyá»n sá»­ dá»¥ng lá»‡nh nÃ y.")
+        await update.message.reply_text("❌ Bạn không có quyền sử dụng lệnh này.")
         return
     
     db = next(get_db())
@@ -334,35 +334,35 @@ async def payment_stats_command(update: Update, context: ContextTypes.DEFAULT_TY
         ).scalar() or 0
         
         message = f"""
-ðŸ“Š <b>THá»NG KÃŠ THANH TOÃN</b>
+📊 <b>THỐNG KÊ THANH TOÁN</b>
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“‹ <b>YÃŠU Cáº¦U:</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📋 <b>YÊU CẦU:</b>
+━━━━━━━━━━━━━━━━━━━━━
 
-â³ Äang chá»: {total_pending}
-âœ… ÄÃ£ duyá»‡t: {total_approved}
-âŒ ÄÃ£ tá»« chá»‘i: {total_rejected}
+⏳ Đang chờ: {total_pending}
+✅ Đã duyệt: {total_approved}
+❌ Đã từ chối: {total_rejected}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’° <b>DOANH THU:</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💰 <b>DOANH THU:</b>
+━━━━━━━━━━━━━━━━━━━━━
 
-Tá»•ng: {total_revenue:,.0f} VNÄ
-Trung bÃ¬nh: {total_revenue/total_approved if total_approved > 0 else 0:,.0f} VNÄ/giao dá»‹ch
+Tổng: {total_revenue:,.0f} VNĐ
+Trung bình: {total_revenue/total_approved if total_approved > 0 else 0:,.0f} VNĐ/giao dịch
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’Ž <b>PREMIUM USERS:</b>
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💎 <b>PREMIUM USERS:</b>
+━━━━━━━━━━━━━━━━━━━━━
 
-Tá»•ng: {db.query(User).filter(User.subscription_tier == 'PREMIUM').count()} users
+Tổng: {db.query(User).filter(User.subscription_tier == 'PREMIUM').count()} users
 """
         
         await update.message.reply_text(message, parse_mode="HTML")
         
     except Exception as e:
         logger.error(f"Error getting payment stats: {e}")
-        await update.message.reply_text(f"âŒ Lá»—i: {e}")
+        await update.message.reply_text(f"❌ Lỗi: {e}")
     finally:
         db.close()
 

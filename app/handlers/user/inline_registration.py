@@ -21,7 +21,7 @@ async def start_free_registration(update: Update, context: ContextTypes.DEFAULT_
     if db_user and db_user.email and db_user.full_name:
         # Already registered, go to step 2
         await query.message.delete()
-        await query.message.reply_text("Báº¡n Ä‘Ã£ Ä‘Äƒng kÃ½ rá»“i. Äang chuyá»ƒn Ä‘áº¿n bÆ°á»›c tiáº¿p theo...")
+        await query.message.reply_text("Bạn đã đăng ký rồi. Đang chuyển đến bước tiếp theo...")
         
         # Import and call step 2
         from app.handlers.user.free_flow import free_step2_show_value
@@ -37,9 +37,9 @@ async def start_free_registration(update: Update, context: ContextTypes.DEFAULT_
         pass
     
     await query.message.reply_text(
-        "ðŸ“ **Äá»ƒ Ä‘Äƒng kÃ½, vui lÃ²ng gÃµ lá»‡nh:**\n\n"
+        "📝 **Để đăng ký, vui lòng gõ lệnh:**\n\n"
         "/register\n\n"
-        "TÃ´i sáº½ hÆ°á»›ng dáº«n báº¡n tá»«ng bÆ°á»›c.",
+        "Tôi sẽ hướng dẫn bạn từng bước.",
         parse_mode="Markdown"
     )
 

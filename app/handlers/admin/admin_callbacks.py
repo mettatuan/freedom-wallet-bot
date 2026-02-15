@@ -21,7 +21,7 @@ async def handle_admin_approve_callback(update: Update, context: ContextTypes.DE
     # Check if user is admin
     if not is_admin(user_id):
         await query.edit_message_text(
-            text="âŒ Báº¡n khÃ´ng cÃ³ quyá»n thá»±c hiá»‡n thao tÃ¡c nÃ y.",
+            text="❌ Bạn không có quyền thực hiện thao tác này.",
             parse_mode="HTML"
         )
         return
@@ -64,16 +64,16 @@ async def handle_admin_approve_callback(update: Update, context: ContextTypes.DE
             
             # Update message with success
             new_caption = f"""
-âœ… <b>ÄÃƒ DUYá»†T THÃ€NH CÃ”NG</b>
+✅ <b>ĐÃ DUYỆT THÀNH CÔNG</b>
 
-MÃ£: <code>{verification_id}</code>
+Mã: <code>{verification_id}</code>
 
-âœ… User Ä‘Ã£ Ä‘Æ°á»£c nÃ¢ng cáº¥p lÃªn Premium (365 ngÃ y)
-âœ… ThÃ´ng tin Ä‘Ã£ lÆ°u vÃ o Google Sheets
-âœ… User Ä‘Ã£ nháº­n thÃ´ng bÃ¡o kÃ­ch hoáº¡t
+✅ User đã được nâng cấp lên Premium (365 ngày)
+✅ Thông tin đã lưu vào Google Sheets
+✅ User đã nhận thông báo kích hoạt
 
-NgÆ°á»i duyá»‡t: {query.from_user.full_name}
-Thá»i gian: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
+Người duyệt: {query.from_user.full_name}
+Thời gian: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
 """
             
             # Send notification to user
@@ -84,21 +84,21 @@ Thá»i gian: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
                 await context.bot.send_message(
                     chat_id=verification.user_id,
                     text=f"""
-ðŸŽ‰ <b>CHÃšC Má»ªNG! PREMIUM ÄÃƒ KÃCH HOáº T</b>
+🎉 <b>CHÚC MỪNG! PREMIUM ĐÃ KÍCH HOẠT</b>
 
-MÃ£ xÃ¡c nháº­n: <code>{verification_id}</code>
+Mã xác nhận: <code>{verification_id}</code>
 
-âœ… GÃ³i Premium Ä‘Ã£ Ä‘Æ°á»£c kÃ­ch hoáº¡t thÃ nh cÃ´ng!
-â° Thá»i háº¡n: <b>365 ngÃ y</b> (Ä‘áº¿n {expire_date.strftime('%d/%m/%Y')})
+✅ Gói Premium đã được kích hoạt thành công!
+⏰ Thời hạn: <b>365 ngày</b> (đến {expire_date.strftime('%d/%m/%Y')})
 
-ðŸŽ <b>QUYá»€N Lá»¢I:</b>
-ðŸ’¬ KhÃ´ng giá»›i háº¡n tin nháº¯n
-ðŸ¤– AI Assistant Premium
-ðŸ“Š PhÃ¢n tÃ­ch chi tiÃªu thÃ´ng minh
-ðŸŽ¯ Gá»£i Ã½ tÃ i chÃ­nh cÃ¡ nhÃ¢n hÃ³a
-ðŸš€ Há»— trá»£ Æ°u tiÃªn 24/7
+🎁 <b>QUYỀN LỢI:</b>
+💬 Không giới hạn tin nhắn
+🤖 AI Assistant Premium
+📊 Phân tích chi tiêu thông minh
+🎯 Gợi ý tài chính cá nhân hóa
+🚀 Hỗ trợ ưu tiên 24/7
 
-Gá»­i /start Ä‘á»ƒ khÃ¡m phÃ¡ tÃ­nh nÄƒng Premium!
+Gửi /start để khám phá tính năng Premium!
 """,
                     parse_mode="HTML"
                 )
@@ -119,13 +119,13 @@ Gá»­i /start Ä‘á»ƒ khÃ¡m phÃ¡ tÃ­nh nÄƒng Premium!
             
         else:
             await query.edit_message_text(
-                text=f"âŒ Lá»—i khi duyá»‡t {verification_id}. CÃ³ thá»ƒ Ä‘Ã£ Ä‘Æ°á»£c xá»­ lÃ½ rá»“i.",
+                text=f"❌ Lỗi khi duyệt {verification_id}. Có thể đã được xử lý rồi.",
                 parse_mode="HTML"
             )
             
     except Exception as e:
         logger.error(f"Error in handle_admin_approve_callback: {e}", exc_info=True)
-        await query.answer("âŒ CÃ³ lá»—i xáº£y ra. Vui lÃ²ng thá»­ láº¡i!", show_alert=True)
+        await query.answer("❌ Có lỗi xảy ra. Vui lòng thử lại!", show_alert=True)
 
 
 async def handle_admin_reject_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -138,7 +138,7 @@ async def handle_admin_reject_callback(update: Update, context: ContextTypes.DEF
     # Check if user is admin
     if not is_admin(user_id):
         await query.edit_message_text(
-            text="âŒ Báº¡n khÃ´ng cÃ³ quyá»n thá»±c hiá»‡n thao tÃ¡c nÃ y.",
+            text="❌ Bạn không có quyền thực hiện thao tác này.",
             parse_mode="HTML"
         )
         return
@@ -151,16 +151,16 @@ async def handle_admin_reject_callback(update: Update, context: ContextTypes.DEF
     
     await query.edit_message_text(
         text=f"""
-âŒ <b>Tá»ª CHá»I THANH TOÃN</b>
+❌ <b>TỪ CHỐI THANH TOÁN</b>
 
-MÃ£: <code>{verification_id}</code>
+Mã: <code>{verification_id}</code>
 
-Vui lÃ²ng gá»­i lÃ½ do tá»« chá»‘i:
+Vui lòng gửi lý do từ chối:
 
-<i>VÃ­ dá»¥: Sai ná»™i dung chuyá»ƒn khoáº£n, Sá»‘ tiá»n khÃ´ng Ä‘Ãºng, etc.</i>
+<i>Ví dụ: Sai nội dung chuyển khoản, Số tiền không đúng, etc.</i>
 
-Hoáº·c dÃ¹ng command:
-/payment_reject {verification_id} [lÃ½ do]
+Hoặc dùng command:
+/payment_reject {verification_id} [lý do]
 """,
         parse_mode="HTML"
     )
@@ -175,7 +175,7 @@ async def handle_admin_list_pending_callback(update: Update, context: ContextTyp
     
     # Check if user is admin
     if not is_admin(user_id):
-        await query.answer("âŒ Báº¡n khÃ´ng cÃ³ quyá»n xem thÃ´ng tin nÃ y.", show_alert=True)
+        await query.answer("❌ Bạn không có quyền xem thông tin này.", show_alert=True)
         return
     
     # Get all pending verifications
@@ -185,12 +185,12 @@ async def handle_admin_list_pending_callback(update: Update, context: ContextTyp
     ).order_by(PaymentVerification.created_at.desc()).all()
     
     if not pending:
-        await query.answer("âœ… KhÃ´ng cÃ³ yÃªu cáº§u nÃ o Ä‘ang chá» duyá»‡t!", show_alert=True)
+        await query.answer("✅ Không có yêu cầu nào đang chờ duyệt!", show_alert=True)
         db.close()
         return
     
     # Build message
-    message = f"<b>ðŸ“‹ YÃŠU Cáº¦U CHá»œ DUYá»†T: {len(pending)}</b>\n\n"
+    message = f"<b>📋 YÊU CẦU CHỜ DUYỆT: {len(pending)}</b>\n\n"
     
     for ver in pending[:10]:  # Show max 10
         user = db.query(User).filter(User.id == ver.user_id).first()
@@ -201,14 +201,14 @@ async def handle_admin_list_pending_callback(update: Update, context: ContextTyp
         safe_fullname = html.escape(full_name)
         
         message += f"""
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-MÃ£: <code>VER{ver.id}</code>
+━━━━━━━━━━━━━━━━━━━━━
+Mã: <code>VER{ver.id}</code>
 User: {safe_fullname} ({safe_username})
-Sá»‘ tiá»n: {ver.amount:,.0f} VND
-Thá»i gian: {ver.created_at.strftime('%d/%m/%Y %H:%M')}
+Số tiền: {ver.amount:,.0f} VND
+Thời gian: {ver.created_at.strftime('%d/%m/%Y %H:%M')}
 
-Duyá»‡t: /payment_approve VER{ver.id}
-Tá»« chá»‘i: /payment_reject VER{ver.id}
+Duyệt: /payment_approve VER{ver.id}
+Từ chối: /payment_reject VER{ver.id}
 """
     
     db.close()
@@ -220,7 +220,7 @@ Tá»« chá»‘i: /payment_reject VER{ver.id}
         parse_mode="HTML"
     )
     
-    await query.answer("âœ… ÄÃ£ gá»­i danh sÃ¡ch!")
+    await query.answer("✅ Đã gửi danh sách!")
 
 
 async def log_payment_to_sheets(
@@ -248,9 +248,9 @@ async def log_payment_to_sheets(
             return
         
         # Open the SUPPORT spreadsheet (the one user shared)
-        sheet_id = settings.SUPPORT_SHEET_ID
+        sheet_id = settings.ADMIN_SUPPORT_SHEET_ID
         if not sheet_id:
-            logger.warning("No SUPPORT_SHEET_ID configured")
+            logger.warning("No ADMIN_SUPPORT_SHEET_ID configured")
             return
         
         spreadsheet = client.open_by_key(sheet_id)
@@ -262,9 +262,9 @@ async def log_payment_to_sheets(
             # Create new worksheet with headers (11 columns)
             worksheet = spreadsheet.add_worksheet(title="Payments", rows=1000, cols=11)
             worksheet.update('A1:K1', [[
-                'MÃ£ XÃ¡c Nháº­n', 'User ID', 'Username', 'Há» TÃªn', 
-                'Sá»‘ Tiá»n (VND)', 'Tráº¡ng ThÃ¡i', 'NgÃ y Táº¡o', 'NgÃ y Duyá»‡t', 
-                'Admin Duyá»‡t', 'Ghi ChÃº', 'GÃ³i'
+                'Mã Xác Nhận', 'User ID', 'Username', 'Họ Tên', 
+                'Số Tiền (VND)', 'Trạng Thái', 'Ngày Tạo', 'Ngày Duyệt', 
+                'Admin Duyệt', 'Ghi Chú', 'Gói'
             ]])
             # Format header
             worksheet.format('A1:K1', {
@@ -284,17 +284,17 @@ async def log_payment_to_sheets(
         
         # Prepare row data (11 columns to match header)
         row_data = [
-            verification_id,                                            # A: MÃ£ XÃ¡c Nháº­n
+            verification_id,                                            # A: Mã Xác Nhận
             str(user_id),                                              # B: User ID
             username or "N/A",                                         # C: Username
-            full_name or "N/A",                                        # D: Há» TÃªn
-            amount,                                                    # E: Sá»‘ Tiá»n (VND)
-            status,                                                    # F: Tráº¡ng ThÃ¡i
-            created_at.strftime('%Y-%m-%d %H:%M:%S'),                 # G: NgÃ y Táº¡o
-            approved_at.strftime('%Y-%m-%d %H:%M:%S') if approved_at else "",  # H: NgÃ y Duyá»‡t
-            str(approved_by),                                          # I: Admin Duyá»‡t
-            notes or "",                                               # J: Ghi ChÃº (rejection reason)
-            "PREMIUM_365" if status == "APPROVED" else ""              # K: GÃ³i (only for approved)
+            full_name or "N/A",                                        # D: Họ Tên
+            amount,                                                    # E: Số Tiền (VND)
+            status,                                                    # F: Trạng Thái
+            created_at.strftime('%Y-%m-%d %H:%M:%S'),                 # G: Ngày Tạo
+            approved_at.strftime('%Y-%m-%d %H:%M:%S') if approved_at else "",  # H: Ngày Duyệt
+            str(approved_by),                                          # I: Admin Duyệt
+            notes or "",                                               # J: Ghi Chú (rejection reason)
+            "PREMIUM_365" if status == "APPROVED" else ""              # K: Gói (only for approved)
         ]
         
         # Check if verification_id already exists in sheet
@@ -303,7 +303,7 @@ async def log_payment_to_sheets(
             existing_row = None
             
             for idx, row in enumerate(all_values[1:], start=2):  # Skip header (row 1)
-                if row and row[0] == verification_id:  # Column A = MÃ£ XÃ¡c Nháº­n
+                if row and row[0] == verification_id:  # Column A = Mã Xác Nhận
                     existing_row = idx
                     break
             
@@ -355,12 +355,12 @@ async def log_payment_to_sheets(
                     }
                 }]
             })
-            logger.info(f"âœ… Applied color formatting for {status} status")
+            logger.info(f"✅ Applied color formatting for {status} status")
             
         except Exception as color_error:
             logger.warning(f"Failed to apply color formatting: {color_error}")
         
-        logger.info(f"âœ… Payment {verification_id} logged to Google Sheets successfully")
+        logger.info(f"✅ Payment {verification_id} logged to Google Sheets successfully")
         
     except Exception as e:
         logger.error(f"Failed to log payment to sheets: {e}", exc_info=True)

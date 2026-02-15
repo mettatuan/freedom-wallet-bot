@@ -39,21 +39,21 @@ async def support_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /support command - Start support ticket flow"""
     
     support_text = """
-ðŸ†˜ **LiÃªn Há»‡ Há»— Trá»£**
+🆘 **Liên Hệ Hỗ Trợ**
 
-Báº¡n gáº·p váº¥n Ä‘á» cáº§n há»— trá»£ tá»« team?
+Bạn gặp vấn đề cần hỗ trợ từ team?
 
-ðŸ“ **Vui lÃ²ng mÃ´ táº£ váº¥n Ä‘á» chi tiáº¿t:**
-â€¢ Báº¡n Ä‘ang lÃ m gÃ¬?
-â€¢ Lá»—i gÃ¬ xáº£y ra?
-â€¢ áº¢nh chá»¥p mÃ n hÃ¬nh (náº¿u cÃ³)
+📝 **Vui lòng mô tả vấn đề chi tiết:**
+• Bạn đang làm gì?
+• Lỗi gì xảy ra?
+• Ảnh chụp màn hình (nếu có)
 
-ðŸ’¬ **Gá»­i tin nháº¯n tiáº¿p theo Ä‘á»ƒ táº¡o ticket!**
+💬 **Gửi tin nhắn tiếp theo để tạo ticket!**
 
-â±ï¸ *Team sáº½ pháº£n há»“i trong 24h lÃ m viá»‡c*
+⏱️ *Team sẽ phản hồi trong 24h làm việc*
 """
     
-    keyboard = [[InlineKeyboardButton("âŒ Há»§y", callback_data="cancel_support")]]
+    keyboard = [[InlineKeyboardButton("❌ Hủy", callback_data="cancel_support")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
@@ -80,8 +80,8 @@ async def save_support_ticket(update: Update, context: ContextTypes.DEFAULT_TYPE
         # Save to Google Sheets
         client = get_sheets_client()
         
-        if client and settings.SUPPORT_SHEET_ID:
-            sheet = client.open_by_key(settings.SUPPORT_SHEET_ID)
+        if client and settings.ADMIN_SUPPORT_SHEET_ID:
+            sheet = client.open_by_key(settings.ADMIN_SUPPORT_SHEET_ID)
             worksheet = sheet.worksheet(settings.SUPPORT_SHEET_NAME)
             
             # Append row: [Ticket ID, Timestamp, User ID, Username, Full Name, Message, Status]
@@ -100,36 +100,36 @@ async def save_support_ticket(update: Update, context: ContextTypes.DEFAULT_TYPE
             
             # Success response
             success_text = f"""
-âœ… **ÄÃ£ ghi nháº­n yÃªu cáº§u há»— trá»£!**
+✅ **Đã ghi nhận yêu cầu hỗ trợ!**
 
-ðŸŽ« **Ticket ID:** #{ticket_id}
-ðŸ“… **Thá»i gian:** {timestamp}
+🎫 **Ticket ID:** #{ticket_id}
+📅 **Thời gian:** {timestamp}
 
-ðŸ“§ **Ná»™i dung:**
+📧 **Nội dung:**
 "{message[:200]}{'...' if len(message) > 200 else ''}"
 
-â±ï¸ *Team sáº½ xem xÃ©t vÃ  pháº£n há»“i trong 24h lÃ m viá»‡c.*
+⏱️ *Team sẽ xem xét và phản hồi trong 24h làm việc.*
 
-ðŸ’¬ Báº¡n cÃ³ thá»ƒ tiáº¿p tá»¥c há»i bot hoáº·c chá» pháº£n há»“i qua Telegram!
+💬 Bạn có thể tiếp tục hỏi bot hoặc chờ phản hồi qua Telegram!
 
-ðŸ™ Cáº£m Æ¡n báº¡n Ä‘Ã£ sá»­ dá»¥ng Freedom Wallet!
+🙏 Cảm ơn bạn đã sử dụng Freedom Wallet!
 """
             
         else:
             # Fallback if Sheets not configured
             logger.warning("Google Sheets not configured, ticket saved to logs only")
             success_text = f"""
-âœ… **ÄÃ£ ghi nháº­n yÃªu cáº§u!**
+✅ **Đã ghi nhận yêu cầu!**
 
-ðŸŽ« **Ticket ID:** #{ticket_id}
+🎫 **Ticket ID:** #{ticket_id}
 
-âš ï¸ *Há»‡ thá»‘ng support táº¡m thá»i báº£o trÃ¬. Team sáº½ liÃªn há»‡ báº¡n sá»›m nháº¥t!*
+⚠️ *Hệ thống support tạm thời bảo trì. Team sẽ liên hệ bạn sớm nhất!*
 
-ðŸ“§ Email: support@freedomwallet.com
-ðŸ’¬ Telegram: @FreedomWalletSupport
+📧 Email: support@freedomwallet.com
+💬 Telegram: @FreedomWalletSupport
 """
         
-        keyboard = [[InlineKeyboardButton("ðŸ  Vá» trang chá»§", callback_data="start")]]
+        keyboard = [[InlineKeyboardButton("🏠 Về trang chủ", callback_data="start")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await update.message.reply_text(
@@ -144,13 +144,13 @@ async def save_support_ticket(update: Update, context: ContextTypes.DEFAULT_TYPE
         logger.error(f"Failed to save support ticket: {e}")
         
         error_text = """
-ðŸ˜“ **Xin lá»—i, cÃ³ lá»—i xáº£y ra khi lÆ°u ticket.**
+😓 **Xin lỗi, có lỗi xảy ra khi lưu ticket.**
 
-ðŸ”„ Vui lÃ²ng thá»­ láº¡i sau hoáº·c liÃªn há»‡:
-ðŸ“§ Email: support@freedomwallet.com
-ðŸ’¬ Telegram: @FreedomWalletSupport
+🔄 Vui lòng thử lại sau hoặc liên hệ:
+📧 Email: support@freedomwallet.com
+💬 Telegram: @FreedomWalletSupport
 
-ðŸ™ Xin lá»—i vÃ¬ sá»± báº¥t tiá»‡n!
+🙏 Xin lỗi vì sự bất tiện!
 """
         
         await update.message.reply_text(error_text, parse_mode="Markdown")
@@ -164,7 +164,7 @@ async def cancel_support(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     await query.edit_message_text(
-        "âŒ **ÄÃ£ há»§y táº¡o ticket há»— trá»£.**\n\nðŸ’¬ Báº¡n cÃ³ thá»ƒ tiáº¿p tá»¥c chat vá»›i bot hoáº·c dÃ¹ng /support náº¿u cáº§n!",
+        "❌ **Đã hủy tạo ticket hỗ trợ.**\n\n💬 Bạn có thể tiếp tục chat với bot hoặc dùng /support nếu cần!",
         parse_mode="Markdown"
     )
     

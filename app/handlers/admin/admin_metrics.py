@@ -23,13 +23,13 @@ async def admin_metrics_command(update: Update, context: ContextTypes.DEFAULT_TY
     user_id = update.effective_user.id
     
     if not is_admin(user_id):
-        await update.message.reply_text("âŒ Báº¡n khÃ´ng cÃ³ quyá»n sá»­ dá»¥ng lá»‡nh nÃ y.")
+        await update.message.reply_text("❌ Bạn không có quyền sử dụng lệnh này.")
         return
     
-    logger.info(f"ðŸ“Š Admin {user_id} requested metrics dashboard")
+    logger.info(f"📊 Admin {user_id} requested metrics dashboard")
     
     # Show loading message
-    loading_msg = await update.message.reply_text("â³ Äang tÃ­nh toÃ¡n metrics...")
+    loading_msg = await update.message.reply_text("⏳ Đang tính toán metrics...")
     
     try:
         # Get metrics (force fresh calculation)
@@ -42,12 +42,12 @@ async def admin_metrics_command(update: Update, context: ContextTypes.DEFAULT_TY
         # Create inline keyboard
         keyboard = [
             [
-                InlineKeyboardButton("ðŸ”„ Refresh", callback_data="admin_metrics_refresh"),
-                InlineKeyboardButton("ðŸ“Š Google Sheets", url="https://docs.google.com/spreadsheets/d/1-fruHaSlCKIOpIfU5Qrkns0ze3bx3E-mKUgQ5fUF-Hg/edit")
+                InlineKeyboardButton("🔄 Refresh", callback_data="admin_metrics_refresh"),
+                InlineKeyboardButton("📊 Google Sheets", url="https://docs.google.com/spreadsheets/d/1-fruHaSlCKIOpIfU5Qrkns0ze3bx3E-mKUgQ5fUF-Hg/edit")
             ],
             [
-                InlineKeyboardButton("ðŸ“… Weekly View", callback_data="admin_metrics_week"),
-                InlineKeyboardButton("ðŸ’¾ Export CSV", callback_data="admin_metrics_export")
+                InlineKeyboardButton("📅 Weekly View", callback_data="admin_metrics_week"),
+                InlineKeyboardButton("💾 Export CSV", callback_data="admin_metrics_export")
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -63,12 +63,12 @@ async def admin_metrics_command(update: Update, context: ContextTypes.DEFAULT_TY
             disable_web_page_preview=True
         )
         
-        logger.info(f"âœ… Metrics sent to admin {user_id}")
+        logger.info(f"✅ Metrics sent to admin {user_id}")
         
     except Exception as e:
-        logger.error(f"âŒ Error calculating metrics: {e}", exc_info=True)
+        logger.error(f"❌ Error calculating metrics: {e}", exc_info=True)
         await loading_msg.edit_text(
-            f"âŒ Lá»—i khi tÃ­nh toÃ¡n metrics:\n\n<code>{str(e)}</code>",
+            f"❌ Lỗi khi tính toán metrics:\n\n<code>{str(e)}</code>",
             parse_mode="HTML"
         )
 
@@ -81,18 +81,18 @@ async def admin_metrics_week_command(update: Update, context: ContextTypes.DEFAU
     user_id = update.effective_user.id
     
     if not is_admin(user_id):
-        await update.message.reply_text("âŒ Báº¡n khÃ´ng cÃ³ quyá»n sá»­ dá»¥ng lá»‡nh nÃ y.")
+        await update.message.reply_text("❌ Bạn không có quyền sử dụng lệnh này.")
         return
     
-    logger.info(f"ðŸ“… Admin {user_id} requested weekly summary")
+    logger.info(f"📅 Admin {user_id} requested weekly summary")
     
     # TODO: Implement weekly summary view
     # For now, redirect to daily view
     await update.message.reply_text(
-        "ðŸ“… <b>Weekly Summary</b>\n\n"
-        "TÃ­nh nÄƒng nÃ y Ä‘ang Ä‘Æ°á»£c phÃ¡t triá»ƒn.\n"
-        "Hiá»‡n táº¡i vui lÃ²ng xem dashboard hÃ ng ngÃ y vá»›i /admin_metrics\n\n"
-        "Hoáº·c truy cáº­p Google Sheets Ä‘á»ƒ xem weekly summary:\n"
+        "📅 <b>Weekly Summary</b>\n\n"
+        "Tính năng này đang được phát triển.\n"
+        "Hiện tại vui lòng xem dashboard hàng ngày với /admin_metrics\n\n"
+        "Hoặc truy cập Google Sheets để xem weekly summary:\n"
         "https://docs.google.com/spreadsheets/d/1-fruHaSlCKIOpIfU5Qrkns0ze3bx3E-mKUgQ5fUF-Hg/edit",
         parse_mode="HTML",
         disable_web_page_preview=True
@@ -107,24 +107,24 @@ async def admin_metrics_export_command(update: Update, context: ContextTypes.DEF
     user_id = update.effective_user.id
     
     if not is_admin(user_id):
-        await update.message.reply_text("âŒ Báº¡n khÃ´ng cÃ³ quyá»n sá»­ dá»¥ng lá»‡nh nÃ y.")
+        await update.message.reply_text("❌ Bạn không có quyền sử dụng lệnh này.")
         return
     
-    logger.info(f"ðŸ’¾ Admin {user_id} requested CSV export")
+    logger.info(f"💾 Admin {user_id} requested CSV export")
     
     # TODO: Implement CSV export
     # For now, provide instructions
     await update.message.reply_text(
-        "ðŸ’¾ <b>Export Metrics</b>\n\n"
-        "Äá»ƒ export dá»¯ liá»‡u, vui lÃ²ng:\n\n"
-        "1. Truy cáº­p Google Sheets:\n"
+        "💾 <b>Export Metrics</b>\n\n"
+        "Để export dữ liệu, vui lòng:\n\n"
+        "1. Truy cập Google Sheets:\n"
         "https://docs.google.com/spreadsheets/d/1-fruHaSlCKIOpIfU5Qrkns0ze3bx3E-mKUgQ5fUF-Hg/edit\n\n"
-        "2. Click File â†’ Download â†’ CSV\n\n"
-        "3. Chá»n sheet cáº§n export:\n"
-        "   â€¢ Sheet 1: Daily Metrics\n"
-        "   â€¢ Sheet 5: Weekly Summary\n"
-        "   â€¢ Sheet 6: Raw Data Log\n\n"
-        "âš ï¸ Tá»± Ä‘á»™ng export qua Telegram sáº½ Ä‘Æ°á»£c thÃªm trong Phase 2.",
+        "2. Click File → Download → CSV\n\n"
+        "3. Chọn sheet cần export:\n"
+        "   • Sheet 1: Daily Metrics\n"
+        "   • Sheet 5: Weekly Summary\n"
+        "   • Sheet 6: Raw Data Log\n\n"
+        "⚠️ Tự động export qua Telegram sẽ được thêm trong Phase 2.",
         parse_mode="HTML",
         disable_web_page_preview=True
     )
@@ -138,41 +138,41 @@ async def admin_metrics_reset_command(update: Update, context: ContextTypes.DEFA
     user_id = update.effective_user.id
     
     if not is_admin(user_id):
-        await update.message.reply_text("âŒ Báº¡n khÃ´ng cÃ³ quyá»n sá»­ dá»¥ng lá»‡nh nÃ y.")
+        await update.message.reply_text("❌ Bạn không có quyền sử dụng lệnh này.")
         return
     
-    logger.warning(f"ðŸ”„ Admin {user_id} requested cache reset")
+    logger.warning(f"🔄 Admin {user_id} requested cache reset")
     
     try:
         # Clear cache
         metrics_service.cache.clear()
         
         await update.message.reply_text(
-            "âœ… <b>Cache Cleared</b>\n\n"
-            "Metrics cache Ä‘Ã£ Ä‘Æ°á»£c xÃ³a.\n"
-            "Láº§n tÃ­nh toÃ¡n tiáº¿p theo sáº½ láº¥y dá»¯ liá»‡u má»›i tá»« database.\n\n"
-            "DÃ¹ng /admin_metrics Ä‘á»ƒ xem metrics má»›i.",
+            "✅ <b>Cache Cleared</b>\n\n"
+            "Metrics cache đã được xóa.\n"
+            "Lần tính toán tiếp theo sẽ lấy dữ liệu mới từ database.\n\n"
+            "Dùng /admin_metrics để xem metrics mới.",
             parse_mode="HTML"
         )
         
-        logger.info(f"âœ… Cache cleared by admin {user_id}")
+        logger.info(f"✅ Cache cleared by admin {user_id}")
         
     except Exception as e:
-        logger.error(f"âŒ Error clearing cache: {e}", exc_info=True)
+        logger.error(f"❌ Error clearing cache: {e}", exc_info=True)
         await update.message.reply_text(
-            f"âŒ Lá»—i khi xÃ³a cache:\n\n<code>{str(e)}</code>",
+            f"❌ Lỗi khi xóa cache:\n\n<code>{str(e)}</code>",
             parse_mode="HTML"
         )
 
 
 def register_admin_metrics_handlers(application):
     """Register all admin metrics handlers"""
-    logger.info("ðŸ“Š Registering admin metrics handlers...")
+    logger.info("📊 Registering admin metrics handlers...")
     
     application.add_handler(CommandHandler("admin_metrics", admin_metrics_command))
     application.add_handler(CommandHandler("admin_metrics_week", admin_metrics_week_command))
     application.add_handler(CommandHandler("admin_metrics_export", admin_metrics_export_command))
     application.add_handler(CommandHandler("admin_metrics_reset", admin_metrics_reset_command))
     
-    logger.info("âœ… Admin metrics handlers registered")
+    logger.info("✅ Admin metrics handlers registered")
 

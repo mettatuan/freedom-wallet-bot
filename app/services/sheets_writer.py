@@ -35,9 +35,9 @@ class SheetsWriter:
             creds_path = os.getenv('GOOGLE_SHEETS_CREDENTIALS', 'google_service_account.json')
             creds = Credentials.from_service_account_file(creds_path, scopes=self.SCOPES)
             self.service = build('sheets', 'v4', credentials=creds)
-            logger.info(f"âœ… Sheets writer initialized for {self.spreadsheet_id[:10]}...")
+            logger.info(f"✅ Sheets writer initialized for {self.spreadsheet_id[:10]}...")
         except Exception as e:
-            logger.error(f"âŒ Failed to initialize Sheets writer: {e}")
+            logger.error(f"❌ Failed to initialize Sheets writer: {e}")
             raise
     
     async def test_write_permission(self) -> bool:
@@ -63,17 +63,17 @@ class SheetsWriter:
             # Remove test row immediately
             # (In production, just test read permission instead)
             
-            logger.info(f"âœ… Write permission confirmed: {self.spreadsheet_id[:10]}...")
+            logger.info(f"✅ Write permission confirmed: {self.spreadsheet_id[:10]}...")
             return True
             
         except HttpError as e:
             if e.resp.status == 403:
-                logger.warning(f"âš ï¸ Permission denied: Need EDITOR access")
+                logger.warning(f"⚠️ Permission denied: Need EDITOR access")
             else:
-                logger.error(f"âŒ HTTP Error {e.resp.status}: {e}")
+                logger.error(f"❌ HTTP Error {e.resp.status}: {e}")
             return False
         except Exception as e:
-            logger.error(f"âŒ Write permission test failed: {e}")
+            logger.error(f"❌ Write permission test failed: {e}")
             return False
     
     async def add_transaction(self, data: Dict) -> bool:
@@ -91,7 +91,7 @@ class SheetsWriter:
             # Assuming columns: Date | Category | Amount | Jar | Note | Method
             row = [
                 data.get('date', datetime.now().strftime('%d/%m/%Y')),
-                data.get('category', 'KhÃ¡c'),
+                data.get('category', 'Khác'),
                 data.get('amount', 0),
                 data.get('jar', 'Necessities'),
                 data.get('note', ''),
@@ -114,14 +114,14 @@ class SheetsWriter:
             updated_rows = updates.get('updatedRows', 0)
             
             if updated_rows > 0:
-                logger.info(f"âœ… Transaction added: {data.get('amount')} - {data.get('category')}")
+                logger.info(f"✅ Transaction added: {data.get('amount')} - {data.get('category')}")
                 return True
             else:
-                logger.warning(f"âš ï¸ No rows updated")
+                logger.warning(f"⚠️ No rows updated")
                 return False
             
         except Exception as e:
-            logger.error(f"âŒ Failed to add transaction: {e}")
+            logger.error(f"❌ Failed to add transaction: {e}")
             return False
     
     async def add_expense(self, amount: float, category: str, note: str = "", 
@@ -154,7 +154,7 @@ class SheetsWriter:
         
         return await self.add_transaction(data)
     
-    async def add_income(self, amount: float, category: str = "LÆ°Æ¡ng", 
+    async def add_income(self, amount: float, category: str = "Lương", 
                          note: str = "", method: str = "Bot") -> bool:
         """
         Quick income recording

@@ -48,18 +48,18 @@ class Analytics:
         
         ROI DASHBOARD EVENTS:
         - mystatus_viewed: User opened /mystatus
-        - roi_detail_viewed: User clicked "Xem ROI chi tiáº¿t"
-        - optimization_tips_viewed: User clicked "Tá»‘i Æ°u sá»­ dá»¥ng"
+        - roi_detail_viewed: User clicked "Xem ROI chi tiết"
+        - optimization_tips_viewed: User clicked "Tối ưu sử dụng"
         - upgrade_from_status_clicked: User clicked upgrade from /mystatus
         
         MENU EVENTS:
         - premium_menu_opened: User opened Premium menu
-        - menu_expense_clicked: User clicked "Ghi chi tiÃªu"
-        - menu_summary_clicked: User clicked "TÃ¬nh hÃ¬nh"
-        - menu_analysis_clicked: User clicked "PhÃ¢n tÃ­ch"
-        - menu_recommendation_clicked: User clicked "Gá»£i Ã½"
+        - menu_expense_clicked: User clicked "Ghi chi tiêu"
+        - menu_summary_clicked: User clicked "Tình hình"
+        - menu_analysis_clicked: User clicked "Phân tích"
+        - menu_recommendation_clicked: User clicked "Gợi ý"
         - menu_setup_clicked: User clicked "Setup"
-        - menu_support_clicked: User clicked "Há»— trá»£"
+        - menu_support_clicked: User clicked "Hỗ trợ"
         
         GENERAL:
         - message_sent: User sends message
@@ -125,9 +125,9 @@ class Analytics:
         Calculate key metrics
         
         Metrics:
-        - trial_conversion: % of chat_limit_hit â†’ trial_started
+        - trial_conversion: % of chat_limit_hit → trial_started
         - premium_dau: Daily active Premium users
-        - recommendation_ctr: % Premium users clicking "Gá»£i Ã½"
+        - recommendation_ctr: % Premium users clicking "Gợi ý"
         """
         events = Analytics.get_events()
         

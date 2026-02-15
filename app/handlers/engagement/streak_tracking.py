@@ -1,6 +1,6 @@
 """
-Streak Tracking System - Theo dÃµi vÃ  cáº­p nháº­t streak
-PhÃ¡t hiá»‡n khi user ghi giao dá»‹ch vÃ  update streak
+Streak Tracking System - Theo dõi và cập nhật streak
+Phát hiện khi user ghi giao dịch và update streak
 """
 from loguru import logger
 from datetime import datetime, timedelta

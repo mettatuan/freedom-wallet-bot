@@ -20,9 +20,9 @@ async def handle_quick_expense_webhook(update: Update, context: ContextTypes.DEF
     Parse and send expense to Google Apps Script webhook
     
     Examples:
-    - "chi 50k tiá»n Äƒn"
-    - "mua sáº¯m 200k"
-    - "xÄƒng xe 150000 Ä‘á»• xÄƒng Shell"
+    - "chi 50k tiền ăn"
+    - "mua sắm 200k"
+    - "xăng xe 150000 đổ xăng Shell"
     """
     user_id = update.effective_user.id
     user = await get_user_by_id(user_id)
@@ -31,20 +31,20 @@ async def handle_quick_expense_webhook(update: Update, context: ContextTypes.DEF
     # Check Premium
     if tier not in [SubscriptionTier.PREMIUM, SubscriptionTier.TRIAL]:
         await update.message.reply_text(
-            "ðŸ”’ **TÃ­nh nÄƒng Premium**\n\n"
-            "Quick Record chá»‰ dÃ nh cho Premium/Trial.\n\n"
-            "ðŸŽ DÃ¹ng thá»­ 7 ngÃ y FREE: /start"
+            "🔒 **Tính năng Premium**\n\n"
+            "Quick Record chỉ dành cho Premium/Trial.\n\n"
+            "🎁 Dùng thử 7 ngày FREE: /start"
         )
         return
     
     # Check if webhook configured
     if not user.spreadsheet_id or not user.webhook_url:
         await update.message.reply_text(
-            "ðŸ“Š **ChÆ°a cáº¥u hÃ¬nh Quick Record**\n\n"
-            "Äá»ƒ ghi chi tiÃªu tá»± Ä‘á»™ng:\n"
-            "1. CÃ i Ä‘áº·t Apps Script: /setupwebhook\n"
-            "2. Hoáº·c xem hÆ°á»›ng dáº«n: /quickrecord_help\n\n"
-            "ðŸ’¡ PhÆ°Æ¡ng phÃ¡p nÃ y Báº¢O Máº¬T hÆ¡n (bot khÃ´ng cáº§n quyá»n Editor)"
+            "📊 **Chưa cấu hình Quick Record**\n\n"
+            "Để ghi chi tiêu tự động:\n"
+            "1. Cài đặt Apps Script: /setupwebhook\n"
+            "2. Hoặc xem hướng dẫn: /quickrecord_help\n\n"
+            "💡 Phương pháp này BẢO MẬT hơn (bot không cần quyền Editor)"
         )
         return
     
@@ -54,12 +54,12 @@ async def handle_quick_expense_webhook(update: Update, context: ContextTypes.DEF
     
     if not parsed:
         await update.message.reply_text(
-            "âŒ **KhÃ´ng hiá»ƒu format!**\n\n"
-            "Thá»­ láº¡i vá»›i format:\n"
-            "â€¢ `chi 50k tiá»n Äƒn`\n"
-            "â€¢ `mua sáº¯m 200k`\n"
-            "â€¢ `xÄƒng xe 150000 Ä‘á»• táº¡i Shell`\n\n"
-            "Hoáº·c dÃ¹ng: /record"
+            "❌ **Không hiểu format!**\n\n"
+            "Thử lại với format:\n"
+            "• `chi 50k tiền ăn`\n"
+            "• `mua sắm 200k`\n"
+            "• `xăng xe 150000 đổ tại Shell`\n\n"
+            "Hoặc dùng: /record"
         )
         return
     
@@ -69,11 +69,11 @@ async def handle_quick_expense_webhook(update: Update, context: ContextTypes.DEF
     
     # Confirm before sending
     await update.message.reply_text(
-        f"ðŸ“ **XÃ¡c nháº­n ghi:**\n\n"
-        f"ðŸ’¸ Sá»‘ tiá»n: {amount:,.0f} VNÄ\n"
-        f"ðŸ“‚ Danh má»¥c: {category}\n"
-        f"ðŸ“Œ Ghi chÃº: {note if note else '(trá»‘ng)'}\n\n"
-        f"ðŸ”„ Äang gá»­i tá»›i Google Sheets..."
+        f"📝 **Xác nhận ghi:**\n\n"
+        f"💸 Số tiền: {amount:,.0f} VNĐ\n"
+        f"📂 Danh mục: {category}\n"
+        f"📌 Ghi chú: {note if note else '(trống)'}\n\n"
+        f"🔄 Đang gửi tới Google Sheets..."
     )
     
     # Send to webhook
@@ -89,10 +89,10 @@ async def handle_quick_expense_webhook(update: Update, context: ContextTypes.DEF
         
         if success:
             await update.message.reply_text(
-                f"âœ… **ÄÃ£ ghi thÃ nh cÃ´ng!**\n\n"
-                f"ðŸ’¸ Chi: {amount:,.0f} VNÄ\n"
-                f"ðŸ“‚ {category}\n\n"
-                f"ðŸ“Š Xem sá»‘ dÆ°: /balance"
+                f"✅ **Đã ghi thành công!**\n\n"
+                f"💸 Chi: {amount:,.0f} VNĐ\n"
+                f"📂 {category}\n\n"
+                f"📊 Xem số dư: /balance"
             )
             
             # Track usage
@@ -105,19 +105,19 @@ async def handle_quick_expense_webhook(update: Update, context: ContextTypes.DEF
             logger.info(f"User {user_id} recorded expense via webhook: {amount} - {category}")
         else:
             await update.message.reply_text(
-                f"âŒ **Lá»—i ghi dá»¯ liá»‡u!**\n\n"
-                f"Chi tiáº¿t: {message}\n\n"
-                f"Kiá»ƒm tra:\n"
-                f"â€¢ Apps Script Ä‘ang hoáº¡t Ä‘á»™ng?\n"
-                f"â€¢ Webhook URL cÃ²n Ä‘Ãºng?\n\n"
-                f"CÃ i láº¡i: /setupwebhook"
+                f"❌ **Lỗi ghi dữ liệu!**\n\n"
+                f"Chi tiết: {message}\n\n"
+                f"Kiểm tra:\n"
+                f"• Apps Script đang hoạt động?\n"
+                f"• Webhook URL còn đúng?\n\n"
+                f"Cài lại: /setupwebhook"
             )
     
     except Exception as e:
         await update.message.reply_text(
-            f"âŒ **Lá»—i káº¿t ná»‘i!**\n\n"
-            f"Chi tiáº¿t: {str(e)}\n\n"
-            f"LiÃªn há»‡ /support"
+            f"❌ **Lỗi kết nối!**\n\n"
+            f"Chi tiết: {str(e)}\n\n"
+            f"Liên hệ /support"
         )
         logger.error(f"Webhook error for user {user_id}: {e}")
 
@@ -169,23 +169,23 @@ async def send_transaction_to_webhook(
                     result = await response.json()
                     
                     if result.get('success'):
-                        logger.info(f"âœ… Webhook success for user {user_id}")
+                        logger.info(f"✅ Webhook success for user {user_id}")
                         return True, result.get('message', 'Success')
                     else:
                         error_msg = result.get('error', 'Unknown error')
-                        logger.error(f"âŒ Webhook returned error: {error_msg}")
+                        logger.error(f"❌ Webhook returned error: {error_msg}")
                         return False, error_msg
                 else:
                     error_msg = f"HTTP {response.status}"
-                    logger.error(f"âŒ Webhook HTTP error: {error_msg}")
+                    logger.error(f"❌ Webhook HTTP error: {error_msg}")
                     return False, error_msg
     
     except aiohttp.ClientTimeout:
-        logger.error(f"âŒ Webhook timeout for user {user_id}")
-        return False, "Timeout - Apps Script khÃ´ng pháº£n há»“i"
+        logger.error(f"❌ Webhook timeout for user {user_id}")
+        return False, "Timeout - Apps Script không phản hồi"
     
     except Exception as e:
-        logger.error(f"âŒ Webhook exception: {e}")
+        logger.error(f"❌ Webhook exception: {e}")
         return False, str(e)
 
 
@@ -198,19 +198,19 @@ async def handle_setup_webhook(update: Update, context: ContextTypes.DEFAULT_TYP
     tier = SubscriptionManager.get_user_tier(user)
     
     if tier not in [SubscriptionTier.PREMIUM, SubscriptionTier.TRIAL]:
-        await update.message.reply_text("ðŸ”’ TÃ­nh nÄƒng Premium only")
+        await update.message.reply_text("🔒 Tính năng Premium only")
         return
     
     message = """
-ðŸ“± **CÃ€I Äáº¶T QUICK RECORD QUA WEBHOOK**
+📱 **CÀI ĐẶT QUICK RECORD QUA WEBHOOK**
 
-**BÆ°á»›c 1: Má»Ÿ Google Sheets cá»§a báº¡n**
-VÃ o Sheet Freedom Wallet Ä‘Ã£ copy
+**Bước 1: Mở Google Sheets của bạn**
+Vào Sheet Freedom Wallet đã copy
 
-**BÆ°á»›c 2: VÃ o Extensions â†’ Apps Script**
-Click menu Extensions â†’ Apps Script
+**Bước 2: Vào Extensions → Apps Script**
+Click menu Extensions → Apps Script
 
-**BÆ°á»›c 3: Copy code nÃ y vÃ o Apps Script:**
+**Bước 3: Copy code này vào Apps Script:**
 ```javascript
 function doPost(e) {
   try {
@@ -255,27 +255,27 @@ function doPost(e) {
 }
 ```
 
-**BÆ°á»›c 4: Deploy as Web App**
-â€¢ Click Deploy â†’ New deployment
-â€¢ Select type: Web app
-â€¢ Execute as: Me
-â€¢ Who has access: Anyone
-â€¢ Click Deploy
-â€¢ Copy Web App URL
+**Bước 4: Deploy as Web App**
+• Click Deploy → New deployment
+• Select type: Web app
+• Execute as: Me
+• Who has access: Anyone
+• Click Deploy
+• Copy Web App URL
 
-**BÆ°á»›c 5: Gá»­i URL cho bot**
-GÃµ: `/setwebhook [URL]`
+**Bước 5: Gửi URL cho bot**
+Gõ: `/setwebhook [URL]`
 
-VÃ­ dá»¥:
+Ví dụ:
 `/setwebhook https://script.google.com/macros/s/ABC123.../exec`
 
-âœ… **Xong! Giá» báº¡n cÃ³ thá»ƒ gÃµ:**
-â€¢ "chi 50k tiá»n Äƒn"
-â€¢ "mua sáº¯m 200k"
+✅ **Xong! Giờ bạn có thể gõ:**
+• "chi 50k tiền ăn"
+• "mua sắm 200k"
 
-Bot sáº½ gá»­i tá»›i Apps Script â†’ Tá»± Ä‘á»™ng ghi vÃ o Sheets! ðŸŽ‰
+Bot sẽ gửi tới Apps Script → Tự động ghi vào Sheets! 🎉
 
-ðŸ”’ **Báº£o máº­t:** Bot KHÃ”NG cÃ³ quyá»n ghi, chá»‰ gá»­i request. Apps Script cháº¡y dÆ°á»›i quyá»n Báº N.
+🔒 **Bảo mật:** Bot KHÔNG có quyền ghi, chỉ gửi request. Apps Script chạy dưới quyền BẠN.
 """
     
     await update.message.reply_text(message, parse_mode='Markdown')
@@ -294,16 +294,16 @@ async def handle_set_webhook(update: Update, context: ContextTypes.DEFAULT_TYPE)
     tier = SubscriptionManager.get_user_tier(user)
     
     if tier not in [SubscriptionTier.PREMIUM, SubscriptionTier.TRIAL]:
-        await update.message.reply_text("ðŸ”’ Premium only")
+        await update.message.reply_text("🔒 Premium only")
         return
     
     # Parse webhook URL
     if not context.args or len(context.args) < 1:
         await update.message.reply_text(
-            "âŒ **Thiáº¿u URL!**\n\n"
-            "CÃ¡ch dÃ¹ng:\n"
+            "❌ **Thiếu URL!**\n\n"
+            "Cách dùng:\n"
             "`/setwebhook https://script.google.com/macros/s/ABC.../exec`\n\n"
-            "Xem hÆ°á»›ng dáº«n: /setupwebhook"
+            "Xem hướng dẫn: /setupwebhook"
         )
         return
     
@@ -312,14 +312,14 @@ async def handle_set_webhook(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Validate URL
     if not webhook_url.startswith('https://script.google.com'):
         await update.message.reply_text(
-            "âŒ **URL khÃ´ng há»£p lá»‡!**\n\n"
-            "URL pháº£i báº¯t Ä‘áº§u báº±ng:\n"
+            "❌ **URL không hợp lệ!**\n\n"
+            "URL phải bắt đầu bằng:\n"
             "`https://script.google.com/macros/s/...`"
         )
         return
     
     # Test webhook
-    await update.message.reply_text("ðŸ”„ Äang test webhook...")
+    await update.message.reply_text("🔄 Đang test webhook...")
     
     success, message = await send_transaction_to_webhook(
         webhook_url=webhook_url,
@@ -339,24 +339,24 @@ async def handle_set_webhook(update: Update, context: ContextTypes.DEFAULT_TYPE)
         db.close()
         
         await update.message.reply_text(
-            "âœ… **Káº¿t ná»‘i thÃ nh cÃ´ng!**\n\n"
-            "Webhook Ä‘Ã£ Ä‘Æ°á»£c lÆ°u.\n\n"
+            "✅ **Kết nối thành công!**\n\n"
+            "Webhook đã được lưu.\n\n"
             "Thá»­ ngay:\n"
-            "â€¢ `chi 50k tiá»n Äƒn`\n"
-            "â€¢ `mua sáº¯m 100k`\n\n"
-            "ðŸ“Š Xem sá»‘ dÆ°: /balance"
+            "• `chi 50k tiền ăn`\n"
+            "• `mua sắm 100k`\n\n"
+            "📊 Xem số dư: /balance"
         )
         
         Analytics.track_event(user_id, 'webhook_connected')
     else:
         await update.message.reply_text(
-            f"âŒ **Test tháº¥t báº¡i!**\n\n"
+            f"❌ **Test thất bại!**\n\n"
             f"Lá»—i: {message}\n\n"
-            f"Kiá»ƒm tra:\n"
-            f"â€¢ Deploy as Web App chÆ°a?\n"
-            f"â€¢ Execute as: Me\n"
-            f"â€¢ Who has access: Anyone\n\n"
-            f"Xem hÆ°á»›ng dáº«n: /setupwebhook"
+            f"Kiểm tra:\n"
+            f"• Deploy as Web App chưa?\n"
+            f"• Execute as: Me\n"
+            f"• Who has access: Anyone\n\n"
+            f"Xem hướng dẫn: /setupwebhook"
         )
 
 
@@ -365,9 +365,9 @@ def parse_expense_message(text: str) -> Optional[dict]:
     Parse natural language expense message
     
     Examples:
-    - "chi 50k tiá»n Äƒn" â†’ {amount: 50000, category: "tiá»n Äƒn"}
-    - "mua sáº¯m 200k quáº§n Ã¡o" â†’ {amount: 200000, category: "mua sáº¯m", note: "quáº§n Ã¡o"}
-    - "150000 xÄƒng xe" â†’ {amount: 150000, category: "xÄƒng xe"}
+    - "chi 50k tiền ăn" → {amount: 50000, category: "tiền ăn"}
+    - "mua sắm 200k quần áo" → {amount: 200000, category: "mua sắm", note: "quần áo"}
+    - "150000 xăng xe" → {amount: 150000, category: "xăng xe"}
     
     Returns:
         dict with amount, category, note or None if parse failed
@@ -393,7 +393,7 @@ def parse_expense_message(text: str) -> Optional[dict]:
     remaining = remaining.strip()
     
     # Remove common prefixes
-    prefixes = ['chi', 'mua', 'tráº£', 'thanh toÃ¡n']
+    prefixes = ['chi', 'mua', 'trả', 'thanh toán']
     for prefix in prefixes:
         if remaining.startswith(prefix):
             remaining = remaining[len(prefix):].strip()
@@ -403,7 +403,7 @@ def parse_expense_message(text: str) -> Optional[dict]:
     parts = remaining.split(maxsplit=2)
     
     if not parts:
-        category = "KhÃ¡c"
+        category = "Khác"
         note = ""
     elif len(parts) == 1:
         category = parts[0]
@@ -414,20 +414,20 @@ def parse_expense_message(text: str) -> Optional[dict]:
     
     # Map common categories
     category_map = {
-        'Äƒn': 'Ä‚n uá»‘ng',
-        'uá»‘ng': 'Ä‚n uá»‘ng',
-        'cÆ¡m': 'Ä‚n uá»‘ng',
+        'ăn': 'Ăn uống',
+        'uống': 'Ăn uống',
+        'cơm': 'Ăn uống',
         'cafe': 'Cafe',
-        'cÃ  phÃª': 'Cafe',
-        'xÄƒng': 'XÄƒng xe',
-        'xe': 'XÄƒng xe',
-        'Ä‘iá»‡n': 'HÃ³a Ä‘Æ¡n',
-        'nÆ°á»›c': 'HÃ³a Ä‘Æ¡n',
-        'internet': 'HÃ³a Ä‘Æ¡n',
-        'mua': 'Mua sáº¯m',
-        'sáº¯m': 'Mua sáº¯m',
-        'quáº§n': 'Quáº§n Ã¡o',
-        'Ã¡o': 'Quáº§n Ã¡o',
+        'cà phê': 'Cafe',
+        'xăng': 'Xăng xe',
+        'xe': 'Xăng xe',
+        'điện': 'Hóa đơn',
+        'nước': 'Hóa đơn',
+        'internet': 'Hóa đơn',
+        'mua': 'Mua sắm',
+        'sắm': 'Mua sắm',
+        'quần': 'Quần áo',
+        'áo': 'Quần áo',
     }
     
     for key, value in category_map.items():
@@ -451,12 +451,12 @@ def register_quick_record_webhook_handlers(application):
     application.add_handler(CommandHandler("setwebhook", handle_set_webhook))
     
     # Match expense messages (case-insensitive via (?i) flag)
-    expense_pattern = r'(?i)(?:chi|mua|tráº£|thanh toÃ¡n)?\s*\d+(?:[,\.]\d+)?\s*k?\s*.+'
+    expense_pattern = r'(?i)(?:chi|mua|trả|thanh toán)?\s*\d+(?:[,\.]\d+)?\s*k?\s*.+'
     
     application.add_handler(MessageHandler(
         filters.TEXT & filters.Regex(expense_pattern),
         handle_quick_expense_webhook
     ))
     
-    logger.info("âœ… Quick Record (webhook) handlers registered")
+    logger.info("✅ Quick Record (webhook) handlers registered")
 

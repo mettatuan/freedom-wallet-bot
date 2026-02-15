@@ -1,6 +1,6 @@
 """
 VIP Identity Tier Handler
-Rising Star (10 refs) â†’ Super VIP (50 refs) â†’ Legend (100 refs)
+Rising Star (10 refs) → Super VIP (50 refs) → Legend (100 refs)
 
 VIP = Identity Layer, NOT sales layer
 """
@@ -15,7 +15,7 @@ from datetime import datetime
 VIP_MILESTONES = {
     10: {
         'tier': 'RISING_STAR',
-        'name': 'â­ Rising Star',
+        'name': '⭐ Rising Star',
         'benefits': [
             'VIP Telegram group access',
             'Early access to beta features',
@@ -23,23 +23,23 @@ VIP_MILESTONES = {
             'Direct feedback channel'
         ],
         'message': """
-â­ðŸŽ‰ RISING STAR UNLOCKED!
+⭐🎉 RISING STAR UNLOCKED!
 
-Báº¡n Ä‘Ã£ giÃºp 10 ngÆ°á»i báº¯t Ä‘áº§u quáº£n lÃ½ tiá»n!
+Bạn đã giúp 10 người bắt đầu quản lý tiền!
 
-ðŸŽ¯ Báº¡n giá» lÃ  VIP Rising Star:
-â€¢ Truy cáº­p VIP Community group
-â€¢ Early access features má»›i
-â€¢ Voice trong roadmap sáº£n pháº©m
+🎯 Bạn giờ là VIP Rising Star:
+• Truy cập VIP Community group
+• Early access features mới
+• Voice trong roadmap sản phẩm
 
-Welcome to the inner circle! ðŸš€
+Welcome to the inner circle! 🚀
 
 [Join VIP Group] [Roadmap] [Badge]
 """
     },
     50: {
         'tier': 'SUPER_VIP',
-        'name': 'ðŸ† Super VIP',
+        'name': '🏆 Super VIP',
         'benefits': [
             'Premium 1 year FREE',
             'Founder office hours access',
@@ -47,24 +47,24 @@ Welcome to the inner circle! ðŸš€
             'Monthly strategy sessions'
         ],
         'message': """
-ðŸ†ðŸ”¥ SUPER VIP UNLOCKED!
+🏆🔥 SUPER VIP UNLOCKED!
 
-50 ngÆ°á»i! Báº¡n Ä‘Ã£ chá»©ng minh niá»m tin vÃ o Freedom Wallet!
+50 người! Bạn đã chứng minh niềm tin vào Freedom Wallet!
 
-ðŸŽ¯ Báº¡n giá» lÃ  Super VIP:
-â€¢ Premium 1 nÄƒm FREE (gift)
-â€¢ Direct line to founder
-â€¢ Feature voting rights
-â€¢ Exclusive training
+🎯 Bạn giờ là Super VIP:
+• Premium 1 năm FREE (gift)
+• Direct line to founder
+• Feature voting rights
+• Exclusive training
 
-You're now part of the core! ðŸ’Ž
+You're now part of the core! 💎
 
 [Activate Premium] [Founder AMA] [VIP Portal]
 """
     },
     100: {
         'tier': 'LEGEND',
-        'name': 'ðŸ‘‘ Legend',
+        'name': '👑 Legend',
         'benefits': [
             'Premium LIFETIME FREE',
             'Co-creator status',
@@ -72,17 +72,17 @@ You're now part of the core! ðŸ’Ž
             'Product advisory board'
         ],
         'message': """
-ðŸ‘‘âœ¨ LEGEND STATUS!
+👑✨ LEGEND STATUS!
 
-100 ngÆ°á»i! Báº¡n lÃ  Champion thá»±c thá»¥ cá»§a Freedom Wallet!
+100 người! Bạn là Champion thực thụ của Freedom Wallet!
 
-ðŸŽ¯ Báº¡n giá» lÃ  Legend:
-â€¢ Premium LIFETIME FREE
-â€¢ Co-creator credit
-â€¢ Annual VIP retreat
-â€¢ Advisory board seat
+🎯 Bạn giờ là Legend:
+• Premium LIFETIME FREE
+• Co-creator credit
+• Annual VIP retreat
+• Advisory board seat
 
-You've built something bigger! ðŸŒŸ
+You've built something bigger! 🌟
 
 [Activate Lifetime] [Legend Portal] [Impact]
 """
@@ -125,16 +125,16 @@ async def check_vip_milestone(user_id: int, context: ContextTypes.DEFAULT_TYPE):
         from app.utils.database import db_session
         db_session.commit()
         
-        logger.info(f"âœ… User {user_id} reached VIP milestone: {milestone['tier']} ({referral_count} refs)")
+        logger.info(f"✅ User {user_id} reached VIP milestone: {milestone['tier']} ({referral_count} refs)")
     except Exception as e:
-        logger.error(f"âŒ Failed to update VIP status for user {user_id}: {e}")
+        logger.error(f"❌ Failed to update VIP status for user {user_id}: {e}")
         return False
     
     # Send VIP unlock message
     keyboard = [
-        [InlineKeyboardButton("ðŸŽ Xem quyá»n lá»£i VIP", callback_data=f"vip_benefits_{milestone['tier']}")],
-        [InlineKeyboardButton("ðŸ‘¥ Join VIP Group", url="https://t.me/+vBZk4Kq59P9mMzY1")],
-        [InlineKeyboardButton("ðŸ—ºï¸ Xem Roadmap", callback_data="vip_roadmap")]
+        [InlineKeyboardButton("🎁 Xem quyền lợi VIP", callback_data=f"vip_benefits_{milestone['tier']}")],
+        [InlineKeyboardButton("👥 Join VIP Group", url="https://t.me/+vBZk4Kq59P9mMzY1")],
+        [InlineKeyboardButton("🗺️ Xem Roadmap", callback_data="vip_roadmap")]
     ]
     
     try:
@@ -144,10 +144,10 @@ async def check_vip_milestone(user_id: int, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown"
         )
-        logger.info(f"âœ… Sent VIP unlock message to user {user_id}")
+        logger.info(f"✅ Sent VIP unlock message to user {user_id}")
         return True
     except Exception as e:
-        logger.error(f"âŒ Failed to send VIP message to user {user_id}: {e}")
+        logger.error(f"❌ Failed to send VIP message to user {user_id}: {e}")
         return False
 
 
@@ -159,7 +159,7 @@ async def vip_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     db_user = await get_user_by_id(user.id)
     
     if not db_user:
-        await update.message.reply_text("âŒ Lá»—i: User khÃ´ng tÃ¬m tháº¥y")
+        await update.message.reply_text("❌ Lỗi: User không tìm thấy")
         return
     
     referral_count = db_user.referral_count or 0
@@ -167,17 +167,17 @@ async def vip_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     # Determine current & next milestone
     if referral_count >= 100:
-        current_status = "ðŸ‘‘ Legend"
+        current_status = "👑 Legend"
         next_milestone = None
     elif referral_count >= 50:
-        current_status = "ðŸ† Super VIP"
-        next_milestone = f"{100 - referral_count} refs â†’ ðŸ‘‘ Legend"
+        current_status = "🏆 Super VIP"
+        next_milestone = f"{100 - referral_count} refs → 👑 Legend"
     elif referral_count >= 10:
-        current_status = "â­ Rising Star"
-        next_milestone = f"{50 - referral_count} refs â†’ ðŸ† Super VIP"
+        current_status = "⭐ Rising Star"
+        next_milestone = f"{50 - referral_count} refs → 🏆 Super VIP"
     else:
         current_status = "Community Member"
-        next_milestone = f"{10 - referral_count} refs â†’ â­ Rising Star"
+        next_milestone = f"{10 - referral_count} refs → ⭐ Rising Star"
     
     # Get benefits for current tier
     current_benefits = []
@@ -190,22 +190,22 @@ async def vip_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         current_benefits = ['Share to help friends unlock FREE']
     
     message = f"""
-ðŸ† **VIP STATUS**
+🏆 **VIP STATUS**
 
-ðŸ“Š **Hiá»‡n táº¡i:**
-â€¢ Status: {current_status}
-â€¢ Referrals: {referral_count}
+📊 **Hiện tại:**
+• Status: {current_status}
+• Referrals: {referral_count}
 
-{f"ðŸŽ¯ **Next Milestone:**\nâ€¢ {next_milestone}" if next_milestone else "ðŸŽ‰ **You've reached the top!**"}
+{f"🎯 **Next Milestone:**\n• {next_milestone}" if next_milestone else "🎉 **You've reached the top!**"}
 
-ðŸ’¡ **VIP Benefits:**
-{chr(10).join(f"â€¢ {b}" for b in current_benefits[:5])}
+💡 **VIP Benefits:**
+{chr(10).join(f"• {b}" for b in current_benefits[:5])}
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ‘¥ VIP Community", url="https://t.me/+vBZk4Kq59P9mMzY1")],
-        [InlineKeyboardButton("ðŸ—ºï¸ Product Roadmap", callback_data="vip_roadmap")],
-        [InlineKeyboardButton("Â« Back", callback_data="back_to_menu")]
+        [InlineKeyboardButton("👥 VIP Community", url="https://t.me/+vBZk4Kq59P9mMzY1")],
+        [InlineKeyboardButton("🗺️ Product Roadmap", callback_data="vip_roadmap")],
+        [InlineKeyboardButton("« Back", callback_data="back_to_menu")]
     ]
     
     await update.message.reply_text(
@@ -234,25 +234,25 @@ async def handle_vip_benefits(update: Update, context: ContextTypes.DEFAULT_TYPE
             break
     
     if not milestone:
-        await query.edit_message_text("âŒ Lá»—i: KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin VIP tier")
+        await query.edit_message_text("❌ Lỗi: Không tìm thấy thông tin VIP tier")
         return
     
     message = f"""
 {milestone['name']} **BENEFITS**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-{chr(10).join(f"âœ“ {b}" for b in milestone['benefits'])}
+{chr(10).join(f"✓ {b}" for b in milestone['benefits'])}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¡ **Note:** VIP lÃ  vá» identity & belonging,
-khÃ´ng pháº£i vá» sales. Enjoy the journey! ðŸš€
+💡 **Note:** VIP là về identity & belonging,
+không phải về sales. Enjoy the journey! 🚀
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ‘¥ Join VIP Group", url="https://t.me/+vBZk4Kq59P9mMzY1")],
-        [InlineKeyboardButton("Â« Back", callback_data="vip_status")]
+        [InlineKeyboardButton("👥 Join VIP Group", url="https://t.me/+vBZk4Kq59P9mMzY1")],
+        [InlineKeyboardButton("« Back", callback_data="vip_status")]
     ]
     
     await query.edit_message_text(
@@ -271,35 +271,35 @@ async def handle_vip_roadmap(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.answer()
     
     message = """
-ðŸ—ºï¸ **PRODUCT ROADMAP**
+🗺️ **PRODUCT ROADMAP**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸš§ **IN PROGRESS:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🚧 **IN PROGRESS:**
+━━━━━━━━━━━━━━━━━━━━━
 
-â€¢ AI-powered budgeting suggestions
-â€¢ Multi-currency support
-â€¢ Investment tracking improvements
+• AI-powered budgeting suggestions
+• Multi-currency support
+• Investment tracking improvements
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“‹ **UPCOMING (Q2 2026):**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📋 **UPCOMING (Q2 2026):**
+━━━━━━━━━━━━━━━━━━━━━
 
-â€¢ Family accounts
-â€¢ Goal tracking v2
-â€¢ Bank integration (beta)
+• Family accounts
+• Goal tracking v2
+• Bank integration (beta)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ **VIP VOTING:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 **VIP VOTING:**
+━━━━━━━━━━━━━━━━━━━━━
 
 As a VIP, you can vote on feature priority!
 Join VIP group to participate.
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ‘¥ Join VIP Group", url="https://t.me/+vBZk4Kq59P9mMzY1")],
-        [InlineKeyboardButton("Â« Back", callback_data="vip_status")]
+        [InlineKeyboardButton("👥 Join VIP Group", url="https://t.me/+vBZk4Kq59P9mMzY1")],
+        [InlineKeyboardButton("« Back", callback_data="vip_status")]
     ]
     
     await query.edit_message_text(
@@ -324,5 +324,5 @@ def register_vip_handlers(application):
     application.add_handler(CallbackQueryHandler(handle_vip_benefits, pattern="^vip_benefits_"))
     application.add_handler(CallbackQueryHandler(handle_vip_roadmap, pattern="^vip_roadmap$"))
     
-    logger.info("âœ… VIP handlers registered")
+    logger.info("✅ VIP handlers registered")
 

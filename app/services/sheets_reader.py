@@ -34,9 +34,9 @@ class SheetsReader:
             creds_path = os.getenv('GOOGLE_SHEETS_CREDENTIALS', 'google_service_account.json')
             creds = Credentials.from_service_account_file(creds_path, scopes=self.SCOPES)
             self.service = build('sheets', 'v4', credentials=creds)
-            logger.info(f"âœ… Sheets service initialized for {self.spreadsheet_id[:10]}...")
+            logger.info(f"✅ Sheets service initialized for {self.spreadsheet_id[:10]}...")
         except Exception as e:
-            logger.error(f"âŒ Failed to initialize Sheets service: {e}")
+            logger.error(f"❌ Failed to initialize Sheets service: {e}")
             raise
     
     async def test_connection(self) -> bool:
@@ -54,20 +54,20 @@ class SheetsReader:
             ).execute()
             
             sheet_names = [sheet['properties']['title'] for sheet in spreadsheet.get('sheets', [])]
-            logger.info(f"âœ… Connection test successful: {self.spreadsheet_id[:10]}...")
-            logger.info(f"ðŸ“Š Found sheets: {', '.join(sheet_names)}")
+            logger.info(f"✅ Connection test successful: {self.spreadsheet_id[:10]}...")
+            logger.info(f"📊 Found sheets: {', '.join(sheet_names)}")
             return True
             
         except HttpError as e:
             if e.resp.status == 403:
-                logger.warning(f"âš ï¸ Permission denied: User hasn't shared with service account")
+                logger.warning(f"⚠️ Permission denied: User hasn't shared with service account")
             elif e.resp.status == 404:
-                logger.warning(f"âš ï¸ Spreadsheet not found: Invalid ID")
+                logger.warning(f"⚠️ Spreadsheet not found: Invalid ID")
             else:
-                logger.error(f"âŒ HTTP Error {e.resp.status}: {e}")
+                logger.error(f"❌ HTTP Error {e.resp.status}: {e}")
             return False
         except Exception as e:
-            logger.error(f"âŒ Connection test failed: {e}")
+            logger.error(f"❌ Connection test failed: {e}")
             return False
     
     async def get_balance_summary(self) -> Optional[Dict]:
@@ -100,11 +100,11 @@ class SheetsReader:
                     balance = self._parse_number(row[1])
                     jars[jar_name] = balance
             
-            logger.info(f"ðŸ“Š Retrieved balance for {len(jars)} jars")
+            logger.info(f"📊 Retrieved balance for {len(jars)} jars")
             return jars
             
         except Exception as e:
-            logger.error(f"âŒ Failed to get balance summary: {e}")
+            logger.error(f"❌ Failed to get balance summary: {e}")
             return None
     
     async def get_recent_transactions(self, limit: int = 10) -> Optional[List[Dict]]:
@@ -142,11 +142,11 @@ class SheetsReader:
                     }
                     transactions.append(txn)
             
-            logger.info(f"ðŸ“ Retrieved {len(transactions)} transactions")
+            logger.info(f"📝 Retrieved {len(transactions)} transactions")
             return transactions
             
         except Exception as e:
-            logger.error(f"âŒ Failed to get transactions: {e}")
+            logger.error(f"❌ Failed to get transactions: {e}")
             return None
     
     async def get_monthly_spending(self, year: int = None, month: int = None) -> Optional[Dict]:
@@ -191,11 +191,11 @@ class SheetsReader:
                         else:
                             spending_by_category[category] = amount
             
-            logger.info(f"ðŸ’° Monthly spending: {len(spending_by_category)} categories")
+            logger.info(f"💰 Monthly spending: {len(spending_by_category)} categories")
             return spending_by_category
             
         except Exception as e:
-            logger.error(f"âŒ Failed to get monthly spending: {e}")
+            logger.error(f"❌ Failed to get monthly spending: {e}")
             return None
     
     async def get_total_balance(self) -> Optional[float]:
@@ -210,7 +210,7 @@ class SheetsReader:
             return None
         
         total = sum(jars.values())
-        logger.info(f"ðŸ’µ Total balance: {total:,.0f}")
+        logger.info(f"💵 Total balance: {total:,.0f}")
         return total
     
     # Helper methods
@@ -222,7 +222,7 @@ class SheetsReader:
         
         try:
             # Remove currency symbols, commas, spaces
-            cleaned = str(value).replace(',', '').replace('â‚«', '').replace('VND', '').strip()
+            cleaned = str(value).replace(',', '').replace('₫', '').replace('VND', '').strip()
             return float(cleaned)
         except:
             return 0.0

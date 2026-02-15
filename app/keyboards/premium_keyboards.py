@@ -16,23 +16,23 @@ def premium_main_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ’° TÃ i chÃ­nh", callback_data='premium_finance'),
-            InlineKeyboardButton("ðŸ“Š BÃ¡o cÃ¡o", callback_data='premium_reports')
+            InlineKeyboardButton("💰 Tài chính", callback_data='premium_finance'),
+            InlineKeyboardButton("📊 Báo cáo", callback_data='premium_reports')
         ],
         [
-            InlineKeyboardButton("ðŸŽ¯ Má»¥c tiÃªu", callback_data='premium_goals'),
-            InlineKeyboardButton("ðŸ¤– AI Insights", callback_data='premium_ai')
+            InlineKeyboardButton("🎯 Mục tiêu", callback_data='premium_goals'),
+            InlineKeyboardButton("🤖 AI Insights", callback_data='premium_ai')
         ],
         [
-            InlineKeyboardButton("âš™ï¸ CÃ i Ä‘áº·t", callback_data='premium_settings'),
-            InlineKeyboardButton("â“ Trá»£ giÃºp", callback_data='premium_help')
+            InlineKeyboardButton("⚙️ Cài đặt", callback_data='premium_settings'),
+            InlineKeyboardButton("❓ Trợ giúp", callback_data='premium_help')
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
 # ============================================
-# SUB-MENU 1: TÃ€I CHÃNH (Quick actions)
+# SUB-MENU 1: TÀI CHÍNH (Quick actions)
 # ============================================
 
 def finance_menu():
@@ -42,18 +42,18 @@ def finance_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("âž• Ghi giao dá»‹ch", callback_data='qr_start'),
-            InlineKeyboardButton("ðŸ’³ Xem sá»‘ dÆ°", callback_data='view_balance')
+            InlineKeyboardButton("➕ Ghi giao dịch", callback_data='qr_start'),
+            InlineKeyboardButton("💳 Xem số dư", callback_data='view_balance')
         ],
         [
-            InlineKeyboardButton("ðŸ“‹ Lá»‹ch sá»­ gáº§n Ä‘Ã¢y", callback_data='recent_transactions'),
-            InlineKeyboardButton("ðŸ”„ Chuyá»ƒn tiá»n hÅ©", callback_data='jar_transfer')
+            InlineKeyboardButton("📋 Lịch sử gần đây", callback_data='recent_transactions'),
+            InlineKeyboardButton("🔄 Chuyển tiền hũ", callback_data='jar_transfer')
         ],
         [
-            InlineKeyboardButton("ðŸ“ Sá»­a giao dá»‹ch", callback_data='edit_transaction'),
-            InlineKeyboardButton("ðŸ—‘ï¸ XÃ³a giao dá»‹ch", callback_data='delete_transaction')
+            InlineKeyboardButton("📝 Sửa giao dịch", callback_data='edit_transaction'),
+            InlineKeyboardButton("🗑️ Xóa giao dịch", callback_data='delete_transaction')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_menu')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_menu')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -65,22 +65,22 @@ def quick_record_category_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ½ï¸ Ä‚n uá»‘ng", callback_data='qr_cat_food'),
-            InlineKeyboardButton("ðŸ  Gia Ä‘Ã¬nh", callback_data='qr_cat_family')
+            InlineKeyboardButton("🍽️ Ăn uống", callback_data='qr_cat_food'),
+            InlineKeyboardButton("🏠 Gia đình", callback_data='qr_cat_family')
         ],
         [
-            InlineKeyboardButton("ðŸš— Di chuyá»ƒn", callback_data='qr_cat_transport'),
-            InlineKeyboardButton("ðŸ’Š Sá»©c khá»e", callback_data='qr_cat_health')
+            InlineKeyboardButton("🚗 Di chuyển", callback_data='qr_cat_transport'),
+            InlineKeyboardButton("💊 Sức khỏe", callback_data='qr_cat_health')
         ],
         [
-            InlineKeyboardButton("ðŸŽ‰ Giáº£i trÃ­", callback_data='qr_cat_entertainment'),
-            InlineKeyboardButton("ðŸ“š Há»c táº­p", callback_data='qr_cat_education')
+            InlineKeyboardButton("🎉 Giải trí", callback_data='qr_cat_entertainment'),
+            InlineKeyboardButton("📚 Học tập", callback_data='qr_cat_education')
         ],
         [
-            InlineKeyboardButton("ðŸ›ï¸ Mua sáº¯m", callback_data='qr_cat_shopping'),
-            InlineKeyboardButton("âž• KhÃ¡c", callback_data='qr_cat_other')
+            InlineKeyboardButton("🛍️ Mua sắm", callback_data='qr_cat_shopping'),
+            InlineKeyboardButton("➕ Khác", callback_data='qr_cat_other')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_finance')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_finance')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -92,24 +92,24 @@ def balance_view_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ“Š Tá»•ng quan", callback_data='balance_overview'),
-            InlineKeyboardButton("ðŸº Chi tiáº¿t hÅ©", callback_data='balance_jars')
+            InlineKeyboardButton("📊 Tổng quan", callback_data='balance_overview'),
+            InlineKeyboardButton("🏺 Chi tiết hũ", callback_data='balance_jars')
         ],
         [
-            InlineKeyboardButton("ðŸ’³ Theo tÃ i khoáº£n", callback_data='balance_accounts'),
-            InlineKeyboardButton("ðŸ“ˆ Biá»ƒu Ä‘á»“", callback_data='balance_chart')
+            InlineKeyboardButton("💳 Theo tài khoản", callback_data='balance_accounts'),
+            InlineKeyboardButton("📈 Biểu đồ", callback_data='balance_chart')
         ],
         [
-            InlineKeyboardButton("ðŸ”„ Äá»“ng bá»™", callback_data='sync_balance'),
-            InlineKeyboardButton("ðŸ“¤ Xuáº¥t Excel", callback_data='export_balance')
+            InlineKeyboardButton("🔄 Đồng bộ", callback_data='sync_balance'),
+            InlineKeyboardButton("📤 Xuất Excel", callback_data='export_balance')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_finance')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_finance')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
 # ============================================
-# SUB-MENU 2: BÃO CÃO (Analytics & Reports)
+# SUB-MENU 2: BÁO CÁO (Analytics & Reports)
 # ============================================
 
 def reports_menu():
@@ -119,22 +119,22 @@ def reports_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ“Š HÃ´m nay", callback_data='report_today'),
-            InlineKeyboardButton("ðŸ“… Tuáº§n nÃ y", callback_data='report_week')
+            InlineKeyboardButton("📊 Hôm nay", callback_data='report_today'),
+            InlineKeyboardButton("📅 Tuần này", callback_data='report_week')
         ],
         [
-            InlineKeyboardButton("ðŸ“† ThÃ¡ng nÃ y", callback_data='report_month'),
-            InlineKeyboardButton("ðŸ—“ï¸ NÄƒm nay", callback_data='report_year')
+            InlineKeyboardButton("📆 Tháng này", callback_data='report_month'),
+            InlineKeyboardButton("🗓️ Năm nay", callback_data='report_year')
         ],
         [
-            InlineKeyboardButton("ðŸ” TÃ¹y chá»‰nh", callback_data='report_custom'),
-            InlineKeyboardButton("ðŸ“ˆ So sÃ¡nh", callback_data='report_compare')
+            InlineKeyboardButton("🔍 Tùy chỉnh", callback_data='report_custom'),
+            InlineKeyboardButton("📈 So sánh", callback_data='report_compare')
         ],
         [
-            InlineKeyboardButton("ðŸ’¾ LÆ°u bÃ¡o cÃ¡o", callback_data='save_report'),
-            InlineKeyboardButton("ðŸ“¤ Gá»­i email", callback_data='email_report')
+            InlineKeyboardButton("💾 Lưu báo cáo", callback_data='save_report'),
+            InlineKeyboardButton("📤 Gửi email", callback_data='email_report')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_menu')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_menu')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -146,24 +146,24 @@ def report_categories_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ½ï¸ Ä‚n uá»‘ng", callback_data='cat_report_food'),
-            InlineKeyboardButton("ðŸ  Gia Ä‘Ã¬nh", callback_data='cat_report_family')
+            InlineKeyboardButton("🍽️ Ăn uống", callback_data='cat_report_food'),
+            InlineKeyboardButton("🏠 Gia đình", callback_data='cat_report_family')
         ],
         [
-            InlineKeyboardButton("ðŸš— Di chuyá»ƒn", callback_data='cat_report_transport'),
-            InlineKeyboardButton("ðŸŽ‰ Giáº£i trÃ­", callback_data='cat_report_entertainment')
+            InlineKeyboardButton("🚗 Di chuyển", callback_data='cat_report_transport'),
+            InlineKeyboardButton("🎉 Giải trí", callback_data='cat_report_entertainment')
         ],
         [
-            InlineKeyboardButton("ðŸ“Š Táº¥t cáº£", callback_data='cat_report_all'),
-            InlineKeyboardButton("ðŸ” Top 5", callback_data='cat_report_top5')
+            InlineKeyboardButton("📊 Tất cả", callback_data='cat_report_all'),
+            InlineKeyboardButton("🔝 Top 5", callback_data='cat_report_top5')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_reports')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_reports')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
 # ============================================
-# SUB-MENU 3: Má»¤C TIÃŠU (Goals & Budgets)
+# SUB-MENU 3: MỤC TIÊU (Goals & Budgets)
 # ============================================
 
 def goals_menu():
@@ -173,18 +173,18 @@ def goals_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸŽ¯ Má»¥c tiÃªu hiá»‡n táº¡i", callback_data='view_goals'),
-            InlineKeyboardButton("âž• Táº¡o má»¥c tiÃªu", callback_data='create_goal')
+            InlineKeyboardButton("🎯 Mục tiêu hiện tại", callback_data='view_goals'),
+            InlineKeyboardButton("➕ Tạo mục tiêu", callback_data='create_goal')
         ],
         [
-            InlineKeyboardButton("ðŸ’° NgÃ¢n sÃ¡ch thÃ¡ng", callback_data='monthly_budget'),
-            InlineKeyboardButton("ðŸ“Š Tiáº¿n Ä‘á»™", callback_data='goal_progress')
+            InlineKeyboardButton("💰 Ngân sách tháng", callback_data='monthly_budget'),
+            InlineKeyboardButton("📊 Tiến độ", callback_data='goal_progress')
         ],
         [
-            InlineKeyboardButton("ðŸ”” Nháº¯c nhá»Ÿ", callback_data='goal_reminders'),
-            InlineKeyboardButton("ðŸ† ThÃ nh tÃ­ch", callback_data='achievements')
+            InlineKeyboardButton("🔔 Nhắc nhở", callback_data='goal_reminders'),
+            InlineKeyboardButton("🏆 Thành tích", callback_data='achievements')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_menu')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_menu')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -196,18 +196,18 @@ def budget_management_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ½ï¸ Ä‚n uá»‘ng", callback_data='budget_food'),
-            InlineKeyboardButton("ðŸš— Di chuyá»ƒn", callback_data='budget_transport')
+            InlineKeyboardButton("🍽️ Ăn uống", callback_data='budget_food'),
+            InlineKeyboardButton("🚗 Di chuyển", callback_data='budget_transport')
         ],
         [
-            InlineKeyboardButton("ðŸŽ‰ Giáº£i trÃ­", callback_data='budget_entertainment'),
-            InlineKeyboardButton("ðŸ›ï¸ Mua sáº¯m", callback_data='budget_shopping')
+            InlineKeyboardButton("🎉 Giải trí", callback_data='budget_entertainment'),
+            InlineKeyboardButton("🛍️ Mua sắm", callback_data='budget_shopping')
         ],
         [
-            InlineKeyboardButton("ðŸ“Š Xem táº¥t cáº£", callback_data='budget_all'),
-            InlineKeyboardButton("âš™ï¸ TÃ¹y chá»‰nh", callback_data='budget_custom')
+            InlineKeyboardButton("📊 Xem tất cả", callback_data='budget_all'),
+            InlineKeyboardButton("⚙️ Tùy chỉnh", callback_data='budget_custom')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_goals')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_goals')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -223,24 +223,24 @@ def ai_insights_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ§  PhÃ¢n tÃ­ch chi tiÃªu", callback_data='ai_spending_analysis'),
-            InlineKeyboardButton("ðŸ’¡ Gá»£i Ã½ tiáº¿t kiá»‡m", callback_data='ai_saving_tips')
+            InlineKeyboardButton("🧠 Phân tích chi tiêu", callback_data='ai_spending_analysis'),
+            InlineKeyboardButton("💡 Gợi ý tiết kiệm", callback_data='ai_saving_tips')
         ],
         [
-            InlineKeyboardButton("ðŸ”® Dá»± Ä‘oÃ¡n xu hÆ°á»›ng", callback_data='ai_forecast'),
-            InlineKeyboardButton("âš ï¸ Cáº£nh bÃ¡o báº¥t thÆ°á»ng", callback_data='ai_anomaly')
+            InlineKeyboardButton("🔮 Dự đoán xu hướng", callback_data='ai_forecast'),
+            InlineKeyboardButton("⚠️ Cảnh báo bất thường", callback_data='ai_anomaly')
         ],
         [
-            InlineKeyboardButton("ðŸŽ¯ Tá»‘i Æ°u ngÃ¢n sÃ¡ch", callback_data='ai_optimize'),
-            InlineKeyboardButton("ðŸ“ˆ Chiáº¿n lÆ°á»£c Ä‘áº§u tÆ°", callback_data='ai_investment')
+            InlineKeyboardButton("🎯 Tối ưu ngân sách", callback_data='ai_optimize'),
+            InlineKeyboardButton("📈 Chiến lược đầu tư", callback_data='ai_investment')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_menu')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_menu')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
 # ============================================
-# SUB-MENU 5: CÃ€I Äáº¶T (Settings & Sync)
+# SUB-MENU 5: CÀI ĐẶT (Settings & Sync)
 # ============================================
 
 def settings_menu():
@@ -250,22 +250,22 @@ def settings_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ“Š Sheets Settings", callback_data='settings_sheets'),
-            InlineKeyboardButton("ðŸ”” ThÃ´ng bÃ¡o", callback_data='settings_notifications')
+            InlineKeyboardButton("📊 Sheets Settings", callback_data='settings_sheets'),
+            InlineKeyboardButton("🔔 Thông báo", callback_data='settings_notifications')
         ],
         [
-            InlineKeyboardButton("ðŸŒ NgÃ´n ngá»¯", callback_data='settings_language'),
-            InlineKeyboardButton("ðŸ’± Tiá»n tá»‡", callback_data='settings_currency')
+            InlineKeyboardButton("🌍 Ngôn ngữ", callback_data='settings_language'),
+            InlineKeyboardButton("💱 Tiền tệ", callback_data='settings_currency')
         ],
         [
-            InlineKeyboardButton("ðŸ”„ Äá»“ng bá»™", callback_data='settings_sync'),
-            InlineKeyboardButton("ðŸ“¤ Xuáº¥t dá»¯ liá»‡u", callback_data='settings_export')
+            InlineKeyboardButton("🔄 Đồng bộ", callback_data='settings_sync'),
+            InlineKeyboardButton("📤 Xuất dữ liệu", callback_data='settings_export')
         ],
         [
-            InlineKeyboardButton("ðŸ” Báº£o máº­t", callback_data='settings_security'),
-            InlineKeyboardButton("â„¹ï¸ Vá» Premium", callback_data='settings_about')
+            InlineKeyboardButton("🔐 Bảo mật", callback_data='settings_security'),
+            InlineKeyboardButton("ℹ️ Về Premium", callback_data='settings_about')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_menu')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_menu')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -277,24 +277,24 @@ def sheets_settings_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ”— Káº¿t ná»‘i Sheet", callback_data='connect_sheets'),
-            InlineKeyboardButton("ðŸŒ Cáº­p nháº­t Web App", callback_data='update_webapp')
+            InlineKeyboardButton("🔗 Kết nối Sheet", callback_data='connect_sheets'),
+            InlineKeyboardButton("🌐 Cập nhật Web App", callback_data='update_webapp')
         ],
         [
-            InlineKeyboardButton("ðŸ”„ Äá»“ng bá»™ ngay", callback_data='sync_now'),
-            InlineKeyboardButton("âš™ï¸ Auto-sync", callback_data='toggle_autosync')
+            InlineKeyboardButton("🔄 Đồng bộ ngay", callback_data='sync_now'),
+            InlineKeyboardButton("⚙️ Auto-sync", callback_data='toggle_autosync')
         ],
         [
-            InlineKeyboardButton("ðŸ§ª Test káº¿t ná»‘i", callback_data='test_connection'),
-            InlineKeyboardButton("ðŸ“‹ Xem log", callback_data='view_sync_log')
+            InlineKeyboardButton("🧪 Test kết nối", callback_data='test_connection'),
+            InlineKeyboardButton("📋 Xem log", callback_data='view_sync_log')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_settings')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_settings')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
 # ============================================
-# SUB-MENU 6: TRá»¢ GIÃšP (Help & Support)
+# SUB-MENU 6: TRỢ GIÚP (Help & Support)
 # ============================================
 
 def help_menu():
@@ -304,18 +304,18 @@ def help_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸŽ¬ Video hÆ°á»›ng dáº«n", callback_data='help_videos'),
-            InlineKeyboardButton("ðŸ“š TÃ i liá»‡u", callback_data='help_docs')
+            InlineKeyboardButton("🎬 Video hướng dẫn", callback_data='help_videos'),
+            InlineKeyboardButton("📚 Tài liệu", callback_data='help_docs')
         ],
         [
-            InlineKeyboardButton("â“ FAQ", callback_data='help_faq'),
-            InlineKeyboardButton("ðŸš€ Há»— trá»£ Æ°u tiÃªn", callback_data='priority_support')
+            InlineKeyboardButton("❓ FAQ", callback_data='help_faq'),
+            InlineKeyboardButton("🚀 Hỗ trợ ưu tiên", callback_data='priority_support')
         ],
         [
-            InlineKeyboardButton("ðŸ’¬ NhÃ³m cá»™ng Ä‘á»“ng", callback_data='help_community'),
-            InlineKeyboardButton("ðŸ“§ LiÃªn há»‡", callback_data='help_contact')
+            InlineKeyboardButton("💬 Nhóm cộng đồng", callback_data='help_community'),
+            InlineKeyboardButton("📧 Liên hệ", callback_data='help_contact')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_menu')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_menu')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -331,14 +331,14 @@ def transaction_actions_menu(transaction_id: str):
     """
     keyboard = [
         [
-            InlineKeyboardButton("âœï¸ Sá»­a", callback_data=f'edit_tx_{transaction_id}'),
-            InlineKeyboardButton("ðŸ“‹ NhÃ¢n báº£n", callback_data=f'duplicate_tx_{transaction_id}')
+            InlineKeyboardButton("✏️ Sửa", callback_data=f'edit_tx_{transaction_id}'),
+            InlineKeyboardButton("📋 Nhân bản", callback_data=f'duplicate_tx_{transaction_id}')
         ],
         [
-            InlineKeyboardButton("ðŸ—‘ï¸ XÃ³a", callback_data=f'delete_tx_{transaction_id}'),
-            InlineKeyboardButton("ðŸ”„ HoÃ n tÃ¡c", callback_data=f'undo_tx_{transaction_id}')
+            InlineKeyboardButton("🗑️ Xóa", callback_data=f'delete_tx_{transaction_id}'),
+            InlineKeyboardButton("🔄 Hoàn tác", callback_data=f'undo_tx_{transaction_id}')
         ],
-        [InlineKeyboardButton("Â« ÄÃ³ng", callback_data='close_tx_menu')]
+        [InlineKeyboardButton("« Đóng", callback_data='close_tx_menu')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -350,18 +350,18 @@ def jar_selection_menu(action: str = "transfer"):
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ’° NEC (55%)", callback_data=f'{action}_jar_NEC'),
-            InlineKeyboardButton("ðŸŽ¯ FFA (10%)", callback_data=f'{action}_jar_FFA')
+            InlineKeyboardButton("💰 NEC (55%)", callback_data=f'{action}_jar_NEC'),
+            InlineKeyboardButton("🎯 FFA (10%)", callback_data=f'{action}_jar_FFA')
         ],
         [
-            InlineKeyboardButton("ðŸ“š EDU (10%)", callback_data=f'{action}_jar_EDU'),
-            InlineKeyboardButton("ðŸŽ‰ PLAY (10%)", callback_data=f'{action}_jar_PLAY')
+            InlineKeyboardButton("📚 EDU (10%)", callback_data=f'{action}_jar_EDU'),
+            InlineKeyboardButton("🎉 PLAY (10%)", callback_data=f'{action}_jar_PLAY')
         ],
         [
-            InlineKeyboardButton("ðŸ’ GIVE (5%)", callback_data=f'{action}_jar_GIVE'),
-            InlineKeyboardButton("ðŸ’¼ LTSS (10%)", callback_data=f'{action}_jar_LTSS')
+            InlineKeyboardButton("💝 GIVE (5%)", callback_data=f'{action}_jar_GIVE'),
+            InlineKeyboardButton("💼 LTSS (10%)", callback_data=f'{action}_jar_LTSS')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_finance')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_finance')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -373,18 +373,18 @@ def date_range_menu():
     """
     keyboard = [
         [
-            InlineKeyboardButton("ðŸ“… 7 ngÃ y qua", callback_data='range_7days'),
-            InlineKeyboardButton("ðŸ“† 30 ngÃ y qua", callback_data='range_30days')
+            InlineKeyboardButton("📅 7 ngày qua", callback_data='range_7days'),
+            InlineKeyboardButton("📆 30 ngày qua", callback_data='range_30days')
         ],
         [
-            InlineKeyboardButton("ðŸ“Š ThÃ¡ng nÃ y", callback_data='range_this_month'),
-            InlineKeyboardButton("ðŸ“ˆ ThÃ¡ng trÆ°á»›c", callback_data='range_last_month')
+            InlineKeyboardButton("📊 Tháng này", callback_data='range_this_month'),
+            InlineKeyboardButton("📈 Tháng trước", callback_data='range_last_month')
         ],
         [
-            InlineKeyboardButton("ðŸ—“ï¸ NÄƒm nay", callback_data='range_this_year'),
-            InlineKeyboardButton("ðŸ” TÃ¹y chá»‰nh", callback_data='range_custom')
+            InlineKeyboardButton("🗓️ Năm nay", callback_data='range_this_year'),
+            InlineKeyboardButton("🔍 Tùy chỉnh", callback_data='range_custom')
         ],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data='premium_reports')]
+        [InlineKeyboardButton("« Quay lại", callback_data='premium_reports')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -400,8 +400,8 @@ def confirm_action_menu(action: str, item_id: str = ""):
     """
     keyboard = [
         [
-            InlineKeyboardButton("âœ… XÃ¡c nháº­n", callback_data=f'confirm_{action}_{item_id}'),
-            InlineKeyboardButton("âŒ Há»§y", callback_data=f'cancel_{action}')
+            InlineKeyboardButton("✅ Xác nhận", callback_data=f'confirm_{action}_{item_id}'),
+            InlineKeyboardButton("❌ Hủy", callback_data=f'cancel_{action}')
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -417,15 +417,15 @@ def pagination_menu(page: int, total_pages: int, callback_prefix: str):
     # Navigation buttons
     nav_row = []
     if page > 1:
-        nav_row.append(InlineKeyboardButton("â¬…ï¸ TrÆ°á»›c", callback_data=f'{callback_prefix}_page_{page-1}'))
+        nav_row.append(InlineKeyboardButton("⬅️ Trước", callback_data=f'{callback_prefix}_page_{page-1}'))
     
-    nav_row.append(InlineKeyboardButton(f"ðŸ“„ {page}/{total_pages}", callback_data='page_info'))
+    nav_row.append(InlineKeyboardButton(f"📄 {page}/{total_pages}", callback_data='page_info'))
     
     if page < total_pages:
-        nav_row.append(InlineKeyboardButton("âž¡ï¸ Sau", callback_data=f'{callback_prefix}_page_{page+1}'))
+        nav_row.append(InlineKeyboardButton("➡️ Sau", callback_data=f'{callback_prefix}_page_{page+1}'))
     
     keyboard.append(nav_row)
-    keyboard.append([InlineKeyboardButton("Â« ÄÃ³ng", callback_data='close_list')])
+    keyboard.append([InlineKeyboardButton("« Đóng", callback_data='close_list')])
     
     return InlineKeyboardMarkup(keyboard)
 
@@ -438,6 +438,6 @@ def back_to_menu_button(target: str = 'premium_menu'):
     """
     Single back button for simple returns
     """
-    keyboard = [[InlineKeyboardButton("Â« Quay láº¡i menu", callback_data=target)]]
+    keyboard = [[InlineKeyboardButton("« Quay lại menu", callback_data=target)]]
     return InlineKeyboardMarkup(keyboard)
 

@@ -16,469 +16,469 @@ from app.services.program_manager import ProgramManager, ProgramType
 # 7-Day Onboarding Content with Inline Keyboards
 ONBOARDING_MESSAGES = {
     1: {
-        "title": "ï¿½ CHÃšC Má»ªNG! Báº N ÄÃƒ Má»ž KHÃ“A VIP",
+        "title": "� CHÚC MỪNG! BẠN ĐÃ MỞ KHÓA VIP",
         "content": """
-ðŸ‘ **Tuyá»‡t vá»i! Báº¡n Ä‘Ã£ giá»›i thiá»‡u thÃ nh cÃ´ng 2 ngÆ°á»i!**
+👏 **Tuyệt vời! Bạn đã giới thiệu thành công 2 người!**
 
-Giá» Ä‘Ã¢y, báº¡n Ä‘Æ°á»£c truy cáº­p **Freedom Wallet VIP** â€“ cÃ´ng cá»¥ quáº£n lÃ½ tÃ i chÃ­nh cÃ¡ nhÃ¢n máº¡nh máº½!
+Giờ đây, bạn được truy cập **Freedom Wallet VIP** – công cụ quản lý tài chính cá nhân mạnh mẽ!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŽ¯ **HAI BÆ¯á»šC TIáº¾P THEO:**
+🎯 **HAI BƯỚC TIẾP THEO:**
 
-**BÆ¯á»šC 1: Táº O WEB APP** (10-15 phÃºt)
-   â€¢ Copy Google Sheets Template
-   â€¢ Deploy Web App cÃ¡ nhÃ¢n
-   â€¢ 100% dá»¯ liá»‡u riÃªng tÆ°
+**BƯỚC 1: TẠO WEB APP** (10-15 phút)
+   • Copy Google Sheets Template
+   • Deploy Web App cá nhân
+   • 100% dữ liệu riêng tư
 
-**BÆ¯á»šC 2: Há»ŒC CÃCH DÃ™NG** (15-20 phÃºt)
-   â€¢ Quáº£n lÃ½ tÃ i khoáº£n & giao dá»‹ch
-   â€¢ Ãp dá»¥ng 6 HÅ© Tiá»n
-   â€¢ Äáº¡t tá»± do tÃ i chÃ­nh
+**BƯỚC 2: HỌC CÁCH DÙNG** (15-20 phút)
+   • Quản lý tài khoản & giao dịch
+   • Áp dụng 6 Hũ Tiền
+   • Đạt tự do tài chính
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¡ **Äá»«ng lo!** MÃ¬nh sáº½ hÆ°á»›ng dáº«n tá»«ng bÆ°á»›c.
+💡 **Đừng lo!** Mình sẽ hướng dẫn từng bước.
 
-ðŸ‘‰ **Nháº¥n nÃºt bÃªn dÆ°á»›i Ä‘á»ƒ báº¯t Ä‘áº§u BÆ°á»›c 1!**
+👉 **Nhấn nút bên dưới để bắt đầu Bước 1!**
 """,
         "delay_hours": 0,
         "buttons": [
-            [{"text": "ðŸš€ Báº¯t Ä‘áº§u thiáº¿t láº­p Freedom Wallet", "callback_data": "webapp_step_0"}]
+            [{"text": "🚀 Bắt đầu thiết lập Freedom Wallet", "callback_data": "webapp_step_0"}]
         ]
     },
     
     2: {
-        "title": "ðŸ’° Day 2: Hiá»ƒu vá» 6 HÅ© Tiá»n",
+        "title": "💰 Day 2: Hiểu về 6 Hũ Tiền",
         "content": """
-ðŸ’° **6 HÅ¨ TIá»€N - CON ÄÆ¯á»œNG Tá»° DO TÃ€I CHÃNH**
+💰 **6 HŨ TIỀN - CON ĐƯỜNG TỰ DO TÀI CHÍNH**
 
-ÄÃ¢y lÃ  phÆ°Æ¡ng phÃ¡p Ä‘Æ°á»£c triá»‡u ngÆ°á»i Ã¡p dá»¥ng thÃ nh cÃ´ng!
+Đây là phương pháp được triệu người áp dụng thành công!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ  HÅ¨ 1: CHI TIÃŠU THIáº¾T Yáº¾U (55%)**
-â€¢ Ä‚n uá»‘ng, nhÃ  á»Ÿ, Ä‘iá»‡n nÆ°á»›c
-â€¢ Chi phÃ­ sá»‘ng hÃ ng ngÃ y
-â€¢ Target: Giá»¯ dÆ°á»›i 55% thu nháº­p
+**🏠 HŨ 1: CHI TIÊU THIẾT YẾU (55%)**
+• Ăn uống, nhà ở, điện nước
+• Chi phí sống hàng ngày
+• Target: Giữ dưới 55% thu nhập
 
-**ðŸŽ‰ HÅ¨ 2: HÆ¯á»žNG THá»¤ (10%)**
-â€¢ Cafe, shopping, giáº£i trÃ­
-â€¢ Reward báº£n thÃ¢n
-â€¢ DÃ¹ng háº¿t má»—i thÃ¡ng - sá»‘ng cÃ¢n báº±ng!
+**🎉 HŨ 2: HƯỞNG THỤ (10%)**
+• Cafe, shopping, giải trí
+• Reward bản thân
+• Dùng hết mỗi tháng - sống cân bằng!
 
-**ðŸ’Ž HÅ¨ 3: Äáº¦U TÆ¯ DÃ€I Háº N (10%)**
-â€¢ Cá»• phiáº¿u, quá»¹ Ä‘áº§u tÆ°
-â€¢ Báº¥t Ä‘á»™ng sáº£n
-â€¢ Táº¡o thu nháº­p thá»¥ Ä‘á»™ng
+**💎 HŨ 3: ĐẦU TƯ DÀI HẠN (10%)**
+• Cổ phiếu, quỹ đầu tư
+• Bất động sản
+• Tạo thu nhập thụ động
 
-**ðŸ“š HÅ¨ 4: Há»ŒC Táº¬P & PHÃT TRIá»‚N (10%)**
-â€¢ SÃ¡ch, khÃ³a há»c
-â€¢ Há»™i tháº£o, workshop
-â€¢ Äáº§u tÆ° vÃ o báº£n thÃ¢n
+**📚 HŨ 4: HỌC TẬP & PHÁT TRIỂN (10%)**
+• Sách, khóa học
+• Hội thảo, workshop
+• Đầu tư vào bản thân
 
-**ðŸŽ HÅ¨ 5: Tá»ª THIá»†N & CHO ÄI (5%)**
-â€¢ GiÃºp Ä‘á»¡ ngÆ°á»i khÃ¡c
-â€¢ ÄÃ³ng gÃ³p cá»™ng Ä‘á»“ng
-â€¢ TÃ­ch lÅ©y phÆ°á»›c bÃ¡o
+**🎁 HŨ 5: TỪ THIỆN & CHO ĐI (5%)**
+• Giúp đỡ người khác
+• Đóng góp cộng đồng
+• Tích lũy phước báo
 
-**ðŸ†˜ HÅ¨ 6: Dá»° PHÃ’NG (10%)**
-â€¢ Quá»¹ kháº©n cáº¥p 3-6 thÃ¡ng
-â€¢ Báº£o hiá»ƒm
-â€¢ An toÃ n tÃ i chÃ­nh
+**🆘 HŨ 6: DỰ PHÒNG (10%)**
+• Quỹ khẩn cấp 3-6 tháng
+• Bảo hiểm
+• An toàn tài chính
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“Š **VÃ Dá»¤ THá»°C Táº¾:**
+📊 **VÍ DỤ THỰC TẾ:**
 
-Thu nháº­p: 20,000,000 VNÄ/thÃ¡ng
-â€¢ HÅ© 1: 11M (chi tiÃªu)
-â€¢ HÅ© 2: 2M (hÆ°á»Ÿng thá»¥)
-â€¢ HÅ© 3: 2M (Ä‘áº§u tÆ°)
-â€¢ HÅ© 4: 2M (há»c táº­p)
-â€¢ HÅ© 5: 1M (tá»« thiá»‡n)
-â€¢ HÅ© 6: 2M (dá»± phÃ²ng)
+Thu nhập: 20,000,000 VNĐ/tháng
+• Hũ 1: 11M (chi tiêu)
+• Hũ 2: 2M (hưởng thụ)
+• Hũ 3: 2M (đầu tư)
+• Hũ 4: 2M (học tập)
+• Hũ 5: 1M (từ thiện)
+• Hũ 6: 2M (dự phòng)
 
-ðŸ’¡ **Máº¸O:** Báº¡n cÃ³ thá»ƒ Ä‘iá»u chá»‰nh % phÃ¹ há»£p
-vá»›i hoÃ n cáº£nh riÃªng cá»§a mÃ¬nh!
+💡 **MẸO:** Bạn có thể điều chỉnh % phù hợp
+với hoàn cảnh riêng của mình!
 
-ðŸ“± **THá»°C HÃ€NH:**
-VÃ o Freedom Wallet â†’ "6 Jars" â†’ Xem phÃ¢n bá»• cá»§a báº¡n
+📱 **THỰC HÀNH:**
+Vào Freedom Wallet → "6 Jars" → Xem phân bổ của bạn
 
-â“ CÃ³ tháº¯c máº¯c vá» hÅ© nÃ o khÃ´ng? Há»i mÃ¬nh nhÃ©!
+❓ Có thắc mắc về hũ nào không? Hỏi mình nhé!
 """,
         "delay_hours": 24,
         "buttons": [
-            [{"text": "ðŸ“Š Xem 6 HÅ© trong App", "callback_data": "onboard_open_app"}],
-            [{"text": "ðŸ’¡ VÃ­ dá»¥ phÃ¢n bá»•", "callback_data": "onboard_example_day2"}],
-            [{"text": "âœ… ÄÃ£ hiá»ƒu rá»“i", "callback_data": "onboard_complete_2"}],
-            [{"text": "â“ Cáº§n há»— trá»£", "callback_data": "onboard_help_2"}]
+            [{"text": "📊 Xem 6 Hũ trong App", "callback_data": "onboard_open_app"}],
+            [{"text": "💡 Ví dụ phân bổ", "callback_data": "onboard_example_day2"}],
+            [{"text": "✅ Đã hiểu rồi", "callback_data": "onboard_complete_2"}],
+            [{"text": "❓ Cần hỗ trợ", "callback_data": "onboard_help_2"}]
         ]
     },
     
     3: {
-        "title": "ðŸŽ¯ Day 3: 5 Cáº¥p Báº­c TÃ i ChÃ­nh",
+        "title": "🎯 Day 3: 5 Cấp Bậc Tài Chính",
         "content": """
-ðŸŽ¯ **5 Cáº¤P Báº¬C TÃ€I CHÃNH - Báº N ÄANG á»ž ÄÃ‚U?**
+🎯 **5 CẤP BẬC TÀI CHÍNH - BẠN ĐANG Ở ĐÂU?**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ”´ Cáº¤P 1: TÃ€I CHÃNH Báº¤T á»”N**
-ðŸ“ Thu nháº­p < Chi tiÃªu
-ðŸ’” Ná»£ náº§n, stress liÃªn tá»¥c
-ðŸŽ¯ Má»¥c tiÃªu: Cáº¯t giáº£m chi, tÄƒng thu
+**🔴 CẤP 1: TÀI CHÍNH BẤT ỔN**
+📍 Thu nhập < Chi tiêu
+💔 Nợ nần, stress liên tục
+🎯 Mục tiêu: Cắt giảm chi, tăng thu
 
-**ðŸŸ  Cáº¤P 2: TÃ€I CHÃNH á»”N Äá»ŠNH**
-ðŸ“ Thu nháº­p = Chi tiÃªu
-ðŸ’° Sá»‘ng vá»«a Ä‘á»§, khÃ´ng dÆ°
-ðŸŽ¯ Má»¥c tiÃªu: Táº¡o tháº·ng dÆ° 10-20%
+**🟠 CẤP 2: TÀI CHÍNH ỔN ĐỊNH**
+📍 Thu nhập = Chi tiêu
+💰 Sống vừa đủ, không dư
+🎯 Mục tiêu: Tạo thặng dư 10-20%
 
-**ðŸŸ¡ Cáº¤P 3: TÃ€I CHÃNH TÃCH LÅ¨Y**
-ðŸ“ Thu nháº­p > Chi tiÃªu
-ðŸ’µ Báº¯t Ä‘áº§u tiáº¿t kiá»‡m & Ä‘áº§u tÆ°
-ðŸŽ¯ Má»¥c tiÃªu: Äáº§u tÆ° 10-20% thu nháº­p
+**🟡 CẤP 3: TÀI CHÍNH TÍCH LŨY**
+📍 Thu nhập > Chi tiêu
+💵 Bắt đầu tiết kiệm & đầu tư
+🎯 Mục tiêu: Đầu tư 10-20% thu nhập
 
-**ðŸŸ¢ Cáº¤P 4: TÃ€I CHÃNH AN TOÃ€N**
-ðŸ“ CÃ³ quá»¹ kháº©n cáº¥p 6+ thÃ¡ng
-ðŸ’Ž Thu nháº­p thá»¥ Ä‘á»™ng Ä‘Ã¡ng ká»ƒ
-ðŸŽ¯ Má»¥c tiÃªu: TÄƒng thu nháº­p thá»¥ Ä‘á»™ng
+**🟢 CẤP 4: TÀI CHÍNH AN TOÀN**
+📍 Có quỹ khẩn cấp 6+ tháng
+💎 Thu nhập thụ động đáng kể
+🎯 Mục tiêu: Tăng thu nhập thụ động
 
-**ðŸ”µ Cáº¤P 5: Tá»° DO TÃ€I CHÃNH**
-ðŸ“ Thu nháº­p thá»¥ Ä‘á»™ng > Chi tiÃªu
-ðŸ† KhÃ´ng cáº§n lÃ m váº«n cÃ³ tiá»n
-ðŸŽ¯ Má»¥c tiÃªu: Maintain & enjoy life!
+**🔵 CẤP 5: TỰ DO TÀI CHÍNH**
+📍 Thu nhập thụ động > Chi tiêu
+🏆 Không cần làm vẫn có tiền
+🎯 Mục tiêu: Maintain & enjoy life!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŽ® **QUIZ: Báº N ÄANG á»ž Cáº¤P NÃ€O?**
+🎮 **QUIZ: BẠN ĐANG Ở CẤP NÀO?**
 
-1ï¸âƒ£ Reply "1" náº¿u báº¡n á»Ÿ Cáº¥p 1
-2ï¸âƒ£ Reply "2" náº¿u báº¡n á»Ÿ Cáº¥p 2
-3ï¸âƒ£ Reply "3" náº¿u báº¡n á»Ÿ Cáº¥p 3
-4ï¸âƒ£ Reply "4" náº¿u báº¡n á»Ÿ Cáº¥p 4
-5ï¸âƒ£ Reply "5" náº¿u báº¡n á»Ÿ Cáº¥p 5
+1️⃣ Reply "1" nếu bạn ở Cấp 1
+2️⃣ Reply "2" nếu bạn ở Cấp 2
+3️⃣ Reply "3" nếu bạn ở Cấp 3
+4️⃣ Reply "4" nếu bạn ở Cấp 4
+5️⃣ Reply "5" nếu bạn ở Cấp 5
 
-MÃ¬nh sáº½ cho tips Ä‘á»ƒ lÃªn cáº¥p tiáº¿p theo!
+Mình sẽ cho tips để lên cấp tiếp theo!
 
-ðŸ“Š **Xem chi tiáº¿t trong app:**
-Freedom Wallet â†’ "Financial Level"
+📊 **Xem chi tiết trong app:**
+Freedom Wallet → "Financial Level"
 """,
         "delay_hours": 48,
         "buttons": [
-            [{"text": "ðŸŽ¯ Quiz: TÃ´i á»Ÿ cáº¥p máº¥y?", "callback_data": "onboard_quiz_level"}],
-            [{"text": "ðŸ’¡ Tips lÃªn cáº¥p", "callback_data": "onboard_level_tips"}],
-            [{"text": "âœ… ÄÃ£ xÃ¡c Ä‘á»‹nh cáº¥p", "callback_data": "onboard_complete_3"}],
-            [{"text": "â“ Cáº§n há»— trá»£", "callback_data": "onboard_help_3"}]
+            [{"text": "🎯 Quiz: Tôi ở cấp mấy?", "callback_data": "onboard_quiz_level"}],
+            [{"text": "💡 Tips lên cấp", "callback_data": "onboard_level_tips"}],
+            [{"text": "✅ Đã xác định cấp", "callback_data": "onboard_complete_3"}],
+            [{"text": "❓ Cần hỗ trợ", "callback_data": "onboard_help_3"}]
         ]
     },
     
     4: {
-        "title": "âš¡ Day 4: ThÃªm Giao Dá»‹ch Äáº§u TiÃªn",
+        "title": "⚡ Day 4: Thêm Giao Dịch Đầu Tiên",
         "content": """
-âš¡ **THÃŠM GIAO Dá»ŠCH - THEO DÃ•I CHI TIÃŠU**
+⚡ **THÊM GIAO DỊCH - THEO DÕI CHI TIÊU**
 
-ÄÃ£ setup xong? Giá» lÃ  lÃºc báº¯t Ä‘áº§u tracking!
+Đã setup xong? Giờ là lúc bắt đầu tracking!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“ **CÃCH THÃŠM GIAO Dá»ŠCH:**
+📝 **CÁCH THÊM GIAO DỊCH:**
 
-**BÆ°á»›c 1:** Má»Ÿ Freedom Wallet
-**BÆ°á»›c 2:** Click "ThÃªm giao dá»‹ch"
-**BÆ°á»›c 3:** Äiá»n thÃ´ng tin:
-   â€¢ Loáº¡i: Thu/Chi
-   â€¢ Sá»‘ tiá»n
-   â€¢ Danh má»¥c (Ä‚n uá»‘ng, Di chuyá»ƒn...)
-   â€¢ HÅ© tiá»n (náº¿u lÃ  chi tiÃªu)
-   â€¢ Ghi chÃº (optional)
+**Bước 1:** Mở Freedom Wallet
+**Bước 2:** Click "Thêm giao dịch"
+**Bước 3:** Điền thông tin:
+   • Loại: Thu/Chi
+   • Số tiền
+   • Danh mục (Ăn uống, Di chuyển...)
+   • Hũ tiền (nếu là chi tiêu)
+   • Ghi chú (optional)
 
-**BÆ°á»›c 4:** LÆ°u láº¡i â†’ Done!
+**Bước 4:** Lưu lại → Done!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¡ **TIPS PHÃ‚N LOáº I:**
+💡 **TIPS PHÂN LOẠI:**
 
-**Chi tiÃªu HÅ© 1 (Thiáº¿t yáº¿u):**
-â€¢ Tiá»n nhÃ , Ä‘iá»‡n nÆ°á»›c
-â€¢ Äi láº¡i, xÄƒng xe
-â€¢ Marketing, chi phÃ­ kinh doanh
+**Chi tiêu Hũ 1 (Thiết yếu):**
+• Tiền nhà, điện nước
+• Đi lại, xăng xe
+• Marketing, chi phí kinh doanh
 
-**Chi tiÃªu HÅ© 2 (HÆ°á»Ÿng thá»¥):**
-â€¢ Cafe, trÃ  sá»¯a
-â€¢ Ä‚n nhÃ  hÃ ng
-â€¢ Shopping, giáº£i trÃ­
+**Chi tiêu Hũ 2 (Hưởng thụ):**
+• Cafe, trà sữa
+• Ăn nhà hàng
+• Shopping, giải trí
 
-**Thu nháº­p:**
-â€¢ LÆ°Æ¡ng, thÆ°á»Ÿng
-â€¢ Doanh thu kinh doanh
-â€¢ LÃ£i Ä‘áº§u tÆ°, lÃ£i ngÃ¢n hÃ ng
+**Thu nhập:**
+• Lương, thưởng
+• Doanh thu kinh doanh
+• Lãi đầu tư, lãi ngân hàng
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŽ¯ **THÃCH THá»¨C:**
+🎯 **THÁCH THỨC:**
 
-HÃ´m nay, thÃªm Ã­t nháº¥t **3 giao dá»‹ch** gáº§n Ä‘Ã¢y:
-1ï¸âƒ£ 1 giao dá»‹ch chi tiÃªu thiáº¿t yáº¿u
-2ï¸âƒ£ 1 giao dá»‹ch hÆ°á»Ÿng thá»¥
-3ï¸âƒ£ 1 giao dá»‹ch thu nháº­p (náº¿u cÃ³)
+Hôm nay, thêm ít nhất **3 giao dịch** gần đây:
+1️⃣ 1 giao dịch chi tiêu thiết yếu
+2️⃣ 1 giao dịch hưởng thụ
+3️⃣ 1 giao dịch thu nhập (nếu có)
 
-âœ… Xong rá»“i? Nháº¯n "DONE" nhÃ©!
+✅ Xong rồi? Nhắn "DONE" nhé!
 
-â“ **Gáº·p váº¥n Ä‘á»?**
-â€¢ KhÃ´ng biáº¿t chá»n danh má»¥c?
-â€¢ App bÃ¡o lá»—i?
-â€¢ CÃ¡ch nÃ o nhanh nháº¥t?
+❓ **Gặp vấn đề?**
+• Không biết chọn danh mục?
+• App báo lỗi?
+• Cách nào nhanh nhất?
 
-Há»i mÃ¬nh ngay!
+Hỏi mình ngay!
 """,
         "delay_hours": 72,
         "buttons": [
-            [{"text": "ðŸ“ Má»Ÿ App Ä‘á»ƒ thÃªm", "callback_data": "onboard_open_app"}],
-            [{"text": "ðŸ’¡ Tips phÃ¢n loáº¡i", "callback_data": "onboard_tips_day4"}],
-            [{"text": "âœ… ÄÃ£ thÃªm xong", "callback_data": "onboard_complete_4"}],
-            [{"text": "â“ Cáº§n há»— trá»£", "callback_data": "onboard_help_4"}]
+            [{"text": "📝 Mở App để thêm", "callback_data": "onboard_open_app"}],
+            [{"text": "💡 Tips phân loại", "callback_data": "onboard_tips_day4"}],
+            [{"text": "✅ Đã thêm xong", "callback_data": "onboard_complete_4"}],
+            [{"text": "❓ Cần hỗ trợ", "callback_data": "onboard_help_4"}]
         ]
     },
     
     5: {
-        "title": "ðŸ“ˆ Day 5: TÃ­nh NÄƒng NÃ¢ng Cao",
+        "title": "📈 Day 5: Tính Năng Nâng Cao",
         "content": """
-ðŸ“ˆ **TÃNH NÄ‚NG NÃ‚NG CAO - MASTER FREEDOM WALLET**
+📈 **TÍNH NĂNG NÂNG CAO - MASTER FREEDOM WALLET**
 
-Giá» báº¡n Ä‘Ã£ quen vá»›i basics, nÃ¢ng cáº¥p thÃ´i!
+Giờ bạn đã quen với basics, nâng cấp thôi!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**1ï¸âƒ£ Äáº¦U TÆ¯ & ROI TRACKER**
+**1️⃣ ĐẦU TƯ & ROI TRACKER**
 
-ðŸ“Š Theo dÃµi hiá»‡u suáº¥t Ä‘áº§u tÆ°:
-â€¢ Cá»• phiáº¿u
-â€¢ Crypto
-â€¢ Báº¥t Ä‘á»™ng sáº£n
-â€¢ VÃ ng, ngoáº¡i tá»‡
+📊 Theo dõi hiệu suất đầu tư:
+• Cổ phiếu
+• Crypto
+• Bất động sản
+• Vàng, ngoại tệ
 
-ðŸ’¡ **CÃ¡ch dÃ¹ng:**
-â€¢ Nháº­p giÃ¡ mua ban Ä‘áº§u
-â€¢ Cáº­p nháº­t giÃ¡ hiá»‡n táº¡i
-â€¢ Xem ROI% tá»± Ä‘á»™ng
+💡 **Cách dùng:**
+• Nhập giá mua ban đầu
+• Cập nhật giá hiện tại
+• Xem ROI% tự động
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**2ï¸âƒ£ TÃ€I Sáº¢N & Ná»¢**
+**2️⃣ TÀI SẢN & NỢ**
 
-ðŸ’Ž Quáº£n lÃ½ tá»•ng tÃ i sáº£n:
-â€¢ Tiá»n máº·t, ngÃ¢n hÃ ng
-â€¢ Báº¥t Ä‘á»™ng sáº£n
-â€¢ Xe cá»™, trang sá»©c
-â€¢ Ná»£ vay, tháº» tÃ­n dá»¥ng
+💎 Quản lý tổng tài sản:
+• Tiền mặt, ngân hàng
+• Bất động sản
+• Xe cộ, trang sức
+• Nợ vay, thẻ tín dụng
 
-ðŸ’¡ **Lá»£i Ã­ch:**
-Biáº¿t chÃ­nh xÃ¡c net worth cá»§a báº¡n!
+💡 **Lợi ích:**
+Biết chính xác net worth của bạn!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**3ï¸âƒ£ BÃO CÃO & THá»NG KÃŠ**
+**3️⃣ BÁO CÁO & THỐNG KÊ**
 
-ðŸ“Š Dashboard tá»± Ä‘á»™ng:
-â€¢ Chi tiÃªu theo thÃ¡ng
-â€¢ So sÃ¡nh vá»›i thÃ¡ng trÆ°á»›c
-â€¢ Top danh má»¥c chi nhiá»u nháº¥t
-â€¢ Xu hÆ°á»›ng tiáº¿t kiá»‡m
+📊 Dashboard tự động:
+• Chi tiêu theo tháng
+• So sánh với tháng trước
+• Top danh mục chi nhiều nhất
+• Xu hướng tiết kiệm
 
-ðŸ’¡ **Xem ngay:**
-Freedom Wallet â†’ "Reports"
+💡 **Xem ngay:**
+Freedom Wallet → "Reports"
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**4ï¸âƒ£ NGÃ‚N SÃCH & Má»¤C TIÃŠU**
+**4️⃣ NGÂN SÁCH & MỤC TIÊU**
 
-ðŸŽ¯ Äáº·t má»¥c tiÃªu:
-â€¢ Tiáº¿t kiá»‡m 10M trong 6 thÃ¡ng
-â€¢ Giáº£m chi tiÃªu hÆ°á»Ÿng thá»¥ 20%
-â€¢ Äáº§u tÆ° 5M/thÃ¡ng
+🎯 Đặt mục tiêu:
+• Tiết kiệm 10M trong 6 tháng
+• Giảm chi tiêu hưởng thụ 20%
+• Đầu tư 5M/tháng
 
-ðŸ“ˆ Theo dÃµi tiáº¿n Ä‘á»™ tá»± Ä‘á»™ng!
+📈 Theo dõi tiến độ tự động!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’ª **THÃCH THá»¨C:**
+💪 **THÁCH THỨC:**
 
-KhÃ¡m phÃ¡ 1 tÃ­nh nÄƒng má»›i hÃ´m nay:
-1. Thá»­ ROI Tracker vá»›i 1 khoáº£n Ä‘áº§u tÆ°
-2. Nháº­p tÃ i sáº£n & ná»£ cá»§a báº¡n
-3. Xem Reports thÃ¡ng nÃ y
+Khám phá 1 tính năng mới hôm nay:
+1. Thử ROI Tracker với 1 khoản đầu tư
+2. Nhập tài sản & nợ của bạn
+3. Xem Reports tháng này
 
-â“ Cáº§n hÆ°á»›ng dáº«n chi tiáº¿t? Há»i mÃ¬nh!
+❓ Cần hướng dẫn chi tiết? Hỏi mình!
 """,
         "delay_hours": 96
     },
     
     6: {
-        "title": "ðŸ‘¥ Day 6: Tham Gia Cá»™ng Äá»“ng",
+        "title": "👥 Day 6: Tham Gia Cộng Đồng",
         "content": """
-ðŸ‘¥ **THAM GIA Cá»˜NG Äá»’NG FREEDOM WALLET**
+👥 **THAM GIA CỘNG ĐỒNG FREEDOM WALLET**
 
-Há»c há»i & chia sáº» vá»›i 1000+ thÃ nh viÃªn!
+Học hỏi & chia sẻ với 1000+ thành viên!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¬ **FREEDOM WALLET GROUP**
+💬 **FREEDOM WALLET GROUP**
 
-ðŸ‘‰ [Tham gia ngay](https://t.me/freedomwalletapp)
+👉 [Tham gia ngay](https://t.me/freedomwalletapp)
 
-ðŸ“š **Báº¡n sáº½ nháº­n Ä‘Æ°á»£c:**
+📚 **Bạn sẽ nhận được:**
 
-âœ“ Há»— trá»£ trá»±c tiáº¿p tá»« team & community
-âœ“ Tips tÃ i chÃ­nh hÃ ng ngÃ y
-âœ“ Case studies thá»±c táº¿
-âœ“ Updates tÃ­nh nÄƒng má»›i
-âœ“ TÃ i liá»‡u & templates miá»…n phÃ­
-âœ“ Livestream Q&A Ä‘á»‹nh ká»³
+✓ Hỗ trợ trực tiếp từ team & community
+✓ Tips tài chính hàng ngày
+✓ Case studies thực tế
+✓ Updates tính năng mới
+✓ Tài liệu & templates miễn phí
+✓ Livestream Q&A định kỳ
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ”¥ **TOPICS THÆ¯á»œNG TRÃ€:**
+🔥 **TOPICS THƯỜNG TRÀ:**
 
-â€¢ CÃ¡ch tá»‘i Æ°u 6 HÅ© Tiá»n
-â€¢ Chiáº¿n lÆ°á»£c Ä‘áº§u tÆ° cho ngÆ°á»i má»›i
-â€¢ Tiáº¿t kiá»‡m 50% lÆ°Æ¡ng má»—i thÃ¡ng
-â€¢ Passive income ideas
-â€¢ Kháº¯c phá»¥c lá»—i app nhanh
+• Cách tối ưu 6 Hũ Tiền
+• Chiến lược đầu tư cho người mới
+• Tiết kiệm 50% lương mỗi tháng
+• Passive income ideas
+• Khắc phục lỗi app nhanh
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“– **CÃC NGUá»’N Há»ŒC THÃŠM:**
+📖 **CÁC NGUỒN HỌC THÊM:**
 
 **1. Notion Guide:**
-ðŸ‘‰ [eliroxbot.notion.site/freedomwallet](https://eliroxbot.notion.site/freedomwallet)
-â€¢ HÆ°á»›ng dáº«n chi tiáº¿t má»i tÃ­nh nÄƒng
-â€¢ Video tutorials
-â€¢ Troubleshooting guide
+👉 [eliroxbot.notion.site/freedomwallet](https://eliroxbot.notion.site/freedomwallet)
+• Hướng dẫn chi tiết mọi tính năng
+• Video tutorials
+• Troubleshooting guide
 
 **2. Resources & Templates:**
-â€¢ Excel budgeting templates
-â€¢ Financial planning worksheets
-â€¢ Reading list cho financial literacy
+• Excel budgeting templates
+• Financial planning worksheets
+• Reading list cho financial literacy
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¡ **CHIA Sáºº THÃ€NH CÃ”NG Cá»¦A Báº N!**
+💡 **CHIA SẺ THÀNH CÔNG CỦA BẠN!**
 
-Báº¡n Ä‘Ã£ track Ä‘Æ°á»£c gÃ¬ sau 6 ngÃ y?
-â€¢ Tiáº¿t kiá»‡m Ä‘Æ°á»£c bao nhiÃªu?
-â€¢ PhÃ¡t hiá»‡n ra Ä‘iá»ƒm nÃ o lÃ£ng phÃ­?
-â€¢ Má»¥c tiÃªu tiáº¿p theo lÃ  gÃ¬?
+Bạn đã track được gì sau 6 ngày?
+• Tiết kiệm được bao nhiêu?
+• Phát hiện ra điểm nào lãng phí?
+• Mục tiêu tiếp theo là gì?
 
-Chia sáº» trong Group Ä‘á»ƒ inspire ngÆ°á»i khÃ¡c nhÃ©!
+Chia sẻ trong Group để inspire người khác nhé!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-â“ **FAQ NHANH:**
+❓ **FAQ NHANH:**
 
-Q: Group cÃ³ thu phÃ­ khÃ´ng?
-A: 100% miá»…n phÃ­ mÃ£i mÃ£i!
+Q: Group có thu phí không?
+A: 100% miễn phí mãi mãi!
 
-Q: TÃ´i cÃ³ thá»ƒ há»i báº¥t cá»© Ä‘iá»u gÃ¬?
-A: CÃ³! Team & community sáº½ giÃºp báº¡n.
+Q: Tôi có thể hỏi bất cứ điều gì?
+A: Có! Team & community sẽ giúp bạn.
 
-Q: CÃ³ Ä‘Æ°á»£c support 1-1 khÃ´ng?
-A: CÃ³! Tag @admin trong group.
+Q: Có được support 1-1 không?
+A: Có! Tag @admin trong group.
 
-ðŸš€ Tham gia ngay Ä‘á»ƒ khÃ´ng bá» lá»¡!
+🚀 Tham gia ngay để không bỏ lỡ!
 """,
         "delay_hours": 120
     },
     
     7: {
-        "title": "ðŸŽŠ Day 7: Ã”n Táº­p & Káº¿ Hoáº¡ch",
+        "title": "🎊 Day 7: Ôn Tập & Kế Hoạch",
         "content": """
-ðŸŽŠ **CHÃšC Má»ªNG! Báº N ÄÃƒ HOÃ€N THÃ€NH 7 NGÃ€Y ONBOARDING!**
+🎊 **CHÚC MỪNG! BẠN ĐÃ HOÀN THÀNH 7 NGÀY ONBOARDING!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“š **REVIEW: NHá»®NG GÃŒ Báº N ÄÃƒ Há»ŒC**
+📚 **REVIEW: NHỮNG GÌ BẠN ĐÃ HỌC**
 
-âœ… **Day 1:** Setup Web App hoÃ n chá»‰nh
-âœ… **Day 2:** Hiá»ƒu rÃµ 6 HÅ© Tiá»n
-âœ… **Day 3:** XÃ¡c Ä‘á»‹nh cáº¥p Ä‘á»™ tÃ i chÃ­nh hiá»‡n táº¡i
-âœ… **Day 4:** Tracking giao dá»‹ch thÃ nh tháº¡o
-âœ… **Day 5:** Sá»­ dá»¥ng tÃ­nh nÄƒng nÃ¢ng cao
-âœ… **Day 6:** Tham gia cá»™ng Ä‘á»“ng
+✅ **Day 1:** Setup Web App hoàn chỉnh
+✅ **Day 2:** Hiểu rõ 6 Hũ Tiền
+✅ **Day 3:** Xác định cấp độ tài chính hiện tại
+✅ **Day 4:** Tracking giao dịch thành thạo
+✅ **Day 5:** Sử dụng tính năng nâng cao
+✅ **Day 6:** Tham gia cộng đồng
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŽ¯ **Káº¾ HOáº CH 30 NGÃ€Y Tá»šI**
+🎯 **KẾ HOẠCH 30 NGÀY TỚI**
 
-**TUáº¦N 2: Táº O THÃ“I QUEN**
-â€¢ Track má»i giao dá»‹ch hÃ ng ngÃ y (cáº£ nhá» nháº¥t)
-â€¢ Review chi tiÃªu má»—i tá»‘i 5 phÃºt
-â€¢ Má»¥c tiÃªu: 21 ngÃ y = 1 thÃ³i quen
+**TUẦN 2: TẠO THÓI QUEN**
+• Track mọi giao dịch hàng ngày (cả nhỏ nhất)
+• Review chi tiêu mỗi tối 5 phút
+• Mục tiêu: 21 ngày = 1 thói quen
 
-**TUáº¦N 3: Tá»I Æ¯U HÃ“A**
-â€¢ PhÃ¢n tÃ­ch chi tiÃªu thÃ¡ng trÆ°á»›c
-â€¢ TÃ¬m 3 Ä‘iá»ƒm cÃ³ thá»ƒ cáº¯t giáº£m
-â€¢ TÄƒng hÅ© Ä‘áº§u tÆ° thÃªm 5%
+**TUẦN 3: TỐI ƯU HÓA**
+• Phân tích chi tiêu tháng trước
+• Tìm 3 điểm có thể cắt giảm
+• Tăng hũ đầu tư thêm 5%
 
-**TUáº¦N 4: Má»ž Rá»˜NG**
-â€¢ Thá»­ 1 cÃ¡ch Ä‘áº§u tÆ° má»›i
-â€¢ Äáº·t má»¥c tiÃªu tiáº¿t kiá»‡m cá»¥ thá»ƒ
-â€¢ Share kinh nghiá»‡m trong Group
+**TUẦN 4: MỞ RỘNG**
+• Thử 1 cách đầu tư mới
+• Đặt mục tiêu tiết kiệm cụ thể
+• Share kinh nghiệm trong Group
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’ª **THÃCH THá»¨C 30 NGÃ€Y:**
+💪 **THÁCH THỨC 30 NGÀY:**
 
-MÃ¬nh thÃ¡ch báº¡n trong 30 ngÃ y tá»›i:
-1ï¸âƒ£ Track 100% giao dá»‹ch
-2ï¸âƒ£ Tiáº¿t kiá»‡m thÃªm 10% thu nháº­p
-3ï¸âƒ£ TÃ¬m 1 nguá»“n thu thá»¥ Ä‘á»™ng má»›i
+Mình thách bạn trong 30 ngày tới:
+1️⃣ Track 100% giao dịch
+2️⃣ Tiết kiệm thêm 10% thu nhập
+3️⃣ Tìm 1 nguồn thu thụ động mới
 
-Nháº¯n "ACCEPT" Ä‘á»ƒ nháº­n challenge!
+Nhắn "ACCEPT" để nhận challenge!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“Š **ÄÃNH GIÃ:**
+📊 **ĐÁNH GIÁ:**
 
-GiÃºp mÃ¬nh cáº£i thiá»‡n báº±ng cÃ¡ch tráº£ lá»i:
+Giúp mình cải thiện bằng cách trả lời:
 
-**Onboarding 7 ngÃ y cÃ³ há»¯u Ã­ch khÃ´ng?**
-1ï¸âƒ£ = Ráº¥t tá»‡
-2ï¸âƒ£ = Tá»‡
-3ï¸âƒ£ = BÃ¬nh thÆ°á»ng
-4ï¸âƒ£ = Tá»‘t
-5ï¸âƒ£ = Xuáº¥t sáº¯c!
+**Onboarding 7 ngày có hữu ích không?**
+1️⃣ = Rất tệ
+2️⃣ = Tệ
+3️⃣ = Bình thường
+4️⃣ = Tốt
+5️⃣ = Xuất sắc!
 
-Reply sá»‘ tá»« 1-5 nhÃ©!
+Reply số từ 1-5 nhé!
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŽ **SPECIAL BONUS:**
+🎁 **SPECIAL BONUS:**
 
 **Referral Rewards má»›i:**
-Giá»›i thiá»‡u thÃªm 3 ngÆ°á»i â†’ Nháº­n:
-â€¢ 1 giá» tÆ° váº¥n tÃ i chÃ­nh 1-1
-â€¢ Premium templates pack
-â€¢ Early access tÃ­nh nÄƒng má»›i
+Giới thiệu thêm 3 người → Nhận:
+• 1 giờ tư vấn tài chính 1-1
+• Premium templates pack
+• Early access tính năng mới
 
-Share link cá»§a báº¡n: /referral
+Share link của bạn: /referral
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸš€ **HÃ€NH TRÃŒNH Má»šI Báº®T Äáº¦U!**
+🚀 **HÀNH TRÌNH MỚI BẮT ĐẦU!**
 
-Freedom Wallet khÃ´ng chá»‰ lÃ  app,
-Ä‘Ã³ lÃ  hÃ nh trÃ¬nh thay Ä‘á»•i tÃ i chÃ­nh cá»§a báº¡n.
+Freedom Wallet không chỉ là app,
+đó là hành trình thay đổi tài chính của bạn.
 
-MÃ¬nh sáº½ luÃ´n á»Ÿ Ä‘Ã¢y support báº¡n!
+Mình sẽ luôn ở đây support bạn!
 
-ðŸ’¬ Cáº§n gÃ¬ cá»© há»i - /help
-ðŸŽ¯ Äáº·t má»¥c tiÃªu - /goals
-ðŸ“Š Xem tiáº¿n Ä‘á»™ - /stats
-ðŸ‘¥ Cá»™ng Ä‘á»“ng - /community
+💬 Cần gì cứ hỏi - /help
+🎯 Đặt mục tiêu - /goals
+📊 Xem tiến độ - /stats
+👥 Cộng đồng - /community
 
-**ChÃºc báº¡n thÃ nh cÃ´ng trÃªn con Ä‘Æ°á»ng tá»± do tÃ i chÃ­nh! ðŸŽ‰**
+**Chúc bạn thành công trên con đường tự do tài chính! 🎉**
 
-P/S: Nhá»› track chi tiÃªu hÃ´m nay nhÃ©! ðŸ˜‰
+P/S: Nhớ track chi tiêu hôm nay nhé! 😉
 """,
         "delay_hours": 144
     }
@@ -511,10 +511,10 @@ async def start_onboarding_journey(user_id: int, context: ContextTypes.DEFAULT_T
             )
             
             if success:
-                logger.success(f"âœ… User {user_id} enrolled in ONBOARDING_7_DAY via ProgramManager")
+                logger.success(f"✅ User {user_id} enrolled in ONBOARDING_7_DAY via ProgramManager")
                 return True
             else:
-                logger.warning(f"âš ï¸ Failed to enroll user {user_id} in ONBOARDING_7_DAY")
+                logger.warning(f"⚠️ Failed to enroll user {user_id} in ONBOARDING_7_DAY")
                 # Fallback to legacy method
                 return await _start_onboarding_journey_legacy(user_id, context)
         
@@ -630,8 +630,8 @@ async def handle_onboarding_response(update: Update, context: ContextTypes.DEFAU
     # Check for completion markers
     if text == "DONE":
         await update.message.reply_text(
-            "ðŸŽ‰ Tuyá»‡t vá»i! Báº¡n Ä‘Ã£ hoÃ n thÃ nh nhiá»‡m vá»¥!\n"
-            "Tiáº¿p tá»¥c theo dÃµi nhÃ©, mÃ¬nh sáº½ gá»­i bÃ i tiáº¿p theo sá»›m thÃ´i!",
+            "🎉 Tuyệt vời! Bạn đã hoàn thành nhiệm vụ!\n"
+            "Tiếp tục theo dõi nhé, mình sẽ gửi bài tiếp theo sớm thôi!",
             parse_mode="Markdown"
         )
         return
@@ -639,9 +639,9 @@ async def handle_onboarding_response(update: Update, context: ContextTypes.DEFAU
     # Check for challenge acceptance
     if text == "ACCEPT":
         await update.message.reply_text(
-            "ðŸ’ª **CHALLENGE ACCEPTED!**\n\n"
-            "MÃ¬nh sáº½ nháº¯c báº¡n má»—i tuáº§n Ä‘á»ƒ check progress.\n"
-            "CÃ¹ng nhau lÃ m nÃªn Ä‘iá»u tuyá»‡t vá»i! ðŸš€",
+            "💪 **CHALLENGE ACCEPTED!**\n\n"
+            "Mình sẽ nhắc bạn mỗi tuần để check progress.\n"
+            "Cùng nhau làm nên điều tuyệt vời! 🚀",
             parse_mode="Markdown"
         )
         # TODO: Schedule weekly check-ins
@@ -651,15 +651,15 @@ async def handle_onboarding_response(update: Update, context: ContextTypes.DEFAU
     if text in ["1", "2", "3", "4", "5"]:
         level = int(text)
         tips = {
-            1: "ðŸ’¡ **Tips lÃªn Cáº¥p 2:**\nâ€¢ Liá»‡t kÃª táº¥t cáº£ chi tiÃªu\nâ€¢ TÃ¬m 3 khoáº£n cÃ³ thá»ƒ cáº¯t\nâ€¢ TÄƒng thu nháº­p (side hustle)\nâ€¢ DÃ¹ng app track má»—i ngÃ y",
-            2: "ðŸ’¡ **Tips lÃªn Cáº¥p 3:**\nâ€¢ Táº¡o ngÃ¢n sÃ¡ch chi tiáº¿t\nâ€¢ Ãp dá»¥ng 6 HÅ© Tiá»n\nâ€¢ Tiáº¿t kiá»‡m Ã­t nháº¥t 10%\nâ€¢ TÃ¬m cÃ¡ch tÄƒng thu",
-            3: "ðŸ’¡ **Tips lÃªn Cáº¥p 4:**\nâ€¢ XÃ¢y quá»¹ kháº©n cáº¥p 6 thÃ¡ng\nâ€¢ Äáº§u tÆ° 10-20% thu nháº­p\nâ€¢ Há»c vá» Ä‘áº§u tÆ° an toÃ n\nâ€¢ TÄƒng passive income",
-            4: "ðŸ’¡ **Tips lÃªn Cáº¥p 5:**\nâ€¢ Scale passive income\nâ€¢ Äa dáº¡ng hÃ³a Ä‘áº§u tÆ°\nâ€¢ Tá»‘i Æ°u thuáº¿\nâ€¢ Enjoy life but stay disciplined",
-            5: "ðŸ† **CHÃšC Má»ªNG!**\nBáº¡n Ä‘Ã£ Ä‘áº¡t tá»± do tÃ i chÃ­nh!\nGiá» lÃ  lÃºc giÃºp Ä‘á»¡ ngÆ°á»i khÃ¡c vÃ  enjoy cuá»™c sá»‘ng!"
+            1: "💡 **Tips lên Cấp 2:**\n• Liệt kê tất cả chi tiêu\n• Tìm 3 khoản có thể cắt\n• Tăng thu nhập (side hustle)\n• Dùng app track mỗi ngày",
+            2: "💡 **Tips lên Cấp 3:**\n• Tạo ngân sách chi tiết\n• Áp dụng 6 Hũ Tiền\n• Tiết kiệm ít nhất 10%\n• Tìm cách tăng thu",
+            3: "💡 **Tips lên Cấp 4:**\n• Xây quỹ khẩn cấp 6 tháng\n• Đầu tư 10-20% thu nhập\n• Học về đầu tư an toàn\n• Tăng passive income",
+            4: "💡 **Tips lên Cấp 5:**\n• Scale passive income\n• Đa dạng hóa đầu tư\n• Tối ưu thuế\n• Enjoy life but stay disciplined",
+            5: "🏆 **CHÚC MỪNG!**\nBạn đã đạt tự do tài chính!\nGiờ là lúc giúp đỡ người khác và enjoy cuộc sống!"
         }
         
         await update.message.reply_text(
-            f"âœ… Báº¡n Ä‘ang á»Ÿ **Cáº¥p {level}**!\n\n{tips[level]}",
+            f"✅ Bạn đang ở **Cấp {level}**!\n\n{tips[level]}",
             parse_mode="Markdown"
         )
         return

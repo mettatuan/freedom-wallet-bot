@@ -1,13 +1,13 @@
 """
-ðŸ›¡ï¸ FRAUD DETECTION
+🛡️ FRAUD DETECTION
 ===================
 
-PhÃ¡t hiá»‡n vÃ  ngÄƒn cháº·n referral fraud
+Phát hiện và ngăn chặn referral fraud
 
 Red flags:
-- Same IP/device nhiá»u accounts
+- Same IP/device nhiều accounts
 - Too fast registration (bot-like)
-- Referrer vÃ  referred cÃ³ behavior giá»‘ng nhau
+- Referrer và referred có behavior giống nhau
 - Fake engagement patterns
 
 Author: Freedom Wallet Team
@@ -83,7 +83,7 @@ class FraudDetector:
         if velocity_reason:
             reasons.append(velocity_reason)
         
-        # Check 4: Time pattern (all refs trong giá» hÃ nh chÃ­nh?)
+        # Check 4: Time pattern (all refs trong giờ hành chính?)
         pattern_score, pattern_reason = await self._check_time_pattern(referrer_id)
         fraud_score += pattern_score
         if pattern_reason:
@@ -110,14 +110,14 @@ class FraudDetector:
         # Log if suspicious
         if result['is_suspicious']:
             logger.warning(
-                f"ðŸš¨ FRAUD ALERT: Referrer {referrer_id} â†’ New user {new_user_id}\n"
+                f"🚨 FRAUD ALERT: Referrer {referrer_id} → New user {new_user_id}\n"
                 f"Score: {fraud_score}, Reasons: {reasons}"
             )
         
         return result
     
     async def _check_ip_abuse(self, referrer_id: int, ip_address: str) -> tuple:
-        """Check if IP Ä‘Ã£ dÃ¹ng cho nhiá»u referrals"""
+        """Check if IP đã dùng cho nhiều referrals"""
         
         # Count referrals from this IP in last 24h
         count = self.db.count_referrals_by_ip(
@@ -134,7 +134,7 @@ class FraudDetector:
         return (0, None)
     
     async def _check_device_abuse(self, referrer_id: int, device_fingerprint: str) -> tuple:
-        """Check if device Ä‘Ã£ dÃ¹ng cho nhiá»u referrals"""
+        """Check if device đã dùng cho nhiều referrals"""
         
         count = self.db.count_referrals_by_device(
             referrer_id=referrer_id,
@@ -210,12 +210,12 @@ class FraudDetector:
     
     async def _check_behavior_similarity(self, referrer_id: int, referred_id: int) -> tuple:
         """
-        Check if referrer vÃ  referred cÃ³ behavior giá»‘ng nhau (same person?)
+        Check if referrer và referred có behavior giống nhau (same person?)
         
         Signals:
-        - CÃ¹ng timezone activity pattern
-        - CÃ¹ng typing speed
-        - CÃ¹ng navigation pattern trong bot
+        - Cùng timezone activity pattern
+        - Cùng typing speed
+        - Cùng navigation pattern trong bot
         """
         
         # Get activity logs
@@ -295,7 +295,7 @@ class FraudDetector:
         # Notify admin
         await self._notify_admin_review(referrer_id, referred_id, fraud_result)
         
-        logger.info(f"Flagged referral {referrer_id}â†’{referred_id} for review")
+        logger.info(f"Flagged referral {referrer_id}→{referred_id} for review")
     
     async def _block_referral(self, referrer_id: int, referred_id: int, fraud_result: Dict):
         """Auto-block referral"""
@@ -314,10 +314,10 @@ class FraudDetector:
         # Notify admin
         await self._notify_admin_block(referrer_id, referred_id, fraud_result)
         
-        logger.warning(f"Blocked referral {referrer_id}â†’{referred_id}, score: {fraud_result['fraud_score']}")
+        logger.warning(f"Blocked referral {referrer_id}→{referred_id}, score: {fraud_result['fraud_score']}")
     
     async def _notify_admin_review(self, referrer_id: int, referred_id: int, fraud_result: Dict):
-        """Gá»­i thÃ´ng bÃ¡o cho admin vá» case cáº§n review"""
+        """Gửi thông báo cho admin về case cần review"""
         
         from telegram import Bot
         bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
@@ -326,7 +326,7 @@ class FraudDetector:
         referred = self.db.get_user(referred_id)
         
         message = (
-            "ðŸ” **FRAUD REVIEW NEEDED**\n\n"
+            "🔍 **FRAUD REVIEW NEEDED**\n\n"
             f"Referrer: {referrer.full_name} (ID: {referrer_id})\n"
             f"Referred: {referred.full_name} (ID: {referred_id})\n\n"
             f"**Fraud Score:** {fraud_result['fraud_score']}/100\n\n"
@@ -334,7 +334,7 @@ class FraudDetector:
         )
         
         for reason in fraud_result['reasons']:
-            message += f"â€¢ {reason}\n"
+            message += f"• {reason}\n"
         
         message += f"\n[Review in Admin Panel](/admin/referrals/{referrer_id}_{referred_id})"
         
@@ -346,20 +346,20 @@ class FraudDetector:
         )
     
     async def _notify_referrer_invalid(self, referrer_id: int, referred_id: int):
-        """Notify referrer vá» invalid referral (carefully worded)"""
+        """Notify referrer về invalid referral (carefully worded)"""
         
         from telegram import Bot
         bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
         
         referrer = self.db.get_user(referrer_id)
         
-        # Gentle message (khÃ´ng accuse fraud trá»±c tiáº¿p)
+        # Gentle message (không accuse fraud trực tiếp)
         message = (
-            "â„¹ï¸ **ThÃ´ng bÃ¡o xÃ¡c minh**\n\n"
-            "Má»™t trong nhá»¯ng lÆ°á»£t giá»›i thiá»‡u gáº§n Ä‘Ã¢y cá»§a báº¡n Ä‘ang Ä‘Æ°á»£c xÃ¡c minh.\n\n"
-            "ÄÃ¢y lÃ  quy trÃ¬nh thÆ°á»ng xuyÃªn Ä‘á»ƒ Ä‘áº£m báº£o cháº¥t lÆ°á»£ng cá»™ng Ä‘á»“ng.\n\n"
-            "Náº¿u há»£p lá»‡, lÆ°á»£t giá»›i thiá»‡u sáº½ Ä‘Æ°á»£c cá»™ng trong 24-48h.\n\n"
-            "ðŸ’¡ Tiáº¿p tá»¥c giá»›i thiá»‡u báº¡n bÃ¨ tháº­t Ä‘á»ƒ Ä‘áº¡t VIP nhÃ©!"
+            "ℹ️ **Thông báo xác minh**\n\n"
+            "Một trong những lượt giới thiệu gần đây của bạn đang được xác minh.\n\n"
+            "Đây là quy trình thường xuyên để đảm bảo chất lượng cộng đồng.\n\n"
+            "Nếu hợp lệ, lượt giới thiệu sẽ được cộng trong 24-48h.\n\n"
+            "💡 Tiếp tục giới thiệu bạn bè thật để đạt VIP nhé!"
         )
         
         await bot.send_message(
@@ -422,7 +422,7 @@ class FraudAdminTools:
         logger.info(f"Admin {admin_id} rejected referral {referral_id}: {reason}")
     
     async def _notify_approved(self, referrer_id: int):
-        """Notify vá» approved referral"""
+        """Notify về approved referral"""
         
         from telegram import Bot
         bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
@@ -432,16 +432,16 @@ class FraudAdminTools:
         await bot.send_message(
             chat_id=referrer.id,
             text=(
-                "âœ… **XÃ¡c minh thÃ nh cÃ´ng!**\n\n"
-                "LÆ°á»£t giá»›i thiá»‡u Ä‘Ã£ Ä‘Æ°á»£c xÃ¡c nháº­n.\n"
-                f"Báº¡n hiá»‡n cÃ³ **{referrer.referral_count}** lÆ°á»£t giá»›i thiá»‡u há»£p lá»‡.\n\n"
-                "Tiáº¿p tá»¥c phÃ¡t triá»ƒn! ðŸš€"
+                "✅ **Xác minh thành công!**\n\n"
+                "Lượt giới thiệu đã được xác nhận.\n"
+                f"Bạn hiện có **{referrer.referral_count}** lượt giới thiệu hợp lệ.\n\n"
+                "Tiếp tục phát triển! 🚀"
             ),
             parse_mode="Markdown"
         )
     
     async def _notify_rejected(self, referrer_id: int, reason: str):
-        """Notify vá» rejected referral"""
+        """Notify về rejected referral"""
         
         from telegram import Bot
         bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
@@ -451,10 +451,10 @@ class FraudAdminTools:
         await bot.send_message(
             chat_id=referrer.id,
             text=(
-                "âŒ **KhÃ´ng há»£p lá»‡**\n\n"
-                "LÆ°á»£t giá»›i thiá»‡u khÃ´ng Ä‘áº¡t yÃªu cáº§u xÃ¡c minh.\n\n"
-                f"LÃ½ do: {reason}\n\n"
-                "ðŸ’¡ HÃ£y giá»›i thiá»‡u báº¡n bÃ¨ tháº­t Ä‘á»ƒ Ä‘Æ°á»£c cÃ´ng nháº­n nhÃ©!"
+                "❌ **Không hợp lệ**\n\n"
+                "Lượt giới thiệu không đạt yêu cầu xác minh.\n\n"
+                f"Lý do: {reason}\n\n"
+                "💡 Hãy giới thiệu bạn bè thật để được công nhận nhé!"
             ),
             parse_mode="Markdown"
         )

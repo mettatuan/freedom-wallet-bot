@@ -12,7 +12,7 @@ Structure:
 - support/: Support handlers (tutorials, setup guides)
 - core/: Core functionality handlers (message routing, callbacks, webapp)
 
-LAW #1: Handlers only do Input â†’ Service â†’ Output
+LAW #1: Handlers only do Input → Service → Output
 - Parse user input
 - Call service layer (no direct database/API calls)
 - Format and send response

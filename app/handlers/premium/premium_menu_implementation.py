@@ -42,17 +42,17 @@ async def show_premium_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     streak = 7  # Mock data
     
     message = f"""
-ðŸŒŸ **FREEDOM WALLET PREMIUM**
+🌟 **FREEDOM WALLET PREMIUM**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’Ž ChÃ o má»«ng báº¡n Ä‘áº¿n vá»›i Premium!
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💎 Chào mừng bạn đến với Premium!
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“Š **HÃ´m nay:** 09/02/2026
-ðŸ”¥ **Streak:** {streak} ngÃ y
-ðŸ’° **Sá»‘ dÆ°:** 5,000,000 â‚«
+📊 **Hôm nay:** 09/02/2026
+🔥 **Streak:** {streak} ngày
+💰 **Số dư:** 5,000,000 ₫
 
-ðŸ’¡ Chá»n chá»©c nÄƒng báº¡n muá»‘n sá»­ dá»¥ng:
+💡 Chọn chức năng bạn muốn sử dụng:
 """
     
     await query.edit_message_text(
@@ -74,10 +74,10 @@ async def show_finance_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     message = """
-ðŸ’° **TÃ€I CHÃNH**
+💰 **TÀI CHÍNH**
 
-Quáº£n lÃ½ giao dá»‹ch vÃ  sá»‘ dÆ° cá»§a báº¡n.
-Chá»n thao tÃ¡c báº¡n muá»‘n thá»±c hiá»‡n:
+Quản lý giao dịch và số dư của bạn.
+Chọn thao tác bạn muốn thực hiện:
 """
     
     await query.edit_message_text(
@@ -93,10 +93,10 @@ async def show_reports_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     message = """
-ðŸ“Š **BÃO CÃO & PHÃ‚N TÃCH**
+📊 **BÁO CÁO & PHÂN TÍCH**
 
-Xem chi tiáº¿t thu chi vÃ  xu hÆ°á»›ng chi tiÃªu.
-Chá»n khoáº£ng thá»i gian:
+Xem chi tiết thu chi và xu hướng chi tiêu.
+Chọn khoảng thời gian:
 """
     
     await query.edit_message_text(
@@ -112,10 +112,10 @@ async def show_goals_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     message = """
-ðŸŽ¯ **Má»¤C TIÃŠU & NGÃ‚N SÃCH**
+🎯 **MỤC TIÊU & NGÂN SÁCH**
 
-Theo dÃµi tiáº¿n Ä‘á»™ vÃ  quáº£n lÃ½ ngÃ¢n sÃ¡ch.
-Báº¡n muá»‘n lÃ m gÃ¬?
+Theo dõi tiến độ và quản lý ngân sách.
+Bạn muốn làm gì?
 """
     
     await query.edit_message_text(
@@ -131,10 +131,10 @@ async def show_ai_insights_menu(update: Update, context: ContextTypes.DEFAULT_TY
     await query.answer()
     
     message = """
-ðŸ¤– **AI INSIGHTS**
+🤖 **AI INSIGHTS**
 
-PhÃ¢n tÃ­ch thÃ´ng minh vÃ  gá»£i Ã½ cÃ¡ nhÃ¢n hÃ³a.
-KhÃ¡m phÃ¡ cÃ¡c tÃ­nh nÄƒng AI:
+Phân tích thông minh và gợi ý cá nhân hóa.
+Khám phá các tính năng AI:
 """
     
     await query.edit_message_text(
@@ -150,10 +150,10 @@ async def show_settings_menu(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.answer()
     
     message = """
-âš™ï¸ **CÃ€I Äáº¶T**
+⚙️ **CÀI ĐẶT**
 
-TÃ¹y chá»‰nh bot theo nhu cáº§u cá»§a báº¡n.
-Chá»n má»¥c cÃ i Ä‘áº·t:
+Tùy chỉnh bot theo nhu cầu của bạn.
+Chọn mục cài đặt:
 """
     
     await query.edit_message_text(
@@ -169,10 +169,10 @@ async def show_help_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     message = """
-â“ **TRá»¢ GIÃšP & Há»– TRá»¢**
+❓ **TRỢ GIÚP & HỖ TRỢ**
 
-ChÃºng tÃ´i luÃ´n sáºµn sÃ ng há»— trá»£ báº¡n 24/7!
-Báº¡n cáº§n giÃºp Ä‘á»¡ gÃ¬?
+Chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7!
+Bạn cần giúp đỡ gì?
 """
     
     await query.edit_message_text(
@@ -192,9 +192,9 @@ async def show_balance_options(update: Update, context: ContextTypes.DEFAULT_TYP
     await query.answer()
     
     message = """
-ðŸ’³ **XEM Sá» DÆ¯**
+💳 **XEM SỐ DƯ**
 
-Chá»n cÃ¡ch xem sá»‘ dÆ°:
+Chọn cách xem số dư:
 """
     
     await query.edit_message_text(
@@ -207,31 +207,31 @@ Chá»n cÃ¡ch xem sá»‘ dÆ°:
 async def show_balance_overview(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show balance overview"""
     query = update.callback_query
-    await query.answer("ðŸ”„ Äang táº£i sá»‘ dÆ°...")
+    await query.answer("🔄 Đang tải số dư...")
     
     # Mock data - Replace with actual API call
     message = """
-ðŸ’° **Tá»”NG QUAN Sá» DÆ¯**
+💰 **TỔNG QUAN SỐ DƯ**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**Tá»•ng tÃ i sáº£n:** 10,500,000 â‚«
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+**Tổng tài sản:** 10,500,000 ₫
+━━━━━━━━━━━━━━━━━━━━━
 
-**PhÃ¢n bá»• theo hÅ©:**
-ðŸ’° NEC (55%): 5,775,000 â‚«
-ðŸŽ¯ FFA (10%): 1,050,000 â‚«
-ðŸ“š EDU (10%): 1,050,000 â‚«
-ðŸŽ‰ PLAY (10%): 1,050,000 â‚«
-ðŸ’ GIVE (5%): 525,000 â‚«
-ðŸ’¼ LTSS (10%): 1,050,000 â‚«
+**Phân bổ theo hũ:**
+💰 NEC (55%): 5,775,000 ₫
+🎯 FFA (10%): 1,050,000 ₫
+📚 EDU (10%): 1,050,000 ₫
+🎉 PLAY (10%): 1,050,000 ₫
+💝 GIVE (5%): 525,000 ₫
+💼 LTSS (10%): 1,050,000 ₫
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**TÃ i khoáº£n:**
-ðŸ’³ Cash: 3,500,000 â‚«
-ðŸ¦ VCB: 5,000,000 â‚«
-ðŸ’° MB: 2,000,000 â‚«
+━━━━━━━━━━━━━━━━━━━━━
+**Tài khoản:**
+💳 Cash: 3,500,000 ₫
+🏦 VCB: 5,000,000 ₫
+💰 MB: 2,000,000 ₫
 
-ðŸ”„ Cáº­p nháº­t: 09/02/2026 22:30
+🔄 Cập nhật: 09/02/2026 22:30
 """
     
     await query.edit_message_text(
@@ -251,10 +251,10 @@ async def show_quick_record_categories(update: Update, context: ContextTypes.DEF
     await query.answer()
     
     message = """
-âž• **GHI GIAO Dá»ŠCH NHANH**
+➕ **GHI GIAO DỊCH NHANH**
 
-Chá»n danh má»¥c chi tiÃªu:
-(Sau Ä‘Ã³ nháº­p sá»‘ tiá»n)
+Chọn danh mục chi tiêu:
+(Sau đó nhập số tiền)
 """
     
     await query.edit_message_text(
@@ -274,23 +274,23 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
     context.user_data['waiting_for_amount'] = True
     
     category_names = {
-        'food': 'ðŸ½ï¸ Ä‚n uá»‘ng',
-        'family': 'ðŸ  Gia Ä‘Ã¬nh',
-        'transport': 'ðŸš— Di chuyá»ƒn',
-        'health': 'ðŸ’Š Sá»©c khá»e',
-        'entertainment': 'ðŸŽ‰ Giáº£i trÃ­',
-        'education': 'ðŸ“š Há»c táº­p',
-        'shopping': 'ðŸ›ï¸ Mua sáº¯m',
-        'other': 'âž• KhÃ¡c'
+        'food': '🍽️ Ăn uống',
+        'family': '🏠 Gia đình',
+        'transport': '🚗 Di chuyển',
+        'health': '💊 Sức khỏe',
+        'entertainment': '🎉 Giải trí',
+        'education': '📚 Học tập',
+        'shopping': '🛍️ Mua sắm',
+        'other': '➕ Khác'
     }
     
     message = f"""
-âž• **GHI GIAO Dá»ŠCH**
+➕ **GHI GIAO DỊCH**
 
-Danh má»¥c: **{category_names.get(category, 'N/A')}**
+Danh mục: **{category_names.get(category, 'N/A')}**
 
-ðŸ“ Nháº­p sá»‘ tiá»n:
-VÃ­ dá»¥: 50k, 100000, 1.5tr
+📝 Nhập số tiền:
+Ví dụ: 50k, 100000, 1.5tr
 """
     
     await query.edit_message_text(
@@ -310,9 +310,9 @@ async def show_jar_transfer_source(update: Update, context: ContextTypes.DEFAULT
     await query.answer()
     
     message = """
-ðŸ”„ **CHUYá»‚N TIá»€N GIá»®A CÃC HÅ¨**
+🔄 **CHUYỂN TIỀN GIỮA CÁC HŨ**
 
-Chá»n hÅ© nguá»“n (chuyá»ƒn tá»«):
+Chọn hũ nguồn (chuyển từ):
 """
     
     await query.edit_message_text(
@@ -331,20 +331,20 @@ async def show_jar_transfer_destination(update: Update, context: ContextTypes.DE
     context.user_data['transfer_from_jar'] = from_jar
     
     jar_names = {
-        'NEC': 'ðŸ’° NEC',
-        'FFA': 'ðŸŽ¯ FFA',
-        'EDU': 'ðŸ“š EDU',
-        'PLAY': 'ðŸŽ‰ PLAY',
-        'GIVE': 'ðŸ’ GIVE',
-        'LTSS': 'ðŸ’¼ LTSS'
+        'NEC': '💰 NEC',
+        'FFA': '🎯 FFA',
+        'EDU': '📚 EDU',
+        'PLAY': '🎉 PLAY',
+        'GIVE': '💝 GIVE',
+        'LTSS': '💼 LTSS'
     }
     
     message = f"""
-ðŸ”„ **CHUYá»‚N TIá»€N GIá»®A CÃC HÅ¨**
+🔄 **CHUYỂN TIỀN GIỮA CÁC HŨ**
 
-Tá»«: **{jar_names.get(from_jar, 'N/A')}**
+Từ: **{jar_names.get(from_jar, 'N/A')}**
 
-Chá»n hÅ© Ä‘Ã­ch (chuyá»ƒn Ä‘áº¿n):
+Chọn hũ đích (chuyển đến):
 """
     
     await query.edit_message_text(
@@ -444,7 +444,7 @@ def register_premium_menu_handlers(application):
         CallbackQueryHandler(show_jar_transfer_source, pattern='^jar_transfer$')
     )
     
-    logger.info("âœ… Premium menu handlers registered")
+    logger.info("✅ Premium menu handlers registered")
 
 
 # ============================================

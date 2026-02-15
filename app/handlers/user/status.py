@@ -25,8 +25,8 @@ async def mystatus_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if not user:
         await update.message.reply_text(
-            "âŒ KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin user.\n"
-            "GÃµ /start Ä‘á»ƒ báº¯t Ä‘áº§u!"
+            "❌ Không tìm thấy thông tin user.\n"
+            "Gõ /start để bắt đầu!"
         )
         return
     
@@ -37,30 +37,30 @@ async def mystatus_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if tier == SubscriptionTier.FREE:
         message = _build_free_status_message(user)  # FIX: Removed await (not async)
         keyboard = [
-            [InlineKeyboardButton("ðŸ“Š Xem tiáº¿n Ä‘á»™", callback_data="referral_progress")],
-            [InlineKeyboardButton("ðŸ“– HÆ°á»›ng dáº«n", callback_data="help_tutorial")],
-            [InlineKeyboardButton("ðŸ  Menu", callback_data="start")]
+            [InlineKeyboardButton("📊 Xem tiến độ", callback_data="referral_progress")],
+            [InlineKeyboardButton("📖 Hướng dẫn", callback_data="help_tutorial")],
+            [InlineKeyboardButton("🏠 Menu", callback_data="start")]
         ]
     
     elif tier == SubscriptionTier.TRIAL:
         message = _build_trial_status_message(user, user_id)  # FIX: Removed await
         keyboard = [
-            [InlineKeyboardButton("ðŸ’Ž NÃ¢ng cáº¥p Premium ngay", callback_data="upgrade_to_premium")],
-            [InlineKeyboardButton("ðŸ“Š Xem ROI chi tiáº¿t", callback_data="view_roi_detail")],
-            [InlineKeyboardButton("ðŸ  Menu", callback_data="start")]
+            [InlineKeyboardButton("💎 Nâng cấp Premium ngay", callback_data="upgrade_to_premium")],
+            [InlineKeyboardButton("📊 Xem ROI chi tiết", callback_data="view_roi_detail")],
+            [InlineKeyboardButton("🏠 Menu", callback_data="start")]
         ]
     
     elif tier == SubscriptionTier.PREMIUM:
         message = _build_premium_status_message(user, user_id)  # FIX: Removed await
         keyboard = [
-            [InlineKeyboardButton("ðŸ“Š ROI Dashboard Ä‘áº§y Ä‘á»§", callback_data="view_roi_detail")],
-            [InlineKeyboardButton("ðŸ’¡ Tá»‘i Æ°u sá»­ dá»¥ng", callback_data="optimization_tips")],
-            [InlineKeyboardButton("ðŸ  Menu", callback_data="start")]
+            [InlineKeyboardButton("📊 ROI Dashboard đầy đủ", callback_data="view_roi_detail")],
+            [InlineKeyboardButton("💡 Tối ưu sử dụng", callback_data="optimization_tips")],
+            [InlineKeyboardButton("🏠 Menu", callback_data="start")]
         ]
     
     else:
-        message = "âš ï¸ Lá»—i: KhÃ´ng xÃ¡c Ä‘á»‹nh Ä‘Æ°á»£c tier"
-        keyboard = [[InlineKeyboardButton("ðŸ  Menu", callback_data="start")]]
+        message = "⚠️ Lỗi: Không xác định được tier"
+        keyboard = [[InlineKeyboardButton("🏠 Menu", callback_data="start")]]
     
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -86,38 +86,38 @@ def _build_free_status_message(user) -> str:
     is_unlocked = user.is_free_unlocked
     
     if is_unlocked:
-        status_emoji = "âœ…"
+        status_emoji = "✅"
         status_text = "FREE FOREVER"
     else:
-        status_emoji = "ðŸ“Š"
-        status_text = f"FREE (Tiáº¿n Ä‘á»™: {referral_count}/2)"
+        status_emoji = "📊"
+        status_text = f"FREE (Tiến độ: {referral_count}/2)"
     
     message = f"""
-{status_emoji} **TÃ€I KHOáº¢N {status_text}**
+{status_emoji} **TÀI KHOẢN {status_text}**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“Š **Sá»¬ Dá»¤NG HÃ”M NAY:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📊 **SỬ DỤNG HÔM NAY:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¬ Tin nháº¯n: {messages_today}/5
-ðŸ“ CÃ²n láº¡i: {remaining} tin nháº¯n
+💬 Tin nhắn: {messages_today}/5
+📍 Còn lại: {remaining} tin nhắn
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸŽ **QUYá»€N Lá»¢I Cá»¦A Báº N:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🎁 **QUYỀN LỢI CỦA BẠN:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ“ Template Freedom Wallet Ä‘áº§y Ä‘á»§
-âœ“ Bot há»— trá»£ 5 message/ngÃ y
-âœ“ Káº¿t ná»‘i Google Sheets
-âœ“ Cá»™ng Ä‘á»“ng há»— trá»£
+✓ Template Freedom Wallet đầy đủ
+✓ Bot hỗ trợ 5 message/ngày
+✓ Kết nối Google Sheets
+✓ Cộng đồng hỗ trợ
 
 {"" if is_unlocked else f"""
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ **Má»ž KHÃ“A Äáº¦Y Äá»¦:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 **MỞ KHÓA ĐẦY ĐỦ:**
+━━━━━━━━━━━━━━━━━━━━━
 
-Giá»›i thiá»‡u 2 báº¡n â†’ Sá»Ÿ há»¯u vÄ©nh viá»…n â™¾ï¸
-GÃµ /referral Ä‘á»ƒ xem link cá»§a báº¡n.
+Giới thiệu 2 bạn → Sở hữu vĩnh viễn ♾️
+Gõ /referral để xem link của bạn.
 """}
 """
     
@@ -143,34 +143,34 @@ def _build_trial_status_message(user, user_id: int) -> str:
     roi = ROICalculator.calculate_monthly_roi(user_id)
     
     message = f"""
-ðŸŽ **TÃ€I KHOáº¢N TRIAL**
+🎁 **TÀI KHOẢN TRIAL**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â° **THá»œI GIAN TRIAL:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+⏰ **THỜI GIAN TRIAL:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“… Káº¿t thÃºc: {trial_end_str}
-â³ CÃ²n láº¡i: **{days_remaining} ngÃ y** ({hours_remaining}h)
+📅 Kết thúc: {trial_end_str}
+⏳ Còn lại: **{days_remaining} ngày** ({hours_remaining}h)
 
 {ROICalculator.format_roi_message(roi, "TRIAL")}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-âœ¨ **TÃNH NÄ‚NG ÄÃƒ Má»ž:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+✨ **TÍNH NĂNG ĐÃ MỞ:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… Unlimited tin nháº¯n
-âœ… AI phÃ¢n tÃ­ch tÃ i chÃ­nh
-âœ… Dashboard thÃ´ng minh
-âœ… Gá»£i Ã½ cÃ¡ nhÃ¢n hÃ³a
-âœ… Há»— trá»£ Æ°u tiÃªn 30 phÃºt
+✅ Unlimited tin nhắn
+✅ AI phân tích tài chính
+✅ Dashboard thông minh
+✅ Gợi ý cá nhân hóa
+✅ Hỗ trợ ưu tiên 30 phút
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ **SAU KHI TRIAL Káº¾T THÃšC:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 **SAU KHI TRIAL KẾT THÚC:**
+━━━━━━━━━━━━━━━━━━━━━
 
-NÃ¢ng cáº¥p Premium Ä‘á»ƒ tiáº¿p tá»¥c:
-ðŸ’° 999,000 VNÄ/nÄƒm (~2,750 VNÄ/ngÃ y)
-ðŸš€ KÃ­ch hoáº¡t ngay láº­p tá»©c
+Nâng cấp Premium để tiếp tục:
+💰 999,000 VNĐ/năm (~2,750 VNĐ/ngày)
+🚀 Kích hoạt ngay lập tức
 """
     
     return message
@@ -191,30 +191,30 @@ def _build_premium_status_message(user, user_id: int) -> str:
     roi = ROICalculator.calculate_monthly_roi(user_id)
     
     message = f"""
-ðŸ’Ž **TÃ€I KHOáº¢N PREMIUM**
+💎 **TÀI KHOẢN PREMIUM**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â° **THÃ”NG TIN:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+⏰ **THÔNG TIN:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ“… Háº¿t háº¡n: {expiry_date}
-â³ CÃ²n láº¡i: {days_remaining} ngÃ y
+📅 Hết hạn: {expiry_date}
+⏳ Còn lại: {days_remaining} ngày
 
 {ROICalculator.format_roi_message(roi, "PREMIUM")}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸŽ¯ **Tá»I Æ¯U HÃ“A GIÃ TRá»Š:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🎯 **TỐI ƯU HÓA GIÁ TRỊ:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¡ Sá»­ dá»¥ng nhiá»u hÆ¡n = ROI cao hÆ¡n!
+💡 Sử dụng nhiều hơn = ROI cao hơn!
 
-**Gá»£i Ã½:**
-â€¢ Chat vá»›i AI má»—i ngÃ y
-â€¢ DÃ¹ng Dashboard thÆ°á»ng xuyÃªn
-â€¢ Thá»­ tÃ­nh nÄƒng PhÃ¢n tÃ­ch
-â€¢ Nháº­n Gá»£i Ã½ cÃ¡ nhÃ¢n
+**Gợi ý:**
+• Chat với AI mỗi ngày
+• Dùng Dashboard thường xuyên
+• Thử tính năng Phân tích
+• Nhận Gợi ý cá nhân
 
-â†’ Má»¥c tiÃªu: ROI â‰¥ +200% ðŸš€
+→ Mục tiêu: ROI ≥ +200% 🚀
 """
     
     return message

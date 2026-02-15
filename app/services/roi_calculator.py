@@ -17,10 +17,10 @@ class ROICalculator:
     """Calculate Premium ROI for users"""
     
     # Constants
-    HOURLY_VALUE = 100_000  # VNÄ/hour (user's time value)
-    PREMIUM_YEARLY = 999_000  # VNÄ/year
-    PREMIUM_MONTHLY = 83_250  # VNÄ/month (~999K/12)
-    PREMIUM_DAILY = 2_775  # VNÄ/day (~83K/30)
+    HOURLY_VALUE = 100_000  # VNĐ/hour (user's time value)
+    PREMIUM_YEARLY = 999_000  # VNĐ/year
+    PREMIUM_MONTHLY = 83_250  # VNĐ/month (~999K/12)
+    PREMIUM_DAILY = 2_775  # VNĐ/day (~83K/30)
     
     # Time saved per feature
     TIME_PER_MESSAGE = 3  # minutes per AI message vs manual search
@@ -157,47 +157,47 @@ class ROICalculator:
         """Format ROI data into a beautiful message"""
         
         if 'error' in roi:
-            return "âš ï¸ ChÆ°a cÃ³ dá»¯ liá»‡u sá»­ dá»¥ng"
+            return "⚠️ Chưa có dữ liệu sử dụng"
         
         # Choose emoji based on ROI
         if roi['roi_percent'] >= 100:
-            roi_emoji = "ðŸš€"
+            roi_emoji = "🚀"
         elif roi['roi_percent'] >= 50:
-            roi_emoji = "ðŸ“ˆ"
+            roi_emoji = "📈"
         elif roi['roi_percent'] >= 0:
-            roi_emoji = "âœ…"
+            roi_emoji = "✅"
         else:
-            roi_emoji = "âš ï¸"
+            roi_emoji = "⚠️"
         
         message = f"""
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ“Š **Sá»¬ Dá»¤NG THÃNG NÃ€Y:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+📊 **SỬ DỤNG THÁNG NÀY:**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’¬ {roi['messages']} tin nháº¯n vá»›i AI
-ðŸ“Š {roi['analyses']} phÃ¢n tÃ­ch tÃ i chÃ­nh
-ðŸ’¡ {roi['recommendations']} gá»£i Ã½ cÃ¡ nhÃ¢n
-ðŸ“ˆ {roi['dashboard_views']} láº§n xem dashboard
+💬 {roi['messages']} tin nhắn với AI
+📊 {roi['analyses']} phân tích tài chính
+💡 {roi['recommendations']} gợi ý cá nhân
+📈 {roi['dashboard_views']} lần xem dashboard
 
-â±ï¸ **Tá»•ng thá»i gian tiáº¿t kiá»‡m: {roi['time_saved']}h**
+⏱️ **Tổng thời gian tiết kiệm: {roi['time_saved']}h**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’° **ROI {tier}:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💰 **ROI {tier}:**
+━━━━━━━━━━━━━━━━━━━━━
 
-Chi phÃ­: {roi['cost']:,} VNÄ/thÃ¡ng
-GiÃ¡ trá»‹: {roi['value']:,} VNÄ
+Chi phí: {roi['cost']:,} VNĐ/tháng
+Giá trị: {roi['value']:,} VNĐ
 
-â†’ **Lá»i/Lá»—: {roi['profit']:,} VNÄ** {roi_emoji}
-â†’ **ROI: {roi['roi_percent']:+.0f}%**
+→ **Lời/Lỗ: {roi['profit']:,} VNĐ** {roi_emoji}
+→ **ROI: {roi['roi_percent']:+.0f}%**
 """
         
         if roi['roi_percent'] > 0:
-            message += f"\nðŸŽ‰ {tier} lÃ  khoáº£n Ä‘áº§u tÆ° sinh lá»i!"
+            message += f"\n🎉 {tier} là khoản đầu tư sinh lời!"
         elif roi['roi_percent'] == 0:
-            message += f"\nâœ… Break-even - Sá»­ dá»¥ng thÃªm Ä‘á»ƒ tá»‘i Æ°u!"
+            message += f"\n✅ Break-even - Sử dụng thêm để tối ưu!"
         else:
-            message += f"\nðŸ’¡ Sá»­ dá»¥ng nhiá»u hÆ¡n Ä‘á»ƒ tá»‘i Ä‘a hÃ³a giÃ¡ trá»‹!"
+            message += f"\n💡 Sử dụng nhiều hơn để tối đa hóa giá trị!"
         
         return message
 

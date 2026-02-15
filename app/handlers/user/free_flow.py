@@ -32,21 +32,21 @@ async def free_check_registration(update: Update, context: ContextTypes.DEFAULT_
             from pathlib import Path
             
             message = """
-ChÃ o báº¡n,
+Chào bạn,
 
-Freedom Wallet khÃ´ng pháº£i má»™t app Ä‘á»ƒ báº¡n táº£i vá».
-ÄÃ¢y lÃ  má»™t há»‡ thá»‘ng báº¡n tá»± sá»Ÿ há»¯u.
+Freedom Wallet không phải một app để bạn tải về.
+Đây là một hệ thống bạn tự sở hữu.
 
-Má»—i ngÆ°á»i dÃ¹ng cÃ³:
-â€¢ Google Sheet riÃªng
-â€¢ Apps Script riÃªng
-â€¢ Web App riÃªng
+Mỗi người dùng có:
+• Google Sheet riêng
+• Apps Script riêng
+• Web App riêng
 
-Dá»¯ liá»‡u náº±m trÃªn Drive cá»§a báº¡n.
-KhÃ´ng phá»¥ thuá»™c vÃ o ai.
+Dữ liệu nằm trên Drive của bạn.
+Không phụ thuộc vào ai.
 
-Äá»ƒ báº¯t Ä‘áº§u, vui lÃ²ng nháº­p lá»‡nh /register 
-Ä‘á»ƒ Ä‘iá»n thÃ´ng tin Ä‘Äƒng kÃ½.
+Để bắt đầu, vui lòng nhập lệnh /register 
+để điền thông tin đăng ký.
 """
             
             image_path = Path("media/images/web_apps.jpg")
@@ -79,26 +79,26 @@ async def free_step2_show_value(update: Update, context: ContextTypes.DEFAULT_TY
     await query.answer()
     
     message = """
-TrÆ°á»›c khi lÃ m báº¥t cá»© bÆ°á»›c ká»¹ thuáº­t nÃ o,
-báº¡n cáº§n biáº¿t mÃ¬nh sáº½ nháº­n Ä‘Æ°á»£c Ä‘iá»u gÃ¬.
+Trước khi làm bất cứ bước kỹ thuật nào,
+bạn cần biết mình sẽ nhận được điều gì.
 
-Khi há»‡ thá»‘ng hoÃ n táº¥t, báº¡n sáº½ tháº¥y:
+Khi hệ thống hoàn tất, bạn sẽ thấy:
 
-â€¢ Tá»•ng tÃ i sáº£n hiá»‡n cÃ³
-â€¢ DÃ²ng tiá»n thu â€“ chi theo thÃ¡ng
-â€¢ 6 HÅ© tiá»n phÃ¢n bá»• tá»± Ä‘á»™ng
-â€¢ Cáº¥p Ä‘á»™ tÃ i chÃ­nh hiá»‡n táº¡i cá»§a báº¡n
-â€¢ TÃ¬nh tráº¡ng Ä‘áº§u tÆ°, ná»£ vÃ  tÃ i sáº£n
+• Tổng tài sản hiện có
+• Dòng tiền thu – chi theo tháng
+• 6 Hũ tiền phân bổ tự động
+• Cấp độ tài chính hiện tại của bạn
+• Tình trạng đầu tư, nợ và tài sản
 
-KhÃ´ng pháº£i Ä‘á»ƒ xem cho vui.
-MÃ  Ä‘á»ƒ báº¡n biáº¿t rÃµ tiá»n cá»§a mÃ¬nh Ä‘ang á»Ÿ Ä‘Ã¢u.
+Không phải để xem cho vui.
+Mà để bạn biết rõ tiền của mình đang ở đâu.
 
-Báº¡n sáºµn sÃ ng táº¡o há»‡ thá»‘ng cá»§a riÃªng mÃ¬nh chÆ°a?
+Bạn sẵn sàng tạo hệ thống của riêng mình chưa?
 """
     
     keyboard = [
-        [InlineKeyboardButton("Táº¡o há»‡ thá»‘ng", callback_data="free_step3_copy_template")],
-        [InlineKeyboardButton("Há»i thÃªm", callback_data="free_ask_question")]
+        [InlineKeyboardButton("Tạo hệ thống", callback_data="free_step3_copy_template")],
+        [InlineKeyboardButton("Hỏi thêm", callback_data="free_ask_question")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -114,19 +114,19 @@ async def free_step3_copy_template(update: Update, context: ContextTypes.DEFAULT
     await query.answer()
     
     message = """
-**BÆ°á»›c 1: Táº¡o Google Sheet cá»§a riÃªng báº¡n.**
+**Bước 1: Tạo Google Sheet của riêng bạn.**
 
-Nháº¥n nÃºt bÃªn dÆ°á»›i.
-Chá»n "Táº¡o báº£n sao".
-Äáº·t tÃªn theo Ã½ báº¡n.
+Nhấn nút bên dưới.
+Chọn "Tạo bản sao".
+Đặt tên theo ý bạn.
 
-Tá»« Ä‘Ã¢y trá»Ÿ Ä‘i,
-Ä‘Ã¢y lÃ  há»‡ thá»‘ng tÃ i chÃ­nh cÃ¡ nhÃ¢n cá»§a báº¡n.
+Từ đây trở đi,
+đây là hệ thống tài chính cá nhân của bạn.
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ“‹ Copy Template", url="https://docs.google.com/spreadsheets/d/YOUR_TEMPLATE_ID/copy")],
-        [InlineKeyboardButton("âœ… TÃ´i Ä‘Ã£ copy xong", callback_data="free_step4_deploy_script")]
+        [InlineKeyboardButton("📋 Copy Template", url="https://docs.google.com/spreadsheets/d/YOUR_TEMPLATE_ID/copy")],
+        [InlineKeyboardButton("✅ Tôi đã copy xong", callback_data="free_step4_deploy_script")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -143,20 +143,20 @@ async def free_step4_deploy_script(update: Update, context: ContextTypes.DEFAULT
     await query.answer()
     
     message = """
-**BÆ°á»›c 2: KÃ­ch hoáº¡t Web App.**
+**Bước 2: Kích hoạt Web App.**
 
-Apps Script giÃºp Sheet cá»§a báº¡n trá»Ÿ thÃ nh má»™t á»©ng dá»¥ng thá»±c thá»¥.
+Apps Script giúp Sheet của bạn trở thành một ứng dụng thực thụ.
 
-Chá»‰ cáº§n lÃ m theo hÆ°á»›ng dáº«n,
-khoáº£ng 3â€“5 phÃºt.
+Chỉ cần làm theo hướng dẫn,
+khoảng 3–5 phút.
 
-Äá»«ng lo náº¿u chÆ°a quen ká»¹ thuáº­t.
-LÃ m cháº­m tá»«ng bÆ°á»›c lÃ  Ä‘Æ°á»£c.
+Đừng lo nếu chưa quen kỹ thuật.
+Làm chậm từng bước là được.
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ“– Xem hÆ°á»›ng dáº«n", callback_data="show_deploy_guide")],
-        [InlineKeyboardButton("âœ… TÃ´i Ä‘Ã£ deploy xong", callback_data="free_step5_open_webapp")]
+        [InlineKeyboardButton("📖 Xem hướng dẫn", callback_data="show_deploy_guide")],
+        [InlineKeyboardButton("✅ Tôi đã deploy xong", callback_data="free_step5_open_webapp")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -173,24 +173,26 @@ async def free_step5_open_webapp(update: Update, context: ContextTypes.DEFAULT_T
     await query.answer()
     
     message = """
-BÃ¢y giá» báº¡n cÃ³ thá»ƒ má»Ÿ Web App cá»§a mÃ¬nh.
+Bây giờ bạn có thể mở Web App của mình.
 
-Láº§n Ä‘áº§u má»Ÿ, báº¡n sáº½ tháº¥y:
-â€¢ Tá»•ng tÃ i sáº£n
-â€¢ DÃ²ng tiá»n
-â€¢ Biá»ƒu Ä‘á»“ chi tiÃªu
-â€¢ Cáº¥p Ä‘á»™ tÃ i chÃ­nh
+Lần đầu mở, bạn sẽ thấy:
+• Tổng tài sản
+• Dòng tiền
+• Biểu đồ chi tiêu
+• Cấp độ tài chính
 
-ÄÃ¢y lÃ  láº§n Ä‘áº§u báº¡n nhÃ¬n toÃ n cáº£nh tiá»n cá»§a mÃ¬nh á»Ÿ má»™t nÆ¡i.
+Đây là lần đầu bạn nhìn toàn cảnh tiền của mình ở một nơi.
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸŒ Má»Ÿ Web App", callback_data="get_webapp_url")],
-        [InlineKeyboardButton("âœ… TÃ´i Ä‘Ã£ xem", callback_data="free_step6_first_action")]
+        [InlineKeyboardButton("🌐 Mở Web App", callback_data="get_webapp_url")],
+        [InlineKeyboardButton("✅ Tôi đã xem", callback_data="free_step6_first_action")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await query.edit_message_text(
+    # Delete previous message (photo) and send new text message
+    await query.message.delete()
+    await query.message.chat.send_message(
         text=message,
         reply_markup=reply_markup
     )
@@ -202,22 +204,22 @@ async def free_step6_first_action(update: Update, context: ContextTypes.DEFAULT_
     await query.answer()
     
     message = """
-Viá»‡c quan trá»ng nháº¥t hÃ´m nay:
+Việc quan trọng nhất hôm nay:
 
-Nháº­p:
-â€¢ Sá»‘ dÆ° hiá»‡n táº¡i
-â€¢ 1â€“2 giao dá»‹ch gáº§n Ä‘Ã¢y
+Nhập:
+• Số dư hiện tại
+• 1–2 giao dịch gần đây
 
-KhÃ´ng cáº§n nhiá»u.
-Chá»‰ cáº§n báº¯t Ä‘áº§u.
+Không cần nhiều.
+Chỉ cần bắt đầu.
 
-Tá»± do tÃ i chÃ­nh khÃ´ng Ä‘áº¿n tá»« káº¿ hoáº¡ch lá»›n.
-NÃ³ Ä‘áº¿n tá»« viá»‡c báº¡n biáº¿t tiá»n mÃ¬nh Ä‘ang á»Ÿ Ä‘Ã¢u.
+Tự do tài chính không đến từ kế hoạch lớn.
+Nó đến từ việc bạn biết tiền mình đang ở đâu.
 """
     
     keyboard = [
-        [InlineKeyboardButton("âœ… TÃ´i Ä‘Ã£ nháº­p", callback_data="free_step7_reinforce")],
-        [InlineKeyboardButton("â“ Cáº§n há»— trá»£", callback_data="ask_support")]
+        [InlineKeyboardButton("✅ Tôi đã nhập", callback_data="free_step7_reinforce")],
+        [InlineKeyboardButton("❓ Cần hỗ trợ", callback_data="ask_support")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -233,22 +235,22 @@ async def free_step7_reinforce(update: Update, context: ContextTypes.DEFAULT_TYP
     await query.answer()
     
     message = """
-Tá»« hÃ´m nay,
-báº¡n khÃ´ng cÃ²n mÆ¡ há»“ vá» tiá»n ná»¯a.
+Từ hôm nay,
+bạn không còn mơ hồ về tiền nữa.
 
-Má»—i khoáº£n thu â€“ chi Ä‘á»u cÃ³ nÆ¡i ghi láº¡i.
-Má»—i quyáº¿t Ä‘á»‹nh Ä‘á»u cÃ³ dá»¯ liá»‡u phÃ­a sau.
+Mỗi khoản thu – chi đều có nơi ghi lại.
+Mỗi quyết định đều có dữ liệu phía sau.
 
-Tuáº§n Ä‘áº§u, chá»‰ cáº§n:
-**Ghi láº¡i má»i khoáº£n phÃ¡t sinh.**
+Tuần đầu, chỉ cần:
+**Ghi lại mọi khoản phát sinh.**
 
-Äá»«ng cá»‘ tá»‘i Æ°u.
-Chá»‰ cáº§n trung thá»±c vá»›i con sá»‘.
+Đừng cố tối ưu.
+Chỉ cần trung thực với con số.
 """
     
     keyboard = [
-        [InlineKeyboardButton("Tiáº¿p tá»¥c", callback_data="free_step8_optional_sharing")],
-        [InlineKeyboardButton("Nháº¯c tÃ´i sau", callback_data="schedule_reminder")]
+        [InlineKeyboardButton("Tiếp tục", callback_data="free_step8_optional_sharing")],
+        [InlineKeyboardButton("Nhắc tôi sau", callback_data="schedule_reminder")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -272,24 +274,24 @@ async def free_step8_optional_sharing(update: Update, context: ContextTypes.DEFA
     ref_link = f"https://t.me/FreedomWalletVNBot?start={ref_code}"
     
     message = f"""
-Náº¿u báº¡n tháº¥y há»‡ thá»‘ng nÃ y cÃ³ Ã­ch,
-báº¡n cÃ³ thá»ƒ chia sáº» vá»›i 2 ngÆ°á»i báº¡n
-cÅ©ng Ä‘ang muá»‘n quáº£n lÃ½ tiá»n rÃµ rÃ ng hÆ¡n.
+Nếu bạn thấy hệ thống này có ích,
+bạn có thể chia sẻ với 2 người bạn
+cũng đang muốn quản lý tiền rõ ràng hơn.
 
-Khi báº¡n giá»›i thiá»‡u 2 ngÆ°á»i tháº­t sá»± dÃ¹ng,
-bÃªn mÃ¬nh sáº½ há»— trá»£ báº¡n cáº¥u hÃ¬nh thÃªm Telegram,
-Ä‘á»ƒ báº¡n ghi thu chi ngay trong chat nÃ y.
+Khi bạn giới thiệu 2 người thật sự dùng,
+bên mình sẽ hỗ trợ bạn cấu hình thêm Telegram,
+để bạn ghi thu chi ngay trong chat này.
 
-KhÃ´ng báº¯t buá»™c.
-Chá»‰ khi báº¡n tháº¥y phÃ¹ há»£p.
+Không bắt buộc.
+Chỉ khi bạn thấy phù hợp.
 
-ðŸ”— Link cá»§a báº¡n: `{ref_link}`
+🔗 Link của bạn: `{ref_link}`
 """
     
     keyboard = [
-        [InlineKeyboardButton("Chia sáº» vá»›i báº¡n bÃ¨", callback_data="show_share_guide")],
-        [InlineKeyboardButton("TÃ¬m hiá»ƒu Telegram", callback_data="explain_telegram_unlock")],
-        [InlineKeyboardButton("Äá»ƒ sau", callback_data="skip_sharing")]
+        [InlineKeyboardButton("Chia sẻ với bạn bè", callback_data="show_share_guide")],
+        [InlineKeyboardButton("Tìm hiểu Telegram", callback_data="explain_telegram_unlock")],
+        [InlineKeyboardButton("Để sau", callback_data="skip_sharing")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -316,41 +318,41 @@ async def learn_more(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db.close()
     
     message = """
-**Freedom Wallet lÃ  gÃ¬?**
+**Freedom Wallet là gì?**
 
-Há»‡ thá»‘ng quáº£n lÃ½ tÃ i chÃ­nh cÃ¡ nhÃ¢n dá»±a trÃªn:
-â€¢ Google Sheets (dá»¯ liá»‡u cá»§a báº¡n)
-â€¢ Apps Script (logic tá»± Ä‘á»™ng)
-â€¢ Web App (giao diá»‡n thÃ¢n thiá»‡n)
+Hệ thống quản lý tài chính cá nhân dựa trên:
+• Google Sheets (dữ liệu của bạn)
+• Apps Script (logic tự động)
+• Web App (giao diện thân thiện)
 
-**KhÃ¡c gÃ¬ app khÃ¡c?**
+**Khác gì app khác?**
 
-â€¢ Báº¡n sá»Ÿ há»¯u 100% dá»¯ liá»‡u
-â€¢ KhÃ´ng phá»¥ thuá»™c vÃ o dá»‹ch vá»¥ nÃ o
-â€¢ Miá»…n phÃ­, khÃ´ng giá»›i háº¡n thá»i gian
-â€¢ TÃ¹y biáº¿n theo nhu cáº§u riÃªng
+• Bạn sở hữu 100% dữ liệu
+• Không phụ thuộc vào dịch vụ nào
+• Miễn phí, không giới hạn thời gian
+• Tùy biến theo nhu cầu riêng
 
-**PhÃ¹ há»£p vá»›i ai?**
+**Phù hợp với ai?**
 
-â€¢ NgÆ°á»i muá»‘n kiá»ƒm soÃ¡t tiá»n rÃµ rÃ ng
-â€¢ KhÃ´ng thÃ­ch app thu phÃ­ hÃ ng thÃ¡ng
-â€¢ Muá»‘n hiá»ƒu sÃ¢u vá» dÃ²ng tiá»n cá»§a mÃ¬nh
-â€¢ Coi trá»ng quyá»n riÃªng tÆ° dá»¯ liá»‡u
+• Người muốn kiểm soát tiền rõ ràng
+• Không thích app thu phí hàng tháng
+• Muốn hiểu sâu về dòng tiền của mình
+• Coi trọng quyền riêng tư dữ liệu
 
-Báº¡n muá»‘n báº¯t Ä‘áº§u chá»©?
+Bạn muốn bắt đầu chứ?
 """
     
     if has_registration:
         # Already registered, can start setup
         keyboard = [
-            [InlineKeyboardButton("ðŸš€ Báº¯t Ä‘áº§u setup", callback_data="free_start_step2")],
-            [InlineKeyboardButton("Â« Quay láº¡i", callback_data="back_to_start")]
+            [InlineKeyboardButton("🚀 Bắt đầu setup", callback_data="free_start_step2")],
+            [InlineKeyboardButton("« Quay lại", callback_data="back_to_start")]
         ]
     else:
         # Not registered yet, need to register first
         keyboard = [
-            [InlineKeyboardButton("ðŸ“ ÄÄƒng kÃ½ ngay", callback_data="start_free_registration")],
-            [InlineKeyboardButton("Â« Quay láº¡i", callback_data="back_to_start")]
+            [InlineKeyboardButton("📝 Đăng ký ngay", callback_data="start_free_registration")],
+            [InlineKeyboardButton("« Quay lại", callback_data="back_to_start")]
         ]
     
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -405,19 +407,19 @@ async def skip_sharing(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     message = """
-KhÃ´ng sao cáº£.
+Không sao cả.
 
-Báº¡n Ä‘Ã£ cÃ³ há»‡ thá»‘ng riÃªng rá»“i.
-Äiá»u quan trá»ng nháº¥t lÃ  báº¡n dÃ¹ng nÃ³ má»—i ngÃ y.
+Bạn đã có hệ thống riêng rồi.
+Điều quan trọng nhất là bạn dùng nó mỗi ngày.
 
-Náº¿u cáº§n trá»£ giÃºp báº¥t cá»© lÃºc nÃ o,
-gÃµ /help hoáº·c há»i tÃ´i trá»±c tiáº¿p.
+Nếu cần trợ giúp bất cứ lúc nào,
+gõ /help hoặc hỏi tôi trực tiếp.
 
-ChÃºc báº¡n quáº£n lÃ½ tiá»n tá»‘t! ðŸ’ª
+Chúc bạn quản lý tiền tốt! 💪
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ  Vá» trang chá»§", callback_data="start")]
+        [InlineKeyboardButton("🏠 Về trang chủ", callback_data="start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -428,58 +430,420 @@ ChÃºc báº¡n quáº£n lÃ½ tiá»n tá»‘t! ðŸ’ª
 
 
 async def show_deploy_guide(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show detailed deploy guide"""
+    """Show detailed deploy guide - Step by step with images"""
     query = update.callback_query
     await query.answer()
     
-    message = """
-**ðŸš€ HÆ¯á»šNG DáºªN DEPLOY WEB APP**
-
-**1ï¸âƒ£ Má»Ÿ Apps Script Editor**
-â€¢ Trong Sheet â†’ Extensions â†’ Apps Script
-
-**2ï¸âƒ£ Click Deploy**
-â€¢ Click nÃºt "Deploy" (gÃ³c trÃªn bÃªn pháº£i)
-â€¢ Chá»n "New deployment"
-
-**3ï¸âƒ£ Chá»n type: Web app**
-â€¢ Click icon âš™ï¸ 
-â€¢ Chá»n "Web app"
-
-**4ï¸âƒ£ Cáº¥u hÃ¬nh**
-â€¢ **Execute as**: Chá»n "Me"
-â€¢ **Who has access**: Chá»n "Anyone"
-
-**5ï¸âƒ£ Deploy**
-â€¢ Click "Deploy"
-â€¢ Click "Authorize access"
-â€¢ Chá»n tÃ i khoáº£n Google cá»§a báº¡n
-
-**6ï¸âƒ£ Authorize**
-â€¢ Click "Advanced"
-â€¢ Click "Go to [project name] (unsafe)"
-â€¢ Click "Allow"
-
-**7ï¸âƒ£ LÆ°u Web App URL**
-â€¢ Copy URL hiá»‡n ra
-â€¢ LÆ°u láº¡i Ä‘á»ƒ dÃ¹ng sau
-
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-
-âœ… **Xong!** Báº¡n Ä‘Ã£ cÃ³ Web App riÃªng.
-"""
+    # Get current step from callback data (default: overview)
+    callback_data = query.data
+    current_step = 0  # Overview
     
-    keyboard = [
-        [InlineKeyboardButton("âœ… TÃ´i Ä‘Ã£ deploy xong", callback_data="free_step5_open_webapp")],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data="free_step4_deploy_script")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    if "deploy_guide_step" in callback_data:
+        try:
+            current_step = int(callback_data.split("_")[-1])
+        except:
+            current_step = 0
     
-    await query.edit_message_text(
-        text=message,
-        reply_markup=reply_markup,
-        parse_mode="Markdown"
-    )
+    # Step content
+    steps = {
+        0: {  # Overview
+            "title": "🚀 HƯỚNG DẪN DEPLOY WEB APP",
+            "text": """
+Chào bạn! 👋
+
+Đây là hướng dẫn **từng bước có hình ảnh** để deploy Web App của bạn.
+
+**📋 Các bước chính:**
+
+**Bước 0:** Copy Template Sheet
+**Bước 1:** Mở Apps Script Editor
+**Bước 2:** Click Deploy
+**Bước 3:** Cấu hình Web App
+**Bước 4:** Authorize (4 bước nhỏ)
+**Bước 5:** Copy Web App URL
+
+━━━━━━━━━━━━━━━━━━━━━
+
+⏱️ **Thời gian:** Khoảng 3-5 phút
+📱 **Yêu cầu:** Tài khoản Google của bạn
+
+Bấm "▶️ Bắt đầu" để xem từng bước chi tiết!
+""",
+            "image": None,
+            "keyboard": [
+                [InlineKeyboardButton("▶️ Bắt đầu (Bước 0)", callback_data="deploy_guide_step_1")],
+                [InlineKeyboardButton("« Quay lại", callback_data="free_step4_deploy_script")]
+            ]
+        },
+        1: {  # Step 0: Copy template
+            "title": "📋 BƯỚC 0: Copy Template",
+            "text": """
+**📋 BƯỚC 0: Copy Template Sheet**
+
+Trước tiên, bạn cần copy template về Google Drive của mình.
+
+**🔹 Làm thế nào:**
+1. Click vào nút "Make a copy"
+2. Sheet sẽ được copy vào Drive của bạn
+3. Tự động mở sheet mới
+
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ **Xong bước này?** Bấm "Tiếp ▶️" để sang bước tiếp theo!
+""",
+            "image": "media/images/buoc-1-copy.jpg",
+            "keyboard": [
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="deploy_guide_step_0"), 
+                 InlineKeyboardButton("Tiếp ▶️", callback_data="deploy_guide_step_2")]
+            ]
+        },
+        2: {  # Step 1: Open Apps Script
+            "title": "📝 BƯỚC 1: Mở Apps Script Editor",
+            "text": """
+**📝 BƯỚC 1: Mở Apps Script Editor**
+
+Giờ bạn cần vào Apps Script để deploy.
+
+**🔹 Làm thế nào:**
+1. Trong Google Sheet vừa copy
+2. Click vào menu **Extensions**
+3. Chọn **Apps Script**
+4. Tab mới sẽ mở ra với code editor
+
+━━━━━━━━━━━━━━━━━━━━━
+
+💡 **Tip:** Đây là nơi chứa code tự động tính toán cho bạn!
+""",
+            "image": "media/images/buoc-2-appscript.jpg",
+            "keyboard": [
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="deploy_guide_step_1"), 
+                 InlineKeyboardButton("Tiếp ▶️", callback_data="deploy_guide_step_3")]
+            ]
+        },
+        3: {  # Step 2: Deploy
+            "title": "🚀 BƯỚC 2: Click Deploy",
+            "text": """
+**🚀 BƯỚC 2: Click Deploy**
+
+Bây giờ bạn sẽ deploy (xuất bản) Web App.
+
+**🔹 Làm thế nào:**
+1. Ở góc trên bên phải, tìm nút **"Deploy"**
+2. Click vào nút **Deploy**
+3. Chọn **"New deployment"**
+
+━━━━━━━━━━━━━━━━━━━━━
+
+⚡ **Quan trọng:** Đừng bỏ qua bước này, không deploy thì Web App không hoạt động!
+""",
+            "image": "media/images/buoc-3-deploy.jpg",
+            "keyboard": [
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="deploy_guide_step_2"), 
+                 InlineKeyboardButton("Tiếp ▶️", callback_data="deploy_guide_step_4")]
+            ]
+        },
+        4: {  # Step 3: Configure
+            "title": "⚙️ BƯỚC 3: Cấu hình Web App",
+            "text": """
+**⚙️ BƯỚC 3: Cấu hình Web App**
+
+Thiết lập quyền truy cập cho Web App.
+
+**🔹 Làm thế nào:**
+1. Click vào icon **⚙️ (bánh răng)**
+2. Chọn type: **"Web app"**
+3. **Execute as:** Chọn **"Me"** (tài khoản của bạn)
+4. **Who has access:** Chọn **"Anyone"**
+5. Click nút **"Deploy"** màu xanh
+
+━━━━━━━━━━━━━━━━━━━━━
+
+📌 **Giải thích:**
+• **Me** = Web App chạy với quyền của bạn
+• **Anyone** = Bất kỳ ai có link đều dùng được (chỉ bạn có link)
+""",
+            "image": "media/images/3.ChON_type_Web_app.JPG.jpg",
+            "keyboard": [
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="deploy_guide_step_3"), 
+                 InlineKeyboardButton("Tiếp ▶️", callback_data="deploy_guide_step_5")]
+            ]
+        },
+        5: {  # Step 4.1: Authorize - Click Authorize
+            "title": "🔐 BƯỚC 4: Authorize (1/4)",
+            "text": """
+**🔐 BƯỚC 4: Authorize - Bước 1/4**
+
+Google cần xác nhận bạn cho phép Web App truy cập Sheet.
+
+**🔹 Làm thế nào:**
+1. Một popup sẽ hiện ra
+2. Click vào nút **"Authorize access"**
+
+━━━━━━━━━━━━━━━━━━━━━
+
+💡 **Tại sao?** Google cần chắc chắn bạn đồng ý cho phép Web App đọc/ghi dữ liệu vào Sheet của bạn.
+""",
+            "image": "media/images/6_Authorize.jpg",
+            "keyboard": [
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="deploy_guide_step_4"), 
+                 InlineKeyboardButton("Tiếp ▶️", callback_data="deploy_guide_step_6")]
+            ]
+        },
+        6: {  # Step 4.2: Authorize - Click Advanced
+            "title": "🔐 BƯỚC 4: Authorize (2/4)",
+            "text": """
+**🔐 BƯỚC 4: Authorize - Bước 2/4**
+
+Google sẽ cảnh báo vì Web App chưa được verify.
+
+**🔹 Làm thế nào:**
+1. Popup cảnh báo sẽ xuất hiện
+2. Click vào link **"Advanced"** (Nâng cao)
+
+━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ **Đừng lo!** Đây là Web App của chính bạn, hoàn toàn an toàn. Google chỉ cảnh báo vì chưa được kiểm duyệt chính thức (mất phí + thời gian).
+""",
+            "image": "media/images/6.1_Authorize_Advance.jpg",
+            "keyboard": [
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="deploy_guide_step_5"), 
+                 InlineKeyboardButton("Tiếp ▶️", callback_data="deploy_guide_step_7")]
+            ]
+        },
+        7: {  # Step 4.3: Authorize - Go to project
+            "title": "🔐 BƯỚC 4: Authorize (3/4)",
+            "text": """
+**🔐 BƯỚC 4: Authorize - Bước 3/4**
+
+Xác nhận bạn muốn tiếp tục với Web App chưa verify.
+
+**🔹 Làm thế nào:**
+1. Sau khi click "Advanced"
+2. Click vào link **"Go to [Untitled project] (unsafe)"**
+
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ **An toàn 100%:** Bạn đang cấp quyền cho chính code của mình, không phải ứng dụng bên thứ 3!
+""",
+            "image": "media/images/6.2_Authorize_verify.jpg",
+            "keyboard": [
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="deploy_guide_step_6"), 
+                 InlineKeyboardButton("Tiếp ▶️", callback_data="deploy_guide_step_8")]
+            ]
+        },
+        8: {  # Step 4.4: Authorize - Allow permissions
+            "title": "🔐 BƯỚC 4: Authorize (4/4)",
+            "text": """
+**🔐 BƯỚC 4: Authorize - Bước 4/4 (Cuối cùng!)**
+
+Cho phép các quyền cần thiết cho Web App.
+
+**🔹 Làm thế nào:**
+1. Danh sách quyền sẽ hiển thị
+2. Click **"Select All"** (Chọn tất cả)
+3. Click nút **"Continue"** màu xanh
+
+━━━━━━━━━━━━━━━━━━━━━
+
+📋 **Quyền yêu cầu:**
+• Đọc/ghi Google Sheets
+• Gửi email (cho reminder)
+• Kết nối với services khác
+
+🎉 **Gần xong rồi!** Chỉ còn 1 bước nữa thôi!
+""",
+            "image": "media/images/6.3_Authorize_cuoi.jpg",
+            "keyboard": [
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="deploy_guide_step_7"), 
+                 InlineKeyboardButton("Tiếp ▶️", callback_data="deploy_guide_step_9")]
+            ]
+        },
+        9: {  # Step 5: Copy URL
+            "title": "🎊 BƯỚC 5: Copy Web App URL",
+            "text": """
+**🎊 BƯỚC 5: Copy Web App URL (XONG!)**
+
+Lấy link Web App để sử dụng!
+
+**🔹 Làm thế nào:**
+1. Popup thành công sẽ hiện ra
+2. Bạn sẽ thấy **"Web app URL"**
+3. Click vào icon **📋 Copy** bên cạnh URL
+4. Lưu lại URL này (dán vào Note hoặc gửi cho bot)
+
+━━━━━━━━━━━━━━━━━━━━━
+
+✅ **HOÀN THÀNH!**
+
+🎉 Chúc mừng! Bạn đã deploy thành công Web App!
+
+🔗 **Link này dùng để làm gì?**
+• Mở Web App trên điện thoại/máy tính
+• Ghi chi tiêu nhanh mọi lúc mọi nơi
+• Xem báo cáo tài chính real-time
+
+💾 **Lưu ý:** Hãy lưu link này cẩn thận. Đây là Web App riêng của bạn!
+""",
+            "image": "media/images/6.4_Authorize_copy_link.jpg",
+            "keyboard": [
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="deploy_guide_step_8"), 
+                 InlineKeyboardButton("Tiếp ▶️", callback_data="deploy_guide_step_10")],
+                [InlineKeyboardButton("🏠 Về menu", callback_data="free_step4_deploy_script")]
+            ]
+        },
+        10: {  # Step 6: Login to Web App
+            "title": "🌐 BƯỚC 6: Đăng nhập Web App",
+            "text": """
+**🌐 BƯỚC 6: Đăng nhập vào Web App**
+
+Bây giờ hãy mở Web App của bạn lần đầu tiên!
+
+**🔹 Làm thế nào:**
+1. Mở Web App URL bạn vừa copy
+2. Nhập **tên đăng nhập:** mặc định là `Admin`
+   (💡 Bạn có thể đổi trong Google Sheet của bạn)
+3. Nhập **mật khẩu:** mặc định là `2369`
+   (💡 Bạn cũng có thể đổi trong Google Sheet)
+4. Đợi Web App load xong
+
+━━━━━━━━━━━━━━━━━━━━━
+
+🔐 **An toàn 100%:**
+Bạn đang đăng nhập vào Web App riêng của bạn.
+Dữ liệu chỉ lưu trên Google Drive của bạn.
+Không ai khác có quyền truy cập!
+
+⏱️ **Lần đầu có thể mất 5-10 giây để load.**
+""",
+            "image": "media/images/web_app_login.jpg",
+            "keyboard": [
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="deploy_guide_step_9"), 
+                 InlineKeyboardButton("Tiếp ▶️", callback_data="deploy_guide_step_11")]
+            ]
+        },
+        11: {  # Step 7: Main Screen
+            "title": "📊 BƯỚC 7: Màn hình chính",
+            "text": """
+**📊 BƯỚC 7: Màn hình chính Web App**
+
+Chào mừng bạn đến với Freedom Wallet! 🎉
+
+**🔹 Bạn sẽ thấy:**
+• 💰 **Tổng tài sản** - Toàn cảnh tài chính hiện tại
+• 📊 **Dòng tiền** - Thu nhập & Chi tiêu tháng này
+• 📈 **Biểu đồ** - Phân tích chi tiêu theo danh mục
+• 🎯 **Cấp độ tài chính** - Đánh giá sức khỏe tài chính
+• ⚡ **Ghi nhanh** - Nút ghi giao dịch siêu tốc
+
+━━━━━━━━━━━━━━━━━━━━━
+
+✨ **Đây là lần đầu tiên:**
+Bạn nhìn thấy toàn bộ tiền của mình ở một nơi.
+Bạn kiểm soát 100% dữ liệu.
+Bạn sở hữu hệ thống tài chính riêng!
+
+💡 **Bạn có thể:**
+• Bookmark trang này để truy cập nhanh
+• Add to Home Screen trên mobile
+• Chia sẻ với vợ/chồng nếu muốn
+""",
+            "image": "media/images/web_apps.jpg",
+            "keyboard": [
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="deploy_guide_step_10"), 
+                 InlineKeyboardButton("Tiếp ▶️", callback_data="deploy_guide_step_12")]
+            ]
+        },
+        12: {  # Step 8: Connect to Bot Offer
+            "title": "🤖 Kết nối với Bot?",
+            "text": """
+**🤖 Bạn có muốn kết nối Freedom Wallet Bot?**
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**✨ LỢI ÍCH KHI KẾT NỐI BOT:**
+
+1️⃣ **Ghi chi tiêu siêu nhanh qua Telegram**
+   → Chỉ cần gửi: "Cà phê 35k"
+   → Bot tự động ghi vào Sheet của bạn!
+
+2️⃣ **Xem báo cáo mọi lúc mọi nơi**
+   → /balance - Xem số dư tài khoản
+   → /spending - Xem chi tiêu tháng này
+   → Không cần mở Web App!
+
+3️⃣ **Nhắc nhở thông minh**
+   → Nhắc ghi chi tiêu hàng ngày
+   → Theo dõi streak (chuỗi ngày liên tục)
+   → Gamification - Tạo động lực!
+
+4️⃣ **AI phân tích & tư vấn**
+   → Phân tích thói quen chi tiêu
+   → Đề xuất tiết kiệm cá nhân hóa
+   → Chat với AI advisor bất cứ lúc nào
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**🔹 Để kết nối, bot cần 2 thông tin:**
+• 📋 **Sheet ID** (từ URL Sheet của bạn)
+• 🔗 **Web App URL** (bạn vừa copy)
+
+**🔐 An toàn:**
+Bot chỉ ghi dữ liệu vào Sheet của bạn.
+Không đọc thông tin cá nhân khác.
+Bạn có thể ngắt kết nối bất cứ lúc nào.
+
+━━━━━━━━━━━━━━━━━━━━━
+
+**❓ Bạn có muốn kết nối ngay không?**
+""",
+            "image": None,
+            "keyboard": [
+                [InlineKeyboardButton("✅ Có, tôi muốn kết nối", callback_data="connect_webapp_now")],
+                [InlineKeyboardButton("⏭️ Không, tôi tự làm sau", callback_data="skip_webapp_setup")],
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="deploy_guide_step_11")]
+            ]
+        }
+    }
+    
+    step_data = steps.get(current_step, steps[0])
+    
+    # Always delete previous message and send new one
+    # This avoids "no text to edit" error when transitioning between photo/text messages
+    try:
+        await query.message.delete()
+    except:
+        pass  # Ignore if message already deleted
+    
+    # Send image with caption if image exists
+    if step_data["image"]:
+        from pathlib import Path
+        image_path = Path(step_data["image"])
+        
+        try:
+            with open(image_path, 'rb') as photo:
+                await context.bot.send_photo(
+                    chat_id=query.message.chat_id,
+                    photo=photo,
+                    caption=f"**{step_data['title']}**\n\n{step_data['text']}",
+                    reply_markup=InlineKeyboardMarkup(step_data["keyboard"]),
+                    parse_mode="Markdown"
+                )
+        except Exception as e:
+            # Fallback to text only if image fails
+            await context.bot.send_message(
+                chat_id=query.message.chat_id,
+                text=f"**{step_data['title']}**\n\n{step_data['text']}\n\n⚠️ (Không tải được hình: {e})",
+                reply_markup=InlineKeyboardMarkup(step_data["keyboard"]),
+                parse_mode="Markdown"
+            )
+    else:
+        # Text only (no image)
+        await context.bot.send_message(
+            chat_id=query.message.chat_id,
+            text=f"**{step_data['title']}**\n\n{step_data['text']}",
+            reply_markup=InlineKeyboardMarkup(step_data["keyboard"]),
+            parse_mode="Markdown"
+        )
 
 
 # Register all handlers
@@ -494,6 +858,7 @@ def register_free_flow_handlers(application):
     application.add_handler(CallbackQueryHandler(free_step3_copy_template, pattern="^free_step3_copy_template$"))
     application.add_handler(CallbackQueryHandler(free_step4_deploy_script, pattern="^free_step4_deploy_script$"))
     application.add_handler(CallbackQueryHandler(show_deploy_guide, pattern="^show_deploy_guide$"))
+    application.add_handler(CallbackQueryHandler(show_deploy_guide, pattern="^deploy_guide_step_"))  # NEW: Handle all steps
     application.add_handler(CallbackQueryHandler(free_step5_open_webapp, pattern="^free_step5_open_webapp$"))
     application.add_handler(CallbackQueryHandler(free_step6_first_action, pattern="^free_step6_first_action$"))
     application.add_handler(CallbackQueryHandler(free_step7_reinforce, pattern="^free_step7_reinforce$"))
@@ -502,5 +867,5 @@ def register_free_flow_handlers(application):
     application.add_handler(CallbackQueryHandler(back_to_start, pattern="^back_to_start$"))
     application.add_handler(CallbackQueryHandler(skip_sharing, pattern="^skip_sharing$"))
     
-    logger.info("âœ… FREE flow handlers registered")
+    logger.info("✅ FREE flow handlers registered")
 

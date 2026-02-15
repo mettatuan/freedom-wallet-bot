@@ -18,7 +18,7 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if not db_user:
         await update.message.reply_text(
-            "âŒ Lá»—i: KhÃ´ng tÃ¬m tháº¥y thÃ´ng tin user. Vui lÃ²ng /start láº¡i."
+            "❌ Lỗi: Không tìm thấy thông tin user. Vui lòng /start lại."
         )
         return
     
@@ -36,44 +36,44 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Status message
     if is_unlocked:
-        status_msg = "âœ… **FREE FOREVER Ä‘Ã£ má»Ÿ khÃ³a!**\n\n"
+        status_msg = "✅ **FREE FOREVER đã mở khóa!**\n\n"
     else:
-        status_msg = f"ðŸ“Š **Tiáº¿n Ä‘á»™: {referral_count}/2 báº¡n bÃ¨**\n\n"
+        status_msg = f"📊 **Tiến độ: {referral_count}/2 bạn bè**\n\n"
     
     # Build message
     message = f"""
-ðŸŽ **GIá»šI THIá»†U Báº N BÃˆ**
+🎁 **GIỚI THIỆU BẠN BÈ**
 
-{status_msg}ðŸ“Š **Thá»‘ng KÃª Cá»§a Báº¡n:**
-â€¢ MÃ£ giá»›i thiá»‡u: `{referral_code}`
-â€¢ ÄÃ£ giá»›i thiá»‡u: {referral_count} ngÆ°á»i
-â€¢ Tráº¡ng thÃ¡i: {"âœ… FREE Unlocked" if is_unlocked else "ðŸ”’ Äang khÃ³a"}
+{status_msg}📊 **Thống Kê Của Bạn:**
+• Mã giới thiệu: `{referral_code}`
+• Đã giới thiệu: {referral_count} người
+• Trạng thái: {"✅ FREE Unlocked" if is_unlocked else "🔒 Đang khóa"}
 
-ðŸ”— **Link giá»›i thiá»‡u cá»§a báº¡n:**
+🔗 **Link giới thiệu của bạn:**
 `{referral_link}`
 
-ðŸ“± **CÃ¡ch sá»­ dá»¥ng:**
-1. Copy link trÃªn
-2. Gá»­i cho báº¡n bÃ¨/gia Ä‘Ã¬nh qua Telegram, Facebook, Zalo...
-3. Khi 2 ngÆ°á»i Ä‘Äƒng kÃ½ qua link â†’ Báº¡n má»Ÿ khÃ³a **FREE FOREVER**!
+📱 **Cách sử dụng:**
+1. Copy link trên
+2. Gửi cho bạn bè/gia đình qua Telegram, Facebook, Zalo...
+3. Khi 2 người đăng ký qua link → Bạn mở khóa **FREE FOREVER**!
 
-ðŸ’Ž **Quyá»n lá»£i FREE khi unlock:**
-âœ“ Template Freedom Wallet v3.2 Ä‘áº§y Ä‘á»§
-âœ“ Bot há»— trá»£ 5 message/ngÃ y
-âœ“ Káº¿t ná»‘i Google Sheets tá»± Ä‘á»™ng
-âœ“ Cá»™ng Ä‘á»“ng há»— trá»£ & chia sáº»
-âœ“ Cáº­p nháº­t tÃ­nh nÄƒng má»›i
-âœ“ **Sá»Ÿ há»¯u VÄ¨NH VIá»„N** â™¾ï¸
+💎 **Quyền lợi FREE khi unlock:**
+✓ Template Freedom Wallet v3.2 đầy đủ
+✓ Bot hỗ trợ 5 message/ngày
+✓ Kết nối Google Sheets tự động
+✓ Cộng đồng hỗ trợ & chia sẻ
+✓ Cập nhật tính năng mới
+✓ **Sở hữu VĨNH VIỄN** ♾️
 
-ðŸ’¡ **Chia sáº» vá»›i:**
-â€¢ Báº¡n bÃ¨ quan tÃ¢m quáº£n lÃ½ tiá»n
-â€¢ NgÆ°á»i muá»‘n báº¯t Ä‘áº§u tiáº¿t kiá»‡m
-â€¢ Ai cáº§n cÃ´ng cá»¥ miá»…n phÃ­ & Ä‘Æ¡n giáº£n
+💡 **Chia sẻ với:**
+• Bạn bè quan tâm quản lý tiền
+• Người muốn bắt đầu tiết kiệm
+• Ai cần công cụ miễn phí & đơn giản
 """
     
     # Show referred users list
     if referred_users:
-        message += f"\nðŸ‘¥ **ÄÃ£ giá»›i thiá»‡u thÃ nh cÃ´ng:**\n"
+        message += f"\n👥 **Đã giới thiệu thành công:**\n"
         for idx, ref_user in enumerate(referred_users, 1):
             name = ref_user['name']
             date = ref_user['date'].strftime("%d/%m/%Y")
@@ -81,15 +81,15 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Keyboard
     share_text = (
-        "ðŸŽ Freedom Wallet - Quáº£n lÃ½ tÃ i chÃ­nh cÃ¡ nhÃ¢n Ä‘Æ¡n giáº£n!\n\n"
-        "Giá»›i thiá»‡u 2 báº¡n â†’ Sá»Ÿ há»¯u vÄ©nh viá»…n miá»…n phÃ­ â™¾ï¸\n\n"
-        "ðŸ“Š 6 HÅ© Tiá»n | ðŸ“ˆ Google Sheets | ðŸ’° Template sáºµn"
+        "🎁 Freedom Wallet - Quản lý tài chính cá nhân đơn giản!\n\n"
+        "Giới thiệu 2 bạn → Sở hữu vĩnh viễn miễn phí ♾️\n\n"
+        "📊 6 Hũ Tiền | 📈 Google Sheets | 💰 Template sẵn"
     )
     keyboard = [
-        [InlineKeyboardButton("ðŸ“‹ Copy Link", callback_data=f"copy_ref_{referral_code}")],
-        [InlineKeyboardButton("ðŸ“¢ Chia sáº» ngay", 
+        [InlineKeyboardButton("📋 Copy Link", callback_data=f"copy_ref_{referral_code}")],
+        [InlineKeyboardButton("📢 Chia sẻ ngay", 
                              url=f"https://t.me/share/url?url={referral_link}&text={share_text}")],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data="back_to_menu")]
+        [InlineKeyboardButton("« Quay lại", callback_data="back_to_menu")]
     ]
     
     await update.message.reply_text(
@@ -109,24 +109,24 @@ async def check_unlock_notification(update: Update, context: ContextTypes.DEFAUL
         await context.bot.send_message(
             chat_id=user_id,
             text="""
-ðŸŽ‰ðŸŽ‰ðŸŽ‰ **CHÃšC Má»ªNG!** ðŸŽ‰ðŸŽ‰ðŸŽ‰
+🎉🎉🎉 **CHÚC MỪNG!** 🎉🎉🎉
 
-Báº¡n vá»«a má»Ÿ khÃ³a **FREE FOREVER**!
+Bạn vừa mở khóa **FREE FOREVER**!
 
-âœ… **Quyá»n lá»£i cá»§a báº¡n:**
-âœ“ Sá»­ dá»¥ng Bot khÃ´ng giá»›i háº¡n
-âœ“ Táº£i Template Freedom Wallet
-âœ“ Truy cáº­p Ä‘áº§y Ä‘á»§ tÃ­nh nÄƒng
-âœ“ Cáº­p nháº­t tÃ­nh nÄƒng má»›i miá»…n phÃ­
+✅ **Quyền lợi của bạn:**
+✓ Sử dụng Bot không giới hạn
+✓ Tải Template Freedom Wallet
+✓ Truy cập đầy đủ tính năng
+✓ Cập nhật tính năng mới miễn phí
 
-ðŸ“š **TÃ i liá»‡u hÆ°á»›ng dáº«n:**
-ðŸ‘‰ [HÆ°á»›ng dáº«n táº¡o Web App](https://eliroxbot.notion.site/freedomwallet)
+📚 **Tài liệu hướng dẫn:**
+👉 [Hướng dẫn tạo Web App](https://eliroxbot.notion.site/freedomwallet)
 
-ðŸ’¬ **Tham gia cá»™ng Ä‘á»“ng:**
-ðŸ‘‰ [Freedom Wallet Group](https://t.me/freedomwalletapp)
-(Há»— trá»£ 1-1, chia sáº» tips, cáº­p nháº­t má»›i)
+💬 **Tham gia cộng đồng:**
+👉 [Freedom Wallet Group](https://t.me/freedomwalletapp)
+(Hỗ trợ 1-1, chia sẻ tips, cập nhật mới)
 
-ðŸš€ Báº¯t Ä‘áº§u ngay vá»›i /help hoáº·c há»i mÃ¬nh báº¥t cá»© Ä‘iá»u gÃ¬!
+🚀 Bắt đầu ngay với /help hoặc hỏi mình bất cứ điều gì!
 """,
             parse_mode="Markdown",
             disable_web_page_preview=False
@@ -158,8 +158,8 @@ async def handle_referral_start(update: Update, context: ContextTypes.DEFAULT_TY
     
     if referrer.id == user.id:
         await update.message.reply_text(
-            "ðŸ˜… Báº¡n khÃ´ng thá»ƒ tá»± giá»›i thiá»‡u chÃ­nh mÃ¬nh nhÃ©!\n\n"
-            "HÃ£y gá»­i link cho báº¡n bÃ¨ Ä‘á»ƒ nháº­n Æ°u Ä‘Ã£i."
+            "😅 Bạn không thể tự giới thiệu chính mình nhé!\n\n"
+            "Hãy gửi link cho bạn bè để nhận ưu đãi."
         )
         return False
     
@@ -167,23 +167,23 @@ async def handle_referral_start(update: Update, context: ContextTypes.DEFAULT_TY
     referral, error = await create_referral(referrer.id, user.id, referral_code)
     
     if error:
-        await update.message.reply_text(f"âŒ {error}")
+        await update.message.reply_text(f"❌ {error}")
         return False
     
     if referral:
-        referrer_name = referrer.first_name or referrer.username or "má»™t ngÆ°á»i báº¡n"
+        referrer_name = referrer.first_name or referrer.username or "một người bạn"
         
         # Welcome message + explain registration requirement
         await update.message.reply_text(
-            f"ðŸŽ‰ **ChÃ o má»«ng báº¡n Ä‘áº¿n Freedom Wallet!**\n\n"
-            f"Báº¡n Ä‘Æ°á»£c giá»›i thiá»‡u bá»Ÿi **{referrer_name}**.\n\n"
-            f"ðŸ“ **BÆ°á»›c tiáº¿p theo:**\n"
-            f"Äá»ƒ nháº­n **Template Google Sheet miá»…n phÃ­** vÃ  giÃºp {referrer_name} "
-            f"má»Ÿ khÃ³a FREE tier, vui lÃ²ng:\n\n"
-            f"ðŸ‘‰ Äiá»n thÃ´ng tin Ä‘Äƒng kÃ½ (30 giÃ¢y)\n"
-            f"ðŸ‘‰ Nháº­n link Template qua email\n"
-            f"ðŸ‘‰ Báº¯t Ä‘áº§u quáº£n lÃ½ tÃ i chÃ­nh ngay!\n\n"
-            f"Báº¥m /register Ä‘á»ƒ báº¯t Ä‘áº§u ngay! ðŸš€",
+            f"🎉 **Chào mừng bạn đến Freedom Wallet!**\n\n"
+            f"Bạn được giới thiệu bởi **{referrer_name}**.\n\n"
+            f"📝 **Bước tiếp theo:**\n"
+            f"Để nhận **Template Google Sheet miễn phí** và giúp {referrer_name} "
+            f"mở khóa FREE tier, vui lòng:\n\n"
+            f"👉 Điền thông tin đăng ký (30 giây)\n"
+            f"👉 Nhận link Template qua email\n"
+            f"👉 Bắt đầu quản lý tài chính ngay!\n\n"
+            f"Bấm /register để bắt đầu ngay! 🚀",
             parse_mode="Markdown"
         )
         
@@ -195,10 +195,10 @@ async def handle_referral_start(update: Update, context: ContextTypes.DEFAULT_TY
         try:
             await context.bot.send_message(
                 chat_id=referrer.id,
-                text=f"ðŸŽŠ **Tin vui!**\n\n"
-                     f"**{user.first_name or user.username}** vá»«a nháº¥n vÃ o link giá»›i thiá»‡u cá»§a báº¡n!\n\n"
-                     f"â³ Äang chá» há» hoÃ n táº¥t Ä‘Äƒng kÃ½...\n"
-                     f"(Sáº½ thÃ´ng bÃ¡o khi xong)",
+                text=f"🎊 **Tin vui!**\n\n"
+                     f"**{user.first_name or user.username}** vừa nhấn vào link giới thiệu của bạn!\n\n"
+                     f"⏳ Đang chờ họ hoàn tất đăng ký...\n"
+                     f"(Sẽ thông báo khi xong)",
                 parse_mode="Markdown"
             )
         except:

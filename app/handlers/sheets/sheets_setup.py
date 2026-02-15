@@ -20,13 +20,13 @@ async def cmd_get_service_account_email(update: Update, context: ContextTypes.DE
     
     if not os.path.exists(creds_path):
         await update.message.reply_text(
-            "âŒ **Service account chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh!**\n\n"
-            "Bot chÆ°a cÃ³ file `google_service_account.json`.\n\n"
-            "**Báº¡n cÃ³ thá»ƒ dÃ¹ng Quick Record thay tháº¿:**\n"
-            "1. Copy template vá» Drive\n"
+            "❌ **Service account chưa được cấu hình!**\n\n"
+            "Bot chưa có file `google_service_account.json`.\n\n"
+            "**Bạn có thể dùng Quick Record thay thế:**\n"
+            "1. Copy template về Drive\n"
             "2. Deploy Web App: /taoweb\n"
-            "3. GÃµ: `chi 50k test`\n\n"
-            "KhÃ´ng cáº§n share vá»›i ai!",
+            "3. Gõ: `chi 50k test`\n\n"
+            "Không cần share với ai!",
             parse_mode="Markdown"
         )
         return
@@ -38,22 +38,22 @@ async def cmd_get_service_account_email(update: Update, context: ContextTypes.DE
             project_id = sa_data.get('project_id', 'Unknown')
         
         await update.message.reply_text(
-            f"ðŸ“§ **Service Account Email:**\n\n"
+            f"📧 **Service Account Email:**\n\n"
             f"`{sa_email}`\n\n"
-            f"ðŸ”‘ Project: `{project_id}`\n\n"
-            f"**CÃ¡ch share spreadsheet:**\n"
-            f"1ï¸âƒ£ Má»Ÿ spreadsheet cá»§a báº¡n\n"
-            f"2ï¸âƒ£ Click **Share** (gÃ³c trÃªn pháº£i)\n"
-            f"3ï¸âƒ£ Copy email trÃªn â†’ Paste vÃ o\n"
-            f"4ï¸âƒ£ Quyá»n: **Viewer**\n"
-            f"5ï¸âƒ£ Bá» tick \"Notify people\"\n"
-            f"6ï¸âƒ£ Click **Share**\n\n"
-            f"Sau Ä‘Ã³: `/setsheet [ID_SPREADSHEET_Cá»¦A_Báº N]`",
+            f"🔑 Project: `{project_id}`\n\n"
+            f"**Cách share spreadsheet:**\n"
+            f"1️⃣ Mở spreadsheet của bạn\n"
+            f"2️⃣ Click **Share** (góc trên phải)\n"
+            f"3️⃣ Copy email trên → Paste vào\n"
+            f"4️⃣ Quyền: **Viewer**\n"
+            f"5️⃣ Bỏ tick \"Notify people\"\n"
+            f"6️⃣ Click **Share**\n\n"
+            f"Sau đó: `/setsheet [ID_SPREADSHEET_CỦA_BẠN]`",
             parse_mode="Markdown"
         )
     except Exception as e:
         logger.error(f"Error reading service account: {e}")
-        await update.message.reply_text(f"âŒ Lá»—i Ä‘á»c service account: {str(e)}")
+        await update.message.reply_text(f"❌ Lỗi đọc service account: {str(e)}")
 
 
 async def handle_connect_sheets_wizard(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -65,33 +65,33 @@ async def handle_connect_sheets_wizard(update: Update, context: ContextTypes.DEF
     if query:
         await query.answer()
     
-    # âœ… FIX: Check if user already has spreadsheet connected
+    # ✅ FIX: Check if user already has spreadsheet connected
     user_id = update.effective_user.id
     user = await get_user_by_id(user_id)
     
     if user and user.spreadsheet_id:
         # User already connected - show status
-        connected_at = user.sheets_connected_at.strftime("%d/%m/%Y %H:%M") if user.sheets_connected_at else "KhÃ´ng rÃµ"
+        connected_at = user.sheets_connected_at.strftime("%d/%m/%Y %H:%M") if user.sheets_connected_at else "Không rõ"
         
         message = f"""
-ðŸ“Š **Báº¡n Ä‘Ã£ káº¿t ná»‘i Google Sheets rá»“i!**
+📊 **Bạn đã kết nối Google Sheets rồi!**
 
-ðŸ”— Spreadsheet ID: `{user.spreadsheet_id[:20]}...`
-ðŸ“… Káº¿t ná»‘i lÃºc: {connected_at}
+🔗 Spreadsheet ID: `{user.spreadsheet_id[:20]}...`
+📅 Kết nối lúc: {connected_at}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ’¡ **Báº¡n cÃ³ thá»ƒ:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+💡 **Bạn có thể:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… Äá»•i sang Sheets khÃ¡c
-âœ… Ngáº¯t káº¿t ná»‘i
-âœ… Kiá»ƒm tra tráº¡ng thÃ¡i
+✅ Đổi sang Sheets khác
+✅ Ngắt kết nối
+✅ Kiểm tra trạng thái
 """
         
         keyboard = [
-            [InlineKeyboardButton("ðŸ”„ Äá»•i sheet khÃ¡c", callback_data="change_sheet")],
-            [InlineKeyboardButton("ðŸ”Œ Ngáº¯t káº¿t ná»‘i", callback_data="disconnect_sheet")],
-            [InlineKeyboardButton("ðŸ  Menu", callback_data="start")]
+            [InlineKeyboardButton("🔄 Đổi sheet khác", callback_data="change_sheet")],
+            [InlineKeyboardButton("🔌 Ngắt kết nối", callback_data="disconnect_sheet")],
+            [InlineKeyboardButton("🏠 Menu", callback_data="start")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
@@ -104,50 +104,50 @@ async def handle_connect_sheets_wizard(update: Update, context: ContextTypes.DEF
     
     # User not connected - show wizard
     message = """
-ðŸ”— **Káº¾T Ná»I GOOGLE SHEETS**
+🔗 **KẾT NỐI GOOGLE SHEETS**
 
-Äá»ƒ sá»­ dá»¥ng tÃ­nh nÄƒng Premium AI analysis vÃ  dashboard, bot cáº§n Ä‘á»c dá»¯ liá»‡u tá»« Google Sheets cá»§a báº¡n.
+Để sử dụng tính năng Premium AI analysis và dashboard, bot cần đọc dữ liệu từ Google Sheets của bạn.
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**ðŸ“‹ HÆ¯á»šNG DáºªN 4 BÆ¯á»šC:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+**📋 HƯỚNG DẪN 4 BƯỚC:**
+━━━━━━━━━━━━━━━━━━━━━
 
-**BÆ°á»›c 1:** Copy Template vá» Drive
-[ðŸ“„ Click Ä‘á»ƒ copy]
+**Bước 1:** Copy Template về Drive
+[📄 Click để copy]
 
-**BÆ°á»›c 2:** Share quyá»n View
-ðŸ‘‰ Trong Sheets, báº¥m "Share" (gÃ³c trÃªn pháº£i)
-ðŸ‘‰ ThÃªm email: `freedomwallet-bot@service-account.iam.gserviceaccount.com`
-ðŸ‘‰ Chá»n quyá»n: **Viewer** (chá»‰ Ä‘á»c)
-ðŸ‘‰ Báº¥m "Send"
+**Bước 2:** Share quyền View
+👉 Trong Sheets, bấm "Share" (góc trên phải)
+👉 Thêm email: `freedomwallet-bot@service-account.iam.gserviceaccount.com`
+👉 Chọn quyền: **Viewer** (chỉ đọc)
+👉 Bấm "Send"
 
-**BÆ°á»›c 3:** Láº¥y Spreadsheet ID
+**Bước 3:** Lấy Spreadsheet ID
 URL: `docs.google.com/spreadsheets/d/[ID]/edit`
-ðŸ‘‰ Copy pháº§n ID (44 kÃ½ tá»±)
+👉 Copy phần ID (44 ký tự)
 
-**BÆ°á»›c 4:** Gá»­i ID cho bot
-GÃµ: `/setsheet [PASTE_ID]`
+**Bước 4:** Gửi ID cho bot
+Gõ: `/setsheet [PASTE_ID]`
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-ðŸ”’ **Báº¢O Máº¬T:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+🔒 **BẢO MẬT:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âœ… Bot CHá»ˆ cÃ³ quyá»n **Ä‘á»c** (Viewer)
-âœ… KHÃ”NG thá»ƒ sá»­a/xÃ³a data cá»§a báº¡n
-âœ… Báº¡n cÃ³ thá»ƒ thu há»“i quyá»n báº¥t cá»© lÃºc nÃ o
+✅ Bot CHỈ có quyền **đọc** (Viewer)
+✅ KHÔNG thể sửa/xóa data của bạn
+✅ Bạn có thể thu hồi quyền bất cứ lúc nào
 
-ðŸ’¡ **Tip:** Náº¿u khÃ´ng muá»‘n share, báº¡n váº«n dÃ¹ng Ä‘Æ°á»£c template bÃ¬nh thÆ°á»ng, chá»‰ thiáº¿u tÃ­nh nÄƒng AI analysis tá»± Ä‘á»™ng.
+💡 **Tip:** Nếu không muốn share, bạn vẫn dùng được template bình thường, chỉ thiếu tính năng AI analysis tự động.
 """
     
     # Get template ID from environment
-    template_id = os.getenv("TEMPLATE_SPREADSHEET_ID", "1er6t9JQHLa9eZ1YTIM4aK0IhN37yPq6IUVbOg4-8mXg")
+    template_id = os.getenv("TEMPLATE_SHEET_ID", "1Vlq3MAplg_FtpaOqqcvgz1UNMfemHiQcKFcdfE4nOtI")
     template_url = f"https://docs.google.com/spreadsheets/d/{template_id}/copy"
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ“„ Copy Template", url=template_url)],
-        [InlineKeyboardButton("ðŸ“– Xem video hÆ°á»›ng dáº«n", url="https://youtu.be/your-tutorial-video")],
-        [InlineKeyboardButton("â­ï¸ Bá» qua (dÃ¹ng thá»­ khÃ´ng káº¿t ná»‘i)", callback_data="skip_sheets_connection")],
-        [InlineKeyboardButton("ðŸ  Menu Premium", callback_data="premium_menu")]
+        [InlineKeyboardButton("📄 Copy Template", url=template_url)],
+        [InlineKeyboardButton("📖 Xem video hướng dẫn", url="https://youtu.be/your-tutorial-video")],
+        [InlineKeyboardButton("⏭️ Bỏ qua (dùng thử không kết nối)", callback_data="skip_sheets_connection")],
+        [InlineKeyboardButton("🏠 Menu Premium", callback_data="premium_menu")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -164,49 +164,49 @@ async def handle_set_sheet_command(update: Update, context: ContextTypes.DEFAULT
     /setsheet SPREADSHEET_ID
     Connect user's Google Sheets
     
-    âœ… Works for ALL users (not just Premium)
-    - With service account â†’ Full AI analysis + Quick Record
-    - Without service account â†’ Quick Record only
+    ✅ Works for ALL users (not just Premium)
+    - With service account → Full AI analysis + Quick Record
+    - Without service account → Quick Record only
     """
     user_id = update.effective_user.id
-    logger.info(f"ðŸ” /setsheet command received from user {user_id}")
-    logger.info(f"ðŸ“ Args: {context.args}")
+    logger.info(f"🔍 /setsheet command received from user {user_id}")
+    logger.info(f"📝 Args: {context.args}")
     
     user = await get_user_by_id(user_id)
     
     # Validate args
     if not context.args:
         await update.message.reply_text(
-            "âŒ **Thiáº¿u Spreadsheet ID!**\n\n"
-            "CÃ¡ch dÃ¹ng:\n"
+            "❌ **Thiếu Spreadsheet ID!**\n\n"
+            "Cách dùng:\n"
             "`/setsheet YOUR_SPREADSHEET_ID`\n\n"
-            "ðŸ“– Xem hÆ°á»›ng dáº«n: /connectsheets",
+            "📖 Xem hướng dẫn: /connectsheets",
             parse_mode="Markdown"
         )
         return
     
     spreadsheet_id = context.args[0].strip()
     
-    # âœ… CHECK: If user is using TEMPLATE ID (they need to COPY first!)
-    template_id = os.getenv("TEMPLATE_SPREADSHEET_ID", "1er6t9JQHLa9eZ1YTIM4aK0IhN37yPq6IUVbOg4-8mXg")
+    # ✅ CHECK: If user is using TEMPLATE ID (they need to COPY first!)
+    template_id = os.getenv("TEMPLATE_SHEET_ID", "1Vlq3MAplg_FtpaOqqcvgz1UNMfemHiQcKFcdfE4nOtI")
     if spreadsheet_id == template_id:
         template_url = f"https://docs.google.com/spreadsheets/d/{template_id}/copy"
         await update.message.reply_text(
-            "âš ï¸ **Báº¡n Ä‘ang dÃ¹ng Template ID!**\n\n"
-            "âš ï¸ **Lá»—i:** Báº¡n KHÃ”NG THá»‚ dÃ¹ng trá»±c tiáº¿p template nÃ y.\n\n"
-            "**Báº¡n cáº§n:**\n"
-            "1ï¸âƒ£ **Copy template vá» Drive cá»§a báº¡n**\n"
-            f"   ðŸ‘‰ [Click Ä‘á»ƒ copy]({template_url})\n\n"
-            "2ï¸âƒ£ **Láº¥y ID Má»šI** (cá»§a báº£n copy)\n"
-            "   URL: `docs.google.com/spreadsheets/d/[ID_Má»šI]/edit`\n\n"
-            "3ï¸âƒ£ **Gá»­i ID Má»šI cho bot:**\n"
-            "   `/setsheet [ID_Má»šI]`\n\n"
-            "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-            "ðŸ’¡ **Hoáº·c dÃ¹ng Quick Record (khÃ´ng cáº§n service account):**\n"
+            "⚠️ **Bạn đang dùng Template ID!**\n\n"
+            "⚠️ **Lỗi:** Bạn KHÔNG THỂ dùng trực tiếp template này.\n\n"
+            "**Bạn cần:**\n"
+            "1️⃣ **Copy template về Drive của bạn**\n"
+            f"   👉 [Click để copy]({template_url})\n\n"
+            "2️⃣ **Lấy ID MỚI** (của bản copy)\n"
+            "   URL: `docs.google.com/spreadsheets/d/[ID_MỚI]/edit`\n\n"
+            "3️⃣ **Gửi ID MỚI cho bot:**\n"
+            "   `/setsheet [ID_MỚI]`\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━\n"
+            "💡 **Hoặc dùng Quick Record (không cần service account):**\n"
             "1. Copy template\n"
-            "2. Deploy Web App (Extensions â†’ Apps Script)\n"
+            "2. Deploy Web App (Extensions → Apps Script)\n"
             "3. `/setwebapp [URL]`\n"
-            "4. GÃµ: `chi 50k test`",
+            "4. Gõ: `chi 50k test`",
             parse_mode="Markdown"
         )
         return
@@ -214,21 +214,21 @@ async def handle_set_sheet_command(update: Update, context: ContextTypes.DEFAULT
     # Validate ID format (44 chars, alphanumeric + - _ )
     if not re.match(r'^[a-zA-Z0-9_-]{30,60}$', spreadsheet_id):
         # Get example ID from environment
-        example_id = os.getenv("TEMPLATE_SPREADSHEET_ID", "1er6t9JQHLa9eZ1YTIM4aK0IhN37yPq6IUVbOg4-8mXg")
+        example_id = os.getenv("TEMPLATE_SHEET_ID", "1Vlq3MAplg_FtpaOqqcvgz1UNMfemHiQcKFcdfE4nOtI")
         await update.message.reply_text(
-            "âŒ **ID khÃ´ng há»£p lá»‡!**\n\n"
-            "Spreadsheet ID pháº£i:\n"
-            "â€¢ DÃ i 30-60 kÃ½ tá»±\n"
-            "â€¢ Chá»‰ chá»©a chá»¯, sá»‘, dáº¥u gáº¡ch\n\n"
-            f"VÃ­ dá»¥: `{example_id}`"
+            "❌ **ID không hợp lệ!**\n\n"
+            "Spreadsheet ID phải:\n"
+            "• Dài 30-60 ký tự\n"
+            "• Chỉ chứa chữ, số, dấu gạch\n\n"
+            f"Ví dụ: `{example_id}`"
         )
         return
     
     # Test connection
-    await update.message.reply_text("ðŸ”„ Äang kiá»ƒm tra káº¿t ná»‘i...")
+    await update.message.reply_text("🔄 Đang kiểm tra kết nối...")
     
     try:
-        # âœ… FIX: Try to test connection, but allow fallback if service account not configured
+        # ✅ FIX: Try to test connection, but allow fallback if service account not configured
         sheets = None
         can_test_connection = False
         
@@ -252,19 +252,19 @@ async def handle_set_sheet_command(update: Update, context: ContextTypes.DEFAULT
                         pass
                     
                     await update.message.reply_text(
-                        f"âŒ **KhÃ´ng thá»ƒ káº¿t ná»‘i!**\n\n"
-                        f"**NguyÃªn nhÃ¢n phá»• biáº¿n:**\n"
-                        f"âŒ Báº¡n CHÆ¯A SHARE spreadsheet vá»›i bot\n\n"
-                        f"**CÃ¡ch sá»­a:**\n"
-                        f"1ï¸âƒ£ Má»Ÿ spreadsheet: `docs.google.com/spreadsheets/d/{spreadsheet_id}/edit`\n"
-                        f"2ï¸âƒ£ Click **Share** (gÃ³c trÃªn bÃªn pháº£i)\n"
-                        f"3ï¸âƒ£ Paste email nÃ y:\n"
+                        f"❌ **Không thể kết nối!**\n\n"
+                        f"**Nguyên nhân phổ biến:**\n"
+                        f"❌ Bạn CHƯA SHARE spreadsheet với bot\n\n"
+                        f"**Cách sửa:**\n"
+                        f"1️⃣ Mở spreadsheet: `docs.google.com/spreadsheets/d/{spreadsheet_id}/edit`\n"
+                        f"2️⃣ Click **Share** (góc trên bên phải)\n"
+                        f"3️⃣ Paste email này:\n"
                         f"`{sa_email}`\n"
-                        f"4ï¸âƒ£ Quyá»n: **Viewer** (chá»‰ Ä‘á»c)\n"
-                        f"5ï¸âƒ£ **Bá» tick** \"Notify people\"\n"
-                        f"6ï¸âƒ£ Click Share\n"
-                        f"7ï¸âƒ£ Thá»­ láº¡i: `/setsheet {spreadsheet_id}`\n\n"
-                        f"ðŸ“– Hoáº·c dÃ¹ng Quick Record: /taoweb",
+                        f"4️⃣ Quyền: **Viewer** (chỉ đọc)\n"
+                        f"5️⃣ **Bỏ tick** \"Notify people\"\n"
+                        f"6️⃣ Click Share\n"
+                        f"7️⃣ Thử lại: `/setsheet {spreadsheet_id}`\n\n"
+                        f"📖 Hoặc dùng Quick Record: /taoweb",
                         parse_mode="Markdown"
                     )
                     
@@ -274,18 +274,18 @@ async def handle_set_sheet_command(update: Update, context: ContextTypes.DEFAULT
                     })
                     return
             except Exception as e:
-                logger.warning(f"âš ï¸ Could not test connection with SheetsReader: {e}")
+                logger.warning(f"⚠️ Could not test connection with SheetsReader: {e}")
                 can_test_connection = False
         
         # If service account not configured, save ID without testing (for Quick Record)
         if not can_test_connection:
-            logger.info(f"âš ï¸ Service account not found, saving spreadsheet ID without testing")
+            logger.info(f"⚠️ Service account not found, saving spreadsheet ID without testing")
             await update.message.reply_text(
-                "âš ï¸ **KhÃ´ng thá»ƒ kiá»ƒm tra káº¿t ná»‘i** (chÆ°a config service account)\n\n"
-                "Äang lÆ°u ID Ä‘á»ƒ dÃ¹ng Quick Record...\n\n"
-                "ðŸ’¡ **LÆ°u Ã½:**\n"
-                "â€¢ Quick Record (chi 50k) sáº½ hoáº¡t Ä‘á»™ng âœ…\n"
-                "â€¢ AI Analysis bá»‹ táº¯t (cáº§n service account) âŒ"
+                "⚠️ **Không thể kiểm tra kết nối** (chưa config service account)\n\n"
+                "Đang lưu ID để dùng Quick Record...\n\n"
+                "💡 **Lưu ý:**\n"
+                "• Quick Record (chi 50k) sẽ hoạt động ✅\n"
+                "• AI Analysis bị tắt (cần service account) ❌"
             )
         
         # Connection successful! Save to database
@@ -307,30 +307,30 @@ async def handle_set_sheet_command(update: Update, context: ContextTypes.DEFAULT
                 balance = await sheets.get_total_balance()
                 jars = await sheets.get_balance_summary()
             except Exception as e:
-                logger.warning(f"âš ï¸ Could not get balance preview: {e}")
+                logger.warning(f"⚠️ Could not get balance preview: {e}")
         
         balance_text = ""
         if balance is not None:
-            balance_text = f"\nðŸ’° **Tá»•ng tÃ i sáº£n:** {balance:,.0f} VNÄ\n"
+            balance_text = f"\n💰 **Tổng tài sản:** {balance:,.0f} VNĐ\n"
             if jars:
-                balance_text += "\n**Chi tiáº¿t 6 HÅ©:**\n"
+                balance_text += "\n**Chi tiết 6 Hũ:**\n"
                 for jar_name, amount in jars.items():
-                    balance_text += f"â€¢ {jar_name}: {amount:,.0f} VNÄ\n"
+                    balance_text += f"• {jar_name}: {amount:,.0f} VNĐ\n"
         
-        success_message = f"âœ… **Káº¾T Ná»I THÃ€NH CÃ”NG!**\n\n"
-        success_message += f"ðŸ“Š Spreadsheet: `{spreadsheet_id[:20]}...`\n"
+        success_message = f"✅ **KẾT NỐI THÀNH CÔNG!**\n\n"
+        success_message += f"📊 Spreadsheet: `{spreadsheet_id[:20]}...`\n"
         success_message += balance_text
-        success_message += f"\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-        success_message += f"ðŸš€ **BÃ¢y giá» báº¡n cÃ³ thá»ƒ:**\n"
-        success_message += f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-        success_message += f"ðŸ’¬ Ghi giao dá»‹ch nhanh:\n"
-        success_message += f"   â€¢ `chi 50k cÃ  phÃª`\n"
-        success_message += f"   â€¢ `thu 5tr lÆ°Æ¡ng`\n"
-        success_message += f"   â€¢ `Ä‘áº§u tÆ° 1tr Bitcoin`\n\n"
-        success_message += f"ðŸ“Š Xem sá»‘ dÆ°: /balance\n"
+        success_message += f"\n━━━━━━━━━━━━━━━━━━━━━\n"
+        success_message += f"🚀 **Bây giờ bạn có thể:**\n"
+        success_message += f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+        success_message += f"💬 Ghi giao dịch nhanh:\n"
+        success_message += f"   • `chi 50k cà phê`\n"
+        success_message += f"   • `thu 5tr lương`\n"
+        success_message += f"   • `đầu tư 1tr Bitcoin`\n\n"
+        success_message += f"📊 Xem số dư: /balance\n"
         
         if can_test_connection:
-            success_message += f"ðŸ“ˆ AI analysis: /analyze\n"
+            success_message += f"📈 AI analysis: /analyze\n"
         
         await update.message.reply_text(
             success_message,
@@ -344,16 +344,16 @@ async def handle_set_sheet_command(update: Update, context: ContextTypes.DEFAULT
             'total_balance': balance if balance else 0
         })
         
-        logger.info(f"âœ… User {user_id} connected Sheets: {spreadsheet_id[:10]}...")
+        logger.info(f"✅ User {user_id} connected Sheets: {spreadsheet_id[:10]}...")
         
     except Exception as e:
         await update.message.reply_text(
-            f"âŒ **Lá»—i káº¿t ná»‘i!**\n\n"
-            f"Chi tiáº¿t: `{str(e)}`\n\n"
-            f"Vui lÃ²ng thá»­ láº¡i hoáº·c liÃªn há»‡ /support"
+            f"❌ **Lỗi kết nối!**\n\n"
+            f"Chi tiết: `{str(e)}`\n\n"
+            f"Vui lòng thử lại hoặc liên hệ /support"
         )
         
-        logger.error(f"âŒ Sheets connection error for user {user_id}: {e}")
+        logger.error(f"❌ Sheets connection error for user {user_id}: {e}")
         Analytics.track_event(user_id, 'sheets_connection_error', {'error': str(e)})
 
 
@@ -369,7 +369,7 @@ async def handle_disconnect_sheets(update: Update, context: ContextTypes.DEFAULT
         user = db.query(User).filter(User.id == user_id).first()
         if not user or not user.spreadsheet_id:
             await update.message.reply_text(
-                "â„¹ï¸ Báº¡n chÆ°a káº¿t ná»‘i Google Sheets nÃ o!"
+                "ℹ️ Bạn chưa kết nối Google Sheets nào!"
             )
             return
         
@@ -380,10 +380,10 @@ async def handle_disconnect_sheets(update: Update, context: ContextTypes.DEFAULT
         db.commit()
         
         await update.message.reply_text(
-            "âœ… **ÄÃ£ ngáº¯t káº¿t ná»‘i Google Sheets**\n\n"
-            "ðŸ“Š Báº¡n váº«n cÃ³ thá»ƒ dÃ¹ng template bÃ¬nh thÆ°á»ng.\n"
-            "Chá»‰ thiáº¿u tÃ­nh nÄƒng AI analysis tá»± Ä‘á»™ng.\n\n"
-            "ðŸ”— Káº¿t ná»‘i láº¡i: /connectsheets"
+            "✅ **Đã ngắt kết nối Google Sheets**\n\n"
+            "📊 Bạn vẫn có thể dùng template bình thường.\n"
+            "Chỉ thiếu tính năng AI analysis tự động.\n\n"
+            "🔗 Kết nối lại: /connectsheets"
         )
         
         Analytics.track_event(user_id, 'sheets_disconnected', {
@@ -404,12 +404,12 @@ async def handle_skip_sheets_connection(update: Update, context: ContextTypes.DE
     user_id = update.effective_user.id
     
     await query.edit_message_text(
-        "âœ… **OK, bá» qua káº¿t ná»‘i!**\n\n"
-        "ðŸ“Š Báº¡n váº«n cÃ³ thá»ƒ:\n"
-        "â€¢ DÃ¹ng Google Sheets template bÃ¬nh thÆ°á»ng\n"
-        "â€¢ Tá»± quáº£n lÃ½ tÃ i chÃ­nh\n"
-        "â€¢ Chat vá»›i bot (nhÆ°ng bot khÃ´ng biáº¿t sá»‘ liá»‡u cá»§a báº¡n)\n\n"
-        "ðŸ”— Muá»‘n káº¿t ná»‘i sau: /connectsheets",
+        "✅ **OK, bỏ qua kết nối!**\n\n"
+        "📊 Bạn vẫn có thể:\n"
+        "• Dùng Google Sheets template bình thường\n"
+        "• Tự quản lý tài chính\n"
+        "• Chat với bot (nhưng bot không biết số liệu của bạn)\n\n"
+        "🔗 Muốn kết nối sau: /connectsheets",
         parse_mode="Markdown"
     )
     
@@ -425,39 +425,39 @@ async def handle_change_sheet(update: Update, context: ContextTypes.DEFAULT_TYPE
     user_id = update.effective_user.id
     
     # Get template ID from environment
-    template_id = os.getenv("TEMPLATE_SPREADSHEET_ID", "1er6t9JQHLa9eZ1YTIM4aK0IhN37yPq6IUVbOg4-8mXg")
+    template_id = os.getenv("TEMPLATE_SHEET_ID", "1Vlq3MAplg_FtpaOqqcvgz1UNMfemHiQcKFcdfE4nOtI")
     template_url = f"https://docs.google.com/spreadsheets/d/{template_id}/copy"
     
     message = """
-ðŸ”„ **Äá»”I SANG GOOGLE SHEETS KHÃC**
+🔄 **ĐỔI SANG GOOGLE SHEETS KHÁC**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**ðŸ“‹ HÆ¯á»šNG DáºªN:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+**📋 HƯỚNG DẪN:**
+━━━━━━━━━━━━━━━━━━━━━
 
-**BÆ°á»›c 1:** Copy Template má»›i (náº¿u chÆ°a cÃ³)
-[ðŸ“„ Click Ä‘á»ƒ copy]
+**Bước 1:** Copy Template mới (nếu chưa có)
+[📄 Click để copy]
 
-**BÆ°á»›c 2:** Share quyá»n View
-ðŸ‘‰ Trong Sheets, báº¥m "Share"
-ðŸ‘‰ ThÃªm: `freedomwallet-bot@service-account.iam.gserviceaccount.com`
-ðŸ‘‰ Quyá»n: **Viewer**
+**Bước 2:** Share quyền View
+👉 Trong Sheets, bấm "Share"
+👉 Thêm: `freedomwallet-bot@service-account.iam.gserviceaccount.com`
+👉 Quyền: **Viewer**
 
-**BÆ°á»›c 3:** Láº¥y Spreadsheet ID
+**Bước 3:** Lấy Spreadsheet ID
 URL: `docs.google.com/spreadsheets/d/[ID]/edit`
-ðŸ‘‰ Copy pháº§n [ID]
+👉 Copy phần [ID]
 
-**BÆ°á»›c 4:** Gá»­i ID cho bot
-GÃµ: `/setsheet [PASTE_ID_Má»šI]`
+**Bước 4:** Gửi ID cho bot
+Gõ: `/setsheet [PASTE_ID_MỚI]`
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-â„¹ï¸ **LÆ°u Ã½:** Khi Ä‘á»•i sheet má»›i, sheet cÅ© sáº½ bá»‹ ngáº¯t káº¿t ná»‘i.
+━━━━━━━━━━━━━━━━━━━━━
+ℹ️ **Lưu ý:** Khi đổi sheet mới, sheet cũ sẽ bị ngắt kết nối.
 """
     
     keyboard = [
-        [InlineKeyboardButton("ðŸ“„ Copy Template", url=template_url)],
-        [InlineKeyboardButton("Â« Quay láº¡i", callback_data="connect_sheets_wizard")],
-        [InlineKeyboardButton("ðŸ  Menu", callback_data="start")]
+        [InlineKeyboardButton("📄 Copy Template", url=template_url)],
+        [InlineKeyboardButton("« Quay lại", callback_data="connect_sheets_wizard")],
+        [InlineKeyboardButton("🏠 Menu", callback_data="start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -477,35 +477,35 @@ async def handle_disconnect_sheet_confirm(update: Update, context: ContextTypes.
     
     if not user or not user.spreadsheet_id:
         await query.edit_message_text(
-            "â„¹ï¸ Báº¡n chÆ°a káº¿t ná»‘i Google Sheets nÃ o!",
+            "ℹ️ Bạn chưa kết nối Google Sheets nào!",
             parse_mode="Markdown"
         )
         return
     
     message = f"""
-ðŸ”Œ **NGáº®T Káº¾T Ná»I GOOGLE SHEETS**
+🔌 **NGẮT KẾT NỐI GOOGLE SHEETS**
 
-ðŸ“Š Sheet hiá»‡n táº¡i: `{user.spreadsheet_id[:20]}...`
+📊 Sheet hiện tại: `{user.spreadsheet_id[:20]}...`
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-âš ï¸ **Sau khi ngáº¯t:**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+⚠️ **Sau khi ngắt:**
+━━━━━━━━━━━━━━━━━━━━━
 
-âŒ Bot sáº½ khÃ´ng Ä‘á»c Ä‘Æ°á»£c data
-âŒ AI analysis khÃ´ng hoáº¡t Ä‘á»™ng
-âŒ Dashboard bá»‹ khÃ³a
+❌ Bot sẽ không đọc được data
+❌ AI analysis không hoạt động
+❌ Dashboard bị khóa
 
-âœ… Báº¡n váº«n dÃ¹ng Ä‘Æ°á»£c Sheets thá»§ cÃ´ng
-âœ… CÃ³ thá»ƒ káº¿t ná»‘i láº¡i báº¥t cá»© lÃºc nÃ o
+✅ Bạn vẫn dùng được Sheets thủ công
+✅ Có thể kết nối lại bất cứ lúc nào
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-Báº¡n cÃ³ cháº¯c muá»‘n ngáº¯t káº¿t ná»‘i?
+━━━━━━━━━━━━━━━━━━━━━
+Bạn có chắc muốn ngắt kết nối?
 """
     
     keyboard = [
-        [InlineKeyboardButton("âœ… Ngáº¯t káº¿t ná»‘i", callback_data="disconnect_sheet_confirmed")],
-        [InlineKeyboardButton("Â« KhÃ´ng, giá»¯ láº¡i", callback_data="connect_sheets_wizard")],
-        [InlineKeyboardButton("ðŸ  Menu", callback_data="start")]
+        [InlineKeyboardButton("✅ Ngắt kết nối", callback_data="disconnect_sheet_confirmed")],
+        [InlineKeyboardButton("« Không, giữ lại", callback_data="connect_sheets_wizard")],
+        [InlineKeyboardButton("🏠 Menu", callback_data="start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -529,10 +529,10 @@ async def handle_disconnect_sheet_confirmed(update: Update, context: ContextType
             db.commit()
             
             await query.edit_message_text(
-                "âœ… **ÄÃ£ ngáº¯t káº¿t ná»‘i Google Sheets**\n\n"
-                "ðŸ“Š Báº¡n váº«n cÃ³ thá»ƒ dÃ¹ng template bÃ¬nh thÆ°á»ng.\n"
-                "Chá»‰ thiáº¿u tÃ­nh nÄƒng AI analysis tá»± Ä‘á»™ng.\n\n"
-                "ðŸ”— Káº¿t ná»‘i láº¡i: /connectsheets",
+                "✅ **Đã ngắt kết nối Google Sheets**\n\n"
+                "📊 Bạn vẫn có thể dùng template bình thường.\n"
+                "Chỉ thiếu tính năng AI analysis tự động.\n\n"
+                "🔗 Kết nối lại: /connectsheets",
                 parse_mode="Markdown"
             )
             
@@ -540,7 +540,7 @@ async def handle_disconnect_sheet_confirmed(update: Update, context: ContextType
             logger.info(f"User {user_id} disconnected Sheets")
         else:
             await query.edit_message_text(
-                "â„¹ï¸ KhÃ´ng cÃ³ sheet nÃ o Ä‘ang káº¿t ná»‘i.",
+                "ℹ️ Không có sheet nào đang kết nối.",
                 parse_mode="Markdown"
             )
     finally:
@@ -556,13 +556,13 @@ async def cmd_get_service_account_email(update: Update, context: ContextTypes.DE
     
     if not os.path.exists(creds_path):
         await update.message.reply_text(
-            "âŒ **Service account chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh!**\n\n"
-            "Bot chÆ°a cÃ³ file `google_service_account.json`.\n\n"
-            "**Báº¡n cÃ³ thá»ƒ dÃ¹ng Quick Record thay tháº¿:**\n"
-            "1. Copy template vá» Drive\n"
+            "❌ **Service account chưa được cấu hình!**\n\n"
+            "Bot chưa có file `google_service_account.json`.\n\n"
+            "**Bạn có thể dùng Quick Record thay thế:**\n"
+            "1. Copy template về Drive\n"
             "2. Deploy Web App: /taoweb\n"
-            "3. GÃµ: `chi 50k test`\n\n"
-            "KhÃ´ng cáº§n share vá»›i ai!",
+            "3. Gõ: `chi 50k test`\n\n"
+            "Không cần share với ai!",
             parse_mode="Markdown"
         )
         return
@@ -574,22 +574,22 @@ async def cmd_get_service_account_email(update: Update, context: ContextTypes.DE
             project_id = sa_data.get('project_id', 'Unknown')
         
         await update.message.reply_text(
-            f"ðŸ“§ **Service Account Email:**\n\n"
+            f"📧 **Service Account Email:**\n\n"
             f"`{sa_email}`\n\n"
-            f"ðŸ”‘ Project: `{project_id}`\n\n"
-            f"**CÃ¡ch share spreadsheet:**\n"
-            f"1ï¸âƒ£ Má»Ÿ spreadsheet cá»§a báº¡n\n"
-            f"2ï¸âƒ£ Click **Share** (gÃ³c trÃªn pháº£i)\n"
-            f"3ï¸âƒ£ Copy email trÃªn â†’ Paste vÃ o\n"
-            f"4ï¸âƒ£ Quyá»n: **Viewer**\n"
-            f"5ï¸âƒ£ Bá» tick \"Notify people\"\n"
-            f"6ï¸âƒ£ Click **Share**\n\n"
-            f"Sau Ä‘Ã³: `/setsheet [ID_SPREADSHEET_Cá»¦A_Báº N]`",
+            f"🔑 Project: `{project_id}`\n\n"
+            f"**Cách share spreadsheet:**\n"
+            f"1️⃣ Mở spreadsheet của bạn\n"
+            f"2️⃣ Click **Share** (góc trên phải)\n"
+            f"3️⃣ Copy email trên → Paste vào\n"
+            f"4️⃣ Quyền: **Viewer**\n"
+            f"5️⃣ Bỏ tick \"Notify people\"\n"
+            f"6️⃣ Click **Share**\n\n"
+            f"Sau đó: `/setsheet [ID_SPREADSHEET_CỦA_BẠN]`",
             parse_mode="Markdown"
         )
     except Exception as e:
         logger.error(f"Error reading service account: {e}")
-        await update.message.reply_text(f"âŒ Lá»—i Ä‘á»c service account: {str(e)}")
+        await update.message.reply_text(f"❌ Lỗi đọc service account: {str(e)}")
 
 
 def register_sheets_setup_handlers(application):
@@ -622,5 +622,5 @@ def register_sheets_setup_handlers(application):
         pattern='^disconnect_sheet_confirmed$'
     ))
     
-    logger.info("âœ… Sheets setup handlers registered")
+    logger.info("✅ Sheets setup handlers registered")
 

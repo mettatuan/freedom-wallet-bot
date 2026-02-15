@@ -23,9 +23,9 @@ async def handle_balance_command(update: Update, context: ContextTypes.DEFAULT_T
     # Check Premium
     if tier not in [SubscriptionTier.PREMIUM, SubscriptionTier.TRIAL]:
         await update.message.reply_text(
-            "ðŸ”’ **TÃ­nh nÄƒng Premium**\n\n"
-            "Xem sá»‘ dÆ° realtime tá»« Google Sheets chá»‰ dÃ nh cho Premium/Trial.\n\n"
-            "ðŸŽ DÃ¹ng thá»­ 7 ngÃ y FREE: /start"
+            "🔒 **Tính năng Premium**\n\n"
+            "Xem số dư realtime từ Google Sheets chỉ dành cho Premium/Trial.\n\n"
+            "🎁 Dùng thử 7 ngày FREE: /start"
         )
         return
     
@@ -33,13 +33,13 @@ async def handle_balance_command(update: Update, context: ContextTypes.DEFAULT_T
     sheets = await get_user_sheets_reader(user_id)
     if not sheets:
         await update.message.reply_text(
-            "ðŸ“Š **ChÆ°a káº¿t ná»‘i Google Sheets**\n\n"
-            "Äá»ƒ xem sá»‘ dÆ° tá»± Ä‘á»™ng, hÃ£y káº¿t ná»‘i Sheets cá»§a báº¡n:\n"
+            "📊 **Chưa kết nối Google Sheets**\n\n"
+            "Để xem số dư tự động, hãy kết nối Sheets của bạn:\n"
             "/connectsheets"
         )
         return
     
-    await update.message.reply_text("ðŸ”„ Äang Ä‘á»c dá»¯ liá»‡u tá»« Google Sheets...")
+    await update.message.reply_text("🔄 Đang đọc dữ liệu từ Google Sheets...")
     
     try:
         # Get balance
@@ -48,26 +48,26 @@ async def handle_balance_command(update: Update, context: ContextTypes.DEFAULT_T
         
         if not jars or total is None:
             await update.message.reply_text(
-                "âŒ KhÃ´ng thá»ƒ Ä‘á»c dá»¯ liá»‡u!\n\n"
-                "Kiá»ƒm tra:\n"
-                "â€¢ Google Sheets cÃ³ data chÆ°a?\n"
-                "â€¢ Cáº¥u trÃºc sheet Ä‘Ãºng format chÆ°a?"
+                "❌ Không thể đọc dữ liệu!\n\n"
+                "Kiểm tra:\n"
+                "• Google Sheets có data chưa?\n"
+                "• Cấu trúc sheet đúng format chưa?"
             )
             return
         
         # Format message
         message = f"""
-ðŸ’° **Sá» DÆ¯ HIá»†N Táº I**
+💰 **SỐ DƯ HIỆN TẠI**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**ðŸ“Š Tá»”NG TÃ€I Sáº¢N**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+**📊 TỔNG TÀI SẢN**
+━━━━━━━━━━━━━━━━━━━━━
 
-{total:,.0f} VNÄ
+{total:,.0f} VNĐ
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**ðŸº CHI TIáº¾T 6 HÅ¨**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+**🏺 CHI TIẾT 6 HŨ**
+━━━━━━━━━━━━━━━━━━━━━
 
 """
         
@@ -75,9 +75,9 @@ async def handle_balance_command(update: Update, context: ContextTypes.DEFAULT_T
         for jar_name, amount in jars.items():
             percentage = (amount / total * 100) if total > 0 else 0
             bar = "â–ˆ" * int(percentage / 5)  # 20 bars max
-            message += f"{jar_name}:\n{amount:,.0f} VNÄ ({percentage:.1f}%)\n{bar}\n\n"
+            message += f"{jar_name}:\n{amount:,.0f} VNĐ ({percentage:.1f}%)\n{bar}\n\n"
         
-        message += "ðŸ“± Update: Vá»«a xong\nðŸ”„ Refresh: /balance"
+        message += "📱 Update: Vừa xong\n🔄 Refresh: /balance"
         
         await update.message.reply_text(message, parse_mode="Markdown")
         
@@ -91,9 +91,9 @@ async def handle_balance_command(update: Update, context: ContextTypes.DEFAULT_T
         
     except Exception as e:
         await update.message.reply_text(
-            f"âŒ Lá»—i Ä‘á»c dá»¯ liá»‡u!\n\n"
-            f"Chi tiáº¿t: {str(e)}\n\n"
-            f"LiÃªn há»‡ /support náº¿u váº¥n Ä‘á» tiáº¿p diá»…n."
+            f"❌ Lỗi đọc dữ liệu!\n\n"
+            f"Chi tiết: {str(e)}\n\n"
+            f"Liên hệ /support nếu vấn đề tiếp diễn."
         )
         logger.error(f"Balance command error for user {user_id}: {e}")
 
@@ -110,9 +110,9 @@ async def handle_spending_command(update: Update, context: ContextTypes.DEFAULT_
     # Check Premium
     if tier not in [SubscriptionTier.PREMIUM, SubscriptionTier.TRIAL]:
         await update.message.reply_text(
-            "ðŸ”’ **TÃ­nh nÄƒng Premium**\n\n"
-            "PhÃ¢n tÃ­ch chi tiÃªu chá»‰ dÃ nh cho Premium/Trial.\n\n"
-            "ðŸŽ DÃ¹ng thá»­ 7 ngÃ y FREE: /start"
+            "🔒 **Tính năng Premium**\n\n"
+            "Phân tích chi tiêu chỉ dành cho Premium/Trial.\n\n"
+            "🎁 Dùng thử 7 ngày FREE: /start"
         )
         return
     
@@ -120,13 +120,13 @@ async def handle_spending_command(update: Update, context: ContextTypes.DEFAULT_
     sheets = await get_user_sheets_reader(user_id)
     if not sheets:
         await update.message.reply_text(
-            "ðŸ“Š **ChÆ°a káº¿t ná»‘i Google Sheets**\n\n"
-            "Äá»ƒ phÃ¢n tÃ­ch chi tiÃªu, hÃ£y káº¿t ná»‘i Sheets:\n"
+            "📊 **Chưa kết nối Google Sheets**\n\n"
+            "Để phân tích chi tiêu, hãy kết nối Sheets:\n"
             "/connectsheets"
         )
         return
     
-    await update.message.reply_text("ðŸ“Š Äang phÃ¢n tÃ­ch chi tiÃªu thÃ¡ng nÃ y...")
+    await update.message.reply_text("📊 Đang phân tích chi tiêu tháng này...")
     
     try:
         from datetime import date
@@ -137,8 +137,8 @@ async def handle_spending_command(update: Update, context: ContextTypes.DEFAULT_
         
         if not spending:
             await update.message.reply_text(
-                "â„¹ï¸ **ChÆ°a cÃ³ dá»¯ liá»‡u chi tiÃªu thÃ¡ng nÃ y!**\n\n"
-                "HÃ£y báº¯t Ä‘áº§u ghi chi tiÃªu vÃ o Google Sheets."
+                "ℹ️ **Chưa có dữ liệu chi tiêu tháng này!**\n\n"
+                "Hãy bắt đầu ghi chi tiêu vào Google Sheets."
             )
             return
         
@@ -150,37 +150,37 @@ async def handle_spending_command(update: Update, context: ContextTypes.DEFAULT_
         
         # Format message
         message = f"""
-ðŸ“Š **CHI TIÃŠU THÃNG {today.month}/{today.year}**
+📊 **CHI TIÊU THÁNG {today.month}/{today.year}**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**ðŸ’¸ Tá»”NG CHI TIÃŠU**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+**💸 TỔNG CHI TIÊU**
+━━━━━━━━━━━━━━━━━━━━━
 
-{total_spending:,.0f} VNÄ
+{total_spending:,.0f} VNĐ
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**ðŸ“ˆ TOP 5 Háº NG Má»¤C**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+**📈 TOP 5 HẠNG MỤC**
+━━━━━━━━━━━━━━━━━━━━━
 
 """
         
         # Add top 5 categories
         for i, (category, amount) in enumerate(sorted_spending[:5], 1):
             percentage = (amount / total_spending * 100) if total_spending > 0 else 0
-            emoji = ["ðŸ¥‡", "ðŸ¥ˆ", "ðŸ¥‰", "4ï¸âƒ£", "5ï¸âƒ£"][i-1]
-            message += f"{emoji} **{category}**\n   {amount:,.0f} VNÄ ({percentage:.1f}%)\n\n"
+            emoji = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"][i-1]
+            message += f"{emoji} **{category}**\n   {amount:,.0f} VNĐ ({percentage:.1f}%)\n\n"
         
         # Add insights
-        message += "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-        message += "ðŸ’¡ **INSIGHTS**\n"
-        message += "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
+        message += "━━━━━━━━━━━━━━━━━━━━━\n"
+        message += "💡 **INSIGHTS**\n"
+        message += "━━━━━━━━━━━━━━━━━━━━━\n\n"
         
         top_category = sorted_spending[0][0]
         top_amount = sorted_spending[0][1]
         top_pct = (top_amount / total_spending * 100)
         
-        message += f"â€¢ Báº¡n chi nhiá»u nháº¥t cho **{top_category}** ({top_pct:.0f}%)\n"
-        message += f"â€¢ Trung bÃ¬nh: {total_spending / len(spending):,.0f} VNÄ/háº¡ng má»¥c\n"
+        message += f"• Bạn chi nhiều nhất cho **{top_category}** ({top_pct:.0f}%)\n"
+        message += f"• Trung bình: {total_spending / len(spending):,.0f} VNĐ/hạng mục\n"
         
         # Days left in month
         import calendar
@@ -190,9 +190,9 @@ async def handle_spending_command(update: Update, context: ContextTypes.DEFAULT_
         if days_left > 0:
             daily_avg = total_spending / today.day
             projected = daily_avg * last_day
-            message += f"â€¢ Dá»± kiáº¿n cuá»‘i thÃ¡ng: {projected:,.0f} VNÄ\n"
+            message += f"• Dự kiến cuối tháng: {projected:,.0f} VNĐ\n"
         
-        message += f"\nðŸ“… Dá»¯ liá»‡u: {today.day}/{today.month}/{today.year}"
+        message += f"\n📅 Dữ liệu: {today.day}/{today.month}/{today.year}"
         
         await update.message.reply_text(message, parse_mode="Markdown")
         
@@ -207,9 +207,9 @@ async def handle_spending_command(update: Update, context: ContextTypes.DEFAULT_
         
     except Exception as e:
         await update.message.reply_text(
-            f"âŒ Lá»—i phÃ¢n tÃ­ch!\n\n"
-            f"Chi tiáº¿t: {str(e)}\n\n"
-            f"LiÃªn há»‡ /support náº¿u váº¥n Ä‘á» tiáº¿p diá»…n."
+            f"❌ Lỗi phân tích!\n\n"
+            f"Chi tiết: {str(e)}\n\n"
+            f"Liên hệ /support nếu vấn đề tiếp diễn."
         )
         logger.error(f"Spending command error for user {user_id}: {e}")
 
@@ -226,9 +226,9 @@ async def handle_analyze_command(update: Update, context: ContextTypes.DEFAULT_T
     # Check Premium (not Trial - this is premium-only feature)
     if tier != SubscriptionTier.PREMIUM:
         await update.message.reply_text(
-            "ðŸ”’ **TÃ­nh nÄƒng Premium Exclusive**\n\n"
-            "AI Financial Analysis chá»‰ dÃ nh cho gÃ³i Premium.\n\n"
-            "ðŸ’Ž NÃ¢ng cáº¥p Premium: /upgrade"
+            "🔒 **Tính năng Premium Exclusive**\n\n"
+            "AI Financial Analysis chỉ dành cho gói Premium.\n\n"
+            "💎 Nâng cấp Premium: /upgrade"
         )
         return
     
@@ -236,13 +236,13 @@ async def handle_analyze_command(update: Update, context: ContextTypes.DEFAULT_T
     sheets = await get_user_sheets_reader(user_id)
     if not sheets:
         await update.message.reply_text(
-            "ðŸ“Š **ChÆ°a káº¿t ná»‘i Google Sheets**\n\n"
-            "AI cáº§n data Ä‘á»ƒ phÃ¢n tÃ­ch. HÃ£y káº¿t ná»‘i Sheets:\n"
+            "📊 **Chưa kết nối Google Sheets**\n\n"
+            "AI cần data để phân tích. Hãy kết nối Sheets:\n"
             "/connectsheets"
         )
         return
     
-    await update.message.reply_text("ðŸ¤– AI Ä‘ang phÃ¢n tÃ­ch dá»¯ liá»‡u cá»§a báº¡n...")
+    await update.message.reply_text("🤖 AI đang phân tích dữ liệu của bạn...")
     
     try:
         # Get all data
@@ -258,19 +258,19 @@ async def handle_analyze_command(update: Update, context: ContextTypes.DEFAULT_T
         today = date.today()
         
         message = f"""
-ðŸ¤– **AI FINANCIAL ANALYSIS**
+🤖 **AI FINANCIAL ANALYSIS**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**ðŸ“Š Tá»”NG QUAN**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+**📊 TỔNG QUAN**
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸ’° Tá»•ng tÃ i sáº£n: {total:,.0f} VNÄ
-ðŸ’¸ Chi tiÃªu thÃ¡ng {today.month}: {sum(spending.values()) if spending else 0:,.0f} VNÄ
-ðŸ“ Giao dá»‹ch: {len(transactions)} giao dá»‹ch gáº§n nháº¥t
+💰 Tổng tài sản: {total:,.0f} VNĐ
+💸 Chi tiêu tháng {today.month}: {sum(spending.values()) if spending else 0:,.0f} VNĐ
+📝 Giao dịch: {len(transactions)} giao dịch gần nhất
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-**ðŸ’¡ INSIGHTS**
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
+**💡 INSIGHTS**
+━━━━━━━━━━━━━━━━━━━━━
 
 """
         
@@ -279,24 +279,24 @@ async def handle_analyze_command(update: Update, context: ContextTypes.DEFAULT_T
             max_jar = max(jars.items(), key=lambda x: x[1])
             min_jar = min(jars.items(), key=lambda x: x[1])
             
-            message += f"â€¢ HÅ© lá»›n nháº¥t: **{max_jar[0]}** ({max_jar[1]:,.0f} VNÄ)\n"
-            message += f"â€¢ HÅ© nhá» nháº¥t: **{min_jar[0]}** ({min_jar[1]:,.0f} VNÄ)\n"
+            message += f"• Hũ lớn nhất: **{max_jar[0]}** ({max_jar[1]:,.0f} VNĐ)\n"
+            message += f"• Hũ nhỏ nhất: **{min_jar[0]}** ({min_jar[1]:,.0f} VNĐ)\n"
         
         # Spending pattern
         if spending:
             top_cat = max(spending.items(), key=lambda x: x[1])
-            message += f"â€¢ Chi nhiá»u nháº¥t: **{top_cat[0]}**\n"
+            message += f"• Chi nhiều nhất: **{top_cat[0]}**\n"
         
-        message += f"\nâ”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n"
-        message += f"**ðŸŽ¯ KHUYáº¾N NGHá»Š**\n"
-        message += f"â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
+        message += f"\n━━━━━━━━━━━━━━━━━━━━━\n"
+        message += f"**🎯 KHUYẾN NGHỊ**\n"
+        message += f"━━━━━━━━━━━━━━━━━━━━━\n\n"
         
         # Simple recommendations
-        message += "â€¢ Tiáº¿p tá»¥c theo dÃµi chi tiÃªu hÃ ng ngÃ y\n"
-        message += "â€¢ CÃ¢n báº±ng distribution giá»¯a 6 hÅ©\n"
-        message += "â€¢ Tá»‘i Æ°u cÃ¡c háº¡ng má»¥c chi lá»›n\n"
+        message += "• Tiếp tục theo dõi chi tiêu hàng ngày\n"
+        message += "• Cân bằng distribution giữa 6 hũ\n"
+        message += "• Tối ưu các hạng mục chi lớn\n"
         
-        message += f"\nðŸ“… PhÃ¢n tÃ­ch: {today.day}/{today.month}/{today.year}"
+        message += f"\n📅 Phân tích: {today.day}/{today.month}/{today.year}"
         
         await update.message.reply_text(message, parse_mode="Markdown")
         
@@ -310,9 +310,9 @@ async def handle_analyze_command(update: Update, context: ContextTypes.DEFAULT_T
         
     except Exception as e:
         await update.message.reply_text(
-            f"âŒ Lá»—i phÃ¢n tÃ­ch!\n\n"
-            f"Chi tiáº¿t: {str(e)}\n\n"
-            f"LiÃªn há»‡ /support náº¿u váº¥n Ä‘á» tiáº¿p diá»…n."
+            f"❌ Lỗi phân tích!\n\n"
+            f"Chi tiết: {str(e)}\n\n"
+            f"Liên hệ /support nếu vấn đề tiếp diễn."
         )
         logger.error(f"Analyze command error for user {user_id}: {e}")
 
@@ -326,5 +326,5 @@ def register_premium_data_commands(application):
     application.add_handler(CommandHandler('spending', handle_spending_command))
     application.add_handler(CommandHandler('analyze', handle_analyze_command))
     
-    logger.info("âœ… Premium data commands registered")
+    logger.info("✅ Premium data commands registered")
 

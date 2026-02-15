@@ -44,7 +44,7 @@ async def check_and_trigger_unlock_offer(context):
                 user.unlock_offered_at = datetime.utcnow()
                 db.commit()
                 
-                logger.info(f"âœ… Sent UNLOCK offer to user {user.user_id}")
+                logger.info(f"✅ Sent UNLOCK offer to user {user.user_id}")
                 
             except Exception as e:
                 logger.error(f"Failed to send UNLOCK offer to {user.user_id}: {e}")
@@ -59,25 +59,25 @@ async def send_unlock_offer(context, user_id: int):
     Calm, natural transition - not a sales pitch
     """
     message = """
-Báº¡n Ä‘Ã£ dÃ¹ng Freedom Wallet Ä‘Æ°á»£c má»™t thá»i gian.
+Bạn đã dùng Freedom Wallet được một thời gian.
 
-Nhiá»u ngÆ°á»i á»Ÿ giai Ä‘oáº¡n nÃ y nháº­n ra:
-Viá»‡c má»Ÿ Web App má»—i láº§n Ä‘á»ƒ ghi chi tiÃªu
-khÃ´ng pháº£i lÃºc nÃ o cÅ©ng tiá»‡n.
+Nhiều người ở giai đoạn này nhận ra:
+Việc mở Web App mỗi lần để ghi chi tiêu
+không phải lúc nào cũng tiện.
 
-KhÃ´ng pháº£i vÃ¬ lÆ°á»i.
-Chá»‰ lÃ  cuá»™c sá»‘ng báº­n.
+Không phải vì lười.
+Chỉ là cuộc sống bận.
 
-Náº¿u báº¡n muá»‘n,
-mÃ¬nh cÃ³ thá»ƒ káº¿t ná»‘i Telegram vá»›i Sheet cá»§a báº¡n.
-Báº¡n sáº½ ghi giao dá»‹ch ngay trong chat nÃ y.
-Khoáº£ng 5 giÃ¢y.
+Nếu bạn muốn,
+mình có thể kết nối Telegram với Sheet của bạn.
+Bạn sẽ ghi giao dịch ngay trong chat này.
+Khoảng 5 giây.
 """
     
     keyboard = [
-        [InlineKeyboardButton("Káº¿t ná»‘i Telegram", callback_data="unlock_step2_explain")],
-        [InlineKeyboardButton("Há»i thÃªm", callback_data="unlock_ask_question")],
-        [InlineKeyboardButton("Äá»ƒ sau", callback_data="unlock_skip")]
+        [InlineKeyboardButton("Kết nối Telegram", callback_data="unlock_step2_explain")],
+        [InlineKeyboardButton("Hỏi thêm", callback_data="unlock_ask_question")],
+        [InlineKeyboardButton("Để sau", callback_data="unlock_skip")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -102,5 +102,5 @@ def setup_unlock_trigger_job(application):
         name="unlock_offer_check"
     )
     
-    logger.info("âœ… UNLOCK offer trigger job scheduled (10:00 AM UTC daily)")
+    logger.info("✅ UNLOCK offer trigger job scheduled (10:00 AM UTC daily)")
 

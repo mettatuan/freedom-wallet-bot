@@ -1,6 +1,6 @@
 """
 Setup Guide Handler - Step-by-step usage guide
-Structure: Setup (3 steps) â†’ Accounts â†’ Categories â†’ Debts â†’ Investments â†’ Assets
+Structure: Setup (3 steps) → Accounts → Categories → Debts → Investments → Assets
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler
@@ -9,404 +9,404 @@ from loguru import logger
 # Setup Guide Content - 10 Steps (New structure)
 SETUP_GUIDE_STEPS = {
     0: {
-        "title": "ðŸ“˜ BÆ¯á»šC 2: HÆ¯á»šNG DáºªN Sá»¬ Dá»¤NG",
+        "title": "📘 BƯỚC 2: HƯỚNG DẪN SỬ DỤNG",
         "content": """
-ðŸŽ‰ **Tuyá»‡t vá»i! Báº¡n Ä‘Ã£ hoÃ n thÃ nh BÆ°á»›c 1!**
+🎉 **Tuyệt vời! Bạn đã hoàn thành Bước 1!**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“ Báº N ÄANG á»ž ÄÃ‚U?**
+**📍 BẠN ĐANG Ở ĐÂU?**
 
-âœ… BÆ°á»›c 1: Táº¡o Web App (hoÃ n thÃ nh)
-âž¡ï¸ **BÆ¯á»šC 2: Há»c cÃ¡ch sá»­ dá»¥ng** (báº¡n Ä‘ang á»Ÿ Ä‘Ã¢y)
+✅ Bước 1: Tạo Web App (hoàn thành)
+➡️ **BƯỚC 2: Học cách sử dụng** (bạn đang ở đây)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸŽ¯ CÃCH Sá»¬ Dá»¤NG HIá»†U QUáº¢**
+**🎯 CÁCH SỬ DỤNG HIỆU QUẢ**
 
-**1ï¸âƒ£ CÃ€I Äáº¶T** (3 bÆ°á»›c)
-   a. XÃ³a dá»¯ liá»‡u máº«u
-   b. CÃ i Ä‘áº·t hÅ© tiá»n
-   c. 5 Cáº¥p báº­c tÃ i chÃ­nh
+**1️⃣ CÀI ĐẶT** (3 bước)
+   a. Xóa dữ liệu mẫu
+   b. Cài đặt hũ tiền
+   c. 5 Cấp bậc tài chính
 
-**2ï¸âƒ£ TÃ€I KHOáº¢N** - Biáº¿t tiá»n á»Ÿ Ä‘Ã¢u
+**2️⃣ TÀI KHOẢN** - Biết tiền ở đâu
 
-**3ï¸âƒ£ DANH Má»¤C** - PhÃ¢n loáº¡i chi tiÃªu
+**3️⃣ DANH MỤC** - Phân loại chi tiêu
 
-**4ï¸âƒ£ KHOáº¢N Ná»¢** - LÃ m chá»§ ná»£
+**4️⃣ KHOẢN NỢ** - Làm chủ nợ
 
-**5ï¸âƒ£ Äáº¦U TÆ¯** - Tiá»n lÃ m viá»‡c cho báº¡n
+**5️⃣ ĐẦU TƯ** - Tiền làm việc cho bạn
 
-**6ï¸âƒ£ TÃ€I Sáº¢N** - TÃ­nh Net Worth
+**6️⃣ TÀI SẢN** - Tính Net Worth
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-â± **Thá»i gian**: 15-20 phÃºt
-ðŸ’¡ *Xem láº¡i: /huongdan*
+⏱ **Thời gian**: 15-20 phút
+💡 *Xem lại: /huongdan*
 """,
         "image": None
     },
     
     1: {
-        "title": "âš™ï¸ CÃ€I Äáº¶T (1/3) â€“ XÃ“A Dá»® LIá»†U MáºªU",
+        "title": "⚙️ CÀI ĐẶT (1/3) – XÓA DỮ LIỆU MẪU",
         "content": """
-**ðŸŽ¯ Má»¥c tiÃªu: LÃ m sáº¡ch app, chuáº©n bá»‹ nháº­p dá»¯ liá»‡u tháº­t**
+**🎯 Mục tiêu: Làm sạch app, chuẩn bị nhập dữ liệu thật**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“‹ CÃCH LÃ€M:**
+**📋 CÁCH LÀM:**
 
-1ï¸âƒ£ Má»Ÿ Web App cá»§a báº¡n
+1️⃣ Mở Web App của bạn
 
-2ï¸âƒ£ VÃ o **CÃ i Ä‘áº·t** (Settings) á»Ÿ menu trÃªn
+2️⃣ Vào **Cài đặt** (Settings) ở menu trên
 
-3ï¸âƒ£ Nháº¥n **XÃ³a dá»¯ liá»‡u máº«u** (Delete Sample Data)
+3️⃣ Nhấn **Xóa dữ liệu mẫu** (Delete Sample Data)
 
-4ï¸âƒ£ XÃ¡c nháº­n â†’ Táº¥t cáº£ dá»¯ liá»‡u máº«u bá»‹ xÃ³a
+4️⃣ Xác nhận → Tất cả dữ liệu mẫu bị xóa
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**âœ… Káº¾T QUáº¢:**
-â€¢ App "tráº¯ng tinh"
-â€¢ Sáºµn sÃ ng cho dá»¯ liá»‡u thá»±c táº¿
+**✅ KẾT QUẢ:**
+• App "trắng tinh"
+• Sẵn sàng cho dữ liệu thực tế
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ’¡ LÆ°u Ã½:**
-*Chá»‰ xÃ³a dá»¯ liá»‡u máº«u 1 láº§n duy nháº¥t khi báº¯t Ä‘áº§u!*
+**💡 Lưu ý:**
+*Chỉ xóa dữ liệu mẫu 1 lần duy nhất khi bắt đầu!*
 """,
         "image": "media/images/cai_dat.png"
     },
     
     2: {
-        "title": "âš™ï¸ CÃ€I Äáº¶T (2/3) â€“ CÃ€I Äáº¶T HÅ¨ TIá»€N",
+        "title": "⚙️ CÀI ĐẶT (2/3) – CÀI ĐẶT HŨ TIỀN",
         "content": """
-**ðŸŽ¯ Má»¥c tiÃªu: Thiáº¿t láº­p 6 HÅ© Tiá»n - TrÃ¡i tim Freedom Wallet**
+**🎯 Mục tiêu: Thiết lập 6 Hũ Tiền - Trái tim Freedom Wallet**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸŽ¯ 6 HÅ¨ TIÃŠU CHUáº¨N:**
+**🎯 6 HŨ TIÊU CHUẨN:**
 
-1ï¸âƒ£ **ðŸ  Chi tiÃªu thiáº¿t yáº¿u** (55%)
-2ï¸âƒ£ **ðŸŽ‰ HÆ°á»Ÿng thá»¥** (10%)
-3ï¸âƒ£ **ðŸŽ“ GiÃ¡o dá»¥c** (10%)
-4ï¸âƒ£ **ðŸ’° Tiáº¿t kiá»‡m dÃ i háº¡n** (10%)
-5ï¸âƒ£ **ðŸ’¼ Äáº§u tÆ°** (10%)
-6ï¸âƒ£ **â¤ï¸ Cho Ä‘i** (5%)
+1️⃣ **🏠 Chi tiêu thiết yếu** (55%)
+2️⃣ **🎉 Hưởng thụ** (10%)
+3️⃣ **🎓 Giáo dục** (10%)
+4️⃣ **💰 Tiết kiệm dài hạn** (10%)
+5️⃣ **💼 Đầu tư** (10%)
+6️⃣ **❤️ Cho đi** (5%)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“‹ CÃCH LÃ€M:**
+**📋 CÁCH LÀM:**
 
-1ï¸âƒ£ VÃ o **CÃ i Ä‘áº·t** â†’ **6 Jars Settings**
+1️⃣ Vào **Cài đặt** → **6 Jars Settings**
 
-2ï¸âƒ£ Nháº­p % cho tá»«ng hÅ© (tá»•ng = 100%)
+2️⃣ Nhập % cho từng hũ (tổng = 100%)
 
-3ï¸âƒ£ LÆ°u láº¡i â†’ Há»‡ thá»‘ng tá»± Ä‘á»™ng phÃ¢n bá»•
+3️⃣ Lưu lại → Hệ thống tự động phân bổ
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**âœ… Káº¾T QUáº¢:**
-â€¢ Má»—i khoáº£n thu tá»± Ä‘á»™ng phÃ¢n bá»•
-â€¢ TiÃªu tiá»n cÃ³ ká»‰ luáº­t
-â€¢ Vá»«a sá»‘ng tá»‘t, vá»«a giÃ u lÃªn
+**✅ KẾT QUẢ:**
+• Mỗi khoản thu tự động phân bổ
+• Tiêu tiền có kỉ luật
+• Vừa sống tốt, vừa giàu lên
 """,
         "image": "media/images/hu_tien.jpg"
     },
     
     3: {
-        "title": "âš™ï¸ CÃ€I Äáº¶T (3/3) â€“ 5 Cáº¤P Báº¬C TÃ€I CHÃNH",
+        "title": "⚙️ CÀI ĐẶT (3/3) – 5 CẤP BẬC TÀI CHÍNH",
         "content": """
-**ðŸŽ¯ Má»¥c tiÃªu: XÃ¡c Ä‘á»‹nh báº¡n Ä‘ang á»Ÿ Ä‘Ã¢u, Ä‘i Ä‘áº¿n Ä‘Ã¢u**
+**🎯 Mục tiêu: Xác định bạn đang ở đâu, đi đến đâu**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“ˆ 5 Cáº¤P Báº¬C:**
+**📈 5 CẤP BẬC:**
 
-ðŸ”´ **Cáº¥p 1: BÃ¬nh á»•n tÃ i chÃ­nh**
-   â†’ Chi tiÃªu báº±ng thu nháº­p
+🔴 **Cấp 1: Bình ổn tài chính**
+   → Chi tiêu bằng thu nhập
 
-ðŸŸ  **Cáº¥p 2: An toÃ n tÃ i chÃ­nh**
-   â†’ CÃ³ quá»¹ dá»± phÃ²ng 3-6 thÃ¡ng
+🟠 **Cấp 2: An toàn tài chính**
+   → Có quỹ dự phòng 3-6 tháng
 
-ðŸŸ¡ **Cáº¥p 3: Äá»™c láº­p tÃ i chÃ­nh**
-   â†’ KhÃ´ng phá»¥ thuá»™c lÆ°Æ¡ng
+🟡 **Cấp 3: Độc lập tài chính**
+   → Không phụ thuộc lương
 
-ðŸŸ¢ **Cáº¥p 4: Tá»± do tÃ i chÃ­nh**
-   â†’ Thu nháº­p thá»¥ Ä‘á»™ng > chi tiÃªu
+🟢 **Cấp 4: Tự do tài chính**
+   → Thu nhập thụ động > chi tiêu
 
-ðŸ”µ **Cáº¥p 5: Dá»“i dÃ o tÃ i chÃ­nh**
-   â†’ LÃ m Ä‘Æ°á»£c báº¥t cá»© Ä‘iá»u gÃ¬
+🔵 **Cấp 5: Dồi dào tài chính**
+   → Làm được bất cứ điều gì
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“‹ CÃCH DÃ™NG:**
+**📋 CÁCH DÙNG:**
 
-1ï¸âƒ£ Tá»± Ä‘Ã¡nh giÃ¡ báº¡n Ä‘ang á»Ÿ cáº¥p nÃ o
+1️⃣ Tự đánh giá bạn đang ở cấp nào
 
-2ï¸âƒ£ Äáº·t má»¥c tiÃªu lÃªn cáº¥p tiáº¿p theo
+2️⃣ Đặt mục tiêu lên cấp tiếp theo
 
-3ï¸âƒ£ Theo dÃµi tiáº¿n Ä‘á»™ hÃ ng thÃ¡ng
+3️⃣ Theo dõi tiến độ hàng tháng
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**âœ… Káº¾T QUáº¢:**
-â€¢ CÃ³ lá»™ trÃ¬nh rÃµ rÃ ng
-â€¢ Äá»™ng lá»±c thÃºc Ä‘áº©y
-â€¢ Biáº¿t mÃ¬nh cáº§n lÃ m gÃ¬
+**✅ KẾT QUẢ:**
+• Có lộ trình rõ ràng
+• Động lực thúc đẩy
+• Biết mình cần làm gì
 """,
         "image": "media/images/5_cap_bac_tai_chinh.jpg"
     },
     
     4: {
-        "title": "ðŸ’³ TÃ€I KHOáº¢N â€“ BIáº¾T TIá»€N á»ž ÄÃ‚U",
+        "title": "💳 TÀI KHOẢN – BIẾT TIỀN Ở ĐÂU",
         "content": """
-**ðŸŽ¯ Má»¥c tiÃªu: Biáº¿t tiá»n cá»§a báº¡n Ä‘ang náº±m á»Ÿ Ä‘Ã¢u**
+**🎯 Mục tiêu: Biết tiền của bạn đang nằm ở đâu**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“Œ VÃ Dá»¤ TÃ€I KHOáº¢N:**
+**📌 VÍ DỤ TÀI KHOẢN:**
 
-â€¢ ðŸ’µ Tiá»n máº·t
-â€¢ ðŸ¦ TÃ i khoáº£n ngÃ¢n hÃ ng (VCB, TCB, MB...)
-â€¢ ðŸ“± VÃ­ Ä‘iá»‡n tá»­ (Momo, ZaloPay, VNPay...)
+• 💵 Tiền mặt
+• 🏦 Tài khoản ngân hàng (VCB, TCB, MB...)
+• 📱 Ví điện tử (Momo, ZaloPay, VNPay...)
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“‹ CÃCH LÃ€M:**
+**📋 CÁCH LÀM:**
 
-1ï¸âƒ£ VÃ o má»¥c **Accounts** (TÃ i khoáº£n)
+1️⃣ Vào mục **Accounts** (Tài khoản)
 
-2ï¸âƒ£ âž• ThÃªm táº¥t cáº£ tÃ i khoáº£n cá»§a báº¡n
+2️⃣ ➕ Thêm tất cả tài khoản của bạn
 
-3ï¸âƒ£ Nháº­p **sá»‘ dÆ° ban Ä‘áº§u** (pháº£i khá»›p vá»›i thá»±c táº¿!)
+3️⃣ Nhập **số dư ban đầu** (phải khớp với thực tế!)
 
-4ï¸âƒ£ LÆ°u láº¡i â†’ Xem tá»•ng tÃ i sáº£n
+4️⃣ Lưu lại → Xem tổng tài sản
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**âœ… Káº¾T QUáº¢:**
-â€¢ Biáº¿t tá»•ng tiá»n cÃ³ bao nhiÃªu
-â€¢ Tiá»n náº±m á»Ÿ Ä‘Ã¢u
-â€¢ Ná»n táº£ng cho tracking sau nÃ y
+**✅ KẾT QUẢ:**
+• Biết tổng tiền có bao nhiêu
+• Tiền nằm ở đâu
+• Nền tảng cho tracking sau này
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ’¡ Quan trá»ng:**
-*Sá»‘ dÆ° ban Ä‘áº§u sai â†’ táº¥t cáº£ bÃ¡o cÃ¡o sai!*
+**💡 Quan trọng:**
+*Số dư ban đầu sai → tất cả báo cáo sai!*
 """,
         "image": "media/images/tai_khoan.jpg"
     },
     
     5: {
-        "title": "ðŸ“‚ DANH Má»¤C â€“ PHÃ‚N LOáº I CHI TIÃŠU",
+        "title": "📂 DANH MỤC – PHÂN LOẠI CHI TIÊU",
         "content": """
-**ðŸŽ¯ Má»¥c tiÃªu: Hiá»ƒu tiá»n Ä‘i Ä‘Ã¢u, vÃ o Ä‘Ã¢u**
+**🎯 Mục tiêu: Hiểu tiền đi đâu, vào đâu**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“‚ VÃ Dá»¤ DANH Má»¤C:**
+**📂 VÍ DỤ DANH MỤC:**
 
-**Chi tiÃªu:**
-â€¢ ðŸœ Ä‚n uá»‘ng
-â€¢ ðŸ  NhÃ  á»Ÿ
-â€¢ ðŸŽ“ GiÃ¡o dá»¥c
-â€¢ ðŸŽ‰ Giáº£i trÃ­
-â€¢ ðŸš— Di chuyá»ƒn
-â€¢ ðŸ‘¨â€âš•ï¸ Sá»©c khá»e
+**Chi tiêu:**
+• 🍜 Ăn uống
+• 🏠 Nhà ở
+• 🎓 Giáo dục
+• 🎉 Giải trí
+• 🚗 Di chuyển
+• 👨‍⚕️ Sức khỏe
 
-**Thu nháº­p:**
-â€¢ ðŸ’¼ LÆ°Æ¡ng
-â€¢ ðŸ’° Kinh doanh
-â€¢ ðŸŽ QuÃ  táº·ng
+**Thu nhập:**
+• 💼 Lương
+• 💰 Kinh doanh
+• 🎁 Quà tặng
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“‹ CÃCH LÃ€M:**
+**📋 CÁCH LÀM:**
 
-1ï¸âƒ£ VÃ o má»¥c **Categories**
+1️⃣ Vào mục **Categories**
 
-2ï¸âƒ£ ThÃªm cÃ¡c danh má»¥c phÃ¹ há»£p vá»›i cuá»™c sá»‘ng
+2️⃣ Thêm các danh mục phù hợp với cuộc sống
 
-3ï¸âƒ£ Khi ghi giao dá»‹ch â†’ chá»n danh má»¥c
+3️⃣ Khi ghi giao dịch → chọn danh mục
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**âœ… Káº¾T QUáº¢:**
-â€¢ BÃ¡o cÃ¡o chi tiÃªu theo danh má»¥c
-â€¢ Nháº­n diá»‡n "lá»— há»•ng" tiá»n
-â€¢ Cáº¯t giáº£m chi tiÃªu hiá»‡u quáº£
+**✅ KẾT QUẢ:**
+• Báo cáo chi tiêu theo danh mục
+• Nhận diện "lỗ hổng" tiền
+• Cắt giảm chi tiêu hiệu quả
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ’¡ Tip:**
-*Danh má»¥c chi tiáº¿t â†’ phÃ¢n tÃ­ch tá»‘t hÆ¡n!*
+**💡 Tip:**
+*Danh mục chi tiết → phân tích tốt hơn!*
 """,
         "image": "media/images/danh_muc.jpg"
     },
     
     6: {
-        "title": "ðŸ’³ KHOáº¢N Ná»¢ â€“ LÃ€M CHá»¦ Ná»¢",
+        "title": "💳 KHOẢN NỢ – LÀM CHỦ NỢ",
         "content": """
-**ðŸŽ¯ Má»¥c tiÃªu: KhÃ´ng nÃ© trÃ¡nh - chá»§ Ä‘á»™ng lÃ m chá»§ ná»£**
+**🎯 Mục tiêu: Không né tránh - chủ động làm chủ nợ**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ’³ CÃ“ THá»‚ QUáº¢N LÃ:**
+**💳 CÓ THỂ QUẢN LÝ:**
 
-â€¢ Ná»£ vay ngÃ¢n hÃ ng
-â€¢ Tráº£ gÃ³p (xe, nhÃ , Ä‘iá»‡n thoáº¡i)
-â€¢ Ná»£ cÃ¡ nhÃ¢n
-â€¢ Tháº» tÃ­n dá»¥ng
+• Nợ vay ngân hàng
+• Trả góp (xe, nhà, điện thoại)
+• Nợ cá nhân
+• Thẻ tín dụng
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“‹ CÃCH LÃ€M:**
+**📋 CÁCH LÀM:**
 
-1ï¸âƒ£ VÃ o má»¥c **Debts** (Khoáº£n ná»£)
+1️⃣ Vào mục **Debts** (Khoản nợ)
 
-2ï¸âƒ£ ThÃªm táº¥t cáº£ khoáº£n ná»£ hiá»‡n táº¡i
+2️⃣ Thêm tất cả khoản nợ hiện tại
 
-3ï¸âƒ£ Nháº­p: Sá»‘ tiá»n gá»‘c, lÃ£i suáº¥t, ká»³ háº¡n
+3️⃣ Nhập: Số tiền gốc, lãi suất, kỳ hạn
 
-4ï¸âƒ£ Cáº­p nháº­t khi tráº£ ná»£
+4️⃣ Cập nhật khi trả nợ
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**âœ… Káº¾T QUáº¢:**
-â€¢ Biáº¿t chÃ­nh xÃ¡c tá»•ng ná»£
-â€¢ CÃ³ chiáº¿n lÆ°á»£c thoÃ¡t ná»£
-â€¢ Giáº£m stress tÃ i chÃ­nh
+**✅ KẾT QUẢ:**
+• Biết chính xác tổng nợ
+• Có chiến lược thoát nợ
+• Giảm stress tài chính
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ’¡ Mindset:**
-*"Ná»£ khÃ´ng pháº£i káº» thÃ¹ - khÃ´ng biáº¿t mÃ¬nh ná»£ bao nhiÃªu má»›i lÃ  káº» thÃ¹"*
+**💡 Mindset:**
+*"Nợ không phải kẻ thù - không biết mình nợ bao nhiêu mới là kẻ thù"*
 """,
         "image": "media/images/khoan_no.jpg"
     },
     
     7: {
-        "title": "ðŸ“ˆ Äáº¦U TÆ¯ â€“ TIá»€N LÃ€M VIá»†C CHO Báº N",
+        "title": "📈 ĐẦU TƯ – TIỀN LÀM VIỆC CHO BẠN",
         "content": """
-**ðŸŽ¯ Má»¥c tiÃªu: Theo dÃµi cÃ¡c khoáº£n Ä‘áº§u tÆ° hiá»‡u quáº£**
+**🎯 Mục tiêu: Theo dõi các khoản đầu tư hiệu quả**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“ˆ CÃ“ THá»‚ TRACKING:**
+**📈 CÓ THỂ TRACKING:**
 
-â€¢ Chá»©ng khoÃ¡n (cá»• phiáº¿u, quá»¹)
-â€¢ VÃ ng
-â€¢ Báº¥t Ä‘á»™ng sáº£n cho thuÃª
-â€¢ Kinh doanh
-â€¢ Crypto
+• Chứng khoán (cổ phiếu, quỹ)
+• Vàng
+• Bất động sản cho thuê
+• Kinh doanh
+• Crypto
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“‹ CÃCH LÃ€M:**
+**📋 CÁCH LÀM:**
 
-1ï¸âƒ£ VÃ o má»¥c **Investments**
+1️⃣ Vào mục **Investments**
 
-2ï¸âƒ£ ThÃªm tá»«ng khoáº£n Ä‘áº§u tÆ°
+2️⃣ Thêm từng khoản đầu tư
 
-3ï¸âƒ£ Nháº­p: Vá»‘n gá»‘c, giÃ¡ trá»‹ hiá»‡n táº¡i
+3️⃣ Nhập: Vốn gốc, giá trị hiện tại
 
-4ï¸âƒ£ Cáº­p nháº­t Ä‘á»‹nh ká»³ â†’ Xem ROI
+4️⃣ Cập nhật định kỳ → Xem ROI
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**âœ… Káº¾T QUáº¢:**
-â€¢ Biáº¿t Ä‘áº§u tÆ° lÃ£i/lá»— bao nhiÃªu
-â€¢ Quyáº¿t Ä‘á»‹nh dá»±a trÃªn sá»‘ liá»‡u
-â€¢ Quáº£n lÃ½ portfolio hiá»‡u quáº£
+**✅ KẾT QUẢ:**
+• Biết đầu tư lãi/lỗ bao nhiêu
+• Quyết định dựa trên số liệu
+• Quản lý portfolio hiệu quả
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ’¡ LÆ°u Ã½:**
-*Chá»‰ lÃ  cÃ´ng cá»¥ tracking - khÃ´ng pháº£i tÆ° váº¥n Ä‘áº§u tÆ°!*
+**💡 Lưu ý:**
+*Chỉ là công cụ tracking - không phải tư vấn đầu tư!*
 """,
         "image": "media/images/dau_tu.jpg"
     },
     
     8: {
-        "title": "ðŸ  TÃ€I Sáº¢N â€“ TÃNH NET WORTH",
+        "title": "🏠 TÀI SẢN – TÍNH NET WORTH",
         "content": """
-**ðŸŽ¯ Má»¥c tiÃªu: Biáº¿t giÃ¡ trá»‹ thá»±c sá»± cá»§a báº¡n**
+**🎯 Mục tiêu: Biết giá trị thực sự của bạn**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ  VÃ Dá»¤ TÃ€I Sáº¢N:**
+**🏠 VÍ DỤ TÀI SẢN:**
 
-â€¢ NhÃ  Ä‘áº¥t
-â€¢ Xe (Ã´ tÃ´, xe mÃ¡y)
-â€¢ Trang sá»©c, vÃ ng
-â€¢ Äá»“ Ä‘iá»‡n tá»­ giÃ¡ trá»‹
-â€¢ TÃ i sáº£n khÃ¡c
+• Nhà đất
+• Xe (ô tô, xe máy)
+• Trang sức, vàng
+• Đồ điện tử giá trị
+• Tài sản khác
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ“‹ CÃCH LÃ€M:**
+**📋 CÁCH LÀM:**
 
-1ï¸âƒ£ VÃ o má»¥c **Assets**
+1️⃣ Vào mục **Assets**
 
-2ï¸âƒ£ ThÃªm táº¥t cáº£ tÃ i sáº£n lá»›n
+2️⃣ Thêm tất cả tài sản lớn
 
-3ï¸âƒ£ Nháº­p: GiÃ¡ mua, giÃ¡ hiá»‡n táº¡i
+3️⃣ Nhập: Giá mua, giá hiện tại
 
-4ï¸âƒ£ Cáº­p nháº­t Ä‘á»‹nh ká»³
+4️⃣ Cập nhật định kỳ
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**âœ… Káº¾T QUáº¢:**
-â€¢ TÃ­nh Ä‘Æ°á»£c **Net Worth**
-â€¢ Biáº¿t mÃ¬nh "giÃ u" tháº­t sá»± chÆ°a
-â€¢ Theo dÃµi tÄƒng trÆ°á»Ÿng tÃ i sáº£n
+**✅ KẾT QUẢ:**
+• Tính được **Net Worth**
+• Biết mình "giàu" thật sự chưa
+• Theo dõi tăng trưởng tài sản
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸ’¡ CÃ´ng thá»©c vÃ ng:**
+**💡 Công thức vàng:**
 ```
-Net Worth = TÃ i sáº£n - Ná»£
+Net Worth = Tài sản - Nợ
 ```
 
-*Thu nháº­p cao â‰  GiÃ u*
-*GiÃ u = Net Worth cao!*
+*Thu nhập cao ≠ Giàu*
+*Giàu = Net Worth cao!*
 """,
         "image": "media/images/tai_san.jpg"
     },
     
     9: {
-        "title": "ðŸŽ¯ Káº¾T LUáº¬N â€“ Tá»”NG QUAN",
+        "title": "🎯 KẾT LUẬN – TỔNG QUAN",
         "content": """
-**ðŸ† NGUYÃŠN Táº®C VÃ€NG KHI DÃ™NG FREEDOM WALLET:**
+**🏆 NGUYÊN TẮC VÀNG KHI DÙNG FREEDOM WALLET:**
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-1ï¸âƒ£ **Ghi chÃ©p HÃ€NG NGÃ€Y**
-   â†’ Má»—i giao dá»‹ch pháº£i Ä‘Æ°á»£c ghi láº¡i
+1️⃣ **Ghi chép HÀNG NGÀY**
+   → Mỗi giao dịch phải được ghi lại
 
-2ï¸âƒ£ **Xem bÃ¡o cÃ¡o HÃ€NG TUáº¦N**
-   â†’ Kiá»ƒm tra chi tiÃªu, Ä‘iá»u chá»‰nh ká»‹p thá»i
+2️⃣ **Xem báo cáo HÀNG TUẦN**
+   → Kiểm tra chi tiêu, điều chỉnh kịp thời
 
-3ï¸âƒ£ **ÄÃ¡nh giÃ¡ tÃ i chÃ­nh Má»–I THÃNG**
-   â†’ Xem tá»•ng quan, so sÃ¡nh vá»›i thÃ¡ng trÆ°á»›c
+3️⃣ **Đánh giá tài chính MỖI THÁNG**
+   → Xem tổng quan, so sánh với tháng trước
 
-4ï¸âƒ£ **Äiá»u chá»‰nh má»¥c tiÃªu Má»–I QUÃ**
-   â†’ Thay Ä‘á»•i % 6 hÅ© náº¿u cáº§n
+4️⃣ **Điều chỉnh mục tiêu MỖI QUÝ**
+   → Thay đổi % 6 hũ nếu cần
 
-5ï¸âƒ£ **KiÃªn trÃ¬ ÃT NHáº¤T 90 NGÃ€Y**
-   â†’ Äá»§ Ä‘á»ƒ hÃ¬nh thÃ nh thÃ³i quen
+5️⃣ **Kiên trì ÍT NHẤT 90 NGÀY**
+   → Đủ để hình thành thói quen
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-**ðŸŒ± CÃ¢u nÃ³i cuá»‘i:**
+**🌱 Câu nói cuối:**
 
-*"Tá»± do tÃ i chÃ­nh khÃ´ng Ä‘áº¿n tá»« may máº¯n*
-*â€“ mÃ  Ä‘áº¿n tá»« há»‡ thá»‘ng."*
+*"Tự do tài chính không đến từ may mắn*
+*– mà đến từ hệ thống."*
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━
 
-ðŸŽ‰ **ChÃºc báº¡n thÃ nh cÃ´ng trÃªn hÃ nh trÃ¬nh tá»± do tÃ i chÃ­nh!**
+🎉 **Chúc bạn thành công trên hành trình tự do tài chính!**
 """,
         "image": "media/images/tong_quan.jpg"
     }
@@ -420,10 +420,10 @@ def get_setup_guide_keyboard(current_step: int) -> InlineKeyboardMarkup:
     # Navigation row
     nav_row = []
     if current_step > 0:
-        nav_row.append(InlineKeyboardButton("â¬…ï¸ Quay láº¡i", callback_data=f"guide_step_{current_step-1}"))
+        nav_row.append(InlineKeyboardButton("⬅️ Quay lại", callback_data=f"guide_step_{current_step-1}"))
     
     if current_step < 9:
-        nav_row.append(InlineKeyboardButton("Tiáº¿p theo âž¡ï¸", callback_data=f"guide_step_{current_step+1}"))
+        nav_row.append(InlineKeyboardButton("Tiếp theo ➡️", callback_data=f"guide_step_{current_step+1}"))
     
     if nav_row:
         buttons.append(nav_row)
@@ -431,24 +431,24 @@ def get_setup_guide_keyboard(current_step: int) -> InlineKeyboardMarkup:
     # Jump to specific sections (only show on step 0)
     if current_step == 0:
         buttons.append([
-            InlineKeyboardButton("âš™ï¸ CÃ i Ä‘áº·t (1-3)", callback_data="guide_step_1"),
-            InlineKeyboardButton("ðŸ’³ Tracking (4-8)", callback_data="guide_step_4")
+            InlineKeyboardButton("⚙️ Cài đặt (1-3)", callback_data="guide_step_1"),
+            InlineKeyboardButton("💳 Tracking (4-8)", callback_data="guide_step_4")
         ])
     
     # Menu row
     menu_row = []
     if current_step != 0:
-        menu_row.append(InlineKeyboardButton("ðŸ“˜ Menu", callback_data="guide_step_0"))
+        menu_row.append(InlineKeyboardButton("📘 Menu", callback_data="guide_step_0"))
     
     if current_step == 9:
-        menu_row.append(InlineKeyboardButton("âœ… HoÃ n thÃ nh", callback_data="guide_complete"))
+        menu_row.append(InlineKeyboardButton("✅ Hoàn thành", callback_data="guide_complete"))
     
     if menu_row:
         buttons.append(menu_row)
     
     # Help row (always available)
     buttons.append([
-        InlineKeyboardButton("ðŸ’¬ Cáº§n trá»£ giÃºp?", url="https://t.me/freedomwalletapp")
+        InlineKeyboardButton("💬 Cần trợ giúp?", url="https://t.me/freedomwalletapp")
     ])
     
     return InlineKeyboardMarkup(buttons)
@@ -458,7 +458,7 @@ async def send_guide_step(update: Update, context: ContextTypes.DEFAULT_TYPE, st
     """Send a specific guide step"""
     try:
         if step not in SETUP_GUIDE_STEPS:
-            await update.callback_query.answer("âŒ BÆ°á»›c khÃ´ng há»£p lá»‡!")
+            await update.callback_query.answer("❌ Bước không hợp lệ!")
             return
         
         guide_data = SETUP_GUIDE_STEPS[step]
@@ -526,7 +526,7 @@ async def send_guide_step(update: Update, context: ContextTypes.DEFAULT_TYPE, st
     except Exception as e:
         logger.error(f"Error sending guide step {step}: {e}")
         if update.callback_query:
-            await update.callback_query.answer("âŒ CÃ³ lá»—i xáº£y ra!")
+            await update.callback_query.answer("❌ Có lỗi xảy ra!")
 
 
 async def huongdan_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -551,46 +551,46 @@ async def guide_callback_handler(update: Update, context: ContextTypes.DEFAULT_T
             # Send completion message with next steps
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text="ðŸŽ‰ **CHÃšC Má»ªNG! Báº N ÄÃƒ HOÃ€N THÃ€NH HÆ¯á»šNG DáºªN!**\n\n"
-                     "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-                     "âœ… **Báº¡n Ä‘Ã£ há»c Ä‘Æ°á»£c:**\n"
-                     "â€¢ CÃ¡ch cÃ i Ä‘áº·t vÃ  xÃ³a dá»¯ liá»‡u máº«u\n"
-                     "â€¢ Thiáº¿t láº­p 6 HÅ© Tiá»n vÃ  5 Cáº¥p báº­c\n"
-                     "â€¢ Quáº£n lÃ½ TÃ i khoáº£n, Danh má»¥c, Ná»£, Äáº§u tÆ°, TÃ i sáº£n\n\n"
-                     "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-                     "ðŸš€ **BÆ¯á»šC TIáº¾P THEO - HÃ€NH Äá»˜NG NGAY:**\n\n"
-                     "**1ï¸âƒ£ Ghi giao dá»‹ch Ä‘áº§u tiÃªn** (Quan trá»ng nháº¥t!)\n"
-                     "   â†’ Má»Ÿ Web App cá»§a báº¡n (link á»Ÿ Day 1)\n"
-                     "   â†’ Thá»­ ghi 1 khoáº£n chi tiÃªu hÃ´m nay\n\n"
-                     "**2ï¸âƒ£ Thiáº¿t láº­p 6 HÅ© Tiá»n cá»§a báº¡n**\n"
-                     "   â†’ Settings â†’ 6 Jars â†’ Äiá»u chá»‰nh %\n\n"
-                     "**3ï¸âƒ£ Nháº­p sá»‘ dÆ° tÃ i khoáº£n chÃ­nh xÃ¡c**\n"
-                     "   â†’ Accounts â†’ ThÃªm táº¥t cáº£ tÃ i khoáº£n\n\n"
-                     "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n"
-                     "ðŸ’Ž **CAM Káº¾T 7 NGÃ€Y Äáº¦U TIÃŠN:**\n"
-                     "Má»—i ngÃ y báº¡n sáº½ nháº­n Ä‘Æ°á»£c:\n"
-                     "â€¢ 1 bÃ i há»c thá»±c táº¿ vá» quáº£n lÃ½ tÃ i chÃ­nh\n"
-                     "â€¢ 1 nhiá»‡m vá»¥ nhá» Ä‘á»ƒ thá»±c hÃ nh\n"
-                     "â€¢ Äá»™ng lá»±c vÃ  nháº¯c nhá»Ÿ tá»« bot\n\n"
-                     "ðŸŽ¯ **Má»¥c tiÃªu:** Ghi chÃ©p Ä‘á»§ 7 ngÃ y â†’ HÃ¬nh thÃ nh thÃ³i quen!\n\n"
-                     "ðŸ”¥ **Tham gia Group Ä‘á»ƒ:**\n"
-                     "â€¢ ÄÆ°á»£c há»— trá»£ trá»±c tiáº¿p khi gáº·p khÃ³ khÄƒn\n"
-                     "â€¢ Há»c há»i kinh nghiá»‡m tá»« cá»™ng Ä‘á»“ng\n"
-                     "â€¢ Nháº­n tips & tricks Ä‘á»™c quyá»n\n"
-                     "â€¢ Tham gia thá»­ thÃ¡ch 30 ngÃ y ghi chÃ©p\n\n"
-                     "ðŸ’ª **Báº¯t Ä‘áº§u ngay hÃ´m nay - TÆ°Æ¡ng lai sáº½ cáº£m Æ¡n báº¡n!**",
+                text="🎉 **CHÚC MỪNG! BẠN ĐÃ HOÀN THÀNH HƯỚNG DẪN!**\n\n"
+                     "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                     "✅ **Bạn đã học được:**\n"
+                     "• Cách cài đặt và xóa dữ liệu mẫu\n"
+                     "• Thiết lập 6 Hũ Tiền và 5 Cấp bậc\n"
+                     "• Quản lý Tài khoản, Danh mục, Nợ, Đầu tư, Tài sản\n\n"
+                     "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                     "🚀 **BƯỚC TIẾP THEO - HÀNH ĐỘNG NGAY:**\n\n"
+                     "**1️⃣ Ghi giao dịch đầu tiên** (Quan trọng nhất!)\n"
+                     "   → Mở Web App của bạn (link ở Day 1)\n"
+                     "   → Thử ghi 1 khoản chi tiêu hôm nay\n\n"
+                     "**2️⃣ Thiết lập 6 Hũ Tiền của bạn**\n"
+                     "   → Settings → 6 Jars → Điều chỉnh %\n\n"
+                     "**3️⃣ Nhập số dư tài khoản chính xác**\n"
+                     "   → Accounts → Thêm tất cả tài khoản\n\n"
+                     "━━━━━━━━━━━━━━━━━━━━━\n\n"
+                     "💎 **CAM KẾT 7 NGÀY ĐẦU TIÊN:**\n"
+                     "Mỗi ngày bạn sẽ nhận được:\n"
+                     "• 1 bài học thực tế về quản lý tài chính\n"
+                     "• 1 nhiệm vụ nhỏ để thực hành\n"
+                     "• Động lực và nhắc nhở từ bot\n\n"
+                     "🎯 **Mục tiêu:** Ghi chép đủ 7 ngày → Hình thành thói quen!\n\n"
+                     "🔥 **Tham gia Group để:**\n"
+                     "• Được hỗ trợ trực tiếp khi gặp khó khăn\n"
+                     "• Học hỏi kinh nghiệm từ cộng đồng\n"
+                     "• Nhận tips & tricks độc quyền\n"
+                     "• Tham gia thử thách 30 ngày ghi chép\n\n"
+                     "💪 **Bắt đầu ngay hôm nay - Tương lai sẽ cảm ơn bạn!**",
                 parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("ðŸ‘¥ Tham gia Group VIP", url="https://t.me/freedomwalletapp")],
-                    [InlineKeyboardButton("ðŸ“– Xem láº¡i hÆ°á»›ng dáº«n", callback_data="guide_step_0")],
-                    [InlineKeyboardButton("ðŸ’¬ Chat vá»›i Admin", url="https://t.me/freedomwalletapp")]
+                    [InlineKeyboardButton("👥 Tham gia Group VIP", url="https://t.me/freedomwalletapp")],
+                    [InlineKeyboardButton("📖 Xem lại hướng dẫn", callback_data="guide_step_0")],
+                    [InlineKeyboardButton("💬 Chat với Admin", url="https://t.me/freedomwalletapp")]
                 ])
             )
-            await query.answer("ðŸŽ‰ HoÃ n thÃ nh! Báº¯t Ä‘áº§u ghi chÃ©p ngay nhÃ©!")
+            await query.answer("🎉 Hoàn thành! Bắt đầu ghi chép ngay nhé!")
         
     except Exception as e:
         logger.error(f"Error in guide callback handler: {e}")
-        await query.answer("âŒ CÃ³ lá»—i xáº£y ra!")
+        await query.answer("❌ Có lỗi xảy ra!")
 
 
 def register_setup_guide_handlers(application):
@@ -598,5 +598,5 @@ def register_setup_guide_handlers(application):
     application.add_handler(CommandHandler("huongdan", huongdan_command))
     application.add_handler(CallbackQueryHandler(guide_callback_handler, pattern="^guide_"))
     
-    logger.info("âœ… Setup guide handlers registered")
+    logger.info("✅ Setup guide handlers registered")
 

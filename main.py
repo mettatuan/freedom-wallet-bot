@@ -55,6 +55,7 @@ USE_CLEAN_ARCHITECTURE = False
 from app.handlers.user.start import start, help_menu
 from app.handlers.user.status import mystatus_command  # DAY 2: ROI Dashboard
 from app.handlers.core.message import handle_message
+from app.handlers.core.main_menu import register_main_menu_handlers  # Main menu system
 from app.handlers.support.support import support_command, save_support_ticket, cancel_support
 from app.handlers.core.callback import handle_callback
 from app.handlers.engagement.referral import referral_command
@@ -135,6 +136,12 @@ async def post_shutdown(application: Application) -> None:
 
 def main() -> None:
     """Start the bot."""
+    # Print runtime diagnostics (ROOT CAUSE FIX: Prevent schema drift)
+    from app.utils.runtime_info import print_runtime_info, verify_single_database
+    print_runtime_info()
+    if not verify_single_database():
+        logger.warning("⚠️  Multiple database files detected - check logs above")
+    
     # Create application
     application = (
         Application.builder()
@@ -160,8 +167,8 @@ def main() -> None:
     registration_handler = ConversationHandler(
         entry_points=[
             CommandHandler("register", start_registration),
-            # REMOVED: start_free_registration now handled by CA conversation (line 209)
-            # CallbackQueryHandler(start_registration, pattern="^start_free_registration$")
+            # Re-enabled: start_free_registration callback (CA is disabled)
+            CallbackQueryHandler(start_registration, pattern="^start_free_registration$")
         ],
         states={
             AWAITING_EMAIL: [
@@ -251,6 +258,16 @@ def main() -> None:
     # Registration handler
     application.add_handler(registration_handler)
     
+    # Registration callback handlers (for post-registration flow)
+    from app.handlers.user.registration import (
+        connect_webapp_now, 
+        update_webapp_url, 
+        skip_webapp_setup
+    )
+    application.add_handler(CallbackQueryHandler(connect_webapp_now, pattern="^connect_webapp_now$"))
+    application.add_handler(CallbackQueryHandler(update_webapp_url, pattern="^update_webapp_url$"))
+    application.add_handler(CallbackQueryHandler(skip_webapp_setup, pattern="^skip_webapp_setup$"))
+    
     application.add_handler(CommandHandler("help", help_menu))
     application.add_handler(CommandHandler("mystatus", mystatus_command))  # DAY 2: ROI Dashboard
     application.add_handler(CommandHandler("referral", referral_command))
@@ -289,6 +306,21 @@ def main() -> None:
         logger.info("✅ VIP handlers registered")
     except Exception as e:
         logger.error(f"❌ Failed to register VIP handlers: {e}", exc_info=True)
+    
+    # Register Main Menu handlers (Professional menu system)
+    try:
+        register_main_menu_handlers(application)
+        logger.info("✅ Main menu handlers registered")
+    except Exception as e:
+        logger.error(f"❌ Failed to register main menu handlers: {e}", exc_info=True)
+    
+    # Register Reply Keyboard handlers (Persistent main menu)
+    try:
+        from app.handlers.core.reply_keyboard import register_reply_keyboard_handlers
+        register_reply_keyboard_handlers(application)
+        logger.info("✅ Reply Keyboard handlers registered (6 buttons)")
+    except Exception as e:
+        logger.error(f"❌ Failed to register Reply Keyboard handlers: {e}", exc_info=True)
     
     try:
         register_webapp_setup_handlers(application)

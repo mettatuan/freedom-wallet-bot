@@ -10,21 +10,21 @@ from loguru import logger
 async def send_unlock_message_1(user_id: int, context: ContextTypes.DEFAULT_TYPE):
     """
     MESSAGE 1: RECOGNITION & OWNERSHIP
-    Chuyá»ƒn tráº¡ng thÃ¡i tÃ¢m lÃ½ tá»« "hoÃ n thÃ nh nhiá»‡m vá»¥ xÃ£ há»™i" â†’ "sá»Ÿ há»¯u cÃ´ng cá»¥ cÃ¡ nhÃ¢n"
+    Chuyển trạng thái tâm lý từ "hoàn thành nhiệm vụ xã hội" → "sở hữu công cụ cá nhân"
     """
-    text = """ðŸŽ‰ ChÃºc má»«ng báº¡n!
+    text = """🎉 Chúc mừng bạn!
 
-Báº¡n Ä‘Ã£ hoÃ n táº¥t má»‘c 2 ngÆ°á»i giá»›i thiá»‡u.
-Tá»« Ä‘Ã¢y, Freedom Wallet Ä‘Ã£ sáºµn sÃ ng Ä‘á»ƒ báº¡n sá»­ dá»¥ng Ä‘áº§y Ä‘á»§ cho chÃ­nh mÃ¬nh.
+Bạn đã hoàn tất mốc 2 người giới thiệu.
+Từ đây, Freedom Wallet đã sẵn sàng để bạn sử dụng đầy đủ cho chính mình.
 
-KhÃ´ng pháº£i xem thá»­.
-KhÃ´ng pháº£i lÃ m cho cÃ³.
+Không phải xem thử.
+Không phải làm cho có.
 
-ðŸ‘‰ ÄÃ¢y lÃ  há»‡ thá»‘ng quáº£n lÃ½ tÃ i chÃ­nh cÃ¡ nhÃ¢n cá»§a báº¡n."""
+👉 Đây là hệ thống quản lý tài chính cá nhân của bạn."""
 
     keyboard = [
-        [InlineKeyboardButton("ðŸ”“ Tiáº¿p tá»¥c", callback_data="unlock_continue")],
-        [InlineKeyboardButton("ðŸ“Š Xem tráº¡ng thÃ¡i cá»§a tÃ´i", callback_data="unlock_status")]
+        [InlineKeyboardButton("🔓 Tiếp tục", callback_data="unlock_continue")],
+        [InlineKeyboardButton("📊 Xem trạng thái của tôi", callback_data="unlock_status")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -35,32 +35,32 @@ KhÃ´ng pháº£i lÃ m cho cÃ³.
             reply_markup=reply_markup,
             parse_mode=None
         )
-        logger.info(f"âœ… Sent unlock Message 1 to user {user_id}")
+        logger.info(f"✅ Sent unlock Message 1 to user {user_id}")
     except Exception as e:
-        logger.error(f"âŒ Failed to send unlock Message 1 to user {user_id}: {e}")
+        logger.error(f"❌ Failed to send unlock Message 1 to user {user_id}: {e}")
 
 
 async def handle_unlock_continue(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     MESSAGE 2: IDENTITY + SINGLE NEXT STEP
-    Trigger: User clicks "ðŸ”“ Tiáº¿p tá»¥c"
+    Trigger: User clicks "🔓 Tiếp tục"
     """
     query = update.callback_query
     await query.answer()
     
-    text = """Tá»« thá»i Ä‘iá»ƒm nÃ y, báº¡n lÃ  thÃ nh viÃªn chÃ­nh thá»©c cá»§a Freedom Wallet.
+    text = """Từ thời điểm này, bạn là thành viên chính thức của Freedom Wallet.
 
-ThÃ nh viÃªn chÃ­nh thá»©c lÃ  nhá»¯ng ngÆ°á»i:
-â€¢ Chá»§ Ä‘á»™ng quáº£n lÃ½ tiá»n cá»§a mÃ¬nh
-â€¢ Muá»‘n nhÃ¬n rÃµ dÃ²ng tiá»n, khÃ´ng Ä‘oÃ¡n mÃ²
-â€¢ Sáºµn sÃ ng báº¯t Ä‘áº§u báº±ng hÃ nh Ä‘á»™ng thá»±c táº¿
+Thành viên chính thức là những người:
+• Chủ động quản lý tiền của mình
+• Muốn nhìn rõ dòng tiền, không đoán mò
+• Sẵn sàng bắt đầu bằng hành động thực tế
 
-BÆ°á»›c tiáº¿p theo ráº¥t Ä‘Æ¡n giáº£n:
-ðŸ‘‰ Thiáº¿t láº­p Freedom Wallet Ä‘á»ƒ báº¯t Ä‘áº§u sá»­ dá»¥ng."""
+Bước tiếp theo rất đơn giản:
+👉 Thiết lập Freedom Wallet để bắt đầu sử dụng."""
 
     keyboard = [
-        [InlineKeyboardButton("ðŸ›  Báº¯t Ä‘áº§u thiáº¿t láº­p", callback_data="setup_start")],
-        [InlineKeyboardButton("ðŸ§­ Xem lá»™ trÃ¬nh cÃ¡ nhÃ¢n", callback_data="view_roadmap")]
+        [InlineKeyboardButton("🛠 Bắt đầu thiết lập", callback_data="setup_start")],
+        [InlineKeyboardButton("🧭 Xem lộ trình cá nhân", callback_data="view_roadmap")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -69,28 +69,28 @@ BÆ°á»›c tiáº¿p theo ráº¥t Ä‘Æ¡n giáº£n:
             text=text,
             reply_markup=reply_markup
         )
-        logger.info(f"âœ… Sent unlock Message 2 to user {query.from_user.id}")
+        logger.info(f"✅ Sent unlock Message 2 to user {query.from_user.id}")
     except Exception as e:
-        logger.error(f"âŒ Failed to send unlock Message 2: {e}")
+        logger.error(f"❌ Failed to send unlock Message 2: {e}")
 
 
 async def handle_unlock_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    ALTERNATIVE PATH: User clicks "ðŸ“Š Xem tráº¡ng thÃ¡i cá»§a tÃ´i"
+    ALTERNATIVE PATH: User clicks "📊 Xem trạng thái của tôi"
     """
     query = update.callback_query
     await query.answer()
     
-    text = """ðŸ“Š TRáº NG THÃI Cá»¦A Báº N
+    text = """📊 TRẠNG THÁI CỦA BẠN
 
-âœ… ÄÃ£ hoÃ n táº¥t: 2/2 giá»›i thiá»‡u
-âœ… Tráº¡ng thÃ¡i: ThÃ nh viÃªn FREE
-âœ… Quyá»n truy cáº­p: Äáº§y Ä‘á»§ tÃ­nh nÄƒng
+✅ Đã hoàn tất: 2/2 giới thiệu
+✅ Trạng thái: Thành viên FREE
+✅ Quyền truy cập: Đầy đủ tính năng
 
-BÆ°á»›c tiáº¿p theo:
-ðŸ‘‰ Thiáº¿t láº­p Freedom Wallet Ä‘á»ƒ sá»­ dá»¥ng."""
+Bước tiếp theo:
+👉 Thiết lập Freedom Wallet để sử dụng."""
 
-    keyboard = [[InlineKeyboardButton("ðŸ”“ Báº¯t Ä‘áº§u ngay", callback_data="unlock_continue")]]
+    keyboard = [[InlineKeyboardButton("🔓 Bắt đầu ngay", callback_data="unlock_continue")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     try:
@@ -98,33 +98,33 @@ BÆ°á»›c tiáº¿p theo:
             text=text,
             reply_markup=reply_markup
         )
-        logger.info(f"âœ… Showed status to user {query.from_user.id}")
+        logger.info(f"✅ Showed status to user {query.from_user.id}")
     except Exception as e:
-        logger.error(f"âŒ Failed to show status: {e}")
+        logger.error(f"❌ Failed to show status: {e}")
 
 
 async def handle_setup_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    MESSAGE 3: DAY 1 â€“ FIRST REAL USAGE
-    Trigger: User clicks "ðŸ›  Báº¯t Ä‘áº§u thiáº¿t láº­p"
+    MESSAGE 3: DAY 1 – FIRST REAL USAGE
+    Trigger: User clicks "🛠 Bắt đầu thiết lập"
     """
     query = update.callback_query
     await query.answer()
     
-    text = """ðŸŽ¯ BÆ¯á»šC Äáº¦U TIÃŠN â€“ THIáº¾T Láº¬P FREEDOM WALLET
+    text = """🎯 BƯỚC ĐẦU TIÊN – THIẾT LẬP FREEDOM WALLET
 
-Báº¡n chá»‰ cáº§n lÃ m 3 viá»‡c (10â€“15 phÃºt):
-1ï¸âƒ£ Copy Google Sheets Template
-2ï¸âƒ£ Táº¡o Web App cÃ¡ nhÃ¢n
-3ï¸âƒ£ Nháº­p sá»‘ dÆ° + 1 giao dá»‹ch Ä‘áº§u tiÃªn
+Bạn chỉ cần làm 3 việc (10–15 phút):
+1️⃣ Copy Google Sheets Template
+2️⃣ Tạo Web App cá nhân
+3️⃣ Nhập số dư + 1 giao dịch đầu tiên
 
-ðŸ‘‰ KhÃ´ng cáº§n biáº¿t code.
-ðŸ‘‰ LÃ m cháº­m cÅ©ng hoÃ n toÃ n á»•n."""
+👉 Không cần biết code.
+👉 Làm chậm cũng hoàn toàn ổn."""
 
     keyboard = [
-        [InlineKeyboardButton("ðŸ“‘ Copy Template", url="https://docs.google.com/spreadsheets/d/1nMJNc3KWEGWs7LMZpGJaxeiqbCFaLg_O3oYE4Wx5lnU/copy")],
-        [InlineKeyboardButton("ðŸŒ HÆ°á»›ng dáº«n Web App", callback_data="webapp_guide")],
-        [InlineKeyboardButton("â“ Cáº§n há»— trá»£", callback_data="setup_help")]
+        [InlineKeyboardButton("📑 Copy Template", url="https://docs.google.com/spreadsheets/d/1nMJNc3KWEGWs7LMZpGJaxeiqbCFaLg_O3oYE4Wx5lnU/copy")],
+        [InlineKeyboardButton("🌐 Hướng dẫn Web App", callback_data="webapp_guide")],
+        [InlineKeyboardButton("❓ Cần hỗ trợ", callback_data="setup_help")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -133,37 +133,37 @@ Báº¡n chá»‰ cáº§n lÃ m 3 viá»‡c (10â€“15 phÃºt):
             text=text,
             reply_markup=reply_markup
         )
-        logger.info(f"âœ… Sent setup Message 3 to user {query.from_user.id}")
+        logger.info(f"✅ Sent setup Message 3 to user {query.from_user.id}")
     except Exception as e:
-        logger.error(f"âŒ Failed to send setup message: {e}")
+        logger.error(f"❌ Failed to send setup message: {e}")
 
 
 async def handle_view_roadmap(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    ALTERNATIVE PATH: User clicks "ðŸ§­ Xem lá»™ trÃ¬nh cÃ¡ nhÃ¢n"
+    ALTERNATIVE PATH: User clicks "🧭 Xem lộ trình cá nhân"
     """
     query = update.callback_query
     await query.answer()
     
-    text = """ðŸ§­ Lá»˜ TRÃŒNH CÃ NHÃ‚N
+    text = """🧭 LỘ TRÌNH CÁ NHÂN
 
-**HÃ´m nay:**
-âœ“ Thiáº¿t láº­p Web App (10-15 phÃºt)
-âœ“ Nháº­p giao dá»‹ch Ä‘áº§u tiÃªn
+**Hôm nay:**
+✓ Thiết lập Web App (10-15 phút)
+✓ Nhập giao dịch đầu tiên
 
-**Tuáº§n nÃ y:**
-â€¢ Hiá»ƒu vá» 6 HÅ© Tiá»n
-â€¢ Theo dÃµi dÃ²ng tiá»n hÃ ng ngÃ y
-â€¢ Xem bÃ¡o cÃ¡o chi tiÃªu
+**Tuần này:**
+• Hiểu về 6 Hũ Tiền
+• Theo dõi dòng tiền hàng ngày
+• Xem báo cáo chi tiêu
 
-**ThÃ¡ng nÃ y:**
-â€¢ XÃ¢y dá»±ng Quá»¹ Kháº©n Cáº¥p
-â€¢ Láº­p káº¿ hoáº¡ch tÃ i chÃ­nh rÃµ rÃ ng
-â€¢ LÃ m chá»§ tÃ i chÃ­nh cÃ¡ nhÃ¢n
+**Tháng này:**
+• Xây dựng Quỹ Khẩn Cấp
+• Lập kế hoạch tài chính rõ ràng
+• Làm chủ tài chính cá nhân
 
-Sáºµn sÃ ng báº¯t Ä‘áº§u?"""
+Sẵn sàng bắt đầu?"""
 
-    keyboard = [[InlineKeyboardButton("ðŸ›  Báº¯t Ä‘áº§u thiáº¿t láº­p", callback_data="setup_start")]]
+    keyboard = [[InlineKeyboardButton("🛠 Bắt đầu thiết lập", callback_data="setup_start")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     try:
@@ -171,14 +171,14 @@ Sáºµn sÃ ng báº¯t Ä‘áº§u?"""
             text=text,
             reply_markup=reply_markup
         )
-        logger.info(f"âœ… Showed roadmap to user {query.from_user.id}")
+        logger.info(f"✅ Showed roadmap to user {query.from_user.id}")
     except Exception as e:
-        logger.error(f"âŒ Failed to show roadmap: {e}")
+        logger.error(f"❌ Failed to show roadmap: {e}")
 
 
 async def handle_webapp_guide(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    User clicks "ðŸŒ HÆ°á»›ng dáº«n Web App"
+    User clicks "🌐 Hướng dẫn Web App"
     Send step-by-step setup guide
     """
     query = update.callback_query
@@ -191,21 +191,21 @@ async def handle_webapp_guide(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def handle_setup_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    User clicks "â“ Cáº§n há»— trá»£"
+    User clicks "❓ Cần hỗ trợ"
     Show support options
     """
     query = update.callback_query
     await query.answer()
     
-    text = """â“ Há»– TRá»¢ THIáº¾T Láº¬P
+    text = """❓ HỖ TRỢ THIẾT LẬP
 
-Chá»n cÃ¡ch báº¡n muá»‘n Ä‘Æ°á»£c há»— trá»£:"""
+Chọn cách bạn muốn được hỗ trợ:"""
 
     keyboard = [
-        [InlineKeyboardButton("ðŸ“š Xem hÆ°á»›ng dáº«n Notion", url="https://phamthanhtuan.notion.site/1717ba14c3d0801090cdf4c57ff08652?pvs=105")],
-        [InlineKeyboardButton("ðŸ’¬ Tham gia Group", url="https://t.me/+vBZk4Kq59P9mMzY1")],
-        [InlineKeyboardButton("ðŸ‘¨â€ðŸ’¼ Chat vá»›i Admin", url="https://t.me/tuanai_mentor")],
-        [InlineKeyboardButton("ðŸ”™ Quay láº¡i", callback_data="setup_start")]
+        [InlineKeyboardButton("📚 Xem hướng dẫn Notion", url="https://phamthanhtuan.notion.site/1717ba14c3d0801090cdf4c57ff08652?pvs=105")],
+        [InlineKeyboardButton("💬 Tham gia Group", url="https://t.me/+vBZk4Kq59P9mMzY1")],
+        [InlineKeyboardButton("👨‍💼 Chat với Admin", url="https://t.me/tuanai_mentor")],
+        [InlineKeyboardButton("🔙 Quay lại", callback_data="setup_start")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -214,9 +214,9 @@ Chá»n cÃ¡ch báº¡n muá»‘n Ä‘Æ°á»£c há»— trá»£:"""
             text=text,
             reply_markup=reply_markup
         )
-        logger.info(f"âœ… Showed support menu to user {query.from_user.id}")
+        logger.info(f"✅ Showed support menu to user {query.from_user.id}")
     except Exception as e:
-        logger.error(f"âŒ Failed to show support menu: {e}")
+        logger.error(f"❌ Failed to show support menu: {e}")
 
 
 async def send_gentle_reminder(user_id: int, context: ContextTypes.DEFAULT_TYPE):
@@ -224,14 +224,14 @@ async def send_gentle_reminder(user_id: int, context: ContextTypes.DEFAULT_TYPE)
     MESSAGE 4 (OPTIONAL): GENTLE FOLLOW-UP
     Sent 24 hours after Message 1 if user hasn't progressed
     """
-    text = """ðŸ‘‹ Nháº¯c nháº¹ tá»« Freedom Wallet
+    text = """👋 Nhắc nhẹ từ Freedom Wallet
 
-Chá»‰ cáº§n hoÃ n thÃ nh bÆ°á»›c thiáº¿t láº­p Ä‘áº§u tiÃªn,
-báº¡n sáº½ báº¯t Ä‘áº§u tháº¥y dÃ²ng tiá»n cá»§a mÃ¬nh rÃµ rÃ ng hÆ¡n.
+Chỉ cần hoàn thành bước thiết lập đầu tiên,
+bạn sẽ bắt đầu thấy dòng tiền của mình rõ ràng hơn.
 
-Khi báº¡n sáºµn sÃ ng, mÃ¬nh á»Ÿ Ä‘Ã¢y Ä‘á»ƒ tiáº¿p tá»¥c."""
+Khi bạn sẵn sàng, mình ở đây để tiếp tục."""
 
-    keyboard = [[InlineKeyboardButton("ðŸ›  Tiáº¿p tá»¥c thiáº¿t láº­p", callback_data="setup_start")]]
+    keyboard = [[InlineKeyboardButton("🛠 Tiếp tục thiết lập", callback_data="setup_start")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     try:
@@ -240,9 +240,9 @@ Khi báº¡n sáºµn sÃ ng, mÃ¬nh á»Ÿ Ä‘Ã¢y Ä‘á»ƒ tiáº¿p t
             text=text,
             reply_markup=reply_markup
         )
-        logger.info(f"âœ… Sent gentle reminder to user {user_id}")
+        logger.info(f"✅ Sent gentle reminder to user {user_id}")
     except Exception as e:
-        logger.error(f"âŒ Failed to send reminder to user {user_id}: {e}")
+        logger.error(f"❌ Failed to send reminder to user {user_id}: {e}")
 
 
 def register_unlock_handlers(application):
@@ -254,5 +254,5 @@ def register_unlock_handlers(application):
     application.add_handler(CallbackQueryHandler(handle_webapp_guide, pattern="^webapp_guide$"))
     application.add_handler(CallbackQueryHandler(handle_setup_help, pattern="^setup_help$"))
     
-    logger.info("âœ… Unlock flow v3.0 handlers registered")
+    logger.info("✅ Unlock flow v3.0 handlers registered")
 
