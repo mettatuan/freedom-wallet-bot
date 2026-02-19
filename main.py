@@ -64,7 +64,7 @@ from app.handlers.user.registration import (
     confirm_registration, cancel_registration,
     AWAITING_EMAIL, AWAITING_PHONE, AWAITING_NAME, CONFIRM
 )
-from app.handlers.support.setup_guide import register_setup_guide_handlers
+from app.handlers.support.setup_guide import register_usage_guide_handlers
 from app.handlers.core.webapp_setup import register_webapp_setup_handlers
 from app.handlers.engagement.daily_reminder import register_reminder_handlers
 from app.handlers.user.user_commands import register_user_command_handlers
@@ -276,7 +276,7 @@ def main() -> None:
     # application.add_handler(CommandHandler("tips", tips_command))
     
     # Register setup guide handlers (Week 5+)
-    register_setup_guide_handlers(application)
+    register_usage_guide_handlers(application)
     
     # Register FREE step-by-step flow (Feb 2026)
     try:

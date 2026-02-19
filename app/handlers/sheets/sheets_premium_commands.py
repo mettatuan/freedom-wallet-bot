@@ -59,7 +59,7 @@ async def handle_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
             percentage = jar.get("percentage", 0)
             
             message += f"{icon} **{name}** ({percentage}%)\n"
-            message += f"   â"" {balance:,.0f} â'«\n\n"
+            message += f"   ₫ {balance:,.0f}\n\n"
         
         message += f"━━━━━━━━━━━━━━━\n"
         message += f"💎 **Tổng cộng: {total_balance:,.0f} ₫**\n\n"

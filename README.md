@@ -1,6 +1,6 @@
 # 🤖 Freedom Wallet Bot
 
-AI-powered Telegram customer support bot for Freedom Wallet app.
+AI-powered Telegram bot for personal finance management with Google Sheets integration.
 
 ## 🚀 Quick Start
 
@@ -16,85 +16,113 @@ pip install -r requirements.txt
 ### 2. Setup
 ```bash
 # Create .env file
-cp config/.env.example config/.env
+cp .env.example .env
 
 # Edit .env with your tokens
 TELEGRAM_BOT_TOKEN=your_bot_token_here
-OPENAI_API_KEY=your_openai_key_here
-GOOGLE_SHEETS_CREDENTIALS=path/to/credentials.json
+DATABASE_URL=postgresql://...
+GOOGLE_SHEETS_CREDENTIALS=path/to/google_service_account.json
 ```
 
 ### 3. Run Bot
 ```bash
-# Development mode
+# Local development
 python main.py
 
-# Production mode
-python main.py --prod
+# Or use batch script (Windows)
+start_local.bat
 ```
+
+## 📖 Documentation
+
+**Comprehensive docs in `/docs` folder:**
+
+- **[docs/MASTER_INDEX.md](docs/MASTER_INDEX.md)** - Complete documentation index
+- **[docs/QUICK_START_v2.md](docs/QUICK_START_v2.md)** - Developer quick start guide
+- **[docs/DEPLOY.md](docs/DEPLOY.md)** - Deployment guide (Railway/VPS)
+- **[docs/FLOW_MAP.md](docs/FLOW_MAP.md)** - Architecture & user flows
 
 ## 📁 Project Structure
 
 ```
-freedom-wallet-bot/
-├── bot/
-│   ├── handlers/       # Command handlers
-│   ├── ai/            # AI/GPT integration
-│   ├── knowledge/     # FAQ & docs
-│   └── utils/         # Helpers
-├── data/              # Database & storage
-├── media/             # Tutorial assets
-├── config/            # Configuration
-├── tests/             # Unit tests
-└── main.py           # Entry point
+FreedomWalletBot/
+├── app/
+│   ├── handlers/           # Telegram command/callback handlers
+│   │   ├── core/          # Core: start, menu, setup, keyboard
+│   │   ├── features/      # Features: quick_record, reports, etc.
+│   │   └── admin/         # Admin commands
+│   ├── services/          # Business logic (roadmap, sheets, etc.)
+│   ├── utils/             # Database, helpers
+│   └── models/            # Data models
+├── docs/                  # 📚 All documentation (70+ files)
+├── tests/                 # Unit & integration tests
+├── config/                # Configuration files
+├── migrations/            # Database migrations
+├── scripts/               # Utility scripts
+├── main.py               # Entry point
+├── version.py            # Version info (v2.0.0)
+└── requirements.txt      # Python dependencies
 ```
 
 ## 🎯 Features
 
-- ✅ 24/7 Vietnamese customer support
-- 🤖 GPT-4 powered conversations
-- 📚 Freedom Wallet knowledge base
-- 🎓 Interactive tutorials
-- 🔧 Troubleshooting assistance
-- 💡 Financial tips (6 Jars method)
-- 🆘 Support ticket system
+### **Core**
+- ✅ Personal finance tracking via Telegram
+- 📊 Google Sheets integration (private data)
+- 🤖 AI-powered transaction parsing
+- 📝 Quick record income/expenses
+- 📈 Financial reports & analytics
 
-## 📖 Documentation
+### **Tiers**
+- **FREE** - Basic tracking, manual setup
+- **UNLOCK** - Advanced features via 2 referrals
+- **PREMIUM** - Full automation + AI insights
 
-See [BOT_MASTER_PROMPT.md](BOT_MASTER_PROMPT.md) for full specifications.
+### **Advanced**
+- 💰 6 Jars budgeting system
+- 🎯 Goal tracking
+- 📊 Custom reports
+- 🔔 Smart reminders
+- 🤝 Referral system (gamification)
 
 ## 🧪 Testing
 
 ```bash
-# Run tests
-python -m pytest tests/
+# Run all tests
+pytest
 
-# Test specific handler
-python -m pytest tests/test_handlers.py
+# Run specific test file
+pytest tests/unit/test_state_machine_comprehensive.py
+
+# Run with coverage
+pytest --cov=app tests/
 ```
 
 ## 🚢 Deployment
 
-### Railway
+See [docs/DEPLOY.md](docs/DEPLOY.md) and [docs/DEPLOYMENT_CHECKLIST_v2.md](docs/DEPLOYMENT_CHECKLIST_v2.md)
+
+### Railway (Recommended)
 ```bash
 railway login
-railway init
+railway link
 railway up
 ```
 
-### Google Cloud Run
+### Manual VPS
 ```bash
-gcloud run deploy freedom-wallet-bot \
-  --source . \
-  --platform managed \
-  --region asia-southeast1
+# Sync to VPS
+.\sync_to_vps.bat
+
+# Or use PowerShell
+.\sync_to_vps.ps1
 ```
 
-## 📊 Monitoring
+## 📊 Version
 
-- Bot stats: `/admin stats`
-- Logs: Check `data/logs/bot.log`
-- Analytics: Google Sheets dashboard
+**Current:** v2.0.0 - Unified Flow Architecture
+
+See [CHANGELOG.md](CHANGELOG.md) and [docs/RELEASE_v2.0.0.md](docs/RELEASE_v2.0.0.md)
 
 ## 🤝 Contributing
 
@@ -103,6 +131,8 @@ gcloud run deploy freedom-wallet-bot \
 3. Commit changes (`git commit -m 'Add amazing feature'`)
 4. Push branch (`git push origin feature/amazing`)
 5. Open Pull Request
+
+**Before PR:** Run tests + check [docs/ARCHITECTURE_DECISION.md](docs/ARCHITECTURE_DECISION.md)
 
 ## 📝 License
 

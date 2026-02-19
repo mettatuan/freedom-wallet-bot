@@ -240,50 +240,63 @@ nhưng kiểm soát TỐT hơn.
             # UNLOCKED: Bot is connected, user can log quickly
             days_tracking = db_user.streak_count if db_user else 0
             
+            # Get user info for display
+            email = db_user.email if db_user and db_user.email else "Chưa cập nhật"
+            phone = db_user.phone if db_user and db_user.phone else "Chưa cập nhật"
+            
             welcome_text = f"""
-{greeting}
+✅ Bạn đã đăng ký & kết nối Web App rồi!
 
-Bạn đã kết nối Sheet với Bot thành công.
+📧 Email: {email}
+📱 Phone: {phone}
+🔗 Web App: Đã kết nối ✅
 
-Bây giờ bạn có thể ghi chi tiêu ngay trong chat này.
-5 giây. Không cần mở Sheet.
+━━━━━━━━━━━━━━━━━━━━━
 
-Sheet vẫn là của bạn.
-Bot chỉ là cầu nối để bạn ghi nhanh hơn.
+🎯 BẮT ĐẦU SỬ DỤNG NGAY:
 
-💡 Ghi chi tiêu ngay, hoặc hỏi tôi nếu cần giúp.
+💬 Ghi nhanh: Gửi tin nhắn `Cà phê 35k` → Tự động lưu!
+🤖 Hỏi bất cứ lúc nào: "Tôi chi bao nhiêu tháng này?"
+
+👇 Hoặc chọn menu bên dưới:
 """
             
             keyboard = [
-                [InlineKeyboardButton("💬 Ghi chi tiêu", callback_data="quick_record")],
-                [InlineKeyboardButton("📖 Hướng dẫn", callback_data="help_tutorial")],
-                [InlineKeyboardButton("💎 Tìm hiểu Premium", callback_data="premium_info")]
+                [InlineKeyboardButton("💬 Ghi nhanh thu chi", callback_data="quick_record")],
+                [InlineKeyboardButton("📊 Báo cáo nhanh", callback_data="today_status")],
+                [InlineKeyboardButton("📖 Hướng dẫn", callback_data="help_tutorial"), InlineKeyboardButton("⚙️ Cài đặt", callback_data="setup")]
             ]
         else:
             # FREE: Clear positioning first, no sales pressure
             from pathlib import Path
             
             welcome_text = f"""
-Chào {user.first_name}, tôi là Trợ lý tài chính của bạn
-Freedom Wallet không phải một app để bạn tải về.
-Đây là một hệ thống quản lý tự do tài chính bạn tự sở hữu.
+Chào {user.first_name},
+
+Tôi là trợ lý tài chính của bạn.
+
+Freedom Wallet không phải là một ứng dụng để tải về.
+Đây là một hệ thống quản lý tài chính bạn tự tạo và tự sở hữu.
 
 Mỗi người dùng có:
-• Google Sheet riêng
-• Apps Script riêng
-• Web App riêng
+• Một Google Sheet riêng
+• Một Apps Script riêng
+• Một Web App riêng
 
-Dữ liệu nằm trên Drive của bạn.
-Không phụ thuộc vào ai.
+Toàn bộ dữ liệu nằm trên Google Drive của bạn.
+Bạn toàn quyền kiểm soát.
+Không phụ thuộc vào nền tảng trung gian.
 
-Nếu bạn muốn đăng ký sở hữu hệ thống web app này,
-mình sẽ hướng dẫn từng bước, rất rõ ràng.
+Nếu bạn muốn bắt đầu,
+tôi sẽ hướng dẫn từng bước một.
+Rõ ràng, đơn giản và dễ làm theo.
 """
             
             keyboard = [
                 [InlineKeyboardButton("📝 Đăng ký ngay", callback_data="start_free_registration")],
                 [InlineKeyboardButton("📖 Tìm hiểu thêm", callback_data="learn_more")]
             ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
             
             # Send image with message
             image_path = Path("media/images/web_apps.jpg")
@@ -293,7 +306,7 @@ mình sẽ hướng dẫn từng bước, rất rõ ràng.
                     photo=open(image_path, 'rb'),
                     caption=welcome_text,
                     parse_mode="Markdown",
-                    reply_markup=get_main_reply_keyboard()
+                    reply_markup=reply_markup
                 )
                 return
             except Exception as e:
@@ -303,11 +316,11 @@ mình sẽ hướng dẫn từng bước, rất rõ ràng.
         
         reply_markup = InlineKeyboardMarkup(keyboard)
     
-    # Send welcome message with Reply Keyboard
+    # Send welcome message with inline buttons
     await update.message.reply_text(
         welcome_text,
         parse_mode="Markdown",
-        reply_markup=get_main_reply_keyboard()
+        reply_markup=reply_markup
     )
 
 

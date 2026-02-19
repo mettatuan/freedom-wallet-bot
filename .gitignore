@@ -1,4 +1,6 @@
+# ============================================
 # Python
+# ============================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -16,37 +18,134 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
+# ============================================
 # Virtual Environment
+# ============================================
 venv/
+.venv/
 ENV/
 env/
+env.bak/
+venv.bak/
 
-# Environment Variables
+# ============================================
+# Environment Variables (CRITICAL - NEVER COMMIT)
+# ============================================
 .env
+.env.local
+.env.production
 config/.env
-*.env.local
+config/.env.local
+config/.env.production
+*.env.backup
 
-# IDE
+# KEEP template files
+!.env.example
+!config/.env.example
+
+# ============================================
+# IDE & Editors
+# ============================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.DS_Store
 
+# ============================================
 # Logs
+# ============================================
 *.log
 data/logs/
 logs/
+*.log.*
+startup_log.txt
 
+# ============================================
 # Database
+# ============================================
 *.db
 *.sqlite
 *.sqlite3
+*.db-journal
 data/*.db
+data/*.sqlite
+data/*.sqlite3
+
+# Keep example/schema files
+!data/schema.sql
+
+# ============================================
+# Secrets & Credentials (CRITICAL - NEVER COMMIT)
+# ============================================
+google_service_account.json
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+credentials/
+
+# KEEP example files
+!google_service_account.json.example
+
+# ============================================
+# Backups
+# ============================================
+backups/
+*.backup
+*.bak
+*.old
+
+# ============================================
+# OS Files
+# ============================================
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# ============================================
+# Deployment
+# ============================================
+# Keep deployment scripts but not runtime files
+!deploy/
+deploy/*.pid
+deploy/*.sock
+nssm.exe
+
+# ============================================
+# Testing
+# ============================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+*.swp
+temp/
+tmp/
+
+# ============================================
+# User Data (PII Protection)
+# ============================================
+data/users/
+data/transactions/
+data/backups/
 
 # Google Credentials
 google_service_account.json

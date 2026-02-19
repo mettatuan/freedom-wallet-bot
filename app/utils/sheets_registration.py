@@ -7,6 +7,8 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 from loguru import logger
+import os
+from pathlib import Path
 
 
 REGISTRATION_SHEET_ID = "1-fruHaSlCKIOpIfU5Qrkns0ze3bx3E-mKUgQ5fUF-Hg"
@@ -21,8 +23,12 @@ def get_registration_worksheet():
             'https://www.googleapis.com/auth/drive'
         ]
         
+        # ✅ FIX: Use absolute path for credentials file
+        project_root = Path(__file__).parent.parent.parent
+        creds_path = project_root / 'google_service_account.json'
+        
         creds = ServiceAccountCredentials.from_json_keyfile_name(
-            'google_service_account.json',
+            str(creds_path),
             scope
         )
         

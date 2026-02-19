@@ -248,7 +248,9 @@ def get_jar_name(jar_id: str) -> str:
         'EDU': '🎓 Học tập & Phát triển',
         'PLAY': '🎉 Giải trí & Tận hưởng',
         'FFA': '📈 Đầu tư & Tự do tài chính',
-        'GIVE': '❤️ Cho đi & Cộng đồng'
+        'GIVE': '❤️ Cho đi & Cộng đồng',
+        'AUTO_6JARS': '🏺 Tự động phân bổ 6 hũ',
+        'NO_JAR': '❌ Không phân bổ'
     }
     return jar_names.get(jar_id, jar_id)
 
@@ -544,11 +546,6 @@ async def handle_quick_record(update: Update, context: ContextTypes.DEFAULT_TYPE
                         callback_data=f"qr_cat_{cat_id}"
                     ))
                 keyboard.append(row)
-            
-            # Add "Auto allocate 6 jars" button for income with autoAllocate
-            keyboard.append([
-                InlineKeyboardButton("🏺 Tự động phân bổ 6 hũ", callback_data="qr_auto_allocate")
-            ])
         else:
             # Expense: Show popular expense categories
             expense_cats = [c for c in filtered_cats if c.get('name') in ['Ăn uống', 'Mua sắm', 'Giải trí', 'Y tế', 'Giáo dục', 'Điện nước']]
@@ -648,110 +645,105 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
     context.user_data['pending_transaction']['category_id'] = cat_id
     context.user_data['pending_transaction']['category_icon'] = selected_cat.get('icon', '📝')
     
-    # Check if auto allocate
-    if selected_cat.get('autoAllocate'):
-        # Auto allocate to 6 jars
-        context.user_data['pending_transaction']['jar'] = 'AUTO_6JARS'
-        context.user_data['pending_transaction']['account'] = 'Cash'  # Default
+    transaction = context.user_data['pending_transaction']
+    
+    # ✅ Check if category has default jar assignment
+    has_auto_allocate = selected_cat.get('autoAllocate', False)
+    has_jar_id = selected_cat.get('jarId') and str(selected_cat.get('jarId')).strip() != ''
+    
+    # If category has jar assignment → Auto-assign and skip jar selection
+    if has_auto_allocate or has_jar_id:
+        # Determine jar value
+        if has_auto_allocate:
+            jar_id = 'AUTO_6JARS'
+            jar_display = '🏺 Tự động phân bổ 6 hũ'
+        else:
+            jar_id = str(selected_cat.get('jarId')).strip()
+            jar_display_names = {
+                'NEC': '🏠 NEC - Nhu cầu thiết yếu (45%)',
+                'LTSS': '💰 LTSS - Tiết kiệm dài hạn (10%)',
+                'EDU': '📚 EDU - Giáo dục (10%)',
+                'PLAY': '🎮 PLAY - Giải trí (5%)',
+                'FFA': '💎 FFA - Tự do tài chính (25%)',
+                'GIVE': '❤️ GIVE - Từ thiện (5%)'
+            }
+            jar_display = jar_display_names.get(jar_id, jar_id)
         
-        # Show confirmation
-        transaction = context.user_data['pending_transaction']
-        keyboard = [
-            [InlineKeyboardButton("✅ Xác nhận và ghi", callback_data="qr_confirm")],
-            [
-                InlineKeyboardButton("✏️ Sửa danh mục", callback_data="qr_edit_category"),
-                InlineKeyboardButton("💳 Đổi tài khoản", callback_data="qr_edit_account"),
-            ],
-            [InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        
-        await query.edit_message_text(
-            f"📝 **Phân loại tự động**\n\n"
-            f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
-            f"• Danh mục: {selected_cat.get('icon', '📝')} **{selected_cat['name']}**\n"
-            f"• Phân bổ: **Tự động 6 hũ** 🏺\n"
-            f"• Tài khoản: **Cash**\n"
-            f"• Ghi chú: {transaction['note']}\n\n"
-            f"💡 **Đúng không? Xác nhận hoặc chỉnh sửa:**",
-            parse_mode="Markdown",
-            reply_markup=reply_markup
-        )
-    else:
-        # Manual: has specific jar
-        jar_id = selected_cat.get('jarId', 'NEC')
+        # Save jar to pending transaction
         context.user_data['pending_transaction']['jar'] = jar_id
-        context.user_data['pending_transaction']['account'] = 'Cash'  # Default
         
-        # Show confirmation
-        transaction = context.user_data['pending_transaction']
+        # Show account selection directly
         keyboard = [
-            [InlineKeyboardButton("✅ Xác nhận và ghi", callback_data="qr_confirm")],
             [
-                InlineKeyboardButton("✏️ Sửa danh mục", callback_data="qr_edit_category"),
-                InlineKeyboardButton("✏️ Sửa hũ", callback_data="qr_edit_jar"),
+                InlineKeyboardButton("💵 Cash", callback_data="qr_acc_Cash"),
+                InlineKeyboardButton("🏦 Vietcombank", callback_data="qr_acc_VCB"),
             ],
             [
-                InlineKeyboardButton("💳 Đổi tài khoản", callback_data="qr_edit_account"),
+                InlineKeyboardButton("🏦 Techcombank", callback_data="qr_acc_TCB"),
+                InlineKeyboardButton("🏦 OCB", callback_data="qr_acc_OCB"),
+            ],
+            [
+                InlineKeyboardButton("💰 ZALO", callback_data="qr_acc_ZALO"),
+                InlineKeyboardButton("💰 Khác", callback_data="qr_acc_Other"),
+            ],
+            [
+                InlineKeyboardButton("« Quay lại", callback_data="qr_back_to_category"),
                 InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
         await query.edit_message_text(
-            f"📝 **Phân loại tự động**\n\n"
+            f"📝 **Giao dịch mới**\n\n"
+            f"• Loại: **{transaction['type']}**\n"
+            f"• Số tiền: **{transaction['amount']:,.0f} ₫**\n"
+            f"• Danh mục: {selected_cat.get('icon', '📝')} **{selected_cat['name']}**\n"
+            f"• Ghi chú: {transaction['note']}\n"
+            f"• Hũ phân bổ: **{jar_display}** ✅\n\n"
+            f"💳 **Chọn tài khoản nguồn:**",
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+    else:
+        # Category has NO jar assignment → Show jar selection menu
+        keyboard = [
+            [
+                InlineKeyboardButton("🏠 NEC (45%)", callback_data="qr_jar_NEC"),
+                InlineKeyboardButton("💰 LTSS (10%)", callback_data="qr_jar_LTSS"),
+            ],
+            [
+                InlineKeyboardButton("📚 EDU (10%)", callback_data="qr_jar_EDU"),
+                InlineKeyboardButton("🎮 PLAY (5%)", callback_data="qr_jar_PLAY"),
+            ],
+            [
+                InlineKeyboardButton("💎 FFA (25%)", callback_data="qr_jar_FFA"),
+                InlineKeyboardButton("❤️ GIVE (5%)", callback_data="qr_jar_GIVE"),
+            ],
+            [InlineKeyboardButton("🏺 Tự động phân bổ 6 hũ", callback_data="qr_jar_AUTO_6JARS")],
+            [InlineKeyboardButton("❌ Không phân bổ hũ nào", callback_data="qr_jar_NO_JAR")],
+            [InlineKeyboardButton("« Quay lại", callback_data="qr_back_to_category")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await query.edit_message_text(
+            f"💰 **Chọn hũ phân bổ**\n\n"
             f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
             f"• Danh mục: {selected_cat.get('icon', '📝')} **{selected_cat['name']}**\n"
-            f"• Hũ: **{jar_id}** - {get_jar_name(jar_id)}\n"
-            f"• Tài khoản: **Cash**\n"
             f"• Ghi chú: {transaction['note']}\n\n"
-            f"💡 **Đúng không? Xác nhận hoặc chỉnh sửa:**",
+            f"⚠️ Danh mục này chưa có hũ mặc định\n"
+            f"👇 **Chọn hũ để phân bổ tiền vào:**",
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
 
 
-async def handle_auto_allocate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle auto allocate to 6 jars"""
-    query = update.callback_query
-    await query.answer()
-    
-    # Check if pending transaction exists
-    if 'pending_transaction' not in context.user_data:
-        await query.edit_message_text("⚠️ Không tìm thấy giao dịch. Vui lòng thử lại.")
-        return
-    
-    # Set auto allocate mode
-    context.user_data['pending_transaction']['jar'] = 'AUTO_6JARS'
-    context.user_data['pending_transaction']['account'] = 'Cash'
-    context.user_data['pending_transaction']['category'] = context.user_data['pending_transaction']['note']
-    
-    # Show confirmation
-    transaction = context.user_data['pending_transaction']
-    keyboard = [
-        [InlineKeyboardButton("✅ Xác nhận và ghi", callback_data="qr_confirm")],
-        [
-            InlineKeyboardButton("✏️ Chọn lại danh mục", callback_data="qr_back_category"),
-            InlineKeyboardButton("💳 Đổi tài khoản", callback_data="qr_edit_account"),
-        ],
-        [InlineKeyboardButton("❌ Hủy", callback_data="qr_cancel")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    await query.edit_message_text(
-        f"📝 **Giao dịch mới**\n\n"
-        f"• Loại: **{transaction['type']}**\n"
-        f"• Số tiền: **{transaction['amount']:,.0f} ₫**\n"
-        f"• Ghi chú: {transaction['note']}\n"
-        f"• Phân bổ: **Tự động 6 hũ** 🏺\n"
-        f"• Tài khoản: **Cash**\n\n"
-        f"💡 Thu nhập sẽ được phân bổ theo tỷ lệ:\n"
-        f"   🏠 NEC (55%) • 💎 LTSS (10%) • 🎓 EDU (10%)\n"
-        f"   🎉 PLAY (10%) • 📈 FFA (10%) • ❤️ GIVE (5%)\n\n"
-        f"**Xác nhận để ghi:**",
-        parse_mode="Markdown",
-        reply_markup=reply_markup
-    )
+# NOTE: Function này không còn dùng từ 2026-02-16
+# Logic mới: Category có jarId/autoAllocate → tự động dùng, skip jar menu
+#           Category chưa có → show jar menu (8 options bao gồm cả Auto)
+# 
+# async def handle_auto_allocate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     """Handle auto allocate to 6 jars - DEPRECATED"""
+#     pass
 
 
 async def handle_show_all_categories(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -857,6 +849,19 @@ async def handle_jar_selection(update: Update, context: ContextTypes.DEFAULT_TYP
     # Save jar to pending transaction
     context.user_data['pending_transaction']['jar'] = jar_id
     
+    # ✅ FIX: Get jar display name
+    jar_display_names = {
+        'NEC': '🏠 NEC - Nhu cầu thiết yếu (45%)',
+        'LTSS': '💰 LTSS - Tiết kiệm dài hạn (10%)',
+        'EDU': '📚 EDU - Giáo dục (10%)',
+        'PLAY': '🎮 PLAY - Giải trí (5%)',
+        'FFA': '💎 FFA - Tự do tài chính (25%)',
+        'GIVE': '❤️ GIVE - Từ thiện (5%)',
+        'AUTO_6JARS': '🏺 Tự động phân bổ 6 hũ',
+        'NO_JAR': '❌ Không phân bổ hũ nào'
+    }
+    jar_display = jar_display_names.get(jar_id, jar_id)
+    
     # Show account selection keyboard
     keyboard = [
         [
@@ -884,7 +889,7 @@ async def handle_jar_selection(update: Update, context: ContextTypes.DEFAULT_TYP
         f"• Loại: **{transaction['type']}**\n"
         f"• Số tiền: **{transaction['amount']:,.0f} ₫**\n"
         f"• Ghi chú: {transaction['note']}\n"
-        f"• Hũ: **{jar_id}**\n\n"
+        f"• Hũ phân bổ: **{jar_display}**\n\n"
         f"💳 **Chọn tài khoản nguồn:**",
         parse_mode="Markdown",
         reply_markup=reply_markup
@@ -947,18 +952,29 @@ async def handle_account_selection(update: Update, context: ContextTypes.DEFAULT
         return
     
     transaction = context.user_data['pending_transaction']
+    
+    # ✅ CRITICAL FIX: Validate jar exists before proceeding
+    if 'jar' not in transaction or not transaction['jar']:
+        logger.error(f"❌ [Account Selection] Missing jar in transaction: {transaction}")
+        await query.edit_message_text(
+            "⚠️ **Lỗi dữ liệu giao dịch**\n\n"
+            "Hũ tiền chưa được chọn. Vui lòng thử lại.\n\n"
+            "Gõ lại số tiền để bắt đầu mới."
+        )
+        context.user_data.pop('pending_transaction', None)
+        return
+    
     transaction['account'] = account_id
     
     # Show processing message
     await query.edit_message_text(
-        f"🔄 **Đang ghi giao dịch...**\n\n"
-        f"• Loại: **{transaction['type']}**\n"
-        f"• Số tiền: **{transaction['amount']:,.0f} ₫**\n"
+        f"🔄 Đang ghi giao dịch...\n\n"
+        f"• Loại: {transaction['type']}\n"
+        f"• Số tiền: {transaction['amount']:,.0f} ₫\n"
         f"• Ghi chú: {transaction['note']}\n"
-        f"• Hũ: **{transaction['jar']}**\n"
-        f"• Tài khoản: **{account_id}**\n\n"
-        f"⏳ Vui lòng đợi...",
-        parse_mode="Markdown"
+        f"• Hũ: {transaction['jar']}\n"
+        f"• Tài khoản: {account_id}\n\n"
+        f"⏳ Vui lòng đợi..."
     )
     
     # Get user from database
@@ -980,13 +996,18 @@ async def handle_account_selection(update: Update, context: ContextTypes.DEFAULT
         
         client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
         
-        logger.info(f"📤 [Account] Calling add_transaction: type={transaction['type']}, amount={transaction['amount']}")
+        # ✅ FIX: Convert AUTO_6JARS and NO_JAR to empty string for backend
+        jar_value = ""
+        if transaction['jar'] not in ['AUTO_6JARS', 'NO_JAR']:
+            jar_value = transaction['jar']
+        
+        logger.info(f"📤 [Account] Calling add_transaction: type={transaction['type']}, amount={transaction['amount']}, jar={jar_value}")
         result = await client.add_transaction(
             amount=transaction['amount'],
             category=transaction['category'],
             note=transaction['note'],
             transaction_type=transaction['type'],  # ✅ FIX: Pass transaction type
-            from_jar=transaction['jar'],
+            from_jar=jar_value,
             from_account=account_id,
             to_account=""  # Not used for expense
         )
@@ -995,15 +1016,14 @@ async def handle_account_selection(update: Update, context: ContextTypes.DEFAULT
             # Success!
             category = result.get("category", transaction['note'])
             await query.edit_message_text(
-                f"✅ **Đã ghi thành công!**\n\n"
-                f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
-                f"• Danh mục: **{category}**\n"
-                f"• Hũ: **{transaction['jar']}**\n"
-                f"• Tài khoản: **{account_id}**\n"
+                f"✅ Đã ghi thành công!\n\n"
+                f"• {transaction['type']}: {transaction['amount']:,.0f} ₫\n"
+                f"• Danh mục: {category}\n"
+                f"• Hũ: {transaction['jar']}\n"
+                f"• Tài khoản: {account_id}\n"
                 f"• Ghi chú: {transaction['note']}\n"
                 f"• Thời gian: {result.get('timestamp', 'N/A')}\n\n"
-                f"💡 Dùng /balance để xem số dư nhé!",
-                parse_mode="Markdown"
+                f"💡 Dùng /balance để xem số dư nhé!"
             )
             logger.info(f"✅ User {user_id} quick record: {transaction['type']} {transaction['amount']:,.0f} - {category} - {transaction['jar']}")
         else:
@@ -1044,13 +1064,12 @@ async def handle_confirm_transaction(update: Update, context: ContextTypes.DEFAU
     
     # Show processing message
     await query.edit_message_text(
-        f"🔄 **Đang ghi giao dịch...**\n\n"
-        f"• {transaction['type']}: **{transaction['amount']:,.0f} ₫**\n"
+        f"🔄 Đang ghi giao dịch...\n\n"
+        f"• {transaction['type']}: {transaction['amount']:,.0f} ₫\n"
         f"• Danh mục: {transaction.get('category_icon', '📝')} {transaction['category']}\n"
-        f"• Hũ: **{transaction['jar']}**\n"
-        f"• Tài khoản: **{transaction['account']}**\n\n"
-        f"⏳ Vui lòng đợi...",
-        parse_mode="Markdown"
+        f"• Hũ: {transaction['jar']}\n"
+        f"• Tài khoản: {transaction['account']}\n\n"
+        f"⏳ Vui lòng đợi..."
     )
     
     # Get user from database
@@ -1073,13 +1092,18 @@ async def handle_confirm_transaction(update: Update, context: ContextTypes.DEFAU
         
         client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
         
-        logger.info(f"📤 Calling add_transaction: type={transaction['type']}, amount={transaction['amount']}, category={transaction['category']}")
+        # ✅ FIX: Convert AUTO_6JARS and NO_JAR to empty string for backend
+        jar_value = ""
+        if transaction['jar'] not in ['AUTO_6JARS', 'NO_JAR']:
+            jar_value = transaction['jar']
+        
+        logger.info(f"📤 Calling add_transaction: type={transaction['type']}, amount={transaction['amount']}, category={transaction['category']}, jar={jar_value}")
         result = await client.add_transaction(
             amount=transaction['amount'],
             category=transaction['category'],
             note=transaction['note'],
             transaction_type=transaction['type'],  # ✅ FIX: Pass transaction type
-            from_jar=transaction['jar'],
+            from_jar=jar_value,
             from_account=transaction['account'],
             to_account=""
         )
@@ -1374,10 +1398,10 @@ def register_quick_record_handlers(application):
         CallbackQueryHandler(handle_category_selection, pattern=r'^qr_cat_')
     )
     application.add_handler(
-        CallbackQueryHandler(handle_auto_allocate, pattern=r'^qr_auto_allocate$')
+        CallbackQueryHandler(handle_show_all_categories, pattern=r'^qr_show_all_cats$')
     )
     application.add_handler(
-        CallbackQueryHandler(handle_show_all_categories, pattern=r'^qr_show_all_cats$')
+        CallbackQueryHandler(handle_show_all_categories, pattern=r'^qr_back_to_category$')  # Reuse same handler
     )
     
     # Callback handlers for jar and account selection (old flow - no match found)

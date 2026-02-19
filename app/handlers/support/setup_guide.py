@@ -413,17 +413,17 @@ Net Worth = Tài sản - Nợ
 }
 
 
-def get_setup_guide_keyboard(current_step: int) -> InlineKeyboardMarkup:
-    """Generate navigation keyboard for setup guide"""
+def get_usage_guide_keyboard(current_step: int) -> InlineKeyboardMarkup:
+    """Generate navigation keyboard for usage guide"""
     buttons = []
     
     # Navigation row
     nav_row = []
     if current_step > 0:
-        nav_row.append(InlineKeyboardButton("⬅️ Quay lại", callback_data=f"guide_step_{current_step-1}"))
+        nav_row.append(InlineKeyboardButton("⬅️ Quay lại", callback_data=f"usage_{current_step-1}"))
     
     if current_step < 9:
-        nav_row.append(InlineKeyboardButton("Tiếp theo ➡️", callback_data=f"guide_step_{current_step+1}"))
+        nav_row.append(InlineKeyboardButton("Tiếp theo ➡️", callback_data=f"usage_{current_step+1}"))
     
     if nav_row:
         buttons.append(nav_row)
@@ -431,17 +431,17 @@ def get_setup_guide_keyboard(current_step: int) -> InlineKeyboardMarkup:
     # Jump to specific sections (only show on step 0)
     if current_step == 0:
         buttons.append([
-            InlineKeyboardButton("⚙️ Cài đặt (1-3)", callback_data="guide_step_1"),
-            InlineKeyboardButton("💳 Tracking (4-8)", callback_data="guide_step_4")
+            InlineKeyboardButton("⚙️ Cài đặt (1-3)", callback_data="usage_1"),
+            InlineKeyboardButton("💳 Tracking (4-8)", callback_data="usage_4")
         ])
     
     # Menu row
     menu_row = []
     if current_step != 0:
-        menu_row.append(InlineKeyboardButton("📘 Menu", callback_data="guide_step_0"))
+        menu_row.append(InlineKeyboardButton("📘 Menu", callback_data="usage_0"))
     
     if current_step == 9:
-        menu_row.append(InlineKeyboardButton("✅ Hoàn thành", callback_data="guide_complete"))
+        menu_row.append(InlineKeyboardButton("✅ Hoàn thành", callback_data="usage_complete"))
     
     if menu_row:
         buttons.append(menu_row)
@@ -462,7 +462,7 @@ async def send_guide_step(update: Update, context: ContextTypes.DEFAULT_TYPE, st
             return
         
         guide_data = SETUP_GUIDE_STEPS[step]
-        keyboard = get_setup_guide_keyboard(step)
+        keyboard = get_usage_guide_keyboard(step)
         
         message_text = f"{guide_data['title']}\n\n{guide_data['content']}"
         
@@ -534,17 +534,22 @@ async def huongdan_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_guide_step(update, context, step=0)
 
 
-async def guide_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle guide navigation callbacks"""
+async def usage_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle usage guide navigation callbacks"""
     query = update.callback_query
     callback_data = query.data
     
     try:
-        if callback_data.startswith("guide_step_"):
-            step = int(callback_data.split("_")[-1])
-            await send_guide_step(update, context, step)
+        if callback_data.startswith("usage_"):
+            # Handle both usage_0-9 and usage_complete
+            if callback_data == "usage_complete":
+                pass  # Will be handled below
+            else:
+                step = int(callback_data.split("_")[-1])
+                await send_guide_step(update, context, step)
+                return
         
-        elif callback_data == "guide_complete":
+        if callback_data == "usage_complete":
             # Delete photo message from step 9 before sending text
             await query.message.delete()
             
@@ -582,7 +587,7 @@ async def guide_callback_handler(update: Update, context: ContextTypes.DEFAULT_T
                 parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("👥 Tham gia Group VIP", url="https://t.me/freedomwalletapp")],
-                    [InlineKeyboardButton("📖 Xem lại hướng dẫn", callback_data="guide_step_0")],
+                    [InlineKeyboardButton("📖 Xem lại hướng dẫn", callback_data="usage_0")],
                     [InlineKeyboardButton("💬 Chat với Admin", url="https://t.me/freedomwalletapp")]
                 ])
             )
@@ -593,10 +598,10 @@ async def guide_callback_handler(update: Update, context: ContextTypes.DEFAULT_T
         await query.answer("❌ Có lỗi xảy ra!")
 
 
-def register_setup_guide_handlers(application):
-    """Register all setup guide handlers"""
+def register_usage_guide_handlers(application):
+    """Register all usage guide handlers"""
     application.add_handler(CommandHandler("huongdan", huongdan_command))
-    application.add_handler(CallbackQueryHandler(guide_callback_handler, pattern="^guide_"))
+    application.add_handler(CallbackQueryHandler(usage_callback_handler, pattern="^usage_"))
     
-    logger.info("✅ Setup guide handlers registered")
+    logger.info("✅ Usage guide handlers registered")
 

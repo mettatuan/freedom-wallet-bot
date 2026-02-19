@@ -98,7 +98,7 @@ class SheetsAPIClient:
                 async with session.post(
                     self.api_url,
                     json=payload,
-                    timeout=aiohttp.ClientTimeout(total=30)
+                    timeout=aiohttp.ClientTimeout(total=60)  # ✅ Increased to 60s for slow Google Apps Script
                 ) as response:
                     if response.status == 200:
                         result = await response.json()
@@ -112,16 +112,25 @@ class SheetsAPIClient:
                             "error": f"HTTP {response.status}: {error_text[:200]}"
                         }
         except aiohttp.ClientError as e:
-            logger.error(f"Network error calling API: {e}")
-            return {
-                "success": False,
-                "error": f"Network error: {str(e)}"
-            }
+            error_type = type(e).__name__
+            logger.error(f"Network error calling API ({error_type}): {e}")
+            
+            # Provide specific error messages
+            if "TimeoutError" in error_type or "ServerTimeoutError" in error_type:
+                return {
+                    "success": False,
+                    "error": "Google Sheets phản hồi quá lâu (>60s). Vui lòng thử lại sau."
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": f"Lỗi kết nối: {str(e)[:100]}"
+                }
         except Exception as e:
-            logger.error(f"Unexpected error calling API: {e}")
+            logger.error(f"Unexpected error calling API: {e}", exc_info=True)  # ✅ Added traceback
             return {
                 "success": False,
-                "error": f"Unexpected error: {str(e)}"
+                "error": f"Lỗi không xác định: {str(e)[:100]}"
             }
     
     async def ping(self) -> Dict[str, Any]:

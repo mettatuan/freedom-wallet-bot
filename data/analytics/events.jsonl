@@ -144,3 +144,7 @@
 {"timestamp": "2026-02-14T07:46:39.148412", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 999}}
 {"timestamp": "2026-02-14T07:47:20.430300", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 999}}
 {"timestamp": "2026-02-14T08:31:20.614619", "user_id": 6588506476, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 999}}
+{"timestamp": "2026-02-16T23:53:25.199614", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 999}}
+{"timestamp": "2026-02-17T00:19:24.708930", "user_id": 1299465308, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 999}}
+{"timestamp": "2026-02-19T07:30:04.430253", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 999}}
+{"timestamp": "2026-02-19T07:30:26.623822", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 999}}
