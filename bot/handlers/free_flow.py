@@ -113,6 +113,11 @@ async def free_step3_copy_template(update: Update, context: ContextTypes.DEFAULT
     query = update.callback_query
     await query.answer()
     
+    # Get template URL from settings or use default
+    from config.settings import settings
+    template_id = settings.YOUR_TEMPLATE_ID if settings.YOUR_TEMPLATE_ID else "1Xj2sH_LuJtFS0zQX-C2VkNtF52f5sOBGa6-0bSUIvGw"
+    template_url = f"https://docs.google.com/spreadsheets/d/{template_id}/copy"
+    
     message = """
 **Bước 1: Tạo Google Sheet của riêng bạn.**
 
@@ -125,7 +130,7 @@ Từ đây trở đi,
 """
     
     keyboard = [
-        [InlineKeyboardButton("📋 Copy Template", url="https://docs.google.com/spreadsheets/d/YOUR_TEMPLATE_ID/copy")],
+        [InlineKeyboardButton("📋 Copy Template", url=template_url)],
         [InlineKeyboardButton("✅ Tôi đã copy xong", callback_data="free_step4_deploy_script")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
