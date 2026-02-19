@@ -24,7 +24,7 @@ from config.settings import settings
 
 # === CLEAN ARCHITECTURE (Phase 6: Production Integration) ===
 # Feature flag to enable Clean Architecture handlers
-USE_CLEAN_ARCHITECTURE = True  # Set to False to use only old handlers
+USE_CLEAN_ARCHITECTURE = False  # Set to False to use only old handlers
 
 # Clean Architecture imports
 if USE_CLEAN_ARCHITECTURE:
@@ -158,6 +158,7 @@ def main() -> None:
     registration_handler = ConversationHandler(
         entry_points=[
             CommandHandler("register", start_registration),
+            CallbackQueryHandler(start_registration, pattern="^start_register$"),
             # REMOVED: start_free_registration now handled by CA conversation (line 209)
             # CallbackQueryHandler(start_registration, pattern="^start_free_registration$")
         ],

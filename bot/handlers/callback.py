@@ -298,22 +298,14 @@ Hoặc mô tả lại vấn đề, mình sẽ cố gắng giúp!
             "💬 **Hỏi thêm câu khác đi!**\n\nGõ câu hỏi của bạn, mình sẵn sàng trả lời! 😊",
             parse_mode="Markdown"
         )
+    # Skip registration callbacks (handled by ConversationHandler)
+    if callback_data == "start_register":
+        logger.debug(f"Skipping registration callback: {callback_data} (handled by ConversationHandler)")
+        return
     
     elif callback_data == "cancel_support":
         await query.edit_message_text(
             "❌ **Đã hủy tạo ticket.**\n\nNếu cần hỗ trợ, dùng /support bất cứ lúc nào!",
-            parse_mode="Markdown"
-        )
-    
-    elif callback_data == "start_register":
-        # Start registration flow
-        await query.edit_message_text(
-            "📝 **BẮT ĐẦU ĐĂNG KÝ**\n\n"
-            "Bạn sẽ nhận:\n"
-            "✅ Template Google Sheet miễn phí\n"
-            "✅ Hướng dẫn setup chi tiết\n"
-            "✅ Quyền unlock FREE tier (nếu được giới thiệu)\n\n"
-            "👉 Gõ **/register** để bắt đầu!",
             parse_mode="Markdown"
         )
     
