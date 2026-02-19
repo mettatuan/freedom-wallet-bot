@@ -101,13 +101,12 @@ def main() -> None:
         fallbacks=[CallbackQueryHandler(cancel_support, pattern="^cancel_support$")]
     )
     
-    # Registration conversation handler (LEGACY - disabled when using CA)
+    # Registration conversation handler
     registration_handler = ConversationHandler(
         entry_points=[
             CommandHandler("register", start_registration),
             CallbackQueryHandler(start_registration, pattern="^start_register$"),
-            # REMOVED: start_free_registration now handled by CA conversation (line 209)
-            # CallbackQueryHandler(start_registration, pattern="^start_free_registration$")
+            CallbackQueryHandler(start_registration, pattern="^start_free_registration$")
         ],
         states={
             AWAITING_EMAIL: [
