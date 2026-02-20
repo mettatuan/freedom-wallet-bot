@@ -1,0 +1,124 @@
+# ============================================================
+# VPS DEPLOYMENT CONFIGURATION
+# Edit this file with your VPS details
+# ============================================================
+
+# VPS connection details
+VPS_HOST="your_vps_ip_or_domain"
+VPS_USER="your_username"
+VPS_PATH="/home/your_username/FreedomWalletBot"
+
+# Example configurations:
+# 
+# For DigitalOcean droplet:
+# VPS_HOST="123.45.67.89"
+# VPS_USER="root"
+# VPS_PATH="/root/FreedomWalletBot"
+#
+# For AWS EC2:
+# VPS_HOST="ec2-123-45-67-89.compute-1.amazonaws.com"
+# VPS_USER="ubuntu"
+# VPS_PATH="/home/ubuntu/FreedomWalletBot"
+#
+# For custom server:
+# VPS_HOST="bot.yourdomain.com"
+# VPS_USER="botuser"
+# VPS_PATH="/home/botuser/FreedomWalletBot"
+
+# ============================================================
+# DEPLOYMENT INSTRUCTIONS
+# ============================================================
+
+# 1. Edit this file with your VPS details above
+# 2. Make sure you can SSH to your VPS:
+#    ssh $VPS_USER@$VPS_HOST
+#
+# 3. Run deployment:
+#    PowerShell:
+#      .\deploy_to_vps.ps1 -VPS_HOST "your_ip" -VPS_USER "your_user" -VPS_PATH "/path"
+#
+#    Linux/Mac:
+#      bash deploy_to_vps.sh
+#
+# 4. View logs:
+#    ssh $VPS_USER@$VPS_HOST "tail -f /path/to/bot/logs/bot.log"
+
+# ============================================================
+# SSH KEY SETUP (Recommended)
+# ============================================================
+
+# Generate SSH key (if you don't have one):
+#   ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+#
+# Copy key to VPS:
+#   ssh-copy-id $VPS_USER@$VPS_HOST
+#
+# Test passwordless login:
+#   ssh $VPS_USER@$VPS_HOST
+
+# ============================================================
+# ENVIRONMENT VARIABLES ON VPS
+# ============================================================
+
+# Create .env file on VPS with:
+#   TELEGRAM_BOT_TOKEN=your_bot_token_here
+#   DATABASE_URL=sqlite:///data/bot.db
+#   LOG_LEVEL=INFO
+#   ENV=production
+#
+# Upload .env:
+#   scp .env $VPS_USER@$VPS_HOST:$VPS_PATH/.env
+
+# ============================================================
+# SYSTEMD SERVICE (Optional - Linux only)
+# ============================================================
+
+# Create systemd service on VPS for auto-restart:
+#
+# 1. Create service file on VPS:
+#    sudo nano /etc/systemd/system/freedom-wallet-bot.service
+#
+# 2. Add content:
+#    [Unit]
+#    Description=Freedom Wallet Telegram Bot
+#    After=network.target
+#    
+#    [Service]
+#    Type=simple
+#    User=$VPS_USER
+#    WorkingDirectory=$VPS_PATH
+#    Environment="PATH=$VPS_PATH/.venv/bin"
+#    ExecStart=$VPS_PATH/.venv/bin/python main.py
+#    Restart=always
+#    RestartSec=10
+#    
+#    [Install]
+#    WantedBy=multi-user.target
+#
+# 3. Enable and start:
+#    sudo systemctl enable freedom-wallet-bot
+#    sudo systemctl start freedom-wallet-bot
+#    sudo systemctl status freedom-wallet-bot
+#
+# 4. View logs:
+#    sudo journalctl -u freedom-wallet-bot -f
+
+# ============================================================
+# TROUBLESHOOTING
+# ============================================================
+
+# Bot won't start:
+#   - Check logs: tail -f logs/bot.log
+#   - Check Python: python --version (should be 3.10+)
+#   - Check dependencies: pip list
+#   - Check .env file exists and has correct token
+#
+# SSH connection fails:
+#   - Check VPS IP is correct
+#   - Check firewall allows SSH (port 22)
+#   - Check SSH key permissions: chmod 600 ~/.ssh/id_rsa
+#
+# Deployment fails:
+#   - Run with dry run first: .\deploy_to_vps.ps1 -DryRun
+#   - Check VPS has enough disk space: df -h
+#   - Check VPS has Python 3.10+: python3 --version

@@ -1,0 +1,75 @@
+======================================================
+HƯỚNG DẪN DEPLOY FIX LÊN VPS (KHÔNG CẦN GIT)
+======================================================
+
+BƯỚC 1: Trên VPS - Dừng bot đang chạy
+------------------------------------------------------
+# Tìm process Python
+Get-Process python -ErrorAction SilentlyContinue
+
+# Dừng bot (thay <ID> bằng Process ID từ lệnh trên)
+Stop-Process -Id <ID> -Force
+
+# Hoặc dừng tất cả Python:
+Stop-Process -Name python -Force -ErrorAction SilentlyContinue
+
+
+BƯỚC 2: Trên VPS - Backup file cũ
+------------------------------------------------------
+cd C:\FreedomWalletBot
+Copy-Item main.py main.py.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')
+
+
+BƯỚC 3: Trên VPS - Mở file để sửa
+------------------------------------------------------
+notepad C:\FreedomWalletBot\main.py
+
+
+BƯỚC 4: Tìm dòng 104 trong Notepad
+------------------------------------------------------
+Tìm đoạn code này (khoảng dòng 104-109):
+
+    registration_handler = ConversationHandler(
+        entry_points=[
+            CommandHandler("register", start_registration),
+            CallbackQueryHandler(start_registration, pattern="^start_register$"),
+            # REMOVED: start_free_registration now handled by CA conversation (line 209)
+            # CallbackQueryHandler(start_registration, pattern="^start_free_registration$")
+
+
+BƯỚC 5: SỬA THÀNH (xóa 2 dòng comment, thêm 1 dòng mới):
+------------------------------------------------------
+    registration_handler = ConversationHandler(
+        entry_points=[
+            CommandHandler("register", start_registration),
+            CallbackQueryHandler(start_registration, pattern="^start_register$"),
+            CallbackQueryHandler(start_registration, pattern="^start_free_registration$")
+
+
+BƯỚC 6: Lưu file
+------------------------------------------------------
+Trong Notepad: File → Save (hoặc Ctrl+S)
+Đóng Notepad
+
+
+BƯỚC 7: Chạy lại bot
+------------------------------------------------------
+cd C:\FreedomWalletBot
+python main.py
+
+
+BƯỚC 8: Test trên Telegram
+------------------------------------------------------
+1. /start
+2. Bấm "📝 Đăng ký ngay"
+3. Bot phải hỏi email ngay lập tức ✅
+
+======================================================
+ROLLBACK NẾU CÓ LỖI:
+======================================================
+Stop-Process -Name python -Force
+cd C:\FreedomWalletBot
+Copy-Item main.py.backup_* main.py -Force
+python main.py
+
+======================================================

@@ -1,6 +1,7 @@
 """
 Start Command Handler - Welcome Message
 Week 2: Soft-integrated with State Machine
+Phase 2: Retention-First Model with Main Keyboard
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
@@ -10,6 +11,7 @@ from bot.utils.database import save_user_to_db, get_user_by_id, update_user_regi
 from bot.handlers.referral import handle_referral_start
 from bot.utils.sheets import sync_web_registration
 from config.settings import settings
+from bot.core.keyboard import get_main_keyboard  # Phase 2: Main keyboard
 
 # Week 2: Import state machine (soft-integration)
 from bot.core.state_machine import StateManager, UserState
@@ -300,11 +302,11 @@ mình sẽ hướng dẫn từng bước, rất rõ ràng.
         
         reply_markup = InlineKeyboardMarkup(keyboard)
     
-    # Send welcome message
+    # Send welcome message with main keyboard (Phase 2)
     await update.message.reply_text(
         welcome_text,
         parse_mode="Markdown",
-        reply_markup=reply_markup
+        reply_markup=get_main_keyboard()  # Always show main keyboard
     )
 
 

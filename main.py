@@ -39,8 +39,6 @@ from bot.handlers.webapp_setup import register_webapp_setup_handlers
 from bot.handlers.daily_reminder import register_reminder_handlers
 from bot.handlers.user_commands import register_user_command_handlers
 from bot.handlers.vip import register_vip_handlers  # VIP Identity Tier (Feb 2026)
-from bot.handlers.free_flow import register_free_flow_handlers  # FREE step-by-step flow (Feb 2026)
-from bot.handlers.unlock_calm_flow import register_unlock_calm_flow_handlers  # UNLOCK calm flow (Feb 2026)
 
 # Configure logging with UTF-8 encoding
 logging.basicConfig(
@@ -143,28 +141,6 @@ def main() -> None:
     # Register setup guide handlers (Week 5+)
     register_setup_guide_handlers(application)
     
-    # Register FREE step-by-step flow (Feb 2026)
-    try:
-        register_free_flow_handlers(application)
-        logger.info("✅ FREE flow handlers registered")
-    except Exception as e:
-        logger.error(f"❌ Failed to register FREE flow handlers: {e}", exc_info=True)
-    
-    # Register UNLOCK calm flow (Feb 2026)
-    try:
-        register_unlock_calm_flow_handlers(application)
-        logger.info("✅ UNLOCK calm flow handlers registered")
-    except Exception as e:
-        logger.error(f"❌ Failed to register UNLOCK calm flow handlers: {e}", exc_info=True)
-    
-    # Register unlock flow v3.0 handlers (Feb 2026)
-    try:
-        from bot.handlers.unlock_flow_v3 import register_unlock_handlers
-        register_unlock_handlers(application)
-        logger.info("✅ Unlock flow v3.0 handlers registered")
-    except Exception as e:
-        logger.error(f"❌ Failed to register unlock flow handlers: {e}", exc_info=True)
-    
     # Register VIP Identity Tier handlers (Feb 2026)
     try:
         register_vip_handlers(application)
@@ -190,6 +166,15 @@ def main() -> None:
     # Register daily reminder handlers (Week 6)
     register_reminder_handlers(application)
     register_user_command_handlers(application)
+    
+    # Phase 2: Transaction Engine (Retention-First Model)
+    try:
+        from bot.handlers.transaction import register_transaction_handlers
+        logger.info("📦 Importing transaction handlers...")
+        register_transaction_handlers(application)
+        logger.info("✅ Transaction Engine handlers registered")
+    except Exception as e:
+        logger.error(f"❌ Failed to register transaction handlers: {e}", exc_info=True)
     
     # Week 2: Web App URL Management
     try:
@@ -264,9 +249,7 @@ def main() -> None:
     
     # Setup daily background jobs (Week 4)
     from bot.jobs import setup_daily_jobs
-    from bot.jobs.unlock_trigger import setup_unlock_trigger_job
     setup_daily_jobs(application)
-    setup_unlock_trigger_job(application)
     
     # Start bot
     logger.info(f"[OK] Bot started in {settings.ENV} mode")

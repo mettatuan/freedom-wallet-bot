@@ -12,22 +12,29 @@ import os
 # Web App Setup Guide Content - 3 Steps
 WEBAPP_SETUP_STEPS = {
     0: {
-        "title": "🚀 BƯỚC 1: TẠO WEB APP",
+        "title": "🚀 TẠO WEB APP (TÙY CHỌN)",
         "content": """
-👋 **Chào mừng! Hãy bắt đầu thiết lập Freedom Wallet!**
+👋 **Hướng dẫn tạo Web App - Data ownership layer**
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**📍 BẠN ĐANG Ở ĐÂU?**
+**💡 WEB APP LÀ GÌ?**
 
-➡️ **BƯỚC 1: Tạo Web App** (bạn đang ở đây)
-    → Bước 2: Học cách sử dụng
+Web App là OPTIONAL (tùy chọn) - chỉ cần nếu bạn muốn:
+✅ Sở hữu 100% dữ liệu trong Google Drive riêng
+✅ Xem dashboard trực quan
+✅ Xuất Excel bất kỳ lúc nào
+
+**❌ KHÔNG CẦN WEB APP để:**
+• Ghi giao dịch (dùng Telegram bot)
+• Xem số dư & streak (dùng Telegram)
+• Nhận insight & reminder (dùng Telegram)
 
 ━━━━━━━━━━━━━━━━━━━━━
 
-**🎯 BƯỚC 1 - BẠN SẼ LÀM GÌ?**
+**🎯 HƯỚNG DẪN TẠO WEB APP**
 
-Trong 10-15 phút tới:
+Nếu bạn muốn data ownership layer:
 1️⃣ Tạo bản sao Google Sheets Template
 2️⃣ Mở Extensions → App Script
 3️⃣ Deploy Web App của riêng bạn
@@ -35,10 +42,9 @@ Trong 10-15 phút tới:
 ━━━━━━━━━━━━━━━━━━━━━
 
 **✅ SAU KHI HOÀN THÀNH:**
-• Web App cá nhân (chạy trên Google Sheets của bạn)
-• Dữ liệu 100% riêng tư
-• Truy cập mọi lúc, mọi thiết bị
-• Không cần biết code
+• Web App cá nhân (data trong Drive của bạn)
+• Telegram tự động đồng bộ
+• Dashboard trực quan mọi lúc
 
 ━━━━━━━━━━━━━━━━━━━━━
 
@@ -46,7 +52,7 @@ Trong 10-15 phút tới:
 **📱 THIẾT BỊ**: Desktop/Laptop (khuyến nghị)
 **🔗 CẦN**: Tài khoản Google
 
-💡 *Làm chậm cũng ổn. Có Group VIP hỗ trợ nếu cần!*
+💡 *Telegram bot hoạt động hoàn hảo không cần Web App!*
 """,
         "image": None
     },

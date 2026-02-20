@@ -51,8 +51,7 @@ class User(Base):
     # Referral fields
     referral_code = Column(String(20), unique=True, index=True)  # Unique referral code
     referred_by = Column(Integer, nullable=True)  # Who referred this user
-    referral_count = Column(Integer, default=0)  # How many people this user referred
-    is_free_unlocked = Column(Boolean, default=False)  # FREE tier unlocked (2+ refs)
+    referral_count = Column(Integer, default=0)  # How many people this user referred (GROWTH METRIC ONLY)
     
     # VIP Identity Tier (10/50/100 refs)
     vip_tier = Column(String(20), nullable=True)  # RISING_STAR, SUPER_VIP, LEGEND
@@ -113,13 +112,32 @@ class User(Base):
     last_reminder_sent = Column(DateTime, nullable=True)  # Last reminder timestamp
     reminder_enabled = Column(Boolean, default=True)  # User preference for reminders
     
-    # UNLOCK FLOW TRACKING (Feb 2026)
-    unlock_offered = Column(Boolean, default=False)  # Whether UNLOCKoffer was sent
-    unlock_offered_at = Column(DateTime, nullable=True)  # When UNLOCK offer was sent
+    # ACTIVATION & RETENTION TRACKING (Phase 1 - Retention-First Model)
+    first_transaction_at = Column(DateTime, nullable=True)  # When user logged first transaction (ACTIVATION)
+    activated_at = Column(DateTime, nullable=True)  # Activation timestamp (same as first_transaction_at)
     last_checkin = Column(DateTime, nullable=True)  # Last check-in message sent
+    last_insight_sent = Column(DateTime, nullable=True)  # Last weekly insight sent (Phase 2 - Reflection Engine)
     
     def __repr__(self):
         return f"<User {self.id} ({self.username}) state={self.user_state} streak={self.streak_count}>"
+
+
+class Transaction(Base):
+    """Transaction model - Store financial transactions"""
+    __tablename__ = "transactions"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, index=True)  # Telegram user ID
+    amount = Column(Integer)  # Amount in VND (negative for expenses, positive for income)
+    category = Column(String(50))  # Category (Ăn uống, Di chuyển, Lương, etc.)
+    description = Column(String(255))  # Transaction description (e.g., "Cà phê")
+    transaction_type = Column(String(20))  # "income" or "expense"
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)  # Transaction date
+    synced_to_sheets = Column(Boolean, default=False)  # Whether synced to Google Sheets
+    synced_at = Column(DateTime, nullable=True)  # When synced
+    
+    def __repr__(self):
+        return f"<Transaction {self.id} user={self.user_id} amount={self.amount} category={self.category}>"
 
 
 class ConversationContext(Base):
@@ -409,25 +427,6 @@ async def get_user_referrals(user_id: int):
                 })
         
         return referred_users
-    finally:
-        session.close()
-
-
-async def check_and_unlock_free(user_id: int):
-    """Check if user should unlock FREE tier"""
-    session = SessionLocal()
-    try:
-        user = session.query(User).filter(User.id == user_id).first()
-        if not user:
-            return False
-        
-        if user.referral_count >= 2 and not user.is_free_unlocked:
-            user.is_free_unlocked = True
-            user.subscription_tier = "FREE"
-            session.commit()
-            return True
-        
-        return False
     finally:
         session.close()
 

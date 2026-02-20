@@ -1,0 +1,188 @@
+# ============================================================
+# EXAMPLE VPS CONFIGURATIONS
+# Copy one of these examples and customize
+# ============================================================
+
+# ============================================================
+# Example 1: DigitalOcean Droplet
+# ============================================================
+VPS_HOST="134.209.123.45"
+VPS_USER="root"
+VPS_PATH="/root/FreedomWalletBot"
+
+# Deploy command:
+# .\deploy_to_vps.ps1 -VPS_HOST "134.209.123.45" -VPS_USER "root" -VPS_PATH "/root/FreedomWalletBot"
+
+# ============================================================
+# Example 2: AWS EC2 (Ubuntu)
+# ============================================================
+VPS_HOST="ec2-54-123-45-67.compute-1.amazonaws.com"
+VPS_USER="ubuntu"
+VPS_PATH="/home/ubuntu/FreedomWalletBot"
+
+# Note: AWS EC2 usually uses key-based auth
+# ssh -i ~/.ssh/aws-key.pem ubuntu@ec2-54-123-45-67.compute-1.amazonaws.com
+
+# Deploy command:
+# .\deploy_to_vps.ps1 -VPS_HOST "ec2-54-123-45-67.compute-1.amazonaws.com" -VPS_USER "ubuntu" -VPS_PATH "/home/ubuntu/FreedomWalletBot"
+
+# ============================================================
+# Example 3: Google Cloud (GCP)
+# ============================================================
+VPS_HOST="35.123.45.67"
+VPS_USER="your_username"
+VPS_PATH="/home/your_username/FreedomWalletBot"
+
+# Deploy command:
+# .\deploy_to_vps.ps1 -VPS_HOST "35.123.45.67" -VPS_USER "your_username" -VPS_PATH "/home/your_username/FreedomWalletBot"
+
+# ============================================================
+# Example 4: Linode
+# ============================================================
+VPS_HOST="172.105.123.45"
+VPS_USER="root"
+VPS_PATH="/root/FreedomWalletBot"
+
+# Deploy command:
+# .\deploy_to_vps.ps1 -VPS_HOST "172.105.123.45" -VPS_USER "root" -VPS_PATH "/root/FreedomWalletBot"
+
+# ============================================================
+# Example 5: Vultr
+# ============================================================
+VPS_HOST="207.246.123.45"
+VPS_USER="root"
+VPS_PATH="/root/FreedomWalletBot"
+
+# Deploy command:
+# .\deploy_to_vps.ps1 -VPS_HOST "207.246.123.45" -VPS_USER "root" -VPS_PATH "/root/FreedomWalletBot"
+
+# ============================================================
+# Example 6: Custom Domain
+# ============================================================
+VPS_HOST="bot.yourdomain.com"
+VPS_USER="botuser"
+VPS_PATH="/home/botuser/FreedomWalletBot"
+
+# Deploy command:
+# .\deploy_to_vps.ps1 -VPS_HOST "bot.yourdomain.com" -VPS_USER "botuser" -VPS_PATH "/home/botuser/FreedomWalletBot"
+
+# ============================================================
+# QUICK SETUP GUIDE
+# ============================================================
+
+# Step 1: Get VPS details from provider
+# - IP address or hostname
+# - SSH username (usually: root, ubuntu, admin)
+# - SSH password or key file
+
+# Step 2: Setup SSH key (recommended)
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+ssh-copy-id your_user@your_vps_ip
+
+# Step 3: Create .env on VPS
+ssh your_user@your_vps_ip "cat > /root/FreedomWalletBot/.env << 'EOF'
+TELEGRAM_BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
+DATABASE_URL=sqlite:///data/bot.db
+LOG_LEVEL=INFO
+ENV=production
+EOF"
+
+# Step 4: Run deploy script
+.\deploy_to_vps.ps1 -VPS_HOST "your_vps_ip" -VPS_USER "root" -VPS_PATH "/root/FreedomWalletBot"
+
+# Step 5: Verify
+ssh your_user@your_vps_ip "tail -f /root/FreedomWalletBot/logs/bot.log"
+
+# ============================================================
+# COMMON PATHS BY LINUX DISTRIBUTION
+# ============================================================
+
+# Ubuntu/Debian (non-root user):
+# /home/username/FreedomWalletBot
+
+# Ubuntu/Debian (root):
+# /root/FreedomWalletBot
+
+# CentOS/RHEL (non-root):
+# /home/username/FreedomWalletBot
+
+# CentOS/RHEL (root):
+# /root/FreedomWalletBot
+
+# Alpine Linux:
+# /root/FreedomWalletBot
+
+# ============================================================
+# FIREWALL NOTES
+# ============================================================
+
+# Most VPS providers allow outgoing connections by default
+# Bot only needs OUTGOING connections to:
+# - api.telegram.org (443)
+# - PyPI (pip install)
+
+# No INCOMING ports needed (bot uses long-polling)
+
+# If firewall blocks outgoing:
+# Ubuntu/Debian:
+#   sudo ufw allow out 443/tcp
+#
+# CentOS/RHEL:
+#   sudo firewall-cmd --permanent --add-port=443/tcp
+#   sudo firewall-cmd --reload
+
+# ============================================================
+# MINIMUM VPS SPECS
+# ============================================================
+
+# CPU: 1 core (shared OK)
+# RAM: 512MB (1GB recommended)
+# Disk: 10GB (5GB min)
+# Bandwidth: 1TB/month (bot uses ~100MB/day)
+# OS: Ubuntu 22.04 LTS (recommended)
+
+# Cost: ~$5-10/month
+# Providers: DigitalOcean, Linode, Vultr, AWS Lightsail
+
+# ============================================================
+# TESTING SSH CONNECTION
+# ============================================================
+
+# Basic test:
+ssh your_user@your_vps_ip
+
+# Test with verbose (debug):
+ssh -v your_user@your_vps_ip
+
+# Test with specific key:
+ssh -i ~/.ssh/your_key your_user@your_vps_ip
+
+# Test with timeout:
+ssh -o ConnectTimeout=10 your_user@your_vps_ip
+
+# ============================================================
+# CREATE .ENV FILE ON VPS
+# ============================================================
+
+# Method 1: Direct echo
+ssh your_user@your_vps_ip "mkdir -p /root/FreedomWalletBot && echo 'TELEGRAM_BOT_TOKEN=your_token' > /root/FreedomWalletBot/.env"
+
+# Method 2: Heredoc (multiple lines)
+ssh your_user@your_vps_ip << 'EOF'
+mkdir -p /root/FreedomWalletBot
+cat > /root/FreedomWalletBot/.env << 'ENVEOF'
+TELEGRAM_BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
+DATABASE_URL=sqlite:///data/bot.db
+LOG_LEVEL=INFO
+ENV=production
+ENVEOF
+EOF
+
+# Method 3: Upload from local
+scp .env your_user@your_vps_ip:/root/FreedomWalletBot/.env
+
+# Method 4: Interactive edit
+ssh your_user@your_vps_ip
+mkdir -p /root/FreedomWalletBot
+nano /root/FreedomWalletBot/.env
+# (paste content, Ctrl+X, Y, Enter)

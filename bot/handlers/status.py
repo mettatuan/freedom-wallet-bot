@@ -78,19 +78,11 @@ async def mystatus_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def _build_free_status_message(user) -> str:
-    """Build status message for FREE users"""
+    """Build status message for FREE users - All features included"""
     
     messages_today = user.bot_chat_count or 0
-    remaining = max(0, 5 - messages_today)
-    referral_count = user.referral_count or 0
-    is_unlocked = user.is_free_unlocked
-    
-    if is_unlocked:
-        status_emoji = "✅"
-        status_text = "FREE FOREVER"
-    else:
-        status_emoji = "📊"
-        status_text = f"FREE (Tiến độ: {referral_count}/2)"
+    status_emoji = "✅"
+    status_text = "FREE - FULL ACCESS"
     
     message = f"""
 {status_emoji} **TÀI KHOẢN {status_text}**
@@ -99,26 +91,20 @@ def _build_free_status_message(user) -> str:
 📊 **SỬ DỤNG HÔM NAY:**
 ━━━━━━━━━━━━━━━━━━━━━
 
-💬 Tin nhắn: {messages_today}/5
-📍 Còn lại: {remaining} tin nhắn
+💬 Tin nhắn: {messages_today}
+🔥 Streak: {user.streak_count} ngày
 
 ━━━━━━━━━━━━━━━━━━━━━
 🎁 **QUYỀN LỢI CỦA BẠN:**
 ━━━━━━━━━━━━━━━━━━━━━
 
-✓ Template Freedom Wallet đầy đủ
-✓ Bot hỗ trợ 5 message/ngày
+✓ Ghi giao dịch không giới hạn
+✓ Nhận insight & reminder tự động
 ✓ Kết nối Google Sheets
+✓ AI Assistant 24/7
 ✓ Cộng đồng hỗ trợ
 
-{"" if is_unlocked else f"""
-━━━━━━━━━━━━━━━━━━━━━
-💡 **MỞ KHÓA ĐẦY ĐỦ:**
-━━━━━━━━━━━━━━━━━━━━━
-
-Giới thiệu 2 bạn → Sở hữu vĩnh viễn ♾️
-Gõ /referral để xem link của bạn.
-"""}
+💡 **Tất cả tính năng miễn phí!**
 """
     
     return message
