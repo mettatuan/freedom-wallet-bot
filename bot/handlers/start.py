@@ -187,9 +187,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if code.startswith("WEB_"):
             # ── from freedomwallet.app ──────────────────────────────────
             email_hash = code[4:]
+            logger.info(f"  WEB_ deep link: hash={email_hash}, user_id={user.id}")
             web_data = await sync_web_registration(user.id, user.username or "", email_hash)
+            logger.info(f"  sync_web_registration result: {web_data is not None}")
 
-            # Fallback: sync_web_registration uses settings.REGISTRATION_SHEET_ID which may
+            # Fallback 1: sync_web_registration uses settings.REGISTRATION_SHEET_ID which may
             # differ from the hardcoded sheet in sheets_registration.py. Try direct lookup.
             if not web_data:
                 try:
@@ -199,8 +201,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         web_data['source'] = 'WEB'
                         web_data['is_registered'] = True
                         logger.info(f"✅ WEB fallback lookup succeeded for code {email_hash}: {web_data.get('email')}")
+                    else:
+                        logger.warning(f"  WEB fallback also failed for code {email_hash}")
                 except Exception as e:
-                    logger.error(f"WEB fallback lookup error: {e}")
+                    logger.error(f"WEB fallback lookup error: {e}", exc_info=True)
+
+            # Fallback 2: Sheet credentials missing — still mark user as registered
+            # so they don't get stuck in VISITOR loop. They can verify email later.
+            if not web_data and len(email_hash) >= 4:
+                logger.warning(f"  WEB_ sheet lookup failed (credentials?). Marking user {user.id} as registered via WEB code.")
+                web_data = {
+                    'email': '',
+                    'phone': '',
+                    'full_name': db_user.first_name or '',
+                    'source': 'WEB',
+                    'is_registered': True,
+                    'referral_count': 0,
+                }
 
             if web_data:
                 await update_user_registration(
