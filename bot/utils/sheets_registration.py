@@ -4,7 +4,6 @@ Sheet: https://docs.google.com/spreadsheets/d/1-fruHaSlCKIOpIfU5Qrkns0ze3bx3E-mK
 """
 
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 from loguru import logger
 
@@ -14,27 +13,40 @@ WORKSHEET_NAME = "FreedomWallet_Registrations"
 
 
 def get_registration_worksheet():
-    """Get the registration worksheet"""
+    """Get the registration worksheet — uses google-auth (not oauth2client)"""
     try:
-        scope = [
-            'https://spreadsheets.google.com/feeds',
-            'https://www.googleapis.com/auth/drive'
-        ]
-        
-        creds = ServiceAccountCredentials.from_json_keyfile_name(
-            'google_service_account.json',
-            scope
-        )
-        
-        client = gspread.authorize(creds)
+        # Try google-auth (modern, works with Python 3.12+)
+        try:
+            from google.oauth2.service_account import Credentials
+            scopes = [
+                'https://spreadsheets.google.com/feeds',
+                'https://www.googleapis.com/auth/drive'
+            ]
+            creds = Credentials.from_service_account_file(
+                'google_service_account.json',
+                scopes=scopes
+            )
+            client = gspread.authorize(creds)
+        except ImportError:
+            # Fallback to oauth2client if available
+            from oauth2client.service_account import ServiceAccountCredentials
+            scope = [
+                'https://spreadsheets.google.com/feeds',
+                'https://www.googleapis.com/auth/drive'
+            ]
+            creds = ServiceAccountCredentials.from_json_keyfile_name(
+                'google_service_account.json', scope
+            )
+            client = gspread.authorize(creds)
+
         spreadsheet = client.open_by_key(REGISTRATION_SHEET_ID)
         worksheet = spreadsheet.worksheet(WORKSHEET_NAME)
-        
         return worksheet
-        
+
     except Exception as e:
         logger.error(f"Error accessing registration sheet: {e}")
         return None
+
 
 
 async def find_user_in_sheet_by_referral_code(referral_code: str):
