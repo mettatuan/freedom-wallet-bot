@@ -2035,9 +2035,12 @@ async def handle_web_confirm_yes(update: Update, context: ContextTypes.DEFAULT_T
 
     try:
         from bot.utils.sheets_registration import save_user_to_registration_sheet
-        from bot.utils.database import update_user_registration, generate_referral_code
+        from bot.utils.database import update_user_registration, generate_referral_code, save_user_to_db
 
-        # Link in DB
+        # Ensure user exists in DB first (in case DB was reset or user never pressed /start)
+        await save_user_to_db(user)
+
+        # Link in DB with web registration info
         await update_user_registration(
             user_id=user.id,
             email=sheet_data["email"],
