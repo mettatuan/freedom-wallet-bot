@@ -189,6 +189,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             email_hash = code[4:]
             web_data = await sync_web_registration(user.id, user.username or "", email_hash)
 
+            # Fallback: sync_web_registration uses settings.REGISTRATION_SHEET_ID which may
+            # differ from the hardcoded sheet in sheets_registration.py. Try direct lookup.
+            if not web_data:
+                try:
+                    from bot.utils.sheets_registration import find_user_in_sheet_by_referral_code
+                    web_data = await find_user_in_sheet_by_referral_code(email_hash)
+                    if web_data:
+                        web_data['source'] = 'WEB'
+                        web_data['is_registered'] = True
+                        logger.info(f"✅ WEB fallback lookup succeeded for code {email_hash}: {web_data.get('email')}")
+                except Exception as e:
+                    logger.error(f"WEB fallback lookup error: {e}")
+
             if web_data:
                 await update_user_registration(
                     user_id=user.id,

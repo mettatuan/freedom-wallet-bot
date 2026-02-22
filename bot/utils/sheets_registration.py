@@ -37,6 +37,51 @@ def get_registration_worksheet():
         return None
 
 
+async def find_user_in_sheet_by_referral_code(referral_code: str):
+    """
+    Find a registration row by referral code (column H: 🔗 Link giới thiệu).
+    Used when user arrives via deep link WEB_<code>.
+    Returns dict with row data, or None if not found.
+    """
+    try:
+        worksheet = get_registration_worksheet()
+        if not worksheet:
+            return None
+
+        all_values = worksheet.get_all_values()
+        if len(all_values) < 2:
+            return None
+
+        for idx, row in enumerate(all_values[1:], start=2):  # Skip header
+            row_code = row[7].strip() if len(row) > 7 else ""
+            if row_code == referral_code:
+                logger.info(f"✅ Found row by referral code '{referral_code}' at row {idx}")
+                referral_count_raw = row[8].strip() if len(row) > 8 else "0"
+                try:
+                    referral_count = int(referral_count_raw) if referral_count_raw.isdigit() else 0
+                except (ValueError, AttributeError):
+                    referral_count = 0
+                return {
+                    "row_index":      idx,
+                    "full_name":      row[3].strip() if len(row) > 3 else "",
+                    "email":          row[4].strip() if len(row) > 4 else "",
+                    "phone":          row[5].strip() if len(row) > 5 else "",
+                    "plan":           row[6].strip() if len(row) > 6 else "FREE",
+                    "referral_code":  row_code,
+                    "referral_count": referral_count,
+                    "source":         row[9].strip()  if len(row) > 9  else "Landing Page",
+                    "status":         row[10].strip() if len(row) > 10 else "",
+                    "referred_by":    row[11].strip() if len(row) > 11 else "",
+                }
+
+        logger.info(f"❌ Referral code '{referral_code}' not found in registration sheet")
+        return None
+
+    except Exception as e:
+        logger.error(f"Error in find_user_in_sheet_by_referral_code: {e}", exc_info=True)
+        return None
+
+
 async def find_user_in_sheet_by_email(email: str):
     """
     Find a registration row directly by email address.
