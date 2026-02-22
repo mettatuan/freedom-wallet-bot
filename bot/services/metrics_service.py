@@ -82,12 +82,12 @@ class MetricsCalculationService:
         
         total_old_users = db.query(User).filter(
             User.created_at <= thirty_days_ago,
-            User.is_free_unlocked == True
+            User.subscription_tier != "PREMIUM"
         ).count()
         
         active_old_users = db.query(User).filter(
             User.created_at <= thirty_days_ago,
-            User.is_free_unlocked == True,
+            User.subscription_tier != "PREMIUM",
             User.last_active >= seven_days_ago
         ).count()
         
@@ -97,26 +97,26 @@ class MetricsCalculationService:
         avg_transactions = db.query(
             func.avg(User.total_transactions)
         ).filter(
-            User.is_free_unlocked == True,
+            User.subscription_tier != "PREMIUM",
             User.total_transactions > 0
         ).scalar() or 0
         
         # Supporting data
-        total_free_users = db.query(User).filter(User.is_free_unlocked == True).count()
+        total_free_users = db.query(User).filter(User.subscription_tier != "PREMIUM").count()
         active_7d = db.query(User).filter(
-            User.is_free_unlocked == True,
+            User.subscription_tier != "PREMIUM",
             User.last_active >= seven_days_ago
         ).count()
         
         new_this_week = db.query(User).filter(
-            User.is_free_unlocked == True,
+            User.subscription_tier != "PREMIUM",
             User.created_at >= seven_days_ago
         ).count()
         
         avg_referrals = db.query(
             func.avg(User.referral_count)
         ).filter(
-            User.is_free_unlocked == True
+            User.subscription_tier != "PREMIUM"
         ).scalar() or 0
         
         return {

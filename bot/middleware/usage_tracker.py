@@ -14,57 +14,13 @@ async def check_message_limit(update: Update, context: ContextTypes.DEFAULT_TYPE
     """
     Middleware to check if user can send message
     
+    DISABLED: Message limits removed. All users have unlimited messages.
+    
     Returns:
         bool: True if message allowed, False if blocked
     """
-    if not update.message or not update.message.text:
-        return True  # Allow non-text messages
-    
-    user_id = update.effective_user.id
-    user = await get_user_by_id(user_id)  # FIX: Added await
-    
-    if not user:
-        # New user, allow first message
-        return True
-    
-    # Check if user can send message
-    can_send, error_msg = SubscriptionManager.can_send_message(user)
-    
-    if not can_send:
-        # Track limit hit event
-        Analytics.track_event(user_id, 'chat_limit_hit', {
-            'messages_today': user.bot_chat_count,
-            'tier': user.subscription_tier
-        })
-        
-        # Send upgrade prompt
-        await send_upgrade_prompt(update, context, error_msg)
-        
-        logger.warning(f"User {user_id} hit message limit ({user.bot_chat_count}/{SubscriptionManager.FREE_DAILY_MESSAGES})")
-        return False  # Block message
-    
-    # Increment message count for FREE users
-    SubscriptionManager.increment_message_count(user)
-    
-    # Track message sent
-    remaining = SubscriptionManager.get_remaining_messages(user)
-    Analytics.track_event(user_id, 'message_sent', {
-        'tier': user.subscription_tier,
-        'remaining': remaining
-    })
-    
-    # Warn if approaching limit (1 message left)
-    if remaining == 1:
-        tier = SubscriptionManager.get_user_tier(user)
-        if tier == SubscriptionTier.FREE:
-            await update.message.reply_text(
-                "⚠️ **Còn 1 tin nhắn cuối cùng hôm nay!**\n\n"
-                "💎 Nâng cấp Premium = Unlimited messages + AI insights\n\n"
-                "🎁 Dùng thử FREE 7 ngày!",
-                parse_mode="Markdown"
-            )
-    
-    return True  # Allow message
+    # ✅ FEATURE DISABLED - Unlimited messages for all users
+    return True
 
 
 async def send_upgrade_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE, error_msg: str):

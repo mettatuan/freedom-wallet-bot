@@ -140,7 +140,7 @@ Gõ: `/setsheet [PASTE_ID]`
 """
     
     # Get template ID from environment
-    template_id = os.getenv("TEMPLATE_SPREADSHEET_ID", "1er6t9JQHLa9eZ1YTIM4aK0IhN37yPq6IUVbOg4-8mXg")
+    template_id = os.getenv("TEMPLATE_SPREADSHEET_ID", "1Vlq3MAplg_FtpaOqqcvgz1UNMfemHiQcKFcdfE4nOtI")
     template_url = f"https://docs.google.com/spreadsheets/d/{template_id}/copy"
     
     keyboard = [
@@ -188,7 +188,7 @@ async def handle_set_sheet_command(update: Update, context: ContextTypes.DEFAULT
     spreadsheet_id = context.args[0].strip()
     
     # ✅ CHECK: If user is using TEMPLATE ID (they need to COPY first!)
-    template_id = os.getenv("TEMPLATE_SPREADSHEET_ID", "1er6t9JQHLa9eZ1YTIM4aK0IhN37yPq6IUVbOg4-8mXg")
+    template_id = os.getenv("TEMPLATE_SPREADSHEET_ID", "1Vlq3MAplg_FtpaOqqcvgz1UNMfemHiQcKFcdfE4nOtI")
     if spreadsheet_id == template_id:
         template_url = f"https://docs.google.com/spreadsheets/d/{template_id}/copy"
         await update.message.reply_text(
@@ -214,7 +214,7 @@ async def handle_set_sheet_command(update: Update, context: ContextTypes.DEFAULT
     # Validate ID format (44 chars, alphanumeric + - _ )
     if not re.match(r'^[a-zA-Z0-9_-]{30,60}$', spreadsheet_id):
         # Get example ID from environment
-        example_id = os.getenv("TEMPLATE_SPREADSHEET_ID", "1er6t9JQHLa9eZ1YTIM4aK0IhN37yPq6IUVbOg4-8mXg")
+        example_id = os.getenv("TEMPLATE_SPREADSHEET_ID", "1Vlq3MAplg_FtpaOqqcvgz1UNMfemHiQcKFcdfE4nOtI")
         await update.message.reply_text(
             "❌ **ID không hợp lệ!**\n\n"
             "Spreadsheet ID phải:\n"
@@ -425,7 +425,7 @@ async def handle_change_sheet(update: Update, context: ContextTypes.DEFAULT_TYPE
     user_id = update.effective_user.id
     
     # Get template ID from environment
-    template_id = os.getenv("TEMPLATE_SPREADSHEET_ID", "1er6t9JQHLa9eZ1YTIM4aK0IhN37yPq6IUVbOg4-8mXg")
+    template_id = os.getenv("TEMPLATE_SPREADSHEET_ID", "1Vlq3MAplg_FtpaOqqcvgz1UNMfemHiQcKFcdfE4nOtI")
     template_url = f"https://docs.google.com/spreadsheets/d/{template_id}/copy"
     
     message = """

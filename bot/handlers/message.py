@@ -80,7 +80,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     message_text = update.message.text
     logger.info(f"User {user.id} ({user.username}): {message_text}")
-    
+
+    # CRITICAL: Skip keyboard menu button presses — they are handled by dedicated handlers
+    try:
+        from bot.core.keyboard import (
+            BTN_RECORD, BTN_REPORT, BTN_SHEETS, BTN_WEBAPP,
+            BTN_SHARE, BTN_DONATE, BTN_GUIDE, BTN_SETTINGS,
+        )
+        _MENU_BUTTONS = {BTN_RECORD, BTN_REPORT, BTN_SHEETS, BTN_WEBAPP,
+                         BTN_SHARE, BTN_DONATE, BTN_GUIDE, BTN_SETTINGS}
+    except Exception:
+        _MENU_BUTTONS = set()
+    if message_text in _MENU_BUTTONS:
+        logger.info(f"  → Skipping AI handler - known menu button: {message_text!r}")
+        return
+
     # CRITICAL: Skip if user is in a ConversationHandler flow
     # Check for any active conversation state in context
     conversation_state = context.user_data.get('conversation_state')
@@ -88,6 +102,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.info(f"  → Skipping AI handler - user in conversation (state: {conversation_state})")
         return
     
+    # Check if user is entering email for web-registration lookup
+    if context.user_data.get('awaiting_web_email'):
+        await handle_web_email_input(update, context)
+        return
+
     # Check if user is sending payment proof
     if context.user_data.get('awaiting_payment_proof'):
         await handle_payment_proof_text(update, context)
@@ -584,3 +603,68 @@ User đã nhận thông báo.
             "❌ Có lỗi xảy ra. Vui lòng thử lại!",
             parse_mode="HTML"
         )
+
+
+async def handle_web_email_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Process email entered by user — find in sheet, show info, then ask to confirm."""
+    import re
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+    text = update.message.text.strip()
+
+    if not re.match(r'^[\w\.\+\-]+@[\w\.-]+\.\w{2,}$', text):
+        await update.message.reply_text(
+            "📧 Đây không phải email hợp lệ. Vui lòng nhập lại:"
+        )
+        return
+
+    searching_msg = await update.message.reply_text("🔍 Đang tìm kiếm...")
+
+    try:
+        from bot.utils.sheets_registration import find_user_in_sheet_by_email
+        sheet_data = await find_user_in_sheet_by_email(text)
+        await searching_msg.delete()
+
+        if not sheet_data:
+            await update.message.reply_text(
+                f"❌ Không tìm thấy email *{text}* trong hệ thống.\n\n"
+                "Vui lòng kiểm tra lại email, hoặc dùng /support để được hỗ trợ.",
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("↩️ Nhập lại email", callback_data="web_already_registered")
+                ]])
+            )
+            context.user_data.pop('awaiting_web_email', None)
+            return
+
+        # Found — save temporarily and ask user to confirm
+        context.user_data.pop('awaiting_web_email', None)
+        context.user_data['pending_web_link'] = sheet_data
+
+        name  = sheet_data.get("full_name") or "(chưa có tên)"
+        email = sheet_data.get("email", text)
+        phone = sheet_data.get("phone") or "(chưa có)"
+        plan  = sheet_data.get("plan", "FREE")
+
+        await update.message.reply_text(
+            f"🔍 Tìm thấy thông tin sau trong hệ thống:\n\n"
+            f"👤 *Họ & Tên:* {name}\n"
+            f"📧 *Email:* `{email}`\n"
+            f"📱 *Điện thoại:* {phone}\n"
+            f"💎 *Gói:* {plan}\n\n"
+            f"Bạn xác nhận đây là tài khoản của mình không?",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("✅ Đúng, xác nhận", callback_data="web_confirm_yes")],
+                [InlineKeyboardButton("❌ Không phải tôi", callback_data="web_confirm_no")],
+            ])
+        )
+
+    except Exception as e:
+        logger.error(f"handle_web_email_input error: {e}", exc_info=True)
+        try:
+            await searching_msg.delete()
+        except Exception:
+            pass
+        await update.message.reply_text("😓 Có lỗi xảy ra, vui lòng thử lại sau.")
+        context.user_data.pop('awaiting_web_email', None)

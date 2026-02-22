@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     GOOGLE_SHEETS_CREDENTIALS: Optional[str] = os.getenv("GOOGLE_SHEETS_CREDENTIALS")
     SUPPORT_SHEET_ID: Optional[str] = os.getenv("SUPPORT_SHEET_ID")
     SUPPORT_SHEET_NAME: str = os.getenv("SUPPORT_SHEET_NAME", "Support Tickets")
+    # Registration sheet (landing page sign-ups — env var: ADMIN_SUPPORT_SHEET_ID)
+    REGISTRATION_SHEET_ID: Optional[str] = os.getenv("ADMIN_SUPPORT_SHEET_ID")
     
     # Freedom Wallet Template
     YOUR_TEMPLATE_ID: str = os.getenv("YOUR_TEMPLATE_ID", "")
@@ -70,7 +72,7 @@ class Settings(BaseSettings):
     # Payment Configuration
     PAYMENT_BANK_NAME: str = os.getenv("PAYMENT_BANK_NAME", "OCB")
     PAYMENT_ACCOUNT_NAME: str = os.getenv("PAYMENT_ACCOUNT_NAME", "PHAM THANH TUAN")
-    PAYMENT_ACCOUNT_NUMBER: str = os.getenv("PAYMENT_ACCOUNT_NUMBER", "0107103241416363")
+    PAYMENT_ACCOUNT_NUMBER: str = os.getenv("PAYMENT_ACCOUNT_NUMBER", "0937833239")
     PREMIUM_PRICE_VND: int = int(os.getenv("PREMIUM_PRICE_VND", "999000"))
     PAYMENT_QR_API: str = os.getenv("PAYMENT_QR_API", "https://img.vietqr.io/image/{bank_code}-{account_number}-{template}.jpg")
     

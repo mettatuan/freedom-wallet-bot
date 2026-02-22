@@ -6,6 +6,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler
 from loguru import logger
 from datetime import datetime, timedelta
+import aiohttp
 from bot.utils.database import SessionLocal, User
 
 
@@ -295,15 +296,79 @@ async def reminder_callback_handler(update: Update, context: ContextTypes.DEFAUL
             )
         
         elif callback_data == "reminder_view_report":
-            await query.edit_message_text(
-                text="📊 **Xem báo cáo trong Web App của bạn!**\n\n"
-                     "Vào menu → Reports để xem chi tiết:\n"
-                     "• Chi tiêu theo danh mục\n"
-                     "• Phân bổ 6 Hũ Tiền\n"
-                     "• Xu hướng theo thời gian\n\n"
-                     "💡 *Review hàng tuần để tối ưu tài chính!*",
-                parse_mode="Markdown"
-            )
+            # Fetch real balance + recent transactions from user's Web App
+            _db = SessionLocal()
+            try:
+                _user = _db.query(User).filter(User.id == user_id).first()
+                web_app_url = _user.web_app_url if _user else None
+            finally:
+                _db.close()
+
+            if not web_app_url:
+                await query.edit_message_text(
+                    "⚠️ Bạn chưa kết nối Web App.\n"
+                    "Vào menu → cài đặt kết nối để xem báo cáo ngay trong Telegram!"
+                )
+                return
+
+            await query.edit_message_text("🔄 Đang lấy dữ liệu từ Sheets...")
+
+            try:
+                timeout = aiohttp.ClientTimeout(total=15)
+                async with aiohttp.ClientSession(timeout=timeout) as session:
+                    _KEY = "fwb_bot_production_2026"
+                    # Fetch balance
+                    bal_resp = await session.post(web_app_url, json={"action": "getBalance", "api_key": _KEY})
+                    bal_data = await bal_resp.json(content_type=None)
+
+                    # Fetch recent transactions
+                    tx_resp = await session.post(web_app_url, json={"action": "getTransactions", "data": {"limit": 5}, "api_key": _KEY})
+                    tx_data = await tx_resp.json(content_type=None)
+
+                lines = ["<b>📊 BÁO CÁO NHANH TỪ SHEETS</b>\n"]
+
+                # Balance section
+                if bal_data.get("success"):
+                    jars = bal_data.get("jars", [])
+                    total = bal_data.get("totalBalance", 0)
+                    lines.append("━━━━━━━━━━━━━━━")
+                    lines.append("<b>🪣 Số dư các hũ tiền:</b>")
+                    for jar in jars:
+                        icon = jar.get("icon", "🪣")
+                        name = jar.get("name", "?")
+                        balance = jar.get("balance", 0)
+                        pct = jar.get("percentage", 0)
+                        lines.append(f"{icon} {name} ({pct}%): <b>{balance:,.0f}đ</b>")
+                    lines.append(f"\n💰 <b>Tổng: {total:,.0f}đ</b>")
+                else:
+                    lines.append("⚠️ Không lấy được số dư hũ")
+
+                # Transactions section
+                if tx_data.get("success"):
+                    txs = tx_data.get("transactions", [])
+                    if txs:
+                        lines.append("\n━━━━━━━━━━━━━━━")
+                        lines.append("<b>📅 5 giao dịch gần nhất:</b>")
+                        for tx in txs[:5]:
+                            t = tx.get("type", "Chi")
+                            amt = tx.get("amount", 0)
+                            note = tx.get("note", "") or tx.get("category", "")
+                            date = tx.get("date", "")[:10]
+                            em = "💸" if t in ("Chi", "expense") else "💰"
+                            lines.append(f"{em} {date} — {amt:,.0f}đ {note}")
+
+                msg = "\n".join(lines)
+                back_btn = InlineKeyboardMarkup([[
+                    InlineKeyboardButton("🏠 Menu chính", callback_data="show_main_menu")
+                ]])
+                await query.edit_message_text(msg, parse_mode="HTML", reply_markup=back_btn)
+
+            except Exception as e:
+                logger.error(f"Error fetching Sheets report: {e}")
+                await query.edit_message_text(
+                    f"❌ Lỗi kết nối Web App: {str(e)[:120]}\n\n"
+                    "Kiểm tra Web App có đang hoạt động không."
+                )
         
         elif callback_data == "reminder_catch_up":
             await query.edit_message_text(

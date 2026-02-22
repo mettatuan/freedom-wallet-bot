@@ -309,11 +309,9 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
                                     except Exception as e:
                                         logger.error(f"Failed to send Super VIP notification: {e}")
                         
-                        # Auto-unlock FREE if >= 2
-                        if referrer.referral_count >= 2 and not referrer.is_free_unlocked:
-                            referrer.is_free_unlocked = True
-                            referrer.subscription_tier = "FREE"
-                            
+                        # Auto-unlock FREE if >= 2  
+                        if referrer.referral_count >= 2:
+                            # Already FREE tier by default, just transition to VIP state
                             # Week 2: Transition referrer to VIP state
                             with StateManager() as state_mgr:
                                 success, msg = state_mgr.transition_user(

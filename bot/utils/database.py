@@ -103,6 +103,7 @@ class User(Base):
     
     # GOOGLE SHEETS INTEGRATION (Premium Features)
     spreadsheet_id = Column(String(100), nullable=True)  # User's Google Sheets ID (44 chars)
+    google_sheets_url = Column(String(500), nullable=True)  # User's Google Sheets URL (full link)
     sheets_connected_at = Column(DateTime, nullable=True)  # When sheets connected
     sheets_last_sync = Column(DateTime, nullable=True)  # Last data sync timestamp
     webhook_url = Column(String(500), nullable=True)  # Apps Script webhook URL for Quick Record
@@ -111,6 +112,9 @@ class User(Base):
     milestone_90day_achieved = Column(Boolean, default=False)  # 90-day milestone
     last_reminder_sent = Column(DateTime, nullable=True)  # Last reminder timestamp
     reminder_enabled = Column(Boolean, default=True)  # User preference for reminders
+    reminder_hour = Column(Integer, default=8)  # Hour of day to send reminder (0-23)
+    weekly_reminder_enabled = Column(Boolean, default=True)  # Weekly summary reminder
+    monthly_reminder_enabled = Column(Boolean, default=True)  # Monthly report reminder
     
     # ACTIVATION & RETENTION TRACKING (Phase 1 - Retention-First Model)
     first_transaction_at = Column(DateTime, nullable=True)  # When user logged first transaction (ACTIVATION)

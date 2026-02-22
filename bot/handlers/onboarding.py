@@ -16,11 +16,13 @@ from bot.core.program_manager import ProgramManager, ProgramType
 # 7-Day Onboarding Content with Inline Keyboards
 ONBOARDING_MESSAGES = {
     1: {
-        "title": "� CHÚC MỪNG! BẠN ĐÃ MỞ KHÓA VIP",
+        "title": "🎉 CHÀO MỪNG ĐẾN VỚI FREEDOM WALLET!",
         "content": """
-👏 **Tuyệt vời! Bạn đã giới thiệu thành công 2 người!**
+Chào {user_name}! 👋
 
-Giờ đây, bạn được truy cập **Freedom Wallet VIP** – công cụ quản lý tài chính cá nhân mạnh mẽ!
+👏 **Chúc mừng! Tài khoản của bạn đã sẵn sàng!**
+
+Bạn có thể sử dụng **Freedom Wallet** – công cụ quản lý tài chính cá nhân mạnh mẽ!
 
 ━━━━━━━━━━━━━━━━━━━━━
 
@@ -534,24 +536,36 @@ async def _start_onboarding_journey_legacy(user_id: int, context: ContextTypes.D
         bot_context = context.bot_data
         
         for day, message_data in ONBOARDING_MESSAGES.items():
-            # Calculate when to send
-            send_time = datetime.now() + timedelta(hours=message_data['delay_hours'])
+            delay_hours = message_data['delay_hours']
             
-            # Schedule message with buttons
-            context.job_queue.run_once(
-                send_onboarding_message,
-                when=send_time,
-                data={
-                    'user_id': user_id,
-                    'day': day,
-                    'title': message_data['title'],
-                    'content': message_data['content'],
-                    'buttons': message_data.get('buttons', [])  # Include buttons if available
-                },
-                name=f"onboarding_day_{day}_user_{user_id}"
-            )
-            
-            logger.info(f"Scheduled onboarding Day {day} for user {user_id} at {send_time}")
+            # Send Day 1 immediately, schedule others
+            if delay_hours == 0:
+                # Send Day 1 immediately
+                await send_onboarding_message(
+                    context, 
+                    user_id=user_id, 
+                    day=day
+                )
+                logger.info(f"Sent onboarding Day {day} immediately for user {user_id}")
+            else:
+                # Calculate when to send
+                send_time = datetime.now() + timedelta(hours=delay_hours)
+                
+                # Schedule message with buttons
+                context.job_queue.run_once(
+                    send_onboarding_message,
+                    when=send_time,
+                    data={
+                        'user_id': user_id,
+                        'day': day,
+                        'title': message_data['title'],
+                        'content': message_data['content'],
+                        'buttons': message_data.get('buttons', [])  # Include buttons if available
+                    },
+                    name=f"onboarding_day_{day}_user_{user_id}"
+                )
+                
+                logger.info(f"Scheduled onboarding Day {day} for user {user_id} at {send_time}")
         
         logger.success(f"Started 7-day onboarding (legacy) for user {user_id}")
         return True
@@ -588,6 +602,17 @@ async def send_onboarding_message(context: ContextTypes.DEFAULT_TYPE, user_id: i
         title = message_data['title']
         content = message_data['content']
         buttons = message_data.get('buttons', [])
+    
+    # Personalize message with user's name (for Day 1)
+    from bot.utils.database import get_user_by_id
+    db_user = await get_user_by_id(user_id)
+    user_name = "bạn"  # default
+    if db_user:
+        # Priority: full_name > first_name > username
+        user_name = db_user.full_name or db_user.first_name or db_user.username or "bạn"
+    
+    # Format content with user_name if placeholder exists
+    content = content.format(user_name=user_name)
     
     try:
         # Build inline keyboard if buttons provided

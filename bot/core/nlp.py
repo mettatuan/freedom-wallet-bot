@@ -6,6 +6,10 @@ import re
 from typing import Optional, Tuple
 
 
+# 1 USD = this many VND (fixed rate)
+USD_TO_VND = 26_236
+
+
 def extract_amount(text: str) -> Optional[int]:
     """
     Extract amount from Vietnamese text.
@@ -18,6 +22,7 @@ def extract_amount(text: str) -> Optional[int]:
     - "2.5tr" → 2500000
     - "2.5m" → 2500000
     - "100 triệu" → 100000000
+    - "$50" / "50 usd" / "50 dollar" / "50 đô" → 50 * 26,236 VND
     
     Args:
         text: Input text (e.g., "Cà phê 35k", "Lương 15 triệu")
@@ -25,6 +30,23 @@ def extract_amount(text: str) -> Optional[int]:
     Returns:
         Amount in VND (integer), or None if not found
     """
+    # ── USD / Dollar detection (before any cleaning) ──────────────────────────
+    # Supported: $50 / 50$ / +50$ / 50 usd / 50 dollar / 50 đô / 50 USD
+    usd_patterns = [
+        r'[+\-]?\$\s*(\d+(?:[.,]\d+)?)',                        # $50  +$50  $1,000
+        r'[+\-]?(\d+(?:[.,]\d+)?)\s*\$',                        # 50$  +50$  50 $
+        r'(\d+(?:[.,]\d+)?)\s*(?:usd|dollar|đô)(?:\s|$|[^a-z])',  # 50 usd / 50 đô
+    ]
+    for pat in usd_patterns:
+        m = re.search(pat, text.lower())
+        if m:
+            try:
+                num = float(m.group(1).replace(",", "."))
+                return int(num * USD_TO_VND)
+            except (ValueError, AttributeError):
+                pass
+
+    # ── VND amounts ────────────────────────────────────────────────────────────
     # Remove commas and dots from numbers
     text = text.replace(",", "").replace(".", "")
     
@@ -64,8 +86,8 @@ def detect_transaction_type(text: str) -> str:
     """
     Detect if transaction is income or expense.
     
-    Income indicators: lương, nhận, thu, kinh doanh, bán
-    Expense indicators: chi, mua, trả, đóng
+    Income indicators: + prefix, lương, nhận, thu, kinh doanh, bán
+    Expense indicators: - prefix, chi, mua, trả, đóng
     
     Default: expense (most transactions are expenses)
     
@@ -75,8 +97,17 @@ def detect_transaction_type(text: str) -> str:
     Returns:
         "income" or "expense"
     """
-    text_lower = text.lower()
-    
+    text_stripped = text.strip()
+    text_lower    = text_stripped.lower()
+
+    # ── Explicit sign prefix (+/−) overrides everything ──────────────────
+    # Match leading +/- before digits or $ (e.g. "+50$", "-35k", "+ 100k")
+    import re as _re
+    if _re.match(r'^\+', text_stripped):
+        return "income"
+    if _re.match(r'^-', text_stripped):
+        return "expense"
+
     # Income keywords
     income_keywords = [
         "lương", "salary", "nhận", "receive", "thu", "income",
@@ -84,7 +115,7 @@ def detect_transaction_type(text: str) -> str:
         "lãi", "profit", "thưởng", "bonus"
     ]
     
-    # Expense keywords
+    # Expense keywords  (unused for now — default falls through)
     expense_keywords = [
         "chi", "spend", "mua", "buy", "trả", "pay",
         "đóng", "payment", "tiền"
@@ -114,7 +145,19 @@ def extract_description(text: str, amount: int) -> str:
     """
     # Remove amount patterns
     text_clean = text
-    
+
+    # Remove USD/dollar patterns first
+    usd_pats = [
+        r'[+\-]?\$\s*\d+(?:[.,]\d+)?',       # +$50  $1,000
+        r'[+\-]?\d+(?:[.,]\d+)?\s*\$',        # 50$  +50$
+        r'\d+(?:[.,]\d+)?\s*(?:usd|dollar|đô)(?:\s|$|[^a-z])',
+    ]
+    for p in usd_pats:
+        text_clean = re.sub(p, '', text_clean, flags=re.IGNORECASE)
+
+    # Remove leading + or - sign standing alone
+    text_clean = re.sub(r'^[+\-]\s*', '', text_clean.strip())
+
     # Remove number + unit patterns
     patterns = [
         r'\d+(?:\.\d+)?\s*k(?:\s|$)',
@@ -130,9 +173,9 @@ def extract_description(text: str, amount: int) -> str:
     # Clean up whitespace
     text_clean = ' '.join(text_clean.split())
     
-    # If too short, use original
+    # If too short, use original (strip leading sign)
     if len(text_clean) < 2:
-        return text
+        return re.sub(r'^[+\-]\s*', '', text.strip())
     
     return text_clean.strip()
 

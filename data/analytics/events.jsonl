@@ -121,3 +121,9 @@
 {"timestamp": "2026-02-11T15:17:55.393346", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
 {"timestamp": "2026-02-11T16:13:13.431901", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
 {"timestamp": "2026-02-11T16:14:19.782054", "user_id": 6194449688, "event": "message_sent", "properties": {"tier": "TRIAL", "remaining": 999999}}
+{"timestamp": "2026-02-20T17:07:43.463836", "user_id": 6588506476, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 5}}
+{"timestamp": "2026-02-20T17:11:56.946122", "user_id": 6588506476, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 5}}
+{"timestamp": "2026-02-20T17:12:37.836635", "user_id": 6588506476, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 5}}
+{"timestamp": "2026-02-20T17:17:06.615117", "user_id": 6588506476, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 5}}
+{"timestamp": "2026-02-20T17:23:24.776903", "user_id": 6588506476, "event": "message_sent", "properties": {"tier": "FREE", "remaining": 5}}
+{"timestamp": "2026-02-20T17:28:30.067760", "user_id": 6588506476, "event": "chat_limit_hit", "properties": {"messages_today": 5, "tier": "FREE"}}

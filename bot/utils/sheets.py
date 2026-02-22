@@ -148,18 +148,18 @@ async def find_user_in_sheet_by_email_hash(email_hash: str) -> Optional[Dict]:
             print("   Check: GOOGLE_SHEETS_CREDENTIALS in .env")
             return None
         
-        sheet_id = settings.SUPPORT_SHEET_ID
+        sheet_id = settings.REGISTRATION_SHEET_ID or settings.SUPPORT_SHEET_ID
         if not sheet_id:
-            print("❌ No sheet ID configured")
-            print("   Fix: Set SUPPORT_SHEET_ID in .env file")
+            print("\u274c No registration sheet ID configured")
+            print("   Fix: Set ADMIN_SUPPORT_SHEET_ID in .env file")
             return None
         
         # Validate Sheet ID format
         if len(sheet_id) < 20 or ' ' in sheet_id:
-            print(f"❌ Invalid Sheet ID format: {sheet_id}")
+            print(f"\u274c Invalid Sheet ID format: {sheet_id}")
             print("   Sheet ID should be ~40 characters long")
             print("   Example: 1-fruHaSlCKIOpIfU5Qrkns0ze3bx3E-mKUgQ5fUF-Hg")
-            print("   Current: Check SUPPORT_SHEET_ID in .env")
+            print("   Current: Check ADMIN_SUPPORT_SHEET_ID in .env")
             return None
         
         print(f"📄 Opening sheet: {sheet_id}")

@@ -1,347 +1,315 @@
 """
-Start Command Handler - Welcome Message
-Week 2: Soft-integrated with State Machine
-Phase 2: Retention-First Model with Main Keyboard
+Start Command Handler
+Unified 3-state routing based on Telegram ID (single source of truth):
+
+  STATE 1 – VISITOR  : is_registered=False           → promo screen
+  STATE 2 – SETUP    : is_registered=True, no web_app → setup guide
+  STATE 3 – ACTIVE   : is_registered=True, web_app set → main menu
+
+Entry points (all converge to the same state check):
+  /start            → plain start (new or returning user)
+  /start WEB_<hash> → from freedomwallet.app landing page
+  /start REF<code>  → referral link
 """
+import asyncio
+from pathlib import Path
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from loguru import logger
-from datetime import datetime
-from bot.utils.database import save_user_to_db, get_user_by_id, update_user_registration
+
+from bot.core.keyboard import get_main_keyboard
+from bot.core.state_machine import StateManager
 from bot.handlers.referral import handle_referral_start
+from bot.utils.database import (
+    SessionLocal, get_user_by_id, save_user_to_db, update_user_registration,
+)
 from bot.utils.sheets import sync_web_registration
 from config.settings import settings
-from bot.core.keyboard import get_main_keyboard  # Phase 2: Main keyboard
-
-# Week 2: Import state machine (soft-integration)
-from bot.core.state_machine import StateManager, UserState
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /start command - Show welcome message with menu"""
-    
-    user = update.effective_user
-    logger.info(f"User {user.id} ({user.username}) started the bot")
-    
-    # Save user to database
-    db_user = await save_user_to_db(user)
-    
-    # Week 4: Update Super VIP activity tracking
-    from bot.core.state_machine import StateManager
-    with StateManager() as sm:
-        sm.update_super_vip_activity(user.id)
-    
-    # Check for deep link code: /start CODE
-    if context.args:
-        code = context.args[0]
-        logger.info(f"User {user.id} started with code: {code}")
-        
-        # Case 1: WEB registration (from freedomwallet.app)
-        if code.startswith("WEB_"):
-            email_hash = code[4:]  # Remove "WEB_" prefix
-            logger.info(f"🌐 Web registration detected: {email_hash}")
-            
-            # Try to sync from Google Sheets
-            web_data = await sync_web_registration(user.id, user.username or '', email_hash)
-            
-            if web_data:
-                # Update user in database with web registration data
-                await update_user_registration(
-                    user_id=user.id,
-                    email=web_data.get('email'),
-                    phone=web_data.get('phone'),
-                    full_name=web_data.get('full_name'),
-                    source='WEB',
-                    referral_count=web_data.get('referral_count', 0)
-                )
-                
-                # Reload user to check unlock status
-                db_user = await get_user_by_id(user.id)
-                referral_count = db_user.referral_count if db_user else 0
-                is_unlocked = referral_count >= 2
-                
-                # Week 2: Auto-upgrade state if unlocked
-                if is_unlocked:
-                    with StateManager() as state_mgr:
-                        new_state = state_mgr.check_and_update_state_by_referrals(user.id)
-                        if new_state:
-                            logger.info(f"🎯 User {user.id} auto-upgraded to {new_state.value}")
-                
-                tier = "💎 PREMIUM" if web_data.get('plan') == 'premium' else "🎁 FREE"
-                
-                if is_unlocked:
-                    # UNLOCKED: Start onboarding calmly
-                    from pathlib import Path
-                    
-                    # Send calm affirmation (not celebration)
-                    await update.message.reply_text(
-                        f"Chào {web_data.get('full_name', user.first_name)},\n\n"
-                        f"Bạn vừa kết nối Sheet với Bot thành công.\n\n"
-                        f"Bây giờ bạn có thể ghi chi tiêu ngay trong chat này.\n"
-                        f"5 giây. Không cần mở Sheet.\n\n"
-                        f"Sheet vẫn là của bạn.\n"
-                        f"Bot chỉ là cầu nối để bạn ghi nhanh hơn.\n\n"
-                        f"Thử ghi khoản chi tiêu đầu tiên nhé.",
-                        parse_mode="Markdown"
-                    )
-                    
+# ---------------------------------------------------------------------------
+# Screen helpers
+# ---------------------------------------------------------------------------
 
-                    
-                    # Start onboarding journey (Day 1 scheduled)
-                    from bot.handlers.onboarding import start_onboarding_journey
-                    await start_onboarding_journey(user.id, context)
-                    
-                    # Enable daily reminders for new VIP user
-                    from bot.utils.database import SessionLocal
-                    db = SessionLocal()
-                    db_user = db.merge(db_user)  # Merge into new session
-                    db_user.reminder_enabled = True
-                    db.commit()
-                    db.close()
-                    logger.info(f"✅ Enabled daily reminders for new VIP user {user.id}")
-                    
-                    logger.info(f"✅ Web user {user.id} unlocked VIP and started onboarding")
-                    return
-                    
-                else:
-                    # Week 2: Transition to REGISTERED if not yet VIP
-                    with StateManager() as state_mgr:
-                        current_state, is_legacy = state_mgr.get_user_state(user.id)
-                        if is_legacy or current_state == UserState.VISITOR:
-                            state_mgr.transition_user(user.id, UserState.REGISTERED, "Web registration not unlocked")
-                    # NOT UNLOCKED: Show referral link and progress with buttons
-                    from bot.utils.database import generate_referral_code
-                    
-                    referral_code = generate_referral_code(user.id)
-                    bot_username = (await context.bot.get_me()).username
-                    referral_link = f"https://t.me/{bot_username}?start=REF{referral_code}"
-                    
-                    remaining = 2 - referral_count
-                    
-                    keyboard = [
-                        [InlineKeyboardButton("🔗 Kết nối Sheet", callback_data="sheets_setup")],
-                        [InlineKeyboardButton("❓ Cần hỗ trợ setup", callback_data="help_unlock")]
-                    ]
-                    reply_markup = InlineKeyboardMarkup(keyboard)
-                    
-                    await update.message.reply_text(
-                        f"Chào {web_data.get('full_name', user.first_name)},\n\n"
-                        f"Bạn đã setup Sheet thành công!\n"
-                        f"Hệ thống quản lý tài chính riêng đã sẵn sàng.\n\n"
-                        f"━━━━━━━━━━━━━━━━━━━━━\n"
-                        f"💡 **Bây giờ bạn có thể:**\n"
-                        f"━━━━━━━━━━━━━━━━━━━━━\n\n"
-                        f"✅ Mở Sheet và bắt đầu ghi thu chi\n"
-                        f"✅ Xem phân bổ 6 hũ tiền\n"
-                        f"✅ Kiểm tra cấp độ tài chính\n"
-                        f"✅ Xem báo cáo chi tiết\n\n"
-                        f"Tuần đầu, thử ghi tay vào Sheet.\n"
-                        f"Dù chậm, nhưng đây là lúc bạn \"nhìn rõ tiền\".\n\n"
-                        f"━━━━━━━━━━━━━━━━━━━━━\n\n"
-                        f"🤝 **Muốn ghi nhanh hơn qua Telegram?**\n\n"
-                        f"Kết nối Telegram với Sheet cần cấu hình API,\n"
-                        f"hơi kỹ thuật và dễ sai.\n\n"
-                        f"Nếu bạn giới thiệu 2 người bạn\n"
-                        f"cũng thật sự muốn quản lý tài chính,\n"
-                        f"tôi sẽ hỗ trợ bạn setup 1-1,\n"
-                        f"đảm bảo kết nối thành công.\n\n"
-                        f"🔗 Link giới thiệu: `{referral_link}`",
-                        parse_mode="Markdown",
-                        reply_markup=reply_markup
-                    )
-                    
-                    # Continue daily nurture if not started
-                    from bot.handlers.daily_nurture import start_daily_nurture
-                    await start_daily_nurture(user.id, context)
-                    
-                    return
-                
-            else:
-                # Email hash not found in Sheets
-                await update.message.reply_text(
-                    "❌ **Lỗi xác thực**\n\n"
-                    "Không tìm thấy thông tin đăng ký của bạn từ website.\n\n"
-                    "Vui lòng:\n"
-                    "1️⃣ Đăng ký lại tại [freedomwallet.app](https://freedomwallet.app)\n"
-                    "2️⃣ Hoặc đăng ký trực tiếp trong bot: /register",
-                    parse_mode="Markdown"
-                )
-                return
-        
-        # Case 2: Referral link (from Telegram)
-        else:
-            referral_code = code
-            logger.info(f"🎁 Referral detected: {referral_code}")
-            
-            # Handle referral (will show special welcome + notify referrer)
-            referred = await handle_referral_start(update, context, referral_code)
-            
-            if referred:
-                # Show brief pause before main menu
-                import asyncio
-                await asyncio.sleep(2)
-    
-    # Get user subscription status
-    subscription_tier = db_user.subscription_tier if db_user else "FREE"
-    referral_count = db_user.referral_count if db_user else 0
-    is_free_unlocked = db_user.is_free_unlocked if db_user else False
-    
-    # Determine user stage (not "tier")
-    user_stage = "PREMIUM" if subscription_tier == "PREMIUM" else ("UNLOCKED" if is_free_unlocked else "FREE")
-    
-    # Welcome message - Different for FREE vs PREMIUM
-    from bot.services.recommendation import get_greeting
-    greeting = get_greeting(db_user) if db_user else f"👋 Xin chào {user.first_name}!"
-    
-    # PREMIUM MENU - Calm, supportive
-    if subscription_tier == "PREMIUM":
-        days_tracking = db_user.streak_count if db_user else 0
-        
-        welcome_text = f"""
-{greeting}
+async def _show_visitor_screen(update: Update, user):
+    """STATE 1: unregistered user → promo + "Đăng ký ngay"."""
+    text = (
+        f"Chào {user.first_name}, tôi là Trợ lý tài chính của bạn 👋\n\n"
+        f"Freedom Wallet *không phải* một app để bạn tải về.\n"
+        f"Đây là *hệ thống* quản lý tự do tài chính bạn *tự sở hữu 100%*.\n\n"
+        f"Mỗi người dùng có:\n"
+        f"• Google Sheet riêng trên Drive của bạn\n"
+        f"• Apps Script riêng do bạn deploy\n"
+        f"• Web App riêng chạy trên tài khoản Google của bạn\n\n"
+        f"Dữ liệu nằm trên Drive của bạn.\n"
+        f"Không phụ thuộc vào ai.\n\n"
+        f"Nếu bạn muốn đăng ký sở hữu hệ thống này,\n"
+        f"mình sẽ hướng dẫn từng bước, rất rõ ràng. 👇"
+    )
+    keyboard = [
+        [InlineKeyboardButton("✅ Đăng ký ngay", callback_data="start_free_registration")],
+        [InlineKeyboardButton("🔍 Tôi đã đăng ký trên web", callback_data="web_already_registered")],
+        [InlineKeyboardButton("ℹ️ Tìm hiểu thêm", callback_data="learn_more")],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-━━━━━━━━━━━━━━━━━━━━━
-💎 **PREMIUM - Giảm tải não**
-━━━━━━━━━━━━━━━━━━━━━
+    image_path = Path("media/images/web_apps.jpg")
+    try:
+        await update.message.reply_photo(
+            photo=open(image_path, "rb"),
+            caption=text,
+            parse_mode="Markdown",
+            reply_markup=reply_markup,
+        )
+    except Exception:
+        await update.message.reply_text(text, parse_mode="Markdown", reply_markup=reply_markup)
 
-Bạn đã ghi chi tiêu được {days_tracking} ngày.
 
-Sheet của bạn đã có đầy đủ dữ liệu và báo cáo.
-Premium không thêm chart hay dashboard.
-
-Premium giúp bạn:
-
-• Không phải canh tiền mỗi ngày
-• Được cảnh báo sớm khi có rủi ro
-• Không quên khoản định kỳ
-• Phát hiện chi tiêu bất thường
-
-👉 Bạn nghĩ về tiền ÍT hơn,
-nhưng kiểm soát TỐT hơn.
-
-💡 Ghi chi tiêu, hoặc hỏi tôi bất cứ lúc nào.
-"""
-        
-        keyboard = [
-            [
-                InlineKeyboardButton("💬 Ghi chi tiêu", callback_data="quick_record")
-            ],
-            [
-                InlineKeyboardButton("📊 Xem tổng quan", callback_data="today_status"),
-                InlineKeyboardButton("🛠️ Cài đặt", callback_data="setup")
-            ]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    # FREE & UNLOCKED - Calm, value-focused
-    else:
-        if is_free_unlocked:
-            # UNLOCKED: Bot is connected, user can log quickly
-            days_tracking = db_user.streak_count if db_user else 0
-            
-            welcome_text = f"""
-{greeting}
-
-Bạn đã kết nối Sheet với Bot thành công.
-
-Bây giờ bạn có thể ghi chi tiêu ngay trong chat này.
-5 giây. Không cần mở Sheet.
-
-Sheet vẫn là của bạn.
-Bot chỉ là cầu nối để bạn ghi nhanh hơn.
-
-💡 Ghi chi tiêu ngay, hoặc hỏi tôi nếu cần giúp.
-"""
-            
-            keyboard = [
-                [InlineKeyboardButton("💬 Ghi chi tiêu", callback_data="quick_record")],
-                [InlineKeyboardButton("📖 Hướng dẫn", callback_data="help_tutorial")],
-                [InlineKeyboardButton("💎 Tìm hiểu Premium", callback_data="premium_info")]
-            ]
-        else:
-            # FREE: Clear positioning first, no sales pressure
-            from pathlib import Path
-            
-            welcome_text = f"""
-Chào {user.first_name}, tôi là Trợ lý tài chính của bạn
-Freedom Wallet không phải một app để bạn tải về.
-Đây là một hệ thống quản lý tự do tài chính bạn tự sở hữu.
-
-Mỗi người dùng có:
-• Google Sheet riêng
-• Apps Script riêng
-• Web App riêng
-
-Dữ liệu nằm trên Drive của bạn.
-Không phụ thuộc vào ai.
-
-Nếu bạn muốn đăng ký sở hữu hệ thống web app này,
-mình sẽ hướng dẫn từng bước, rất rõ ràng.
-"""
-            
-            keyboard = [
-                [InlineKeyboardButton("📝 Đăng ký ngay", callback_data="start_free_registration")],
-                [InlineKeyboardButton("📖 Tìm hiểu thêm", callback_data="learn_more")]
-            ]
-            
-            # Send image with message
-            image_path = Path("media/images/web_apps.jpg")
-            
-            try:
-                await update.message.reply_photo(
-                    photo=open(image_path, 'rb'),
-                    caption=welcome_text,
-                    parse_mode="Markdown",
-                    reply_markup=InlineKeyboardMarkup(keyboard)
-                )
-                return
-            except Exception as e:
-                logger.error(f"Error sending photo: {e}")
-                # Fallback to text only
-                pass
-        
-        reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    # Send welcome message with main keyboard (Phase 2)
+async def _show_setup_screen(update: Update, context: ContextTypes.DEFAULT_TYPE, user, db_user):
+    """STATE 2: registered but hasn't set up Web App yet → guide to setup."""
+    user_name = (
+        getattr(db_user, "full_name", None)
+        or getattr(db_user, "first_name", None)
+        or user.first_name
+        or "bạn"
+    )
+    text = (
+        f"🎉 *Chào mừng {user_name} đến với Freedom Wallet!*\n\n"
+        f"Tài khoản của bạn đã sẵn sàng. Bước tiếp theo là *thiết lập Web App* của riêng bạn.\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"*Bạn sẽ có:*\n"
+        f"📊 Google Sheet riêng – dữ liệu 100% trên Drive của bạn\n"
+        f"🌐 Web App riêng – giao diện đẹp, nhanh, tiện\n"
+        f"🤖 Bot Telegram 24/7 – ghi giao dịch, xem báo cáo\n"
+        f"🔗 Link affiliate riêng – giới thiệu bạn bè\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"⏱ *Thiết lập chỉ mất ~15 phút.* Mình sẽ hướng dẫn từng bước!"
+    )
+    keyboard = [
+        [InlineKeyboardButton("🚀 Bắt đầu thiết lập Web App", callback_data="webapp_step_0")],
+    ]
     await update.message.reply_text(
-        welcome_text,
+        text,
         parse_mode="Markdown",
-        reply_markup=get_main_keyboard()  # Always show main keyboard
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
 
-async def help_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /help command - Show help menu"""
-    
-    help_text = """
-📋 **Danh Sách Lệnh**
+async def _show_active_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, user, db_user):
+    """STATE 3: fully set up → show main keyboard + inline quick actions."""
+    user_name = (
+        getattr(db_user, "full_name", None)
+        or getattr(db_user, "first_name", None)
+        or user.first_name
+        or "bạn"
+    )
 
-**/start** - Hiện menu chính
-**/help** - Hiện menu này
-**/tutorial** - Hướng dẫn có hình ảnh
-**/support** - Liên hệ support team
-**/tips** - Nhận tips tài chính hàng ngày
-**/status** - Kiểm tra tình trạng app
+    # Build affiliate link
+    try:
+        from bot.utils.database import generate_referral_code
+        referral_code = generate_referral_code(user.id)
+        bot_username = (await context.bot.get_me()).username
+        affiliate_link = f"https://t.me/{bot_username}?start=REF{referral_code}"
+    except Exception:
+        affiliate_link = None
 
-💬 **Hoặc chat trực tiếp với mình:**
-Gõ câu hỏi bằng tiếng Việt hoặc English!
+    web_app_url = getattr(db_user, "web_app_url", None)
+    sheets_url = getattr(db_user, "google_sheets_url", None)
 
-📚 **Ví dụ câu hỏi:**
-• Làm sao thêm giao dịch?
-• 6 hũ tiền là gì?
-• Cách chuyển tiền giữa hũ?
-• App không load được dữ liệu
+    text = (
+        f"👋 Chào mừng trở lại, *{user_name}*!\n\n"
+        f"Chọn thao tác bên dưới hoặc dùng menu phím bên dưới màn hình."
+    )
 
-🤖 Mình sẽ trả lời ngay lập tức!
-"""
-    
-    keyboard = [
-        [InlineKeyboardButton("🏠 Về trang chủ", callback_data="start")]
+    inline_rows = []
+    row1 = []
+    if web_app_url:
+        row1.append(InlineKeyboardButton("🌐 Mở Web App", url=web_app_url))
+    if sheets_url:
+        row1.append(InlineKeyboardButton("📂 Google Sheet", url=sheets_url))
+    if row1:
+        inline_rows.append(row1)
+
+    row2 = [
+        InlineKeyboardButton("✍️ Ghi giao dịch", callback_data="webapp_record_guide"),
+        InlineKeyboardButton("📊 Báo cáo", callback_data="reminder_view_report"),
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
+    inline_rows.append(row2)
+
+    row3 = [InlineKeyboardButton("📖 Hướng dẫn", callback_data="show_guide_menu")]
+    if affiliate_link:
+        row3.append(InlineKeyboardButton("🔗 Link giới thiệu", url=affiliate_link))
+    inline_rows.append(row3)
+
+    inline_rows.append([InlineKeyboardButton("💝 Đóng góp tùy tâm", callback_data="payment_info")])
+
     await update.message.reply_text(
-        help_text,
+        text,
         parse_mode="Markdown",
-        reply_markup=reply_markup
+        reply_markup=InlineKeyboardMarkup(inline_rows),
+    )
+    # Also send the persistent reply keyboard
+    await update.message.reply_text(
+        "Menu nhanh 👇",
+        reply_markup=get_main_keyboard(),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Main /start handler
+# ---------------------------------------------------------------------------
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /start — unified entry point for all channels.
+
+    Identification: Telegram user.id (primary key in DB).
+    Routing based purely on DB state — no day-based scheduling.
+    """
+    user = update.effective_user
+    logger.info(f"/start: user {user.id} (@{user.username})")
+
+    # 1. Ensure user row exists
+    db_user = await save_user_to_db(user)
+
+    # 2. VIP activity ping
+    try:
+        with StateManager() as sm:
+            sm.update_super_vip_activity(user.id)
+    except Exception:
+        pass
+
+    # 3. Entry-point pre-processing (no messages here, only DB updates)
+    if context.args:
+        code = context.args[0]
+        logger.info(f"  start code: {code}")
+
+        if code.startswith("WEB_"):
+            # ── from freedomwallet.app ──────────────────────────────────
+            email_hash = code[4:]
+            web_data = await sync_web_registration(user.id, user.username or "", email_hash)
+
+            if web_data:
+                await update_user_registration(
+                    user_id=user.id,
+                    email=web_data.get("email"),
+                    phone=web_data.get("phone"),
+                    full_name=web_data.get("full_name"),
+                    source="WEB",
+                    referral_count=web_data.get("referral_count", 0),
+                )
+                # Credit referral PENDING → VERIFIED if referred_by present
+                _credit_referral_on_web_registration(user.id, web_data)
+
+                # Sync row to FreedomWallet_Registrations sheet
+                try:
+                    from bot.utils.database import generate_referral_code
+                    from bot.utils.sheets_registration import save_user_to_registration_sheet
+                    referral_code = generate_referral_code(user.id)
+                    bot_username = (await context.bot.get_me()).username
+                    referral_link = f"https://t.me/{bot_username}?start=REF{referral_code}"
+                    await save_user_to_registration_sheet(
+                        user_id=user.id,
+                        username=user.username or "",
+                        full_name=web_data.get("full_name", ""),
+                        email=web_data.get("email", ""),
+                        phone=web_data.get("phone", ""),
+                        plan="FREE",
+                        referral_link=referral_link,
+                        referral_count=web_data.get("referral_count", 0),
+                        source="Landing Page",
+                        status="Đã đăng ký",
+                        referred_by=web_data.get("referred_by"),
+                    )
+                    logger.info(f"✅ WEB user {user.id} synced to Registrations sheet")
+                except Exception as e:
+                    logger.error(f"Sheet sync WEB: {e}")
+            else:
+                logger.warning(f"WEB_ lookup failed for {email_hash}")
+        else:
+            # ── referral link (REFxxx) ──────────────────────────────────
+            referred = await handle_referral_start(update, context, code)
+            if referred:
+                await asyncio.sleep(1)
+
+    # 4. Reload fresh state from DB
+    db_user = await get_user_by_id(user.id) or db_user
+
+    # 5. Enable reminders for registered users
+    if db_user and db_user.is_registered:
+        try:
+            _db = SessionLocal()
+            _u = _db.merge(db_user)
+            _u.reminder_enabled = True
+            _db.commit()
+            _db.close()
+        except Exception as e:
+            logger.error(f"Enable reminders: {e}")
+
+    # 6. ── 3-STATE ROUTING ──────────────────────────────────────────────
+    is_registered = bool(db_user and db_user.is_registered)
+    has_web_app   = bool(db_user and getattr(db_user, "web_app_url", None))
+
+    if not is_registered:
+        # STATE 1: VISITOR
+        logger.info(f"  → VISITOR screen for {user.id}")
+        await _show_visitor_screen(update, user)
+
+    elif not has_web_app:
+        # STATE 2: SETUP (registered, no web app yet)
+        logger.info(f"  → SETUP screen for {user.id}")
+        await _show_setup_screen(update, context, user, db_user)
+
+    else:
+        # STATE 3: ACTIVE (registered + web app set)
+        logger.info(f"  → ACTIVE menu for {user.id}")
+        await _show_active_menu(update, context, user, db_user)
+
+
+def _credit_referral_on_web_registration(user_id: int, web_data: dict):
+    """Promote referral PENDING → VERIFIED when WEB user is confirmed."""
+    try:
+        from bot.utils.database import SessionLocal, User as UserModel, Referral
+        _db = SessionLocal()
+        try:
+            referred_by = web_data.get("referred_by")
+            if not referred_by:
+                return
+            referral = (
+                _db.query(Referral)
+                .filter(Referral.referred_user_id == user_id, Referral.status == "PENDING")
+                .first()
+            )
+            if referral:
+                referral.status = "VERIFIED"
+                referrer = _db.query(UserModel).filter(UserModel.id == referral.referrer_id).first()
+                if referrer:
+                    referrer.referral_count = (referrer.referral_count or 0) + 1
+                _db.commit()
+                logger.info(f"✅ Referral VERIFIED: user {user_id} referred by {referral.referrer_id}")
+        finally:
+            _db.close()
+    except Exception as e:
+        logger.error(f"Credit referral WEB: {e}")
+
+
+async def help_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /help command."""
+    help_text = (
+        "📋 *Danh Sách Lệnh*\n\n"
+        "*/start* – Hiện menu chính\n"
+        "*/help* – Hiện menu này\n"
+        "*/support* – Liên hệ support\n\n"
+        "💬 *Hoặc chat trực tiếp với mình:*\n"
+        "Gõ câu hỏi bằng tiếng Việt hoặc English!\n\n"
+        "📚 *Ví dụ câu hỏi:*\n"
+        "• Làm sao thêm giao dịch?\n"
+        "• 6 hũ tiền là gì?\n"
+        "• App không load được dữ liệu\n\n"
+        "🤖 Mình sẽ trả lời ngay lập tức!"
+    )
+    keyboard = [[InlineKeyboardButton("🏠 Về trang chủ", callback_data="start")]]
+    await update.message.reply_text(
+        help_text, parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )

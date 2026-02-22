@@ -91,7 +91,7 @@ class StateManager:
         - referral_count >= 2 → VIP
         - referral_count < 2 → REGISTERED
         """
-        if user.is_free_unlocked or user.referral_count >= 2:
+        if user.referral_count >= 2:
             return UserState.VIP
         elif user.referral_count >= 1 or user.is_registered:
             return UserState.REGISTERED

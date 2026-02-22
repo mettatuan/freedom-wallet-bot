@@ -30,42 +30,32 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
         ReplyKeyboardMarkup configured with main keyboard
     """
     keyboard = [
-        # Row 1: Overview + Quick Record
-        [
-            KeyboardButton("📊 Tổng quan"),
-            KeyboardButton("➕ Ghi giao dịch")
-        ],
-        # Row 2: Weekly Report + Insights
-        [
-            KeyboardButton("📈 Báo cáo tuần"),
-            KeyboardButton("💡 Insight")
-        ],
-        # Row 3: Drive Sync + Web App
-        [
-            KeyboardButton("🔗 Kết nối Drive"),
-            KeyboardButton("🌐 Mở Web App")
-        ],
-        # Row 4: Referral + Settings
-        [
-            KeyboardButton("🎁 Giới thiệu"),
-            KeyboardButton("⚙️ Cài đặt")
-        ]
+        [KeyboardButton("✍️ Ghi giao dịch"),  KeyboardButton("📊 Báo cáo")],
+        [KeyboardButton("📂 Mở Google Sheet"), KeyboardButton("🌐 Mở Web App")],
+        [KeyboardButton("🔗 Chia sẻ"),         KeyboardButton("💝 Đóng góp")],
+        [KeyboardButton("📖 Hướng dẫn"),       KeyboardButton("⚙️ Cài đặt")],
     ]
-    
     return ReplyKeyboardMarkup(
         keyboard,
-        resize_keyboard=True,  # Fit to screen
-        one_time_keyboard=False,  # Always visible
-        input_field_placeholder="VD: Cà phê 35k 💬"  # Hint for quick input
+        resize_keyboard=True,
+        one_time_keyboard=False,
+        input_field_placeholder="VD: Cà phê 35k 💬"
     )
 
 
-# Button text constants for handler matching
-BTN_OVERVIEW = "📊 Tổng quan"
-BTN_RECORD = "➕ Ghi giao dịch"
-BTN_WEEKLY = "📈 Báo cáo tuần"
-BTN_INSIGHT = "💡 Insight"
-BTN_DRIVE = "🔗 Kết nối Drive"
-BTN_WEBAPP = "🌐 Mở Web App"
-BTN_REFERRAL = "🎁 Giới thiệu"
+# Button text constants
+BTN_RECORD   = "✍️ Ghi giao dịch"
+BTN_REPORT   = "📊 Báo cáo"
+BTN_SHEETS   = "📂 Mở Google Sheet"
+BTN_WEBAPP   = "🌐 Mở Web App"
+BTN_SHARE    = "🔗 Chia sẻ"
+BTN_DONATE   = "💝 Đóng góp"
+BTN_GUIDE    = "📖 Hướng dẫn"
 BTN_SETTINGS = "⚙️ Cài đặt"
+
+# Legacy aliases (for any leftover references in other files)
+BTN_OVERVIEW = BTN_REPORT
+BTN_WEEKLY   = BTN_REPORT
+BTN_INSIGHT  = BTN_REPORT
+BTN_DRIVE    = BTN_SHEETS
+BTN_REFERRAL = BTN_SHARE

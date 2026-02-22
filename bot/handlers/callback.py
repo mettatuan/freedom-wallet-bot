@@ -11,6 +11,7 @@ from bot.handlers.admin_callbacks import (
     handle_admin_reject_callback,
     handle_admin_list_pending_callback
 )
+from bot.handlers.webapp_setup import send_webapp_setup_step
 
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -43,8 +44,9 @@ async def _handle_callback_internal(update: Update, context: ContextTypes.DEFAUL
         logger.debug(f"Skipping sheets callback: {callback_data} (handled by ConversationHandler)")
         return
     
-    # Skip free flow callbacks (handled by free_flow.py)
-    if callback_data and callback_data.startswith("free_"):
+    # Skip free flow callbacks (handled by free_flow.py)  
+    # EXCEPT free_step3_copy_template which redirects to webapp_setup
+    if callback_data and callback_data.startswith("free_") and callback_data != "free_step3_copy_template":
         logger.debug(f"Skipping free flow callback: {callback_data} (handled by free_flow handlers)")
         return
     
@@ -53,9 +55,14 @@ async def _handle_callback_internal(update: Update, context: ContextTypes.DEFAUL
         logger.debug(f"Skipping unlock flow callback: {callback_data} (handled by unlock_calm_flow handlers)")
         return
     
-    # Skip learn_more and skip_sharing callbacks (handled by free_flow.py)
-    if callback_data in ["learn_more", "skip_sharing", "show_deploy_guide", "back_to_start", "start_free_registration"]:
+    # Skip skip_sharing and show_deploy_guide callbacks (handled by free_flow.py)
+    if callback_data in ["skip_sharing", "show_deploy_guide", "back_to_start", "start_free_registration"]:
         logger.debug(f"Skipping free flow helper callback: {callback_data}")
+        return
+    
+    # Handle learn_more callback
+    if callback_data == "learn_more":
+        await handle_learn_more(update, context)
         return
     
     # Week 4: Update Super VIP activity tracking
@@ -90,7 +97,30 @@ async def _handle_callback_internal(update: Update, context: ContextTypes.DEFAUL
         await handle_premium_usage_guide(update, context)
         return
     
-    # DAY 2: ROI & Upsell callbacks
+    # Web App completion menu callbacks
+    elif callback_data == "webapp_record_guide":
+        await handle_webapp_record_guide(update, context)
+        return
+    elif callback_data == "reminder_view_report":
+        # Delegate to daily_reminder handler
+        from bot.handlers.daily_reminder import handle_reminder_callbacks
+        await handle_reminder_callbacks(update, context)
+        return
+    elif callback_data == "show_guide_menu":
+        await handle_show_guide_menu(update, context)
+        return
+    elif callback_data == "payment_info":
+        await handle_payment_info(update, context)
+        return
+    elif callback_data == "web_already_registered":
+        await handle_web_already_registered(update, context)
+        return
+    elif callback_data == "web_confirm_yes":
+        await handle_web_confirm_yes(update, context)
+        return
+    elif callback_data == "web_confirm_no":
+        await handle_web_confirm_no(update, context)
+        return
     elif callback_data == "upgrade_to_premium":
         await handle_upgrade_to_premium(update, context)
         return
@@ -326,7 +356,7 @@ Hoặc mô tả lại vấn đề, mình sẽ cố gắng giúp!
         
         referral_code = db_user.referral_code
         referral_count = db_user.referral_count
-        is_unlocked = db_user.is_free_unlocked
+        is_unlocked = (db_user.subscription_tier == "PREMIUM" or db_user.referral_count >= 2)
         referred_users = await get_user_referrals(user.id)
         
         # Build referral link
@@ -761,6 +791,12 @@ Hoặc mô tả lại vấn đề, mình sẽ cố gắng giúp!
             parse_mode="Markdown",
             reply_markup=reply_markup
         )
+    
+    elif callback_data == "free_step3_copy_template":
+        # FREE user clicked "Tạo Google Sheet" - redirect to webapp_setup flow
+        logger.info("Redirecting free_step3_copy_template to webapp_setup step 1")
+        await send_webapp_setup_step(update, context, step=1)
+        return
     
     elif callback_data == "webapp_setup_guide":
         # Send step-by-step setup guide with images
@@ -1715,3 +1751,344 @@ Bắt đầu ngay? 👇
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
+
+
+async def handle_learn_more(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'learn_more' callback - Show more info about Freedom Wallet"""
+    query = update.callback_query
+    
+    message = """
+🎯 **FREEDOM WALLET LÀ GÌ?**
+
+━━━━━━━━━━━━━━━━━━━━━
+
+Freedom Wallet **KHÔNG phải** là một app bạn tải về.
+
+Đây là **HỆ THỐNG** quản lý tự do tài chính mà **BẠN SỞ HỮU 100%**:
+
+✅ **Google Sheet riêng** trên Drive của bạn
+✅ **Apps Script riêng** do bạn deploy
+✅ **Web App riêng** chạy trên tài khoản Google của bạn
+
+**Dữ liệu nằm trên Drive của bạn**
+→ Không phụ thuộc vào ai
+→ Kiểm soát hoàn toàn
+
+━━━━━━━━━━━━━━━━━━━━━
+
+🎁 **BẠN NHẬN ĐƯỢC:**
+
+📊 **Công cụ quản lý tài chính**
+   → Theo dõi thu chi tự động
+   → Phân loại thông minh
+   → Báo cáo trực quan
+
+🏺 **Phương pháp 6 Hũ Tiền**
+   → Chi tiêu thiết yếu (55%)
+   → Hưởng thụ cuộc sống (10%)
+   → Đầu tư dài hạn (10%)
+   → Học tập phát triển (10%)
+   → Từ thiện cho đi (5%)
+   → Dự phòng khẩn cấp (10%)
+
+🤖 **Bot Telegram 24/7**
+   → AI Assistant
+   → Ghi giao dịch nhanh
+   → Nhắc nhở hàng ngày
+
+━━━━━━━━━━━━━━━━━━━━━
+
+⏱️ **THIẾT LẬP CHỈ MẤT 15 PHÚT**
+
+Mình sẽ hướng dẫn bạn từng bước:
+1️⃣ Copy Google Sheet Template
+2️⃣ Deploy Web App (3 phút)
+3️⃣ Kết nối với Bot
+
+**Sẵn sàng bắt đầu?** 👇
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("✅ Sẵn sàng - Đăng ký ngay!", callback_data="start_free_registration")],
+        [InlineKeyboardButton("📚 Xem hướng dẫn chi tiết", url="https://eliroxbot.notion.site/freedomwallet")],
+        [InlineKeyboardButton("🏠 Quay lại", callback_data="start")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    try:
+        await query.edit_message_text(
+            message,
+            parse_mode="Markdown",
+            reply_markup=reply_markup,
+            disable_web_page_preview=True
+        )
+    except Exception as e:
+        logger.error(f"Error editing message in handle_learn_more: {e}")
+        await query.message.reply_text(
+            message,
+            parse_mode="Markdown", reply_markup=reply_markup,
+            disable_web_page_preview=True
+        )
+
+
+async def handle_webapp_record_guide(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'webapp_record_guide' callback - Show quick transaction guide"""
+    query = update.callback_query
+    
+    message = """
+✍️ <b>GHI GIAO DỊCH NHANH QUA BOT</b>
+
+━━━━━━━━━━━━━━━
+
+<b>📝 CÁCH 1 — GÕ TRỰC TIẾP:</b>
+
+Chỉ cần gõ vào ô chat, ví dụ:
+
+• <code>Cà phê 35k</code>
+• <code>Ăn trưa 50k</code>
+• <code>Grab 40k</code>
+• <code>Lương 15tr</code>
+
+Bot sẽ tự động:
+✅ Nhận diện loại: Thu / Chi
+✅ Đề xuất danh mục
+✅ Đề xuất hũ tiền
+✅ Đề xuất tài khoản
+
+Bạn chỉ cần xác nhận rồi ghi vào Sheets!
+
+━━━━━━━━━━━━━━━
+
+<b>📱 CÁCH 2 — DÙNG NÚT MENU:</b>
+
+Nhấn nút <b>✍️ Ghi thu chi</b> ở bàn phím bên dưới
+→ Chọn loại giao dịch
+→ Nhập số tiền
+→ Xác nhận và xong!
+
+━━━━━━━━━━━━━━━
+
+<b>⚡ NHANH CHÓNG:</b>
+Chỉ 10 giây là xong! 🚀
+
+━━━━━━━━━━━━━━━
+
+<b>🎯 THỬ NGAY:</b>
+Gõ: <code>Cà phê 35k</code>
+"""
+    
+    keyboard = [
+        [InlineKeyboardButton("🏠 Quay về menu", callback_data="start")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    try:
+        await query.edit_message_text(
+            message,
+            parse_mode="HTML",
+            reply_markup=reply_markup
+        )
+    except Exception as e:
+        logger.error(f"Error editing message in handle_webapp_record_guide: {e}")
+
+
+async def handle_show_guide_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'show_guide_menu' callback - Show comprehensive guide menu"""
+    query = update.callback_query
+    
+    message = """
+📘 <b>MENU HƯỚNG DẪN</b>
+
+━━━━━━━━━━━━━━━
+
+<b>🎯 CÁC CHỨC NĂNG CHÍNH:</b>
+
+<b>1. ✍️ Ghi giao dịch</b>
+   → Gõ tự nhiên: "Cà phê 35k"
+   → Hoặc dùng nút menu
+
+<b>2. 📊 Xem báo cáo</b>
+   → Số dư hiện tại
+   → 5 giao dịch gần nhất
+   → Chi tiêu theo danh mục
+
+<b>3. 🏺 Quản lý 6 Hũ Tiền</b>
+   → Thiết yếu (55%)
+   → Hưởng thụ (10%)
+   → Đầu tư (10%)
+   → Học tập (10%)
+   → Từ thiện (5%)
+   → Dự phòng (10%)
+
+<b>4. 🌐 Web App & Sheets</b>
+   → Mở Web App để xem chi tiết
+   → Mở Sheets để chỉnh sửa
+
+━━━━━━━━━━━━━━━
+
+<b>💡 MẸO:</b>
+• Dùng nút bên dưới để thao tác nhanh
+• Gõ /help để xem danh sách lệnh
+• Gõ câu hỏi để nhận trợ giúp AI
+
+━━━━━━━━━━━━━━━
+
+📚 <b>Xem hướng dẫn đầy đủ:</b>
+👉 <a href="https://eliroxbot.notion.site/freedomwallet">Notion Guide</a>
+"""
+    
+    keyboard = [
+        [
+            InlineKeyboardButton("✍️ Ghi giao dịch", callback_data="webapp_record_guide"),
+            InlineKeyboardButton("📊 Xem báo cáo", callback_data="reminder_view_report")
+        ],
+        [InlineKeyboardButton("🏠 Quay về menu", callback_data="start")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    try:
+        await query.edit_message_text(
+            message,
+            parse_mode="HTML",
+            reply_markup=reply_markup,
+            disable_web_page_preview=True
+        )
+    except Exception as e:
+        logger.error(f"Error editing message in handle_show_guide_menu: {e}")
+
+
+async def handle_payment_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle 'payment_info' callback — show donation QR (tùy tâm)."""
+    import urllib.parse
+    from config.settings import settings
+    query = update.callback_query
+    await query.answer()
+
+    bank = settings.PAYMENT_BANK_NAME
+    name = settings.PAYMENT_ACCOUNT_NAME
+    stk  = settings.PAYMENT_ACCOUNT_NUMBER
+
+    bank_codes = {
+        "OCB": "970448", "VIETCOMBANK": "970436", "TECHCOMBANK": "970407",
+        "MBBANK": "970422", "AGRIBANK": "970405", "BIDV": "970418",
+        "VPBANK": "970432", "SACOMBANK": "970403", "ACB": "970416",
+        "VIETINBANK": "970415",
+    }
+    bank_code = bank_codes.get(bank.upper(), "970448")
+    qr_url = (
+        f"https://img.vietqr.io/image/{bank_code}-{stk}-compact.jpg?"
+        + urllib.parse.urlencode({"accountName": name, "addInfo": "Freedom Wallet"})
+    )
+
+    caption = (
+        "💝 <b>\u0110\u00f3ng g\u00f3p — T\u1ef1 do T\u00e0i ch\u00ednh c\u00f9ng nhau</b>\n\n"
+        "Freedom Wallet Bot \u0111\u01b0\u1ee3c ph\u00e1t tri\u1ec3n <b>mi\u1ec5n ph\u00ed</b> v\u1edbi t\u00e2m huy\u1ebft gi\u00fap "
+        "c\u1ed9ng \u0111\u1ed3ng th\u1ef1c h\u00e0nh t\u00e0i ch\u00ednh l\u00e0nh m\u1ea1nh.\n\n"
+        "M\u1ecdi \u0111\u00f3ng g\u00f3p <i>t\u00f9y t\u00e2m</i> \u0111\u1ec1u gi\u00fap:\n"
+        "\U0001f5a5 Duy tr\u00ec server & chi ph\u00ed v\u1eadn h\u00e0nh\n"
+        "\U0001f680 Ph\u00e1t tri\u1ec3n t\u00ednh n\u0103ng m\u1edbi\n"
+        "\U0001f4da X\u00e2y d\u1ef1ng c\u1ed9ng \u0111\u1ed3ng T\u1ef1 do T\u00e0i ch\u00ednh\n\n"
+        f"<b>Qu\u00e9t m\u00e3 QR ho\u1eb7c chuy\u1ec3n kho\u1ea3n:</b>\n"
+        f"\U0001f3e6 Ng\u00e2n h\u00e0ng: <code>{bank}</code>\n"
+        f"\U0001f464 Ch\u1ee7 TK: <code>{name}</code>\n"
+        f"\U0001f4b3 S\u1ed1 TK: <code>{stk}</code>\n\n"
+        "<i>C\u1ea3m \u01a1n b\u1ea1n \u0111\u00e3 \u0111\u1ed3ng h\u00e0nh v\u00e0 tin t\u01b0\u1edfng! \U0001f64f</i>"
+    )
+
+    keyboard = [[InlineKeyboardButton("\U0001f3e0 Qu\u1eady l\u1ea1i", callback_data="start")]]
+    try:
+        await query.message.reply_photo(
+            photo=qr_url, caption=caption,
+            parse_mode="HTML", reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        await query.message.delete()
+    except Exception as e:
+        logger.error(f"payment_info photo error: {e}")
+        await query.edit_message_text(
+            caption, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+
+async def handle_web_already_registered(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Ask user for their registration email to link Telegram account."""
+    query = update.callback_query
+    context.user_data['awaiting_web_email'] = True
+    text = "📧 *Nhập email bạn đã dùng để đăng ký trên website:*\n\n_Ví dụ: tenban@gmail.com_"
+    try:
+        await query.edit_message_caption(caption=text, parse_mode="Markdown")
+    except Exception:
+        await query.edit_message_text(text, parse_mode="Markdown")
+
+
+async def handle_web_confirm_yes(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """User confirmed the found registration — link their Telegram account."""
+    query = update.callback_query
+    user = query.from_user
+    sheet_data = context.user_data.pop('pending_web_link', None)
+
+    if not sheet_data:
+        await query.edit_message_text(
+            "❌ Phiên làm việc đã hết hạn. Vui lòng thử lại /start",
+            parse_mode="Markdown"
+        )
+        return
+
+    try:
+        from bot.utils.sheets_registration import save_user_to_registration_sheet
+        from bot.utils.database import update_user_registration, generate_referral_code
+
+        # Link in DB
+        await update_user_registration(
+            user_id=user.id,
+            email=sheet_data["email"],
+            phone=sheet_data.get("phone"),
+            full_name=sheet_data.get("full_name"),
+            source="WEB",
+            referral_count=sheet_data.get("referral_count", 0),
+        )
+
+        # Update sheet row with Telegram ID + Username
+        bot_me = await context.bot.get_me()
+        referral_code = generate_referral_code(user.id)
+        referral_link = f"https://t.me/{bot_me.username}?start=REF{referral_code}"
+
+        await save_user_to_registration_sheet(
+            user_id=user.id,
+            username=user.username or "",
+            full_name=sheet_data.get("full_name", ""),
+            email=sheet_data["email"],
+            phone=sheet_data.get("phone", ""),
+            plan=sheet_data.get("plan", "FREE"),
+            referral_link=referral_link,
+            referral_count=sheet_data.get("referral_count", 0),
+            source=sheet_data.get("source", "Landing Page"),
+            status="Đã đăng ký",
+            referred_by=sheet_data.get("referred_by"),
+        )
+
+        name = sheet_data.get("full_name") or user.first_name or "bạn"
+        await query.edit_message_text(
+            f"✅ *Xác nhận thành công!*\n\n"
+            f"Xin chào *{name}*, tài khoản đã được liên kết với Telegram của bạn.\n\n"
+            f"Bước tiếp theo: thiết lập Web App của riêng bạn 👇",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("🚀 Thiết lập Web App ngay", callback_data="webapp_step_0")
+            ]])
+        )
+
+    except Exception as e:
+        logger.error(f"web_confirm_yes error: {e}", exc_info=True)
+        await query.edit_message_text("😓 Có lỗi xảy ra, vui lòng thử lại sau.")
+
+
+async def handle_web_confirm_no(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """User said the found account is not theirs — let them re-enter email."""
+    query = update.callback_query
+    context.user_data.pop('pending_web_link', None)
+    context.user_data['awaiting_web_email'] = True
+    await query.edit_message_text(
+        "📧 *Nhập lại email bạn đã dùng để đăng ký:*\n\n_Ví dụ: tenban@gmail.com_",
+        parse_mode="Markdown"
+    )
+
