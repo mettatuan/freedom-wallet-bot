@@ -47,6 +47,8 @@ def extract_amount(text: str) -> Optional[int]:
                 pass
 
     # ── VND amounts ────────────────────────────────────────────────────────────
+    # Keep original text for fallback detection (before cleaning)
+    text_orig = text
     # Remove commas and dots from numbers
     text = text.replace(",", "").replace(".", "")
     
@@ -78,7 +80,26 @@ def extract_amount(text: str) -> Optional[int]:
             else:
                 # Plain number
                 return int(number)
-    
+
+    # ── Investment/Forex context: bare number → assume USD ───────────────────
+    # e.g., "+213 đầu tư XAUUSD", "lãi 500 gold", "+0.5 BTC crypto"
+    invest_keywords = [
+        'xau', 'xauusd', 'gold', 'forex', 'đầu tư', 'invest',
+        'crypto', 'btc', 'eth', 'coin', 'stock', 'chứng khoán',
+        'trading', 'trade', 'lãi đầu tư', 'lợi nhuận'
+    ]
+    if any(k in text_orig.lower() for k in invest_keywords):
+        m = re.search(r'(\d+(?:[.,]\d+)?)', text_orig)
+        if m:
+            num = float(m.group(1).replace(',', '.'))
+            return int(num * USD_TO_VND)
+
+    # ── Signed bare number fallback: "+213", "-50" ───────────────────────────
+    # User explicitly used +/- → trust the number even without unit
+    m = re.search(r'[+\-]\s*(\d+)\b', text_orig)
+    if m:
+        return int(m.group(1))
+
     return None
 
 
@@ -205,6 +226,60 @@ def format_vnd(amount: int) -> str:
         return f"{formatted}đ"
 
 
+async def ai_parse_transaction(text: str, api_key: str) -> dict:
+    """
+    AI fallback: parse ambiguous transaction text using OpenAI.
+    Only called when standard parser fails and OPENAI_API_KEY is set.
+
+    Returns same structure as parse_natural_language_transaction(),
+    or a dict with 'error' key on failure.
+    """
+    try:
+        import openai
+        client = openai.AsyncOpenAI(api_key=api_key)
+
+        system_prompt = (
+            "Bạn là trợ lý tài chính. Phân tích tin nhắn giao dịch tiếng Việt/Anh.\n"
+            "Trả về JSON với các field:\n"
+            "  amount: số tiền VND (integer, âm = chi tiêu, dương = thu nhập)\n"
+            "  category: 1 trong [Ăn uống, Di chuyển, Mua sắm, Giải trí, Sức khỏe,\n"
+            "    Giáo dục, Lương, Đầu tư, Thu nhập khác, Chi phí khác]\n"
+            "  description: mô tả ngắn (max 50 ký tự)\n"
+            "  type: 'income' hoặc 'expense'\n"
+            "Tỷ giá: 1 USD = 26,236 VND. XAUUSD, forex, crypto → income/investment.\n"
+            "Chỉ trả JSON, không giải thích."
+        )
+
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": text},
+            ],
+            max_tokens=120,
+            temperature=0,
+        )
+
+        import json
+        raw = response.choices[0].message.content.strip()
+        # Strip markdown code blocks if present
+        raw = re.sub(r'^```[\w]*\n?', '', raw)
+        raw = re.sub(r'```$', '', raw).strip()
+        data = json.loads(raw)
+
+        return {
+            "amount":       int(data["amount"]),
+            "category":     data.get("category", "Chi phí khác"),
+            "description":  data.get("description", text[:50]),
+            "type":         data.get("type", "expense"),
+            "original_text": text,
+            "_ai_parsed":   True,
+        }
+
+    except Exception as e:
+        return {"error": f"AI parse failed: {e}"}
+
+
 def parse_natural_language_transaction(text: str) -> dict:
     """
     Parse natural language transaction into structured data.
@@ -225,8 +300,16 @@ def parse_natural_language_transaction(text: str) -> dict:
     amount = extract_amount(text)
     
     if amount is None:
+        # Context-aware suggestion based on what user typed
+        bare = re.search(r'(\d+)', text)
+        if bare:
+            n = bare.group(1)
+            hint = f"Thêm đơn vị vào số {n}: '+{n}k', '+{n}tr' hoặc '+${n}'"
+        else:
+            hint = "VD: 'Cà phê 35k', 'Lương 15tr', '+$213 đầu tư XAUUSD'"
         return {
-            "error": "Không tìm thấy số tiền. VD: 'Cà phê 35k'"
+            "error": f"Không tìm thấy số tiền. {hint}",
+            "_original_text": text,
         }
     
     # Detect type

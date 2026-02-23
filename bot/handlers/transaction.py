@@ -9,7 +9,7 @@ from loguru import logger
 import aiohttp
 
 import asyncio
-from bot.core.nlp import parse_natural_language_transaction, format_vnd
+from bot.core.nlp import parse_natural_language_transaction, ai_parse_transaction, format_vnd
 from bot.core.categories import get_all_categories
 from bot.core.keyboard import (
     get_main_keyboard,
@@ -149,9 +149,15 @@ async def handle_quick_transaction(update: Update, context: ContextTypes.DEFAULT
 
     parsed = parse_natural_language_transaction(message_text)
 
+    # ── AI fallback khi standard parser không nhận được số tiền ──────────────
+    if "error" in parsed:
+        from config.settings import settings
+        if settings.OPENAI_API_KEY:
+            parsed = await ai_parse_transaction(message_text, settings.OPENAI_API_KEY)
+
     if "error" in parsed:
         await update.message.reply_text(
-            f"❌ {parsed['error']}\n\n💡 Thử: 'Cà phê 35k' hoặc 'Lương 15tr'",
+            f"❌ {parsed['error']}",
             reply_markup=get_main_keyboard()
         )
         raise ApplicationHandlerStop
