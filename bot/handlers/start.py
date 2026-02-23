@@ -259,6 +259,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         source="Landing Page",
                         status="Đã đăng ký",
                         referred_by=web_data.get("referred_by"),
+                        web_code=email_hash,  # Pass 3 fallback: match by WEB code in column H
                     )
                     logger.info(f"✅ WEB user {user.id} synced to Registrations sheet")
                 except Exception as e:

@@ -149,7 +149,8 @@ async def save_user_to_registration_sheet(
     referral_count: int,
     source: str,
     status: str,
-    referred_by: str = None
+    referred_by: str = None,
+    web_code: str = None,
 ):
     """
     Save user to registration Google Sheet
@@ -188,6 +189,22 @@ async def save_user_to_registration_sheet(
                     user_exists = True
                     user_row = idx
                     logger.info(f"🔍 Found existing landing-page row by email at row {user_row} — will update with TG data")
+
+        # Pass 3: if still not found, search by WEB code in column H (index 7)
+        # This handles the case where sheet lookup failed → fallback web_data has empty email
+        # but we still know the original WEB_ code (16N3XXV etc.) that was in column H
+        if not user_exists and web_code:
+            for idx, row in enumerate(all_values[1:], start=2):
+                row_h = row[7].strip() if len(row) > 7 else ""
+                row_user_id = row[1].strip() if len(row) > 1 else ""
+                if row_h == web_code and row_user_id == "":
+                    user_exists = True
+                    user_row = idx
+                    # Recover email/phone/full_name from the found row so we don't blank them out
+                    if not email:   email    = row[4].strip() if len(row) > 4 else email
+                    if not phone:   phone    = row[5].strip() if len(row) > 5 else phone
+                    if not full_name: full_name = row[3].strip() if len(row) > 3 else full_name
+                    logger.info(f"🔍 Found landing-page row by WEB code '{web_code}' at row {user_row} — updating with TG data")
         
         # Prepare row data
         now_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
