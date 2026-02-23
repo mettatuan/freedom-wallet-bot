@@ -665,7 +665,7 @@ def get_webapp_setup_keyboard(current_step: int) -> InlineKeyboardMarkup:
             InlineKeyboardButton("📱 Kết nối ngay", callback_data="connect_webapp_start")
         ])
         buttons.append([
-            InlineKeyboardButton("⏭ Bỏ qua, học cách dùng", callback_data="guide_step_0")
+            InlineKeyboardButton("⏭ Bỏ qua, học cách dùng", callback_data="webapp_usage_step_0")
         ])
         buttons.append([
             InlineKeyboardButton("💬 Cần trợ giúp?", url="https://t.me/tuanai_mentor")
@@ -820,7 +820,7 @@ async def webapp_callback_handler(update: Update, context: ContextTypes.DEFAULT_
         elif callback_data == "show_guide_menu":
             await query.answer()
             guide_keyboard = InlineKeyboardMarkup([
-                [InlineKeyboardButton("🏗️ Tạo Web App", callback_data="guide_step_0")],
+                [InlineKeyboardButton("🏗️ Tạo Web App", callback_data="webapp_step_0")],
                 [InlineKeyboardButton("🤖 Kết nối Telegram Bot", callback_data="connect_webapp_start")],
                 [InlineKeyboardButton("📖 Sử dụng Web App", callback_data="webapp_usage_step_0")],
                 [InlineKeyboardButton("⬅️ Quay lại", callback_data="webapp_usage_step_9")]
@@ -1132,7 +1132,7 @@ async def show_quick_menu_keyboard(update: Update, context: ContextTypes.DEFAULT
         # Add inline menu for first-time setup
         inline_keyboard = [
             [InlineKeyboardButton("📖 Hướng dẫn tạo Web App", callback_data="webapp_step_0")],
-            [InlineKeyboardButton("🔗 Hướng dẫn kết nối Google Sheets", callback_data="guide_step_0")],
+            [InlineKeyboardButton("🔗 Hướng dẫn kết nối Google Sheets", callback_data="webapp_step_0")],
             [InlineKeyboardButton("🎯 Hướng dẫn sử dụng Web Apps", url="https://t.me/tuanai_mentor")]
         ]
         inline_markup = InlineKeyboardMarkup(inline_keyboard)

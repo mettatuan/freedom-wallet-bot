@@ -1082,8 +1082,8 @@ async def handle_donate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_guide_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show guide submenu: Tạo Web App / Kết nối Bot / Sử dụng Web App."""
     keyboard = [
-        [InlineKeyboardButton("🛠 Tạo Web App",                callback_data="show_guide_menu")],
-        [InlineKeyboardButton("🔗 Cập nhật link & Kết nối Bot", callback_data="show_guide_menu")],
+        [InlineKeyboardButton("🛠 Tạo Web App",                callback_data="webapp_step_0")],
+        [InlineKeyboardButton("🔗 Cập nhật link & Kết nối Bot", callback_data="connect_webapp_start")],
         [InlineKeyboardButton("📱 Sử dụng Web App",            callback_data="webapp_usage_step_1")],
     ]
     await update.message.reply_text(
