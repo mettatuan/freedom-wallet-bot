@@ -4,8 +4,10 @@ A Telegram bot providing 24/7 customer support for Freedom Wallet app
 """
 
 import asyncio
+import html
 import logging
 import sys
+import traceback
 from pathlib import Path
 
 from telegram import Update
@@ -55,14 +57,58 @@ logger = logging.getLogger(__name__)
 
 
 async def error_handler(update: Update, context) -> None:
-    """Handle errors in the bot."""
-    logger.error(f"Update {update} caused error {context.error}")
-    
-    if update and update.effective_message:
-        await update.effective_message.reply_text(
-            "😓 Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau!\n"
-            "Nếu vấn đề tiếp diễn, dùng /support để liên hệ."
+    """SCALE#102 — Log + alert admin + reply to user on unhandled exceptions."""
+    logger.error("Unhandled exception", exc_info=context.error)
+
+    # ── 1. Reply to user (best-effort) ──────────────────────────────────────
+    try:
+        if update and update.effective_message:
+            await update.effective_message.reply_text(
+                "😓 Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau!\n"
+                "Nếu vấn đề tiếp diễn, dùng /support để liên hệ."
+            )
+    except Exception:
+        pass
+
+    # ── 2. Alert admin on Telegram (SCALE#102) ───────────────────────────────
+    if not settings.ADMIN_USER_ID:
+        return
+
+    try:
+        tb = "".join(
+            traceback.format_exception(
+                type(context.error), context.error, context.error.__traceback__
+            )
         )
+
+        # Build context info for the alert
+        user_info = ""
+        if update and update.effective_user:
+            u = update.effective_user
+            user_info = (
+                f"\n👤 User: <code>{html.escape(u.full_name)}</code> "
+                f"(<code>{u.id}</code>)"
+            )
+
+        chat_info = ""
+        if update and update.effective_chat:
+            chat_info = f"\n💬 Chat: <code>{update.effective_chat.id}</code>"
+
+        # Truncate traceback to fit Telegram 4096 char limit
+        tb_escaped = html.escape(tb[-2800:])
+
+        alert = (
+            f"🚨 <b>Bot Exception</b>{user_info}{chat_info}\n\n"
+            f"<pre>{tb_escaped}</pre>"
+        )
+
+        await context.bot.send_message(
+            chat_id=settings.ADMIN_USER_ID,
+            text=alert,
+            parse_mode="HTML",
+        )
+    except Exception as alert_err:
+        logger.warning(f"[SCALE#102] Failed to send error alert to admin: {alert_err}")
 
 
 async def post_init(application: Application) -> None:
