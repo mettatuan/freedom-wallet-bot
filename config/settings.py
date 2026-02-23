@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     # Freedom Wallet Template
     YOUR_TEMPLATE_ID: str = os.getenv("YOUR_TEMPLATE_ID", "")
     
+    # Telegram API proxy (Cloudflare Worker URL to bypass regional blocks)
+    # Example: https://telegram-proxy.your-name.workers.dev
+    TELEGRAM_BASE_URL: Optional[str] = os.getenv("TELEGRAM_BASE_URL")
+
     # Redis (for caching - Phase 3)
     REDIS_URL: Optional[str] = os.getenv("REDIS_URL")
     

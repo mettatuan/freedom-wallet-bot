@@ -79,7 +79,7 @@ async def post_shutdown(application: Application) -> None:
 def main() -> None:
     """Start the bot."""
     # Create application
-    application = (
+    builder = (
         Application.builder()
         .token(settings.TELEGRAM_BOT_TOKEN)
         .concurrent_updates(32)
@@ -88,8 +88,13 @@ def main() -> None:
         .write_timeout(30)
         .post_init(post_init)
         .post_shutdown(post_shutdown)
-        .build()
     )
+    # Cloudflare Worker proxy: set TELEGRAM_BASE_URL in .env to bypass regional blocks
+    if settings.TELEGRAM_BASE_URL:
+        base = settings.TELEGRAM_BASE_URL.rstrip('/')
+        builder = builder.base_url(f"{base}/bot").base_file_url(f"{base}/file/bot")
+        logger.info(f"[INFO] Using Telegram proxy: {base}")
+    application = builder.build()
     
     # Support conversation handler
     from telegram.ext import ConversationHandler
