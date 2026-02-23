@@ -6,11 +6,9 @@ A Telegram bot providing 24/7 customer support for Freedom Wallet app
 import asyncio
 import logging
 import sys
-import time
 from pathlib import Path
 
 from telegram import Update
-from telegram.error import TimedOut
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -85,6 +83,9 @@ def main() -> None:
         Application.builder()
         .token(settings.TELEGRAM_BOT_TOKEN)
         .concurrent_updates(32)
+        .connect_timeout(60)
+        .read_timeout(30)
+        .write_timeout(30)
         .post_init(post_init)
         .post_shutdown(post_shutdown)
         .build()
@@ -258,22 +259,8 @@ def main() -> None:
     logger.info(f"[OK] Bot started in {settings.ENV} mode")
     logger.info(f"[INFO] Log level: {settings.LOG_LEVEL}")
     
-    # Run bot with startup retry (handles Telegram API TimedOut on init)
-    def _run_with_retry():
-        MAX_RETRIES = 5
-        for attempt in range(MAX_RETRIES):
-            try:
-                application.run_polling(allowed_updates=Update.ALL_TYPES)
-                break
-            except TimedOut:
-                if attempt < MAX_RETRIES - 1:
-                    logger.warning(f"Startup TimedOut (attempt {attempt + 1}/{MAX_RETRIES}), retrying in 10s...")
-                    time.sleep(10)
-                else:
-                    logger.error("Max retries reached. Bot failed to start.")
-                    raise
-
-    _run_with_retry()
+    # Start polling (connect_timeout=60 handles slow Telegram API at startup)
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
