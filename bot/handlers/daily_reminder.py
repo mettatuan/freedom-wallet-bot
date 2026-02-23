@@ -7,7 +7,7 @@ from telegram.ext import ContextTypes, CallbackQueryHandler
 from loguru import logger
 from datetime import datetime, timedelta
 import aiohttp
-from bot.utils.database import SessionLocal, User
+from bot.utils.database import SessionLocal, User, run_sync
 
 
 # Morning Reminder Content (8:00 AM)
@@ -93,20 +93,62 @@ def get_streak_message(streak: int) -> str:
     else:
         return f"👑 **Streak: {streak} ngày!** BẠN LÀ HUYỀN THOẠI!"
 
+def _get_reminder_user_sync(user_id: int):
+    """Returns dict of user data needed for reminder, or None if not found/reminders disabled."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.reminder_enabled:
+            return None
+        return {
+            "name": user.full_name or user.first_name or "bạn",
+            "streak": user.streak_count or 0,
+            "last_transaction_date": user.last_transaction_date,
+            "reminder_enabled": user.reminder_enabled,
+        }
+    finally:
+        db.close()
+
+
+def _update_last_reminder_sync(user_id: int) -> None:
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            user.last_reminder_sent = datetime.utcnow()
+            db.commit()
+    finally:
+        db.close()
+
+
+def _disable_reminder_sync(user_id: int) -> None:
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            user.reminder_enabled = False
+            db.commit()
+    finally:
+        db.close()
+
+
+def _get_user_web_app_url_sync(user_id: int):
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        return user.web_app_url if user else None
+    finally:
+        db.close()
 
 async def send_morning_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int):
     """Send morning motivation reminder"""
     try:
-        db = SessionLocal()
-        user = db.query(User).filter(User.id == user_id).first()
-        
-        if not user or not user.reminder_enabled:
-            db.close()
+        user_data = await run_sync(_get_reminder_user_sync, user_id)
+        if not user_data:
             return
         
-        # Get user name
-        name = user.full_name or user.first_name or "bạn"
-        streak = user.streak_count or 0
+        name = user_data['name']
+        streak = user_data['streak']
         
         # Generate message
         streak_message = get_streak_message(streak)
@@ -132,9 +174,7 @@ async def send_morning_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int
         )
         
         # Update last reminder sent
-        user.last_reminder_sent = datetime.utcnow()
-        db.commit()
-        db.close()
+        await run_sync(_update_last_reminder_sync, user_id)
         
         logger.info(f"Sent morning reminder to user {user_id} (streak: {streak})")
         
@@ -145,20 +185,16 @@ async def send_morning_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int
 async def send_evening_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int):
     """Send evening reminder to record transactions"""
     try:
-        db = SessionLocal()
-        user = db.query(User).filter(User.id == user_id).first()
-        
-        if not user or not user.reminder_enabled:
-            db.close()
+        user_data = await run_sync(_get_reminder_user_sync, user_id)
+        if not user_data:
             return
         
-        # Get user name
-        name = user.full_name or user.first_name or "bạn"
-        streak = user.streak_count or 0
+        name = user_data['name']
+        streak = user_data['streak']
         
         # Check if user recorded transaction today
         today = datetime.utcnow().date()
-        last_transaction = user.last_transaction_date
+        last_transaction = user_data['last_transaction_date']
         recorded_today = last_transaction and last_transaction.date() == today
         
         if recorded_today:
@@ -194,9 +230,7 @@ async def send_evening_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int
         )
         
         # Update last reminder sent
-        user.last_reminder_sent = datetime.utcnow()
-        db.commit()
-        db.close()
+        await run_sync(_update_last_reminder_sync, user_id)
         
         logger.info(f"Sent evening reminder to user {user_id} (recorded_today: {recorded_today})")
         
@@ -207,15 +241,11 @@ async def send_evening_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: int
 async def send_skip_alert(context: ContextTypes.DEFAULT_TYPE, user_id: int, skip_days: int):
     """Send alert when user skips recording for 2+ days"""
     try:
-        db = SessionLocal()
-        user = db.query(User).filter(User.id == user_id).first()
-        
-        if not user:
-            db.close()
+        user_data = await run_sync(_get_reminder_user_sync, user_id)
+        if not user_data:
             return
         
-        # Get user name
-        name = user.full_name or user.first_name or "bạn"
+        name = user_data['name']
         
         # Generate message
         message = SKIP_ALERT_TEMPLATE.format(
@@ -239,7 +269,6 @@ async def send_skip_alert(context: ContextTypes.DEFAULT_TYPE, user_id: int, skip
         )
         
         logger.info(f"Sent skip alert to user {user_id} (skip_days: {skip_days})")
-        db.close()
         
     except Exception as e:
         logger.error(f"Error sending skip alert to {user_id}: {e}")
@@ -275,12 +304,7 @@ async def reminder_callback_handler(update: Update, context: ContextTypes.DEFAUL
             )
         
         elif callback_data == "reminder_disable_today":
-            db = SessionLocal()
-            user = db.query(User).filter(User.id == user_id).first()
-            if user:
-                user.reminder_enabled = False
-                db.commit()
-            db.close()
+            await run_sync(_disable_reminder_sync, user_id)
             
             await query.edit_message_text(
                 text="🔕 **Đã tắt nhắc nhở hôm nay.**\n\n"
@@ -297,12 +321,7 @@ async def reminder_callback_handler(update: Update, context: ContextTypes.DEFAUL
         
         elif callback_data == "reminder_view_report":
             # Fetch real balance + recent transactions from user's Web App
-            _db = SessionLocal()
-            try:
-                _user = _db.query(User).filter(User.id == user_id).first()
-                web_app_url = _user.web_app_url if _user else None
-            finally:
-                _db.close()
+            web_app_url = await run_sync(_get_user_web_app_url_sync, user_id)
 
             if not web_app_url:
                 await query.edit_message_text(

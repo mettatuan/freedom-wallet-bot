@@ -5,10 +5,62 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from loguru import logger
 from bot.services.payment_service import PaymentVerificationService
-from bot.utils.database import get_db, PaymentVerification, User
+from bot.utils.database import get_db, PaymentVerification, User, SessionLocal, run_sync
 from bot.handlers.admin_payment import is_admin
 from datetime import datetime
 import html
+
+
+def _get_approve_notify_data_sync(verification_id: str):
+    """Return user/amount data needed for approval notification. Extracts all primitives before close."""
+    db = SessionLocal()
+    try:
+        ver_id = int(verification_id.replace("VER", ""))
+        ver = db.query(PaymentVerification).filter(PaymentVerification.id == ver_id).first()
+        if not ver:
+            return None
+        user = db.query(User).filter(User.id == ver.user_id).first()
+        return {
+            "user_id": ver.user_id,
+            "amount": float(ver.amount),
+            "username": user.username if user else None,
+            "full_name": user.full_name if user else None,
+        }
+    finally:
+        db.close()
+
+
+def _get_pending_list_sync():
+    """Return list of pending payment dicts with user display info."""
+    db = SessionLocal()
+    try:
+        pending = db.query(PaymentVerification).filter(
+            PaymentVerification.status == "PENDING"
+        ).order_by(PaymentVerification.created_at.desc()).all()
+        result = []
+        for ver in pending:
+            user = db.query(User).filter(User.id == ver.user_id).first()
+            result.append({
+                "id": ver.id,
+                "user_id": ver.user_id,
+                "amount": float(ver.amount),
+                "created_at_str": ver.created_at.strftime('%d/%m/%Y %H:%M'),
+                "username": user.username if user else None,
+                "full_name": user.full_name if user else None,
+            })
+        return result
+    finally:
+        db.close()
+
+
+def _get_ver_created_at_sync(ver_int_id: int):
+    """Return created_at datetime for a verification record, or None if not found."""
+    db = SessionLocal()
+    try:
+        ver = db.query(PaymentVerification).filter(PaymentVerification.id == ver_int_id).first()
+        return ver.created_at if ver else None
+    finally:
+        db.close()
 
 
 async def handle_admin_approve_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -39,28 +91,20 @@ async def handle_admin_approve_callback(update: Update, context: ContextTypes.DE
         
         if success:
             # Get verification details for Google Sheets logging
-            db = next(get_db())
-            ver_id = int(verification_id.replace("VER", ""))
-            verification = db.query(PaymentVerification).filter(
-                PaymentVerification.id == ver_id
-            ).first()
+            approval_data = await run_sync(_get_approve_notify_data_sync, verification_id)
             
-            user = db.query(User).filter(User.id == verification.user_id).first()
-            
-            if user and verification:
+            if approval_data:
                 # Log to Google Sheets
                 await log_payment_to_sheets(
                     verification_id=verification_id,
-                    user_id=user.id,
-                    username=user.username,
-                    full_name=user.full_name,
-                    amount=verification.amount,
+                    user_id=approval_data['user_id'],
+                    username=approval_data['username'],
+                    full_name=approval_data['full_name'],
+                    amount=approval_data['amount'],
                     status="APPROVED",
                     approved_by=user_id,
                     approved_at=datetime.now()
                 )
-            
-            db.close()
             
             # Update message with success
             new_caption = f"""
@@ -82,7 +126,7 @@ Thời gian: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
                 expire_date = datetime.now() + timedelta(days=365)
                 
                 await context.bot.send_message(
-                    chat_id=verification.user_id,
+                    chat_id=approval_data['user_id'] if approval_data else user_id,
                     text=f"""
 🎉 <b>CHÚC MỪNG! PREMIUM ĐÃ KÍCH HOẠT</b>
 
@@ -103,7 +147,7 @@ Gửi /start để khám phá tính năng Premium!
                     parse_mode="HTML"
                 )
             except Exception as notify_error:
-                logger.error(f"Failed to notify user {verification.user_id}: {notify_error}")
+                logger.error(f"Failed to notify user {approval_data['user_id'] if approval_data else '?'}: {notify_error}")
             
             try:
                 await query.edit_message_text(
@@ -179,39 +223,32 @@ async def handle_admin_list_pending_callback(update: Update, context: ContextTyp
         return
     
     # Get all pending verifications
-    db = next(get_db())
-    pending = db.query(PaymentVerification).filter(
-        PaymentVerification.status == "PENDING"
-    ).order_by(PaymentVerification.created_at.desc()).all()
+    pending_items = await run_sync(_get_pending_list_sync)
     
-    if not pending:
+    if not pending_items:
         await query.answer("✅ Không có yêu cầu nào đang chờ duyệt!", show_alert=True)
-        db.close()
         return
     
     # Build message
-    message = f"<b>📋 YÊU CẦU CHỜ DUYỆT: {len(pending)}</b>\n\n"
+    message = f"<b>📋 YÊU CẦU CHỜ DUYỆT: {len(pending_items)}</b>\n\n"
     
-    for ver in pending[:10]:  # Show max 10
-        user = db.query(User).filter(User.id == ver.user_id).first()
-        username = f"@{user.username}" if user and user.username else "N/A"
-        full_name = user.full_name if user else "N/A"
+    for ver in pending_items[:10]:  # Show max 10
+        username = f"@{ver['username']}" if ver['username'] else "N/A"
+        full_name = ver['full_name'] or "N/A"
         
         safe_username = html.escape(username)
         safe_fullname = html.escape(full_name)
         
         message += f"""
 ━━━━━━━━━━━━━━━━━━━━━
-Mã: <code>VER{ver.id}</code>
+Mã: <code>VER{ver['id']}</code>
 User: {safe_fullname} ({safe_username})
-Số tiền: {ver.amount:,.0f} VND
-Thời gian: {ver.created_at.strftime('%d/%m/%Y %H:%M')}
+Số tiền: {ver['amount']:,.0f} VND
+Thời gian: {ver['created_at_str']}
 
-Duyệt: /payment_approve VER{ver.id}
-Từ chối: /payment_reject VER{ver.id}
+Duyệt: /payment_approve VER{ver['id']}
+Từ chối: /payment_reject VER{ver['id']}
 """
-    
-    db.close()
     
     # Send as new message
     await context.bot.send_message(
@@ -275,12 +312,8 @@ async def log_payment_to_sheets(
             logger.info("Created new 'Payments' worksheet")
         
         # Get created_at from verification (need to query database)
-        from bot.utils.database import get_db
-        db = next(get_db())
-        ver_id = int(verification_id.replace("VER", ""))
-        ver = db.query(PaymentVerification).filter(PaymentVerification.id == ver_id).first()
-        created_at = ver.created_at if ver else approved_at
-        db.close()
+        ver_int_id = int(verification_id.replace("VER", ""))
+        created_at = (await run_sync(_get_ver_created_at_sync, ver_int_id)) or approved_at
         
         # Prepare row data (11 columns to match header)
         row_data = [

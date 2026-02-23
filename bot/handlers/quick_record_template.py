@@ -4,13 +4,31 @@ Parse "chi 50k tiền ăn" và gọi API để ghi vào Google Sheets
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, MessageHandler, filters, ApplicationHandlerStop, CallbackQueryHandler
-from bot.utils.database import get_db, User
+from bot.utils.database import get_db, User, SessionLocal, run_sync
 from bot.services.sheets_api_client import SheetsAPIClient
 import re
 import logging
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Sync DB helper
+# ---------------------------------------------------------------------------
+def _get_user_sheets_data_sync(user_id: int):
+    """Return (spreadsheet_id, web_app_url) primitives or None if not set up."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.spreadsheet_id:
+            return None
+        return {
+            "spreadsheet_id": user.spreadsheet_id,
+            "web_app_url": user.web_app_url,
+        }
+    finally:
+        db.close()
 
 # Transaction type keywords
 # Grammar keywords - Always remove (they're just markers)
@@ -424,20 +442,18 @@ async def handle_quick_record(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
     
     # Check if user has connected Sheets
-    db = next(get_db())
-    user = db.query(User).filter(User.id == user_id).first()
-    
-    if not user or not user.spreadsheet_id:
+    user_data = await run_sync(_get_user_sheets_data_sync, user_id)
+    if not user_data:
         # User not connected
         await update.message.reply_text(
             "⚠️ Bạn chưa kết nối Google Sheets!\n\n"
             "Dùng /connectsheets để kết nối trước nhé. 😊"
         )
         return
-    
+
     # Get categories from API for smart matching
     try:
-        client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
+        client = SheetsAPIClient(user_data['spreadsheet_id'], user_data['web_app_url'])
         categories_result = await client.get_categories()
         
         if not categories_result.get("success"):
@@ -613,15 +629,13 @@ async def handle_category_selection(update: Update, context: ContextTypes.DEFAUL
     cat_id = query.data.replace("qr_cat_", "")
     
     # Get user from database
-    db = next(get_db())
-    user = db.query(User).filter(User.id == user_id).first()
-    
-    if not user or not user.spreadsheet_id:
+    user_data = await run_sync(_get_user_sheets_data_sync, user_id)
+    if not user_data:
         await query.edit_message_text("⚠️ Bạn chưa kết nối Google Sheets!")
         return
-    
+
     try:
-        client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
+        client = SheetsAPIClient(user_data['spreadsheet_id'], user_data['web_app_url'])
         categories_result = await client.get_categories()
         
         if not categories_result.get("success"):
@@ -766,15 +780,13 @@ async def handle_show_all_categories(update: Update, context: ContextTypes.DEFAU
     transaction_type = transaction['type']
     
     # Get user from database
-    db = next(get_db())
-    user = db.query(User).filter(User.id == user_id).first()
-    
-    if not user or not user.spreadsheet_id:
+    user_data = await run_sync(_get_user_sheets_data_sync, user_id)
+    if not user_data:
         await query.edit_message_text("⚠️ Bạn chưa kết nối Google Sheets!")
         return
-    
+
     try:
-        client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
+        client = SheetsAPIClient(user_data['spreadsheet_id'], user_data['web_app_url'])
         categories_result = await client.get_categories()
         
         if not categories_result.get("success"):
@@ -958,23 +970,21 @@ async def handle_account_selection(update: Update, context: ContextTypes.DEFAULT
     )
     
     # Get user from database
-    db = next(get_db())
-    user = db.query(User).filter(User.id == user_id).first()
-    
-    if not user or not user.spreadsheet_id:
+    user_data = await run_sync(_get_user_sheets_data_sync, user_id)
+    if not user_data:
         await query.edit_message_text("⚠️ Không tìm thấy spreadsheet ID. Vui lòng /connectsheets lại.")
         context.user_data.pop('pending_transaction', None)
         return
-    
+
     # Call API to write to sheet
     try:
         # ✅ FIX: Pass user's Web App URL to client
         logger.info(f"🔧 [Account] Creating SheetsAPIClient for user {user_id}")
-        logger.info(f"📊 [Account] Spreadsheet ID: {user.spreadsheet_id[:20]}...")
-        webapp_url_display = user.web_app_url[:80] if user.web_app_url else 'NOT SET'
+        logger.info(f"📊 [Account] Spreadsheet ID: {user_data['spreadsheet_id'][:20]}...")
+        webapp_url_display = user_data['web_app_url'][:80] if user_data['web_app_url'] else 'NOT SET'
         logger.info(f"🌐 [Account] Web App URL: {webapp_url_display}")
         
-        client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
+        client = SheetsAPIClient(user_data['spreadsheet_id'], user_data['web_app_url'])
         
         logger.info(f"📤 [Account] Calling add_transaction: type={transaction['type']}, amount={transaction['amount']}")
         result = await client.add_transaction(
@@ -1050,24 +1060,22 @@ async def handle_confirm_transaction(update: Update, context: ContextTypes.DEFAU
     )
     
     # Get user from database
-    db = next(get_db())
-    user = db.query(User).filter(User.id == user_id).first()
-    
-    if not user or not user.spreadsheet_id:
+    user_data = await run_sync(_get_user_sheets_data_sync, user_id)
+    if not user_data:
         await query.edit_message_text("⚠️ Không tìm thấy spreadsheet ID. Vui lòng /connectsheets lại.")
         context.user_data.pop('pending_transaction', None)
         return
-    
+
     # Call API to write to sheet
     try:
         # ✅ FIX: Pass user's Web App URL to client
         logger.info(f"🔧 Creating SheetsAPIClient for user {user_id}")
-        logger.info(f"📊 Spreadsheet ID: {user.spreadsheet_id[:20]}...")
-        webapp_url_display = user.web_app_url[:80] if user.web_app_url else 'NOT SET'
+        logger.info(f"📊 Spreadsheet ID: {user_data['spreadsheet_id'][:20]}...")
+        webapp_url_display = user_data['web_app_url'][:80] if user_data['web_app_url'] else 'NOT SET'
         logger.info(f"🌐 Web App URL: {webapp_url_display}")
-        logger.info(f"DEBUG - web_app_url type: {type(user.web_app_url)}, value: {user.web_app_url is not None}")
-        
-        client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
+        logger.info(f"DEBUG - web_app_url type: {type(user_data['web_app_url'])}, value: {user_data['web_app_url'] is not None}")
+
+        client = SheetsAPIClient(user_data['spreadsheet_id'], user_data['web_app_url'])
         
         logger.info(f"📤 Calling add_transaction: type={transaction['type']}, amount={transaction['amount']}, category={transaction['category']}")
         result = await client.add_transaction(

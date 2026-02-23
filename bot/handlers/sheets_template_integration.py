@@ -11,7 +11,7 @@ from telegram.ext import (
     MessageHandler,
     filters
 )
-from bot.utils.database import get_db, User
+from bot.utils.database import get_db, User, SessionLocal, run_sync
 from bot.services.sheets_api_client import (
     TEMPLATE_URL,
     extract_spreadsheet_id,
@@ -24,6 +24,34 @@ logger = logging.getLogger(__name__)
 
 # Conversation states
 WAITING_FOR_SHEETS_ID = 1
+
+
+def _get_sheets_status_sync(user_id: int):
+    """Returns dict with spreadsheet_id and connected_at string if connected, else None."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user and user.spreadsheet_id:
+            return {
+                "spreadsheet_id": user.spreadsheet_id,
+                "connected_at": user.sheets_connected_at.strftime('%d/%m/%Y %H:%M') if user.sheets_connected_at else 'N/A'
+            }
+        return None
+    finally:
+        db.close()
+
+
+def _save_sheets_id_sync(user_id: int, spreadsheet_id: str) -> None:
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            user.spreadsheet_id = spreadsheet_id
+            user.sheets_connected_at = datetime.now()
+            user.sheets_last_sync = datetime.now()
+            db.commit()
+    finally:
+        db.close()
 
 
 async def handle_connect_sheets(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -39,10 +67,9 @@ async def handle_connect_sheets(update: Update, context: ContextTypes.DEFAULT_TY
         message = update.message
     
     # Check if already connected
-    db = next(get_db())
-    user = db.query(User).filter(User.id == update.effective_user.id).first()
+    sheets_status = await run_sync(_get_sheets_status_sync, update.effective_user.id)
     
-    if user and user.spreadsheet_id:
+    if sheets_status:
         keyboard = [
             [
                 InlineKeyboardButton("🔄 Đổi Sheets khác", callback_data="sheets_change"),
@@ -53,8 +80,8 @@ async def handle_connect_sheets(update: Update, context: ContextTypes.DEFAULT_TY
         
         text = (
             f"📊 Bạn đã kết nối Google Sheets rồi!\n\n"
-            f"🔗 Spreadsheet ID: `{user.spreadsheet_id[:20]}...`\n"
-            f"📅 Kết nối lúc: {user.sheets_connected_at.strftime('%d/%m/%Y %H:%M') if user.sheets_connected_at else 'N/A'}\n\n"
+            f"🔗 Spreadsheet ID: `{sheets_status['spreadsheet_id'][:20]}...`\n"
+            f"📅 Kết nối lúc: {sheets_status['connected_at']}\n\n"
             f"Bạn muốn đổi sang Sheets khác không?"
         )
         
@@ -168,15 +195,8 @@ async def handle_sheets_id_input(update: Update, context: ContextTypes.DEFAULT_T
         return WAITING_FOR_SHEETS_ID
     
     # Success! Save to database
-    db = next(get_db())
-    user = db.query(User).filter(User.id == user_id).first()
-    
-    if user:
-        user.spreadsheet_id = spreadsheet_id
-        user.sheets_connected_at = datetime.now()
-        user.sheets_last_sync = datetime.now()
-        db.commit()
-        logger.info(f"✅ User {user_id} connected Sheets: {spreadsheet_id[:20]}...")
+    await run_sync(_save_sheets_id_sync, user_id, spreadsheet_id)
+    logger.info(f"✅ User {user_id} connected Sheets: {spreadsheet_id[:20]}...")
     
     # Show success message with balance info
     await update.message.reply_text(

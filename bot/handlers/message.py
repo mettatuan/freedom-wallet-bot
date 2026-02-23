@@ -517,37 +517,51 @@ async def handle_admin_rejection_reason(update: Update, context: ContextTypes.DE
         )
         
         if success:
-            # Get verification details
-            db = next(get_db())
-            ver_id = int(verification_id.replace("VER", ""))
-            verification = db.query(PaymentVerification).filter(
-                PaymentVerification.id == ver_id
-            ).first()
-            
-            if verification:
+            # Get verification details via thread-safe sync helper
+            from bot.utils.database import run_sync, SessionLocal, PaymentVerification as _PV, User as _U
+
+            def _get_ver_data_sync(ver_str):
+                _db = SessionLocal()
+                try:
+                    _vid = int(ver_str.replace("VER", ""))
+                    _v = _db.query(_PV).filter(_PV.id == _vid).first()
+                    if not _v:
+                        return None
+                    _u = _db.query(_U).filter(_U.id == _v.user_id).first()
+                    return {
+                        "recipient_id": _v.user_id,
+                        "amount": _v.amount,
+                        "approved_at": _v.approved_at,
+                        "user_id": _u.id if _u else None,
+                        "username": _u.username if _u else None,
+                        "full_name": _u.full_name if _u else None,
+                    }
+                finally:
+                    _db.close()
+
+            ver_data = await run_sync(_get_ver_data_sync, verification_id)
+
+            if ver_data:
                 # Log to Google Sheets
                 from bot.handlers.admin_callbacks import log_payment_to_sheets
-                from bot.utils.database import User
-                user = db.query(User).filter(User.id == verification.user_id).first()
-                
-                if user:
+                if ver_data["user_id"]:
                     await log_payment_to_sheets(
                         verification_id=verification_id,
-                        user_id=user.id,
-                        username=user.username,
-                        full_name=user.full_name,
-                        amount=verification.amount,
+                        user_id=ver_data["user_id"],
+                        username=ver_data["username"],
+                        full_name=ver_data["full_name"],
+                        amount=ver_data["amount"],
                         status="REJECTED",
                         approved_by=user_id,
-                        approved_at=verification.approved_at or datetime.now(),
-                        notes=reason  # Pass rejection reason
+                        approved_at=ver_data["approved_at"] or datetime.now(),
+                        notes=reason
                     )
-                
+
                 # Notify user
                 safe_reason = html.escape(reason)
                 try:
                     await context.bot.send_message(
-                        chat_id=verification.user_id,
+                        chat_id=ver_data["recipient_id"],
                         text=f"""
 ❌ <b>THANH TOÁN BỊ TỪ CHỐI</b>
 
@@ -566,7 +580,7 @@ Mã xác nhận: <code>{verification_id}</code>
 • Kiểm tra lại thông tin thanh toán
 • Đảm bảo chuyển khoản đúng:
   - Số tiền: 999,000 VND
-  - Nội dung: FW{verification.user_id} PREMIUM
+  - Nội dung: FW{ver_data["recipient_id"]} PREMIUM
 • Gửi lại ảnh/thông tin xác nhận
 
 💬 Cần hỗ trợ? Dùng /support để liên hệ Admin
@@ -574,9 +588,7 @@ Mã xác nhận: <code>{verification_id}</code>
                         parse_mode="HTML"
                     )
                 except Exception as notify_error:
-                    logger.error(f"Failed to notify user {verification.user_id}: {notify_error}")
-            
-            db.close()
+                    logger.error(f"Failed to notify user {ver_data['recipient_id']}: {notify_error}")
             
             # Confirm to admin
             safe_reason_admin = html.escape(reason)

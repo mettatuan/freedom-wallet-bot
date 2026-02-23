@@ -10,7 +10,62 @@ from loguru import logger
 from datetime import datetime
 import os
 import re
-from bot.utils.database import get_user_by_id, SessionLocal, User
+from bot.utils.database import get_user_by_id, SessionLocal, User, run_sync
+
+
+def _get_user_urls_sync(user_id: int):
+    """Return {'web_app_url': ..., 'google_sheets_url': ...} or None."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter_by(id=user_id).first()
+        if not user:
+            return None
+        return {
+            'web_app_url': user.web_app_url,
+            'google_sheets_url': user.google_sheets_url,
+        }
+    finally:
+        db.close()
+
+
+def _save_webapp_url_sync_ws(user_id: int, url: str) -> bool:
+    """Save web_app_url for user. Returns True if user found, False otherwise."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter_by(id=user_id).first()
+        if not user:
+            return False
+        user.web_app_url = url
+        db.commit()
+        return True
+    finally:
+        db.close()
+
+
+def _check_sheets_already_connected_sync(user_id: int) -> bool:
+    """Return True if user already has google_sheets_url set."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter_by(id=user_id).first()
+        return bool(user and user.google_sheets_url)
+    finally:
+        db.close()
+
+
+def _save_sheets_url_sync_ws(user_id: int, url: str, spreadsheet_id: str) -> bool:
+    """Save google_sheets_url + spreadsheet_id for user. Returns True if user found."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter_by(id=user_id).first()
+        if not user:
+            return False
+        user.google_sheets_url = url
+        user.spreadsheet_id = spreadsheet_id
+        user.sheets_connected_at = datetime.utcnow()
+        db.commit()
+        return True
+    finally:
+        db.close()
 
 # Usage guide steps: shown after sheets connection
 WEBAPP_USAGE_STEPS = {
@@ -209,14 +264,10 @@ async def send_webapp_usage_step(update: Update, context: ContextTypes.DEFAULT_T
     web_app_url = None
     sheets_url = None
     try:
-        _db = SessionLocal()
-        try:
-            _user = _db.query(User).filter_by(id=user_id).first()
-            if _user:
-                web_app_url = _user.web_app_url
-                sheets_url = _user.google_sheets_url
-        finally:
-            _db.close()
+        urls = await run_sync(_get_user_urls_sync, user_id)
+        if urls:
+            web_app_url = urls['web_app_url']
+            sheets_url = urls['google_sheets_url']
     except Exception:
         pass
 
@@ -893,47 +944,40 @@ async def handle_webapp_url_message(update: Update, context: ContextTypes.DEFAUL
     
     # Save URL to database
     try:
-        db = SessionLocal()
-        try:
-            user = db.query(User).filter_by(id=user_id).first()
+        user_found = await run_sync(_save_webapp_url_sync_ws, user_id, url)
+        
+        if user_found:
+            # Clear Web App URL waiting state
+            context.user_data['waiting_for_webapp_url'] = False
             
-            if user:
-                user.web_app_url = url
-                db.commit()
-                
-                # Clear Web App URL waiting state
-                context.user_data['waiting_for_webapp_url'] = False
-                
-                # Ask for Google Sheets URL next
-                context.user_data['waiting_for_sheets_url'] = True
-                
-                await update.message.reply_text(
-                    "✅ <b>ĐÃ CẬP NHẬT WEB APP URL!</b>\n\n"
-                    "━━━━━━━━━━━━━━━\n\n"
-                    "📑 <b>BƯỚC 2: KẾT NỐI GOOGLE SHEETS</b>\n\n"
-                    "<b>🌟 LỢI ÍCH:</b>\n\n"
-                    "• 🔁 <b>Cập nhật tức thì:</b> Giao dịch từ Telegram → Google Sheets ngay lập tức\n"
-                    "• 📱 <b>Xem mọi lúc, mọi nơi:</b> Mở Sheets trên điện thoại hoặc máy tính bất kỳ lúc nào\n"
-                    "• 🔒 <b>Mở Google Sheet:</b> nhanh chóng ngay trong Bot\n\n"
-                    "━━━━━━━━━━━━━━━\n\n"
-                    "<b>📝 CÁCH LẤY LINK GOOGLE SHEETS:</b>\n\n"
-                    "1️⃣ Mở file Google Sheets bạn đã tạo khi làm Web App\n"
-                    "2️⃣ Copy link trên thanh địa chỉ trình duyệt\n\n"
-                    "<i>💡 Link có dạng: https://docs.google.com/spreadsheets/d/...</i>\n\n"
-                    "━━━━━━━━━━━━━━━\n\n"
-                    "👉 <b>Gửi link Google Sheets của bạn ngay bây giờ!</b>\n\n"
-                    "<i>Hoặc nhấn /cancel để bỏ qua bước này</i>",
-                    parse_mode="HTML"
-                )
-                
-                logger.info(f"✅ Saved webapp URL for user {user_id}, asking for Sheets URL")
-            else:
-                await update.message.reply_text(
-                    "❌ Không tìm thấy tài khoản. Vui lòng /start lại!"
-                )
-                context.user_data['waiting_for_webapp_url'] = False
-        finally:
-            db.close()
+            # Ask for Google Sheets URL next
+            context.user_data['waiting_for_sheets_url'] = True
+            
+            await update.message.reply_text(
+                "✅ <b>ĐÃ CẬP NHẬT WEB APP URL!</b>\n\n"
+                "━━━━━━━━━━━━━━━\n\n"
+                "📑 <b>BƯỚC 2: KẾT NỐI GOOGLE SHEETS</b>\n\n"
+                "<b>🌟 LỢI ÍCH:</b>\n\n"
+                "• 🔁 <b>Cập nhật tức thì:</b> Giao dịch từ Telegram → Google Sheets ngay lập tức\n"
+                "• 📱 <b>Xem mọi lúc, mọi nơi:</b> Mở Sheets trên điện thoại hoặc máy tính bất kỳ lúc nào\n"
+                "• 🔒 <b>Mở Google Sheet:</b> nhanh chóng ngay trong Bot\n\n"
+                "━━━━━━━━━━━━━━━\n\n"
+                "<b>📝 CÁCH LẤY LINK GOOGLE SHEETS:</b>\n\n"
+                "1️⃣ Mở file Google Sheets bạn đã tạo khi làm Web App\n"
+                "2️⃣ Copy link trên thanh địa chỉ trình duyệt\n\n"
+                "<i>💡 Link có dạng: https://docs.google.com/spreadsheets/d/...</i>\n\n"
+                "━━━━━━━━━━━━━━━\n\n"
+                "👉 <b>Gửi link Google Sheets của bạn ngay bây giờ!</b>\n\n"
+                "<i>Hoặc nhấn /cancel để bỏ qua bước này</i>",
+                parse_mode="HTML"
+            )
+            
+            logger.info(f"✅ Saved webapp URL for user {user_id}, asking for Sheets URL")
+        else:
+            await update.message.reply_text(
+                "❌ Không tìm thấy tài khoản. Vui lòng /start lại!"
+            )
+            context.user_data['waiting_for_webapp_url'] = False
             
     except Exception as e:
         logger.error(f"Error saving webapp URL for user {user_id}: {e}")
@@ -965,15 +1009,11 @@ async def handle_sheets_url_message(update: Update, context: ContextTypes.DEFAUL
     # If this looks like a sheets URL but state was lost, recover gracefully
     if not context.user_data.get('waiting_for_sheets_url') and is_sheets_url:
         # Check if user already has a sheets URL connected
-        db = SessionLocal()
-        try:
-            user = db.query(User).filter_by(id=user_id).first()
-            if user and user.google_sheets_url:
-                # Already connected — this was probably an accidental resend, ignore
-                raise ApplicationHandlerStop
-            # Otherwise treat as if they're setting it up
-        finally:
-            db.close()
+        already_connected = await run_sync(_check_sheets_already_connected_sync, user_id)
+        if already_connected:
+            # Already connected — this was probably an accidental resend, ignore
+            raise ApplicationHandlerStop
+        # Otherwise treat as if they're setting it up
     match = re.match(sheets_pattern, url)
     
     if not match:
@@ -992,30 +1032,21 @@ async def handle_sheets_url_message(update: Update, context: ContextTypes.DEFAUL
     
     # Save URL to database
     try:
-        db = SessionLocal()
-        try:
-            user = db.query(User).filter_by(id=user_id).first()
+        user_found = await run_sync(_save_sheets_url_sync_ws, user_id, url, spreadsheet_id)
+        
+        if user_found:
+            # Clear waiting state
+            context.user_data['waiting_for_sheets_url'] = False
             
-            if user:
-                user.google_sheets_url = url
-                user.spreadsheet_id = spreadsheet_id
-                user.sheets_connected_at = datetime.utcnow()
-                db.commit()
-                
-                # Clear waiting state
-                context.user_data['waiting_for_sheets_url'] = False
-                
-                # Show success message with quick menu keyboard AND guide
-                await show_quick_menu_keyboard(update, context, first_time=True, sheets_connected=True)
-                
-                logger.info(f"✅ Saved Google Sheets URL for user {user_id} (ID: {spreadsheet_id})")
-            else:
-                await update.message.reply_text(
-                    "❌ Không tìm thấy tài khoản. Vui lòng /start lại!"
-                )
-                context.user_data['waiting_for_sheets_url'] = False
-        finally:
-            db.close()
+            # Show success message with quick menu keyboard AND guide
+            await show_quick_menu_keyboard(update, context, first_time=True, sheets_connected=True)
+            
+            logger.info(f"✅ Saved Google Sheets URL for user {user_id} (ID: {spreadsheet_id})")
+        else:
+            await update.message.reply_text(
+                "❌ Không tìm thấy tài khoản. Vui lòng /start lại!"
+            )
+            context.user_data['waiting_for_sheets_url'] = False
             
     except Exception as e:
         logger.error(f"Error saving Sheets URL for user {user_id}: {e}")

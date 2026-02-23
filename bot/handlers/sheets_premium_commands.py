@@ -4,11 +4,23 @@ Commands for users who connected Google Sheets: /balance, /spending
 """
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
-from bot.utils.database import get_db, User
+from bot.utils.database import get_db, User, SessionLocal, run_sync
 from bot.services.sheets_api_client import SheetsAPIClient
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _get_user_sheets_data_sync(user_id: int):
+    """Returns dict with spreadsheet_id and web_app_url, or None if not connected."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.spreadsheet_id:
+            return None
+        return {"spreadsheet_id": user.spreadsheet_id, "web_app_url": user.web_app_url}
+    finally:
+        db.close()
 
 
 async def handle_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -19,10 +31,9 @@ async def handle_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
     # Check if user has connected Sheets
-    db = next(get_db())
-    user = db.query(User).filter(User.id == user_id).first()
+    user_data = await run_sync(_get_user_sheets_data_sync, user_id)
     
-    if not user or not user.spreadsheet_id:
+    if not user_data:
         await update.message.reply_text(
             "⚠️ Bạn chưa kết nối Google Sheets!\n\n"
             "Dùng /connectsheets để kết nối trước nhé. 😊"
@@ -33,7 +44,7 @@ async def handle_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🔄 Đang lấy số dư...\n⏳ Vui lòng đợi...")
     
     try:
-        client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
+        client = SheetsAPIClient(user_data['spreadsheet_id'], user_data['web_app_url'])
         result = await client.get_balance()
         
         if not result.get("success"):
@@ -86,10 +97,9 @@ async def handle_spending(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
     # Check if user has connected Sheets
-    db = next(get_db())
-    user = db.query(User).filter(User.id == user_id).first()
+    user_data = await run_sync(_get_user_sheets_data_sync, user_id)
     
-    if not user or not user.spreadsheet_id:
+    if not user_data:
         await update.message.reply_text(
             "⚠️ Bạn chưa kết nối Google Sheets!\n\n"
             "Dùng /connectsheets để kết nối trước nhé. 😊"
@@ -100,7 +110,7 @@ async def handle_spending(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🔄 Đang phân tích chi tiêu...\n⏳ Vui lòng đợi...")
     
     try:
-        client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
+        client = SheetsAPIClient(user_data['spreadsheet_id'], user_data['web_app_url'])
         result = await client.get_recent_transactions(limit=10)
         
         if not result.get("success"):

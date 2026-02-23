@@ -6,7 +6,7 @@ Calm, value-first approach
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 from telegram.ext import ContextTypes, ConversationHandler
 from loguru import logger
-from bot.utils.database import SessionLocal, User, generate_referral_code
+from bot.utils.database import SessionLocal, User, generate_referral_code, run_sync
 from bot.utils.sheets_registration import save_user_to_registration_sheet
 import re
 from datetime import datetime
@@ -14,6 +14,34 @@ from pathlib import Path
 
 # Conversation states
 AWAITING_EMAIL, AWAITING_PHONE, AWAITING_NAME = range(3)
+
+
+def _check_registration_complete_sync(user_id: int) -> bool:
+    db = SessionLocal()
+    try:
+        u = db.query(User).filter(User.id == user_id).first()
+        return bool(u and u.email and u.phone and u.full_name)
+    finally:
+        db.close()
+
+
+def _save_registration_data_sync(user_id: int, email: str, phone: str, full_name: str):
+    """Saves registration data. Returns referral_count int, or None if user not found."""
+    db = SessionLocal()
+    try:
+        u = db.query(User).filter(User.id == user_id).first()
+        if not u:
+            return None
+        u.email = email
+        u.phone = phone
+        u.full_name = full_name
+        u.is_registered = True
+        u.registration_date = datetime.now()
+        u.source = 'BOT_FREE_FLOW'
+        db.commit()
+        return u.referral_count or 0
+    finally:
+        db.close()
 
 
 async def free_step1_intro(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -24,21 +52,17 @@ async def free_step1_intro(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     
     # Check if user already has full info
-    db = SessionLocal()
-    try:
-        db_user = db.query(User).filter(User.id == user.id).first()
-        if db_user and db_user.email and db_user.phone and db_user.full_name:
-            # Already have info, skip to step 2
-            logger.info(f"User {user.id} already has registration info, skipping to step 2")
-            await query.edit_message_text("Đang tải...")
-            
-            # Import here to avoid circular dependency
-            from bot.handlers.free_flow import free_step2_show_value
-            update.callback_query = query
-            await free_step2_show_value(update, context)
-            return ConversationHandler.END
-    finally:
-        db.close()
+    already_registered = await run_sync(_check_registration_complete_sync, user.id)
+    if already_registered:
+        # Already have info, skip to step 2
+        logger.info(f"User {user.id} already has registration info, skipping to step 2")
+        await query.edit_message_text("Đang tải...")
+        
+        # Import here to avoid circular dependency
+        from bot.handlers.free_flow import free_step2_show_value
+        update.callback_query = query
+        await free_step2_show_value(update, context)
+        return ConversationHandler.END
     
     # Send intro message with image
     message = """
@@ -167,67 +191,58 @@ async def receive_free_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     phone = context.user_data.get('registration_phone')
     
     # Save to database
-    db = SessionLocal()
-    try:
-        db_user = db.query(User).filter(User.id == user.id).first()
-        if db_user:
-            db_user.email = email
-            db_user.phone = phone
-            db_user.full_name = full_name
-            db_user.is_registered = True
-            db_user.registration_date = datetime.now()
-            db_user.source = 'BOT_FREE_FLOW'
-            db.commit()
-            
-            # Generate referral code
-            referral_code = generate_referral_code(user.id)
-            bot_username = (await context.bot.get_me()).username
-            referral_link = f"https://t.me/{bot_username}?start=REF{referral_code}"
-            
-            # Save to Google Sheet
-            try:
-                await save_user_to_registration_sheet(
-                    user_id=user.id,
-                    username=user.username,
-                    full_name=full_name,
-                    email=email,
-                    phone=phone,
-                    plan="FREE",
-                    referral_link=referral_link,
-                    referral_count=db_user.referral_count or 0,
-                    source="BOT_FREE_FLOW",
-                    status="ACTIVE",
-                    referred_by=None
-                )
-                logger.info(f"✅ Saved user {user.id} to Google Sheet")
-            except Exception as e:
-                logger.error(f"❌ Failed to save to Google Sheet: {e}")
-            
-            await update.message.reply_text(
-                f"✅ Cảm ơn {full_name}!\n\n"
-                f"Thông tin đã được lưu lại.\n"
-                f"Bây giờ, hãy cùng tạo hệ thống của riêng bạn.",
-                parse_mode="Markdown"
+    referral_count = await run_sync(_save_registration_data_sync, user.id, email, phone, full_name)
+    
+    if referral_count is not None:
+        # Generate referral code
+        referral_code = generate_referral_code(user.id)
+        bot_username = (await context.bot.get_me()).username
+        referral_link = f"https://t.me/{bot_username}?start=REF{referral_code}"
+        
+        # Save to Google Sheet
+        try:
+            await save_user_to_registration_sheet(
+                user_id=user.id,
+                username=user.username,
+                full_name=full_name,
+                email=email,
+                phone=phone,
+                plan="FREE",
+                referral_link=referral_link,
+                referral_count=referral_count,
+                source="BOT_FREE_FLOW",
+                status="ACTIVE",
+                referred_by=None
             )
-            
-            # Wait a moment then go to step 2
-            import asyncio
-            await asyncio.sleep(1)
-            
-            # Proceed to step 2
-            from bot.handlers.free_flow import free_step2_show_value
-            
-            # Create a fake callback query for step 2
-            from telegram import CallbackQuery
-            fake_query = type('obj', (object,), {
-                'answer': lambda: None,
-                'edit_message_text': update.message.reply_text,
-                'message': update.message,
-                'from_user': user
-            })()
-            
-            # Call step 2 directly
-            message = """
+            logger.info(f"✅ Saved user {user.id} to Google Sheet")
+        except Exception as e:
+            logger.error(f"❌ Failed to save to Google Sheet: {e}")
+        
+        await update.message.reply_text(
+            f"✅ Cảm ơn {full_name}!\n\n"
+            f"Thông tin đã được lưu lại.\n"
+            f"Bây giờ, hãy cùng tạo hệ thống của riêng bạn.",
+            parse_mode="Markdown"
+        )
+        
+        # Wait a moment then go to step 2
+        import asyncio
+        await asyncio.sleep(1)
+        
+        # Proceed to step 2
+        from bot.handlers.free_flow import free_step2_show_value
+        
+        # Create a fake callback query for step 2
+        from telegram import CallbackQuery
+        fake_query = type('obj', (object,), {
+            'answer': lambda: None,
+            'edit_message_text': update.message.reply_text,
+            'message': update.message,
+            'from_user': user
+        })()
+        
+        # Call step 2 directly
+        message = """
 Trước khi làm bất cứ bước kỹ thuật nào,
 bạn cần biết mình sẽ nhận được điều gì.
 
@@ -244,29 +259,19 @@ Mà để bạn biết rõ tiền của mình đang ở đâu.
 
 Bạn sẵn sàng tạo hệ thống của riêng mình chưa?
 """
-            
-            keyboard = [
-                [InlineKeyboardButton("Tạo hệ thống", callback_data="free_step3_copy_template")],
-                [InlineKeyboardButton("Hỏi thêm", callback_data="learn_more")]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await update.message.reply_text(
-                text=message,
-                reply_markup=reply_markup
-            )
-            
-            return ConversationHandler.END
-            
-    except Exception as e:
-        logger.error(f"Error saving user info: {e}", exc_info=True)
+        
+        keyboard = [
+            [InlineKeyboardButton("Tạo hệ thống", callback_data="free_step3_copy_template")],
+            [InlineKeyboardButton("Hỏi thêm", callback_data="learn_more")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
         await update.message.reply_text(
-            "😓 Xin lỗi, có lỗi xảy ra khi lưu thông tin.\n"
-            "Vui lòng thử lại sau hoặc liên hệ /support"
+            text=message,
+            reply_markup=reply_markup
         )
+        
         return ConversationHandler.END
-    finally:
-        db.close()
 
 
 async def cancel_free_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):

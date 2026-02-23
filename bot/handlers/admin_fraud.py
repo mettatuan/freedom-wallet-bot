@@ -15,7 +15,7 @@ from telegram.ext import ContextTypes
 from loguru import logger
 from config.settings import settings
 from bot.core.fraud_detector import FraudDetector
-from bot.utils.database import SessionLocal, Referral, User
+from bot.utils.database import SessionLocal, Referral, User, run_sync
 from datetime import datetime
 
 
@@ -107,68 +107,73 @@ async def fraud_review_command(update: Update, context: ContextTypes.DEFAULT_TYP
         return
     
     try:
-        session = SessionLocal()
-        
-        # Get referral
-        referral = session.query(Referral).filter(Referral.id == referral_id).first()
-        
-        if not referral:
+        def _get_referral_data_sync(rid: int):
+            session = SessionLocal()
+            try:
+                referral = session.query(Referral).filter(Referral.id == rid).first()
+                if not referral:
+                    return None
+                referrer = session.query(User).filter(User.id == referral.referrer_id).first()
+                referred = session.query(User).filter(User.id == referral.referred_id).first()
+                total_refs = session.query(Referral).filter(Referral.referrer_id == referral.referrer_id).count()
+                verified_refs = session.query(Referral).filter(Referral.referrer_id == referral.referrer_id, Referral.status == "VERIFIED").count()
+                pending_refs = session.query(Referral).filter(Referral.referrer_id == referral.referrer_id, Referral.review_status.in_(['PENDING_REVIEW', 'HIGH_RISK'])).count()
+                return {
+                    "referrer_name": (referrer.username or referrer.full_name) if referrer else 'Unknown',
+                    "referred_name": (referred.username or referred.full_name) if referred else 'Unknown',
+                    "referrer_id": referral.referrer_id,
+                    "referred_id": referral.referred_id,
+                    "velocity_score": referral.velocity_score,
+                    "review_status": referral.review_status,
+                    "ip_address": referral.ip_address,
+                    "user_agent": referral.user_agent,
+                    "device_fingerprint": referral.device_fingerprint,
+                    "created_at": referral.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    "total_refs": total_refs,
+                    "verified_refs": verified_refs,
+                    "pending_refs": pending_refs,
+                }
+            finally:
+                session.close()
+
+        ref_data = await run_sync(_get_referral_data_sync, referral_id)
+
+        if not ref_data:
             await update.message.reply_text(f"❌ Referral {referral_id} not found.")
-            session.close()
             return
-        
-        # Get user details
-        referrer = session.query(User).filter(User.id == referral.referrer_id).first()
-        referred = session.query(User).filter(User.id == referral.referred_id).first()
-        
-        referrer_name = referrer.username or referrer.full_name if referrer else 'Unknown'
-        referred_name = referred.username or referred.full_name if referred else 'Unknown'
-        
-        # Get referrer's total referrals
-        total_refs = session.query(Referral).filter(
-            Referral.referrer_id == referral.referrer_id
-        ).count()
-        
-        verified_refs = session.query(Referral).filter(
-            Referral.referrer_id == referral.referrer_id,
-            Referral.status == "VERIFIED"
-        ).count()
-        
-        pending_refs = session.query(Referral).filter(
-            Referral.referrer_id == referral.referrer_id,
-            Referral.review_status.in_(['PENDING_REVIEW', 'HIGH_RISK'])
-        ).count()
-        
-        session.close()
-        
+
         # Build detailed message
-        emoji = "🚨" if referral.review_status == 'HIGH_RISK' else "⚠️"
-        
+        emoji = "🚨" if ref_data["review_status"] == 'HIGH_RISK' else "⚠️"
+        ua = ref_data["user_agent"] or 'N/A'
+        ua_display = ua[:50] + '...' if len(ua) > 50 else ua
+        dfp = ref_data["device_fingerprint"] or ''
+        dfp_display = dfp[:16] + '...' if dfp else 'N/A'
+
         message = (
             f"{emoji} **FRAUD REVIEW - #{referral_id}**\n\n"
-            f"**Fraud Score:** {referral.velocity_score}/100\n"
-            f"**Status:** {referral.review_status}\n\n"
+            f"**Fraud Score:** {ref_data['velocity_score']}/100\n"
+            f"**Status:** {ref_data['review_status']}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━━\n"
             f"**REFERRER INFO:**\n"
-            f"• Name: {referrer_name}\n"
-            f"• ID: {referral.referrer_id}\n"
-            f"• Total refs: {total_refs}\n"
-            f"• Verified: {verified_refs}\n"
-            f"• Pending review: {pending_refs}\n\n"
+            f"• Name: {ref_data['referrer_name']}\n"
+            f"• ID: {ref_data['referrer_id']}\n"
+            f"• Total refs: {ref_data['total_refs']}\n"
+            f"• Verified: {ref_data['verified_refs']}\n"
+            f"• Pending review: {ref_data['pending_refs']}\n\n"
             f"**REFERRED USER:**\n"
-            f"• Name: {referred_name}\n"
-            f"• ID: {referral.referred_id}\n\n"
+            f"• Name: {ref_data['referred_name']}\n"
+            f"• ID: {ref_data['referred_id']}\n\n"
             f"**TECHNICAL DATA:**\n"
-            f"• IP: {referral.ip_address or 'N/A'}\n"
-            f"• User-Agent: {referral.user_agent[:50] + '...' if referral.user_agent and len(referral.user_agent) > 50 else referral.user_agent or 'N/A'}\n"
-            f"• Device FP: {referral.device_fingerprint[:16] + '...' if referral.device_fingerprint else 'N/A'}\n"
-            f"• Created: {referral.created_at.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+            f"• IP: {ref_data['ip_address'] or 'N/A'}\n"
+            f"• User-Agent: {ua_display}\n"
+            f"• Device FP: {dfp_display}\n"
+            f"• Created: {ref_data['created_at']}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━━\n"
             f"**ACTIONS:**\n"
             f"• `/fraud_approve {referral_id}` - Approve\n"
             f"• `/fraud_reject {referral_id}` - Reject\n"
         )
-        
+
         await update.message.reply_text(message, parse_mode="Markdown")
     
     except Exception as e:

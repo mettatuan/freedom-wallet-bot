@@ -8,7 +8,42 @@ from loguru import logger
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 import os
-from bot.utils.database import SessionLocal, User
+from bot.utils.database import SessionLocal, User, run_sync
+
+
+# ---------------------------------------------------------------------------
+# Sync DB helpers (called via run_sync to avoid blocking the event loop)
+# ---------------------------------------------------------------------------
+
+def _load_user_for_milestone_sync(user_id: int, milestone_field: str):
+    """Read user data needed for a milestone; returns None if already achieved."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or getattr(user, milestone_field, False):
+            return None
+        return {
+            "full_name": user.full_name,
+            "first_name": user.first_name,
+            "total_transactions": user.total_transactions or 0,
+            "longest_streak": user.longest_streak or 0,
+        }
+    finally:
+        db.close()
+
+
+def _mark_milestone_sync(user_id: int, milestone_field: str, set_super_vip: bool = False):
+    """Mark milestone achieved and optionally promote to SUPER_VIP."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            setattr(user, milestone_field, True)
+            if set_super_vip and user.user_state != "SUPER_VIP":
+                user.user_state = "SUPER_VIP"
+            db.commit()
+    finally:
+        db.close()
 
 
 def create_personalized_image(template_path: str, user_name: str, days: int, output_path: str) -> str:
@@ -90,15 +125,12 @@ def create_personalized_image(template_path: str, user_name: str, days: int, out
 async def celebrate_7day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: int):
     """Celebrate 7-day streak with personalized image"""
     try:
-        db = SessionLocal()
-        user = db.query(User).filter(User.id == user_id).first()
-        
-        if not user or user.milestone_7day_achieved:
-            db.close()
+        user_data = await run_sync(_load_user_for_milestone_sync, user_id, "milestone_7day_achieved")
+        if not user_data:
             return
-        
+
         # Get user name
-        user_name = user.full_name or user.first_name or "BẠN"
+        user_name = user_data["full_name"] or user_data["first_name"] or "BẠN"
         
         # Path to template and output
         template_path = "media/images/chuc_mung_7ngay.png"
@@ -132,9 +164,9 @@ async def celebrate_7day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: int
 ━━━━━━━━━━━━━━━━━━━━━
 
 📊 **THỐNG KÊ CỦA BẠN:**
-• Tổng giao dịch: {user.total_transactions or 0}
+• Tổng giao dịch: {user_data['total_transactions']}
 • Streak hiện tại: 7 ngày
-• Streak dài nhất: {user.longest_streak or 7} ngày
+• Streak dài nhất: {user_data['longest_streak'] or 7} ngày
 
 ━━━━━━━━━━━━━━━━━━━━━
 
@@ -177,9 +209,7 @@ async def celebrate_7day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: int
             )
         
         # Mark milestone achieved
-        user.milestone_7day_achieved = True
-        db.commit()
-        db.close()
+        await run_sync(_mark_milestone_sync, user_id, "milestone_7day_achieved")
         
         logger.info(f"Celebrated 7-day streak for user {user_id}")
         
@@ -190,15 +220,12 @@ async def celebrate_7day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: int
 async def celebrate_30day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: int):
     """Celebrate 30-day streak with medal and personalized image"""
     try:
-        db = SessionLocal()
-        user = db.query(User).filter(User.id == user_id).first()
-        
-        if not user or user.milestone_30day_achieved:
-            db.close()
+        user_data = await run_sync(_load_user_for_milestone_sync, user_id, "milestone_30day_achieved")
+        if not user_data:
             return
-        
+
         # Get user name
-        user_name = user.full_name or user.first_name or "BẠN"
+        user_name = user_data["full_name"] or user_data["first_name"] or "BẠN"
         
         # Path to template and output
         template_path = "media/images/huy_chuong_30ngay.png"
@@ -232,9 +259,9 @@ async def celebrate_30day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: in
 ━━━━━━━━━━━━━━━━━━━━━
 
 📊 **THỐNG KÊ CỦA BẠN:**
-• Tổng giao dịch: {user.total_transactions or 0}
+• Tổng giao dịch: {user_data['total_transactions']}
 • Streak hiện tại: 30 ngày
-• Streak dài nhất: {user.longest_streak or 30} ngày
+• Streak dài nhất: {user_data['longest_streak'] or 30} ngày
 • Thời gian kiên trì: 1 tháng
 
 ━━━━━━━━━━━━━━━━━━━━━
@@ -287,15 +314,8 @@ Bây giờ quản lý tài chính đã trở thành phần tự nhiên của cu�
                 parse_mode="Markdown"
             )
         
-        # Mark milestone achieved
-        user.milestone_30day_achieved = True
-        
-        # Update user to SUPER_VIP if not already
-        if user.user_state != "SUPER_VIP":
-            user.user_state = "SUPER_VIP"
-        
-        db.commit()
-        db.close()
+        # Mark milestone achieved and promote to SUPER_VIP
+        await run_sync(_mark_milestone_sync, user_id, "milestone_30day_achieved", True)
         
         logger.info(f"Celebrated 30-day streak for user {user_id}")
         
@@ -306,15 +326,12 @@ Bây giờ quản lý tài chính đã trở thành phần tự nhiên của cu�
 async def celebrate_90day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: int):
     """Celebrate 90-day streak - MASTER level"""
     try:
-        db = SessionLocal()
-        user = db.query(User).filter(User.id == user_id).first()
-        
-        if not user or user.milestone_90day_achieved:
-            db.close()
+        user_data = await run_sync(_load_user_for_milestone_sync, user_id, "milestone_90day_achieved")
+        if not user_data:
             return
-        
+
         # Get user name
-        user_name = user.full_name or user.first_name or "BẠN"
+        user_name = user_data["full_name"] or user_data["first_name"] or "BẠN"
         
         # Celebration message
         message = f"""
@@ -329,7 +346,7 @@ async def celebrate_90day_streak(context: ContextTypes.DEFAULT_TYPE, user_id: in
 ━━━━━━━━━━━━━━━━━━━━━
 
 📊 **KỶ LỤC CỦA BẠN:**
-• Tổng giao dịch: {user.total_transactions or 0}
+• Tổng giao dịch: {user_data['total_transactions']}
 • Streak hiện tại: 90 ngày
 • Thời gian kiên trì: 3 tháng
 • Xếp hạng: **TOP 1%**
@@ -369,15 +386,8 @@ Cảm ơn bạn đã tin tưởng Freedom Wallet! 🙏
             parse_mode="Markdown"
         )
         
-        # Mark milestone achieved
-        user.milestone_90day_achieved = True
-        
-        # Ensure SUPER_VIP status
-        if user.user_state != "SUPER_VIP":
-            user.user_state = "SUPER_VIP"
-        
-        db.commit()
-        db.close()
+        # Mark milestone achieved and promote to SUPER_VIP
+        await run_sync(_mark_milestone_sync, user_id, "milestone_90day_achieved", True)
         
         logger.info(f"Celebrated 90-day streak for user {user_id} - MASTER LEVEL!")
         

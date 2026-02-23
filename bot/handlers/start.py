@@ -23,6 +23,7 @@ from bot.core.state_machine import StateManager
 from bot.handlers.referral import handle_referral_start
 from bot.utils.database import (
     SessionLocal, get_user_by_id, save_user_to_db, update_user_registration,
+    run_sync, User,
 )
 from bot.utils.sheets import sync_web_registration
 from config.settings import settings
@@ -229,7 +230,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     referral_count=web_data.get("referral_count", 0),
                 )
                 # Credit referral PENDING → VERIFIED if referred_by present
-                _credit_referral_on_web_registration(user.id, web_data)
+                await run_sync(_credit_referral_on_web_registration, user.id, web_data)
 
                 # Sync row to FreedomWallet_Registrations sheet
                 try:
@@ -268,11 +269,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 5. Enable reminders for registered users
     if db_user and db_user.is_registered:
         try:
-            _db = SessionLocal()
-            _u = _db.merge(db_user)
-            _u.reminder_enabled = True
-            _db.commit()
-            _db.close()
+            def _enable_reminders_sync(uid: int):
+                _db = SessionLocal()
+                try:
+                    _u = _db.query(User).filter(User.id == uid).first()
+                    if _u:
+                        _u.reminder_enabled = True
+                        _db.commit()
+                finally:
+                    _db.close()
+            await run_sync(_enable_reminders_sync, db_user.id)
         except Exception as e:
             logger.error(f"Enable reminders: {e}")
 

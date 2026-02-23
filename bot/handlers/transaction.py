@@ -17,7 +17,7 @@ from bot.core.keyboard import (
     # legacy aliases
     BTN_OVERVIEW, BTN_WEEKLY, BTN_INSIGHT, BTN_DRIVE, BTN_REFERRAL,
 )
-from bot.utils.database import Transaction, User, get_db
+from bot.utils.database import Transaction, User, get_db, run_sync
 from datetime import datetime, timezone
 
 
@@ -177,8 +177,8 @@ _JAR_NAME_TO_ID = {
 }
 
 
-async def _save_transaction(user_id: int, pending: dict):
-    """Save transaction to local DB. Returns (success, error_msg, web_app_url, transaction_id)."""
+def _save_transaction_sync(user_id: int, pending: dict):
+    """Sync DB work — must only return primitive values, never SQLAlchemy objects."""
     db: Session = next(get_db())
     try:
         user = db.query(User).filter(User.id == user_id).first()
@@ -195,14 +195,20 @@ async def _save_transaction(user_id: int, pending: dict):
             user.first_transaction_at = datetime.utcnow()
         db.commit()
         db.refresh(transaction)
-
-        web_app_url = user.web_app_url if user else None
-        return True, "", web_app_url, transaction.id
+        # Extract primitives BEFORE closing session — never leak ORM objects
+        tx_id = transaction.id
+        web_app_url = str(user.web_app_url) if user and user.web_app_url else None
+        return True, "", web_app_url, tx_id
     except Exception as e:
         db.rollback()
         return False, str(e), None, None
     finally:
         db.close()
+
+
+async def _save_transaction(user_id: int, pending: dict):
+    """Save transaction to local DB. Returns (success, error_msg, web_app_url, transaction_id)."""
+    return await run_sync(_save_transaction_sync, user_id, pending)
 
 
 async def _sync_to_gas(transaction_id: int, user_id: int, pending: dict, web_app_url: str):
@@ -248,16 +254,18 @@ async def _sync_to_gas(transaction_id: int, user_id: int, pending: dict, web_app
             logger.warning(f"⚠️ GAS non-JSON response (HTTP {resp.status}): {raw_text[:300]}")
             return
         if result.get("success"):
-            # Update sync flag in DB
-            db: Session = next(get_db())
-            try:
-                tx = db.query(Transaction).filter(Transaction.id == transaction_id).first()
-                if tx:
-                    tx.synced_to_sheets = True
-                    tx.synced_at = datetime.utcnow()
-                    db.commit()
-            finally:
-                db.close()
+            # Update sync flag in DB via thread to avoid blocking event loop
+            def _mark_synced_sync(tx_id: int):
+                db: Session = next(get_db())
+                try:
+                    tx = db.query(Transaction).filter(Transaction.id == tx_id).first()
+                    if tx:
+                        tx.synced_to_sheets = True
+                        tx.synced_at = datetime.utcnow()
+                        db.commit()
+                finally:
+                    db.close()
+            await run_sync(_mark_synced_sync, transaction_id)
             logger.info(f"✅ GAS sync OK: txId={result.get('transactionId')} user={user_id}")
         else:
             logger.warning(f"⚠️ GAS addTransaction failed: {result}")
@@ -402,15 +410,19 @@ async def handle_txn_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def handle_overview(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    db: Session = next(get_db())
-    try:
+
+    def _overview_sync(uid: int) -> str:
         from bot.core.awareness import get_awareness_snapshot, format_awareness_message
-        snapshot = get_awareness_snapshot(user_id, db)
-        message = format_awareness_message(snapshot)
-        message += f"\n💡 Gõ nhanh: 'Cà phê 35k' để ghi ngay!"
-        await update.message.reply_text(message, parse_mode='HTML', reply_markup=get_main_keyboard())
-    finally:
-        db.close()
+        db: Session = next(get_db())
+        try:
+            snapshot = get_awareness_snapshot(uid, db)
+            return format_awareness_message(snapshot)
+        finally:
+            db.close()
+
+    message = await run_sync(_overview_sync, user_id)
+    message += "\n💡 Gõ nhanh: 'Cà phê 35k' để ghi ngay!"
+    await update.message.reply_text(message, parse_mode='HTML', reply_markup=get_main_keyboard())
 
 
 async def handle_record_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -434,26 +446,34 @@ async def handle_record_button(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def handle_weekly_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    db: Session = next(get_db())
-    try:
+
+    def _weekly_sync(uid: int) -> str:
         from bot.core.reflection import generate_weekly_insight, format_weekly_insight_message
-        insight = generate_weekly_insight(user_id, db)
-        message = format_weekly_insight_message(insight)
-        await update.message.reply_text(message, parse_mode='HTML', reply_markup=get_main_keyboard())
-    finally:
-        db.close()
+        db: Session = next(get_db())
+        try:
+            insight = generate_weekly_insight(uid, db)
+            return format_weekly_insight_message(insight)
+        finally:
+            db.close()
+
+    message = await run_sync(_weekly_sync, user_id)
+    await update.message.reply_text(message, parse_mode='HTML', reply_markup=get_main_keyboard())
 
 
 async def handle_insight(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    db: Session = next(get_db())
-    try:
+
+    def _insight_sync(uid: int) -> str:
         from bot.core.behavioral import get_behavioral_snapshot, format_behavioral_message
-        snapshot = get_behavioral_snapshot(user_id, db)
-        message = format_behavioral_message(snapshot)
-        await update.message.reply_text(message, parse_mode='HTML', reply_markup=get_main_keyboard())
-    finally:
-        db.close()
+        db: Session = next(get_db())
+        try:
+            snapshot = get_behavioral_snapshot(uid, db)
+            return format_behavioral_message(snapshot)
+        finally:
+            db.close()
+
+    message = await run_sync(_insight_sync, user_id)
+    await update.message.reply_text(message, parse_mode='HTML', reply_markup=get_main_keyboard())
 
 
 # ─────────────────────────────────────────────
@@ -503,7 +523,7 @@ def _get_user_settings(user_id):
 
 async def handle_settings_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    r_en, r_hr, w_en, m_en = _get_user_settings(user_id)
+    r_en, r_hr, w_en, m_en = await run_sync(_get_user_settings, user_id)
     await update.message.reply_text(
         "⚙️ <b>Cài đặt</b>\n\nTuỳ chỉnh nhắc nhở và kết nối của bạn:",
         parse_mode="HTML",
@@ -548,16 +568,18 @@ async def handle_settings_callback(update: Update, context: ContextTypes.DEFAULT
     # ── Set hour ─────────────────────────────────────────────────────
     if data.startswith("settings_hour_"):
         hour = int(data.split("_")[-1])
-        _db = next(get_db())
-        try:
-            _u = _db.query(User).filter(User.id == user_id).first()
-            if _u:
-                _u.reminder_hour = hour
-                _db.commit()
-        finally:
-            _db.close()
+        def _set_hour(_uid, _h):
+            _db = next(get_db())
+            try:
+                _u = _db.query(User).filter(User.id == _uid).first()
+                if _u:
+                    _u.reminder_hour = _h
+                    _db.commit()
+            finally:
+                _db.close()
+        await run_sync(_set_hour, user_id, hour)
         await query.answer(f"✅ Đã đặt nhắc lúc {hour:02d}:00")
-        r_en, r_hr, w_en, m_en = _get_user_settings(user_id)
+        r_en, r_hr, w_en, m_en = await run_sync(_get_user_settings, user_id)
         await query.edit_message_text(
             "⚙️ <b>Cài đặt</b>\n\nTuỳ chỉnh nhắc nhở và kết nối của bạn:",
             parse_mode="HTML",
@@ -568,7 +590,7 @@ async def handle_settings_callback(update: Update, context: ContextTypes.DEFAULT
     # ── Back (from hour picker) ──────────────────────────────────────
     if data == "settings_back":
         await query.answer()
-        r_en, r_hr, w_en, m_en = _get_user_settings(user_id)
+        r_en, r_hr, w_en, m_en = await run_sync(_get_user_settings, user_id)
         await query.edit_message_text(
             "⚙️ <b>Cài đặt</b>\n\nTuỳ chỉnh nhắc nhở và kết nối của bạn:",
             parse_mode="HTML",
@@ -578,15 +600,17 @@ async def handle_settings_callback(update: Update, context: ContextTypes.DEFAULT
 
     # ── Toggle reminder_enabled ──────────────────────────────────────
     if data == "settings_toggle_reminder":
-        _db = next(get_db())
-        try:
-            _u = _db.query(User).filter(User.id == user_id).first()
-            if _u:
-                _u.reminder_enabled = not bool(_u.reminder_enabled)
-                _db.commit()
-        finally:
-            _db.close()
-        r_en, r_hr, w_en, m_en = _get_user_settings(user_id)
+        def _toggle_reminder(_uid):
+            _db = next(get_db())
+            try:
+                _u = _db.query(User).filter(User.id == _uid).first()
+                if _u:
+                    _u.reminder_enabled = not bool(_u.reminder_enabled)
+                    _db.commit()
+            finally:
+                _db.close()
+        await run_sync(_toggle_reminder, user_id)
+        r_en, r_hr, w_en, m_en = await run_sync(_get_user_settings, user_id)
         await query.answer("🔔 Đã bật nhắc nhở!" if r_en else "🔕 Đã tắt nhắc nhở!")
         await query.edit_message_reply_markup(
             reply_markup=_settings_keyboard(r_en, r_hr, w_en, m_en)
@@ -595,16 +619,17 @@ async def handle_settings_callback(update: Update, context: ContextTypes.DEFAULT
 
     # ── Toggle weekly_reminder_enabled ───────────────────────────────
     if data == "settings_toggle_weekly":
-        _db = next(get_db())
-        try:
-            _u = _db.query(User).filter(User.id == user_id).first()
-            if _u:
-                cur = bool(getattr(_u, "weekly_reminder_enabled", True))
-                _u.weekly_reminder_enabled = not cur
-                _db.commit()
-        finally:
-            _db.close()
-        r_en, r_hr, w_en, m_en = _get_user_settings(user_id)
+        def _toggle_weekly(_uid):
+            _db = next(get_db())
+            try:
+                _u = _db.query(User).filter(User.id == _uid).first()
+                if _u:
+                    _u.weekly_reminder_enabled = not bool(getattr(_u, "weekly_reminder_enabled", True))
+                    _db.commit()
+            finally:
+                _db.close()
+        await run_sync(_toggle_weekly, user_id)
+        r_en, r_hr, w_en, m_en = await run_sync(_get_user_settings, user_id)
         await query.answer("📆 Đã bật tổng kết tuần!" if w_en else "📆 Đã tắt tổng kết tuần!")
         await query.edit_message_reply_markup(
             reply_markup=_settings_keyboard(r_en, r_hr, w_en, m_en)
@@ -613,16 +638,17 @@ async def handle_settings_callback(update: Update, context: ContextTypes.DEFAULT
 
     # ── Toggle monthly_reminder_enabled ──────────────────────────────
     if data == "settings_toggle_monthly":
-        _db = next(get_db())
-        try:
-            _u = _db.query(User).filter(User.id == user_id).first()
-            if _u:
-                cur = bool(getattr(_u, "monthly_reminder_enabled", True))
-                _u.monthly_reminder_enabled = not cur
-                _db.commit()
-        finally:
-            _db.close()
-        r_en, r_hr, w_en, m_en = _get_user_settings(user_id)
+        def _toggle_monthly(_uid):
+            _db = next(get_db())
+            try:
+                _u = _db.query(User).filter(User.id == _uid).first()
+                if _u:
+                    _u.monthly_reminder_enabled = not bool(getattr(_u, "monthly_reminder_enabled", True))
+                    _db.commit()
+            finally:
+                _db.close()
+        await run_sync(_toggle_monthly, user_id)
+        r_en, r_hr, w_en, m_en = await run_sync(_get_user_settings, user_id)
         await query.answer("📊 Đã bật báo cáo tháng!" if m_en else "📊 Đã tắt báo cáo tháng!")
         await query.edit_message_reply_markup(
             reply_markup=_settings_keyboard(r_en, r_hr, w_en, m_en)
@@ -676,32 +702,35 @@ async def handle_settings_url_input(update: Update, context: ContextTypes.DEFAUL
         raise ApplicationHandlerStop
 
     user_id = update.effective_user.id
-    _db = next(get_db())
-    try:
-        _u = _db.query(User).filter(User.id == user_id).first()
-        if _u:
-            if awaiting == "sheet":
-                _u.webhook_url = url
+
+    def _save_url_sync(_uid, _field, _url):
+        _db = next(get_db())
+        try:
+            _u = _db.query(User).filter(User.id == _uid).first()
+            if _u:
+                setattr(_u, _field, _url)
                 _db.commit()
-                context.user_data.pop("awaiting_settings", None)
-                await update.message.reply_text(
-                    "✅ <b>Đã cập nhật Google Sheet Webhook!</b>\n\n"
-                    f"<code>{url[:80]}...</code>" if len(url) > 80 else f"<code>{url}</code>",
-                    parse_mode="HTML",
-                    reply_markup=get_main_keyboard(),
-                )
-            elif awaiting == "webapp":
-                _u.web_app_url = url
-                _db.commit()
-                context.user_data.pop("awaiting_settings", None)
-                await update.message.reply_text(
-                    "✅ <b>Đã cập nhật Web App URL!</b>\n\n"
-                    f"<code>{url[:80]}...</code>" if len(url) > 80 else f"<code>{url}</code>",
-                    parse_mode="HTML",
-                    reply_markup=get_main_keyboard(),
-                )
-    finally:
-        _db.close()
+        finally:
+            _db.close()
+
+    if awaiting == "sheet":
+        await run_sync(_save_url_sync, user_id, "webhook_url", url)
+        context.user_data.pop("awaiting_settings", None)
+        display = f"<code>{url[:80]}...</code>" if len(url) > 80 else f"<code>{url}</code>"
+        await update.message.reply_text(
+            f"✅ <b>Đã cập nhật Google Sheet Webhook!</b>\n\n{display}",
+            parse_mode="HTML",
+            reply_markup=get_main_keyboard(),
+        )
+    elif awaiting == "webapp":
+        await run_sync(_save_url_sync, user_id, "web_app_url", url)
+        context.user_data.pop("awaiting_settings", None)
+        display = f"<code>{url[:80]}...</code>" if len(url) > 80 else f"<code>{url}</code>"
+        await update.message.reply_text(
+            f"✅ <b>Đã cập nhật Web App URL!</b>\n\n{display}",
+            parse_mode="HTML",
+            reply_markup=get_main_keyboard(),
+        )
     raise ApplicationHandlerStop
 
 
@@ -762,14 +791,16 @@ async def handle_report_callback(update: Update, context: ContextTypes.DEFAULT_T
         type_label   = TYPE_LABELS.get(rpt_type, "Thu chi")
         period_label = PERIOD_LABELS[data]
 
-        # Fetch from Sheets
-        from bot.utils.database import get_db, User
-        db = next(get_db())
-        try:
-            user = db.query(User).filter(User.id == user_id).first()
-            web_app_url = user.web_app_url if user else None
-        finally:
-            db.close()
+        # Fetch web_app_url via thread to avoid blocking event loop
+        def _get_webapp_url(_uid):
+            from bot.utils.database import get_db, User
+            _db = next(get_db())
+            try:
+                _u = _db.query(User).filter(User.id == _uid).first()
+                return str(_u.web_app_url) if _u and _u.web_app_url else None
+            finally:
+                _db.close()
+        web_app_url = await run_sync(_get_webapp_url, user_id)
 
         if not web_app_url:
             await query.edit_message_text(
@@ -870,12 +901,16 @@ async def handle_report_callback(update: Update, context: ContextTypes.DEFAULT_T
 async def handle_open_sheets(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Open user's Google Sheet directly."""
     user_id = update.effective_user.id
-    db: Session = next(get_db())
-    try:
-        user = db.query(User).filter(User.id == user_id).first()
-        sheets_url = user.google_sheets_url if user else None
-    finally:
-        db.close()
+
+    def _get_sheets_url(_uid):
+        _db: Session = next(get_db())
+        try:
+            _u = _db.query(User).filter(User.id == _uid).first()
+            return str(_u.google_sheets_url) if _u and _u.google_sheets_url else None
+        finally:
+            _db.close()
+
+    sheets_url = await run_sync(_get_sheets_url, user_id)
 
     if sheets_url:
         await update.message.reply_text(
@@ -905,20 +940,23 @@ async def handle_share(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id      = update.effective_user.id
     bot_username = context.bot.username
 
-    # ── Fetch or create referral code ──────────────────────────────
-    _db = next(get_db())
-    try:
-        _u = _db.query(User).filter(User.id == user_id).first()
-        ref_code      = _u.referral_code   if _u else None
-        ref_count     = (_u.referral_count or 0) if _u else 0
-        if not ref_code:
-            from bot.utils.database import generate_referral_code
-            ref_code = generate_referral_code(user_id)
-            if _u:
-                _u.referral_code = ref_code
-                _db.commit()
-    finally:
-        _db.close()
+    # ── Fetch or create referral code (via thread) ─────────────────
+    def _get_ref_sync(_uid):
+        from bot.utils.database import generate_referral_code
+        _db = next(get_db())
+        try:
+            _u = _db.query(User).filter(User.id == _uid).first()
+            code  = str(_u.referral_code) if _u and _u.referral_code else None
+            count = int(_u.referral_count or 0) if _u else 0
+            if not code:
+                code = generate_referral_code(_uid)
+                if _u:
+                    _u.referral_code = code
+                    _db.commit()
+            return code, count
+        finally:
+            _db.close()
+    ref_code, ref_count = await run_sync(_get_ref_sync, user_id)
 
     # ── Personal affiliate link ─────────────────────────────────────
     ref_url  = f"https://t.me/{bot_username}?start={ref_code}"
@@ -1051,12 +1089,16 @@ async def handle_guide_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_open_webapp(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Open user's Web App directly if set, else guide to setup."""
     uid = update.effective_user.id
-    _db = next(get_db())
-    try:
-        _user = _db.query(User).filter(User.id == uid).first()
-        wa_url = _user.web_app_url if _user else None
-    finally:
-        _db.close()
+
+    def _get_wa_url(_uid):
+        _db = next(get_db())
+        try:
+            _user = _db.query(User).filter(User.id == _uid).first()
+            return str(_user.web_app_url) if _user and _user.web_app_url else None
+        finally:
+            _db.close()
+
+    wa_url = await run_sync(_get_wa_url, uid)
     if wa_url:
         await update.message.reply_text(
             "🌐 <b>Web App của bạn</b>\n\nNhấn để mở Freedom Wallet Web:",

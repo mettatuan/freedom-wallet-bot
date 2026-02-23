@@ -7,7 +7,107 @@ from telegram.ext import ContextTypes
 from loguru import logger
 import html
 from config.settings import settings
-from bot.utils.database import get_db, PaymentVerification, User
+from bot.utils.database import get_db, PaymentVerification, User, SessionLocal, run_sync
+from sqlalchemy import func
+
+
+def _get_pending_payments_sync():
+    """Return {'total': int, 'items': list[dict]} for pending payment verifications."""
+    db = SessionLocal()
+    try:
+        pending = db.query(PaymentVerification).filter(
+            PaymentVerification.status == "PENDING"
+        ).order_by(PaymentVerification.created_at.desc()).all()
+        total = len(pending)
+        items = []
+        for v in pending[:10]:
+            user = db.query(User).filter(User.id == v.user_id).first()
+            time_ago = (datetime.utcnow() - v.created_at).total_seconds() / 60
+            tx_preview = v.transaction_info[:150].replace('\n', ' ').replace('\r', ' ')
+            items.append({
+                'id': v.id,
+                'user_id': v.user_id,
+                'amount': v.amount,
+                'time_ago': time_ago,
+                'username': user.username if user else 'Unknown',
+                'full_name': user.full_name if user and user.full_name else 'N/A',
+                'transaction_preview': tx_preview,
+            })
+        return {'total': total, 'items': items}
+    finally:
+        db.close()
+
+
+def _get_approval_details_sync(verification_id: str):
+    """Return dict with user/ver details for approve flow, or None if not found."""
+    db = SessionLocal()
+    try:
+        ver_id = int(verification_id.replace("VER", ""))
+        ver = db.query(PaymentVerification).filter(PaymentVerification.id == ver_id).first()
+        if not ver:
+            return None
+        user = db.query(User).filter(User.id == ver.user_id).first()
+        return {
+            'user_id': ver.user_id,
+            'amount': ver.amount,
+            'username': user.username if user else 'Unknown',
+            'full_name': user.full_name if user else 'N/A',
+            'premium_expires_str': user.premium_expires_at.strftime('%d/%m/%Y') if user and user.premium_expires_at else None,
+        }
+    finally:
+        db.close()
+
+
+def _get_rejection_data_sync(ver_int_id: int):
+    """Return {'user_id', 'amount', 'status'} or None."""
+    db = SessionLocal()
+    try:
+        ver = db.query(PaymentVerification).filter(PaymentVerification.id == ver_int_id).first()
+        if not ver:
+            return None
+        return {'user_id': ver.user_id, 'amount': ver.amount, 'status': ver.status}
+    finally:
+        db.close()
+
+
+def _do_reject_payment_sync(ver_int_id: int, approved_by: int, reason: str) -> None:
+    """Write REJECTED status to payment verification."""
+    db = SessionLocal()
+    try:
+        ver = db.query(PaymentVerification).filter(PaymentVerification.id == ver_int_id).first()
+        if ver:
+            ver.status = "REJECTED"
+            ver.approved_by = approved_by
+            ver.approved_at = datetime.utcnow()
+            ver.notes = reason
+            db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+def _get_payment_stats_sync():
+    """Return aggregated payment statistics dict."""
+    db = SessionLocal()
+    try:
+        pending = db.query(PaymentVerification).filter(PaymentVerification.status == "PENDING").count()
+        approved = db.query(PaymentVerification).filter(PaymentVerification.status == "APPROVED").count()
+        rejected = db.query(PaymentVerification).filter(PaymentVerification.status == "REJECTED").count()
+        revenue = db.query(func.sum(PaymentVerification.amount)).filter(
+            PaymentVerification.status == "APPROVED"
+        ).scalar() or 0
+        premium_count = db.query(User).filter(User.subscription_tier == 'PREMIUM').count()
+        return {
+            'pending': pending,
+            'approved': approved,
+            'rejected': rejected,
+            'revenue': revenue,
+            'premium_count': premium_count,
+        }
+    finally:
+        db.close()
 from bot.services.payment_service import PaymentVerificationService
 from bot.core.subscription import SubscriptionManager
 from datetime import datetime
@@ -29,43 +129,34 @@ async def payment_pending_command(update: Update, context: ContextTypes.DEFAULT_
         await update.message.reply_text("❌ Bạn không có quyền sử dụng lệnh này.")
         return
     
-    db = next(get_db())
     try:
-        # Get all pending verifications
-        pending = db.query(PaymentVerification).filter(
-            PaymentVerification.status == "PENDING"
-        ).order_by(PaymentVerification.created_at.desc()).all()
+        result = await run_sync(_get_pending_payments_sync)
+        total = result['total']
+        pending_items = result['items']
         
-        if not pending:
+        if not pending_items:
             await update.message.reply_text("✅ Không có yêu cầu xác nhận thanh toán nào.")
             return
         
         # Send header
         await update.message.reply_text(
-            f"<b>🔍 YÊU CẦU XÁC NHẬN THANH TOÁN</b>\n\nTìm thấy {len(pending)} yêu cầu đang chờ:\n",
+            f"<b>🔍 YÊU CẦU XÁC NHẬN THANH TOÁN</b>\n\nTìm thấy {total} yêu cầu đang chờ:\n",
             parse_mode="HTML"
         )
         
         # Send each verification as separate message with buttons
-        for verification in pending[:10]:  # Show max 10
-            user = db.query(User).filter(User.id == verification.user_id).first()
-            username = user.username if user else "Unknown"
-            safe_username = html.escape(username)
-            full_name = html.escape(user.full_name if user and user.full_name else "N/A")
-            
-            time_ago = (datetime.utcnow() - verification.created_at).total_seconds() / 60
-            
-            # Escape transaction info and replace newlines with spaces
-            transaction_preview = verification.transaction_info[:150].replace('\n', ' ').replace('\r', ' ')
-            safe_transaction_info = html.escape(transaction_preview)
+        for item in pending_items:
+            safe_username = html.escape(item['username'])
+            full_name = html.escape(item['full_name'])
+            safe_transaction_info = html.escape(item['transaction_preview'])
             
             message = f"""━━━━━━━━━━━━━━━━━━━━━
-<b>VER{verification.id}</b>
+<b>VER{item['id']}</b>
 
 👤 User: {full_name} (@{safe_username})
-🆔 ID: {verification.user_id}
-💰 Số tiền: <b>{verification.amount:,.0f} VNĐ</b>
-⏱️ {time_ago:.0f} phút trước
+🆔 ID: {item['user_id']}
+💰 Số tiền: <b>{item['amount']:,.0f} VNĐ</b>
+⏱️ {item['time_ago']:.0f} phút trước
 
 📝 Thông tin:
 {safe_transaction_info}...
@@ -74,23 +165,21 @@ async def payment_pending_command(update: Update, context: ContextTypes.DEFAULT_
             # Inline buttons for this verification
             keyboard = [
                 [
-                    InlineKeyboardButton("✅ Duyệt", callback_data=f"admin_approve_VER{verification.id}"),
-                    InlineKeyboardButton("❌ Từ chối", callback_data=f"admin_reject_VER{verification.id}")
+                    InlineKeyboardButton("✅ Duyệt", callback_data=f"admin_approve_VER{item['id']}"),
+                    InlineKeyboardButton("❌ Từ chối", callback_data=f"admin_reject_VER{item['id']}")
                 ]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             
             await update.message.reply_text(message, parse_mode="HTML", reply_markup=reply_markup)
         
-        if len(pending) > 10:
-            await update.message.reply_text(f"\n... và {len(pending) - 10} yêu cầu khác", parse_mode="HTML")
+        if total > 10:
+            await update.message.reply_text(f"\n... và {total - 10} yêu cầu khác", parse_mode="HTML")
         
     except Exception as e:
         logger.error(f"Error getting pending payments: {e}")
         safe_error = html.escape(str(e))
         await update.message.reply_text(f"❌ Lỗi: {safe_error}", parse_mode="HTML")
-    finally:
-        db.close()
 
 
 async def payment_approve_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -121,24 +210,16 @@ async def payment_approve_command(update: Update, context: ContextTypes.DEFAULT_
     )
     
     if success:
-        db = next(get_db())
         try:
-            # Get verification details
-            ver_id = int(verification_id.replace("VER", ""))
-            verification = db.query(PaymentVerification).filter(
-                PaymentVerification.id == ver_id
-            ).first()
+            approval_data = await run_sync(_get_approval_details_sync, verification_id)
             
-            if verification:
-                # Get user
-                payment_user = db.query(User).filter(
-                    User.id == verification.user_id
-                ).first()
+            if approval_data:
+                expire_str = approval_data['premium_expires_str'] or '365 ngày'
                 
                 # Notify user
                 try:
                     await context.bot.send_message(
-                        chat_id=verification.user_id,
+                        chat_id=approval_data['user_id'],
                         text=f"""
 🎉 <b>CHÚC MỪNG! PREMIUM Đã Kích Hoạt</b>
 
@@ -146,7 +227,7 @@ async def payment_approve_command(update: Update, context: ContextTypes.DEFAULT_
 ✅ <b>THANH TOÁN ĐÃ XÁC NHẬN:</b>
 ━━━━━━━━━━━━━━━━━━━━━
 
-💰 Số tiền: {verification.amount:,.0f} VNĐ
+💰 Số tiền: {approval_data['amount']:,.0f} VNĐ
 ⏱️ Thời gian: {datetime.now().strftime('%H:%M %d/%m/%Y')}
 
 ━━━━━━━━━━━━━━━━━━━━━
@@ -154,7 +235,7 @@ async def payment_approve_command(update: Update, context: ContextTypes.DEFAULT_
 ━━━━━━━━━━━━━━━━━━━━━
 
 ✅ Kích hoạt: Ngay bây giờ
-📅 Hết hạn: {payment_user.premium_expires_at.strftime('%d/%m/%Y') if payment_user.premium_expires_at else '365 ngày'}
+📅 Hết hạn: {expire_str}
 
 ━━━━━━━━━━━━━━━━━━━━━
 🎁 <b>BẮT ĐẦU SỬ DỤNG:</b>
@@ -171,23 +252,23 @@ Cảm ơn bạn đã tin tưởng Freedom Wallet! 💖
                         parse_mode="HTML"
                     )
                 except Exception as e:
-                    logger.error(f"Error notifying user {verification.user_id}: {e}")
+                    logger.error(f"Error notifying user {approval_data['user_id']}: {e}")
                 
                 # Confirm to admin
-                safe_username = html.escape(payment_user.username if payment_user else 'Unknown')
+                safe_username = html.escape(approval_data['username'])
                 await update.message.reply_text(
                     f"✅ Đã phê duyệt {verification_id}\n"
-                    f"👤 User: {safe_username} (ID: {verification.user_id})\n"
-                    f"💰 Số tiền: {verification.amount:,.0f} VNĐ\n"
-                    f"📅 Premium đến: {payment_user.premium_expires_at.strftime('%d/%m/%Y') if payment_user and payment_user.premium_expires_at else 'N/A'}\n"
+                    f"👤 User: {safe_username} (ID: {approval_data['user_id']})\n"
+                    f"💰 Số tiền: {approval_data['amount']:,.0f} VNĐ\n"
+                    f"📅 Premium đến: {expire_str}\n"
                     f"✅ Đã gửi thông báo cho user",
                     parse_mode="HTML"
                 )
             else:
                 await update.message.reply_text(f"✅ Đã phê duyệt {verification_id}")
                 
-        finally:
-            db.close()
+        except Exception as e:
+            logger.error(f"Error in payment_approve_command post-approval: {e}")
     else:
         await update.message.reply_text(
             f"❌ Không thể phê duyệt {verification_id}. Kiểm tra lại ID hoặc log.",
@@ -217,36 +298,29 @@ async def payment_reject_command(update: Update, context: ContextTypes.DEFAULT_T
     verification_id = context.args[0]
     reason = " ".join(context.args[1:]) if len(context.args) > 1 else "Không rõ lý do"
     
-    db = next(get_db())
+    ver_id = int(verification_id.replace("VER", ""))
+    
     try:
-        # Get verification request
-        ver_id = int(verification_id.replace("VER", ""))
-        verification = db.query(PaymentVerification).filter(
-            PaymentVerification.id == ver_id
-        ).first()
+        ver_data = await run_sync(_get_rejection_data_sync, ver_id)
         
-        if not verification:
+        if not ver_data:
             await update.message.reply_text(f"❌ Không tìm thấy {verification_id}")
             return
         
-        if verification.status != "PENDING":
+        if ver_data['status'] != "PENDING":
             await update.message.reply_text(
-                f"❌ {verification_id} đã được xử lý: {verification.status}"
+                f"❌ {verification_id} đã được xử lý: {ver_data['status']}"
             )
             return
         
         # Update status
-        verification.status = "REJECTED"
-        verification.approved_by = user_id
-        verification.approved_at = datetime.utcnow()
-        verification.notes = reason
-        db.commit()
+        await run_sync(_do_reject_payment_sync, ver_id, user_id, reason)
         
         # Notify user
         safe_reason = html.escape(reason)
         try:
             await context.bot.send_message(
-                chat_id=verification.user_id,
+                chat_id=ver_data['user_id'],
                 text=f"""
 ❌ <b>YÊU CẦU XÁC NHẬN BỊ TỪ CHỐI</b>
 
@@ -255,7 +329,7 @@ async def payment_reject_command(update: Update, context: ContextTypes.DEFAULT_T
 ━━━━━━━━━━━━━━━━━━━━━
 
 Mã: {verification_id}
-💰 Số tiền: {verification.amount:,.0f} VNĐ
+💰 Số tiền: {ver_data['amount']:,.0f} VNĐ
 
 ━━━━━━━━━━━━━━━━━━━━━
 📝 <b>LÝ DO:</b>
@@ -277,13 +351,13 @@ Vui lòng kiểm tra lại thông tin thanh toán và liên hệ Admin để đ�
                 ]])
             )
         except Exception as e:
-            logger.error(f"Error notifying user {verification.user_id}: {e}")
+            logger.error(f"Error notifying user {ver_data['user_id']}: {e}")
         
         # Confirm to admin
         safe_reason_admin = html.escape(reason)
         await update.message.reply_text(
             f"✅ Đã từ chối {verification_id}\n"
-            f"👤 User ID: {verification.user_id}\n"
+            f"👤 User ID: {ver_data['user_id']}\n"
             f"📝 Lý do: {safe_reason_admin}\n"
             f"✅ Đã gửi thông báo cho user",
             parse_mode="HTML"
@@ -294,9 +368,6 @@ Vui lòng kiểm tra lại thông tin thanh toán và liên hệ Admin để đ�
     except Exception as e:
         logger.error(f"Error rejecting payment {verification_id}: {e}")
         await update.message.reply_text(f"❌ Lỗi: {e}")
-        db.rollback()
-    finally:
-        db.close()
 
 
 async def payment_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -310,28 +381,8 @@ async def payment_stats_command(update: Update, context: ContextTypes.DEFAULT_TY
         await update.message.reply_text("❌ Bạn không có quyền sử dụng lệnh này.")
         return
     
-    db = next(get_db())
     try:
-        # Get statistics
-        total_pending = db.query(PaymentVerification).filter(
-            PaymentVerification.status == "PENDING"
-        ).count()
-        
-        total_approved = db.query(PaymentVerification).filter(
-            PaymentVerification.status == "APPROVED"
-        ).count()
-        
-        total_rejected = db.query(PaymentVerification).filter(
-            PaymentVerification.status == "REJECTED"
-        ).count()
-        
-        # Get total revenue (approved only)
-        from sqlalchemy import func
-        total_revenue = db.query(
-            func.sum(PaymentVerification.amount)
-        ).filter(
-            PaymentVerification.status == "APPROVED"
-        ).scalar() or 0
+        stats = await run_sync(_get_payment_stats_sync)
         
         message = f"""
 📊 <b>THỐNG KÊ THANH TOÁN</b>
@@ -340,22 +391,22 @@ async def payment_stats_command(update: Update, context: ContextTypes.DEFAULT_TY
 📋 <b>YÊU CẦU:</b>
 ━━━━━━━━━━━━━━━━━━━━━
 
-⏳ Đang chờ: {total_pending}
-✅ Đã duyệt: {total_approved}
-❌ Đã từ chối: {total_rejected}
+⏳ Đang chờ: {stats['pending']}
+✅ Đã duyệt: {stats['approved']}
+❌ Đã từ chối: {stats['rejected']}
 
 ━━━━━━━━━━━━━━━━━━━━━
 💰 <b>DOANH THU:</b>
 ━━━━━━━━━━━━━━━━━━━━━
 
-Tổng: {total_revenue:,.0f} VNĐ
-Trung bình: {total_revenue/total_approved if total_approved > 0 else 0:,.0f} VNĐ/giao dịch
+Tổng: {stats['revenue']:,.0f} VNĐ
+Trung bình: {stats['revenue']/stats['approved'] if stats['approved'] > 0 else 0:,.0f} VNĐ/giao dịch
 
 ━━━━━━━━━━━━━━━━━━━━━
 💎 <b>PREMIUM USERS:</b>
 ━━━━━━━━━━━━━━━━━━━━━
 
-Tổng: {db.query(User).filter(User.subscription_tier == 'PREMIUM').count()} users
+Tổng: {stats['premium_count']} users
 """
         
         await update.message.reply_text(message, parse_mode="HTML")
@@ -363,5 +414,3 @@ Tổng: {db.query(User).filter(User.subscription_tier == 'PREMIUM').count()} use
     except Exception as e:
         logger.error(f"Error getting payment stats: {e}")
         await update.message.reply_text(f"❌ Lỗi: {e}")
-    finally:
-        db.close()

@@ -7,12 +7,23 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from loguru import logger
 from bot.core.subscription import SubscriptionManager, SubscriptionTier
-from bot.utils.database import get_user_by_id, SessionLocal
+from bot.utils.database import get_user_by_id, SessionLocal, User, run_sync
 from bot.services.analytics import Analytics
 import re
 import aiohttp
 from datetime import datetime
 from typing import Optional
+
+
+def _save_webhook_url_sync(user_id: int, webhook_url: str) -> None:
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            user.webhook_url = webhook_url
+            db.commit()
+    finally:
+        db.close()
 
 
 async def handle_quick_expense_webhook(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -332,11 +343,7 @@ async def handle_set_webhook(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     if success:
         # Save to database
-        db = SessionLocal()
-        user = db.merge(user)
-        user.webhook_url = webhook_url
-        db.commit()
-        db.close()
+        await run_sync(_save_webhook_url_sync, user_id, webhook_url)
         
         await update.message.reply_text(
             "✅ **Kết nối thành công!**\n\n"

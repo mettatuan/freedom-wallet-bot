@@ -6,13 +6,14 @@ from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from loguru import logger
 from bot.handlers.streak_tracking import get_user_streak_stats, toggle_reminder, record_transaction_event
+from bot.utils.database import run_sync
 
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show user's streak statistics"""
     user_id = update.effective_user.id
     
-    stats = get_user_streak_stats(user_id)
+    stats = await run_sync(get_user_streak_stats, user_id)
     
     if not stats:
         await update.message.reply_text(
@@ -60,7 +61,7 @@ async def reminder_on_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     """Enable daily reminders"""
     user_id = update.effective_user.id
     
-    success = toggle_reminder(user_id, True)
+    success = await run_sync(toggle_reminder, user_id, True)
     
     if success:
         await update.message.reply_text(
@@ -82,7 +83,7 @@ async def reminder_off_command(update: Update, context: ContextTypes.DEFAULT_TYP
     """Disable daily reminders"""
     user_id = update.effective_user.id
     
-    success = toggle_reminder(user_id, False)
+    success = await run_sync(toggle_reminder, user_id, False)
     
     if success:
         await update.message.reply_text(
@@ -103,10 +104,10 @@ async def record_transaction_command(update: Update, context: ContextTypes.DEFAU
     user_id = update.effective_user.id
     
     # Record transaction event
-    record_transaction_event(user_id, context)
+    await run_sync(record_transaction_event, user_id, context)
     
     # Get updated stats
-    stats = get_user_streak_stats(user_id)
+    stats = await run_sync(get_user_streak_stats, user_id)
     
     if stats:
         await update.message.reply_text(

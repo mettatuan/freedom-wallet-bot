@@ -2,6 +2,7 @@
 Database Models for Bot
 Phase 2: Context Memory + Referral System
 """
+import asyncio as _asyncio
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Boolean, Float, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -11,10 +12,27 @@ import hashlib
 import secrets
 
 Base = declarative_base()
-engine = create_engine(settings.DATABASE_URL)
+
+# PostgreSQL: full connection pool config
+# SQLite: no pool args (they are unsupported / cause crash)
+_db_url = settings.DATABASE_URL
+_engine_kwargs: dict = {}
+if _db_url.startswith("postgresql"):
+    _engine_kwargs = dict(pool_size=10, max_overflow=20, pool_pre_ping=True)
+engine = create_engine(_db_url, **_engine_kwargs)
+
 # Configure session to not expire objects after commit
 # This allows objects to be used after session.close() without DetachedInstanceError
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
+
+
+async def run_sync(fn, *args, **kwargs):
+    """Run a blocking/sync function in a thread pool to avoid blocking the event loop.
+
+    Usage in async handlers:
+        result = await run_sync(_my_sync_db_fn, arg1, arg2)
+    """
+    return await _asyncio.to_thread(fn, *args, **kwargs)
 
 
 def get_db():

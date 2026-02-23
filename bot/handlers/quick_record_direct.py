@@ -6,7 +6,7 @@ Requires EDITOR permission
 from telegram import Update
 from telegram.ext import ContextTypes
 from loguru import logger
-from bot.services.sheets_writer import get_user_sheets_writer
+from bot.services.sheets_api_client import SheetsAPIClient
 from bot.core.subscription import SubscriptionManager, SubscriptionTier
 from bot.utils.database import get_user_by_id
 from bot.services.analytics import Analytics
@@ -35,9 +35,8 @@ async def handle_quick_expense(update: Update, context: ContextTypes.DEFAULT_TYP
         )
         return
     
-    # Check if Sheets connected with EDITOR permission
-    sheets = await get_user_sheets_writer(user_id)
-    if not sheets:
+    # Check if Sheets connected
+    if not user.spreadsheet_id:
         await update.message.reply_text(
             "📊 **Chưa kết nối Google Sheets**\n\n"
             "Để ghi chi tiêu tự động, hãy:\n"
@@ -46,6 +45,8 @@ async def handle_quick_expense(update: Update, context: ContextTypes.DEFAULT_TYP
             "⚠️ Lưu ý: Bot cần Editor để ghi được data!"
         )
         return
+    
+    client = SheetsAPIClient(user.spreadsheet_id, user.web_app_url)
     
     # Parse message
     text = update.message.text
@@ -77,14 +78,14 @@ async def handle_quick_expense(update: Update, context: ContextTypes.DEFAULT_TYP
     
     # Write to Sheets
     try:
-        success = await sheets.add_expense(
+        result = await client.add_transaction(
             amount=amount,
             category=category,
             note=note,
-            method='Telegram Bot'
+            transaction_type="Chi"
         )
         
-        if success:
+        if result.get('success'):
             await update.message.reply_text(
                 f"✅ **Đã ghi thành công!**\n\n"
                 f"💸 Chi: {amount:,.0f} VNĐ\n"

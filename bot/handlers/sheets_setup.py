@@ -5,12 +5,40 @@ Guide user to connect their Google Sheets
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from loguru import logger
-from bot.utils.database import get_user_by_id, SessionLocal, User
+from bot.utils.database import get_user_by_id, SessionLocal, User, run_sync
 from bot.services.sheets_reader import SheetsReader
 from bot.services.analytics import Analytics
 from datetime import datetime
 import re
 import os
+
+
+def _save_spreadsheet_sync(user_id: int, spreadsheet_id: str) -> None:
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if user:
+            user.spreadsheet_id = spreadsheet_id
+            user.sheets_connected_at = datetime.now()
+            db.commit()
+    finally:
+        db.close()
+
+
+def _disconnect_sheets_sync(user_id: int):
+    """Clears spreadsheet_id. Returns old spreadsheet_id string if one existed, else None."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.spreadsheet_id:
+            return None
+        old_id = user.spreadsheet_id
+        user.spreadsheet_id = None
+        user.sheets_connected_at = None
+        db.commit()
+        return old_id
+    finally:
+        db.close()
 
 
 async def cmd_get_service_account_email(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -289,14 +317,7 @@ async def handle_set_sheet_command(update: Update, context: ContextTypes.DEFAULT
             )
         
         # Connection successful! Save to database
-        db = SessionLocal()
-        try:
-            user = db.query(User).filter(User.id == user_id).first()
-            user.spreadsheet_id = spreadsheet_id
-            user.sheets_connected_at = datetime.now()
-            db.commit()
-        finally:
-            db.close()
+        await run_sync(_save_spreadsheet_sync, user_id, spreadsheet_id)
         
         # Get balance preview (only if connection test succeeded)
         balance = None
@@ -364,36 +385,25 @@ async def handle_disconnect_sheets(update: Update, context: ContextTypes.DEFAULT
     """
     user_id = update.effective_user.id
     
-    db = SessionLocal()
-    try:
-        user = db.query(User).filter(User.id == user_id).first()
-        if not user or not user.spreadsheet_id:
-            await update.message.reply_text(
-                "ℹ️ Bạn chưa kết nối Google Sheets nào!"
-            )
-            return
-        
-        # Remove connection
-        old_id = user.spreadsheet_id
-        user.spreadsheet_id = None
-        user.sheets_connected_at = None
-        db.commit()
-        
+    old_id = await run_sync(_disconnect_sheets_sync, user_id)
+    if old_id is None:
         await update.message.reply_text(
-            "✅ **Đã ngắt kết nối Google Sheets**\n\n"
-            "📊 Bạn vẫn có thể dùng template bình thường.\n"
-            "Chỉ thiếu tính năng AI analysis tự động.\n\n"
-            "🔗 Kết nối lại: /connectsheets"
+            "ℹ️ Bạn chưa kết nối Google Sheets nào!"
         )
-        
-        Analytics.track_event(user_id, 'sheets_disconnected', {
-            'old_id': old_id[:10] + '...'
-        })
-        
-        logger.info(f"User {user_id} disconnected Sheets")
-        
-    finally:
-        db.close()
+        return
+    
+    await update.message.reply_text(
+        "✅ **Đã ngắt kết nối Google Sheets**\n\n"
+        "📊 Bạn vẫn có thể dùng template bình thường.\n"
+        "Chỉ thiếu tính năng AI analysis tự động.\n\n"
+        "🔗 Kết nối lại: /connectsheets"
+    )
+    
+    Analytics.track_event(user_id, 'sheets_disconnected', {
+        'old_id': old_id[:10] + '...'
+    })
+    
+    logger.info(f"User {user_id} disconnected Sheets")
 
 
 async def handle_skip_sheets_connection(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -519,32 +529,22 @@ async def handle_disconnect_sheet_confirmed(update: Update, context: ContextType
     
     user_id = update.effective_user.id
     
-    db = SessionLocal()
-    try:
-        user = db.query(User).filter(User.id == user_id).first()
-        if user and user.spreadsheet_id:
-            old_id = user.spreadsheet_id
-            user.spreadsheet_id = None
-            user.sheets_connected_at = None
-            db.commit()
-            
-            await query.edit_message_text(
-                "✅ **Đã ngắt kết nối Google Sheets**\n\n"
-                "📊 Bạn vẫn có thể dùng template bình thường.\n"
-                "Chỉ thiếu tính năng AI analysis tự động.\n\n"
-                "🔗 Kết nối lại: /connectsheets",
-                parse_mode="Markdown"
-            )
-            
-            Analytics.track_event(user_id, 'sheets_disconnected', {'old_id': old_id[:10] + '...'})
-            logger.info(f"User {user_id} disconnected Sheets")
-        else:
-            await query.edit_message_text(
-                "ℹ️ Không có sheet nào đang kết nối.",
-                parse_mode="Markdown"
-            )
-    finally:
-        db.close()
+    old_id = await run_sync(_disconnect_sheets_sync, user_id)
+    if old_id:
+        await query.edit_message_text(
+            "✅ **Đã ngắt kết nối Google Sheets**\n\n"
+            "📊 Bạn vẫn có thể dùng template bình thường.\n"
+            "Chỉ thiếu tính năng AI analysis tự động.\n\n"
+            "🔗 Kết nối lại: /connectsheets",
+            parse_mode="Markdown"
+        )
+        Analytics.track_event(user_id, 'sheets_disconnected', {'old_id': old_id[:10] + '...'})
+        logger.info(f"User {user_id} disconnected Sheets")
+    else:
+        await query.edit_message_text(
+            "ℹ️ Không có sheet nào đang kết nối.",
+            parse_mode="Markdown"
+        )
 
 
 

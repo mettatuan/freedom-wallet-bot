@@ -6,12 +6,34 @@ from telegram.ext import ContextTypes
 from loguru import logger
 from config.settings import settings
 from bot.services.analytics import Analytics
+from bot.utils.database import SessionLocal, User, run_sync
 from bot.handlers.admin_callbacks import (
     handle_admin_approve_callback,
     handle_admin_reject_callback,
     handle_admin_list_pending_callback
 )
 from bot.handlers.webapp_setup import send_webapp_setup_step
+
+
+def _get_leaderboard_sync():
+    """Return list of top-10 referrer dicts (username, full_name, referral_count)."""
+    db = SessionLocal()
+    try:
+        top_users = db.query(User).filter(
+            User.referral_count > 0
+        ).order_by(
+            User.referral_count.desc()
+        ).limit(10).all()
+        return [
+            {
+                'username': u.username,
+                'full_name': u.full_name,
+                'referral_count': u.referral_count,
+            }
+            for u in top_users
+        ]
+    finally:
+        db.close()
 
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1000,51 +1022,40 @@ Hoặc mô tả lại vấn đề, mình sẽ cố gắng giúp!
     
     elif callback_data == "leaderboard":
         # Show top referrers leaderboard
-        from bot.utils.database import SessionLocal, User
+        top_users_data = await run_sync(_get_leaderboard_sync)
         
-        session = SessionLocal()
-        try:
-            # Get top 10 referrers (exclude admins)
-            top_users = session.query(User).filter(
-                User.referral_count > 0
-            ).order_by(
-                User.referral_count.desc()
-            ).limit(10).all()
+        leaderboard_text = "━━━━━━━━━━━━━━━━━━━━━\n"
+        leaderboard_text += "🏆 **BẢNG XẾP HẠNG TOP REFERRERS**\n"
+        leaderboard_text += "━━━━━━━━━━━━━━━━━━━━━\n\n"
+        
+        medals = ["🥇", "🥈", "🥉"]
+        for idx, ud in enumerate(top_users_data, 1):
+            medal = medals[idx-1] if idx <= 3 else f"{idx}️⃣"
+            name = ud['username'] or ud['full_name'] or "Anonymous"
+            refs = ud['referral_count']
             
-            leaderboard_text = "━━━━━━━━━━━━━━━━━━━━━\n"
-            leaderboard_text += "🏆 **BẢNG XẾP HẠNG TOP REFERRERS**\n"
-            leaderboard_text += "━━━━━━━━━━━━━━━━━━━━━\n\n"
+            # Show Super VIP badge
+            badge = "🌟" if refs >= 50 else "⭐" if refs >= 2 else ""
             
-            medals = ["🥇", "🥈", "🥉"]
-            for idx, user in enumerate(top_users, 1):
-                medal = medals[idx-1] if idx <= 3 else f"{idx}️⃣"
-                name = user.username or user.full_name or "Anonymous"
-                refs = user.referral_count
-                
-                # Show Super VIP badge
-                badge = "🌟" if refs >= 50 else "⭐" if refs >= 2 else ""
-                
-                leaderboard_text += f"{medal} **{name}** {badge}\n"
-                leaderboard_text += f"     {refs} lượt giới thiệu\n\n"
-            
-            leaderboard_text += "━━━━━━━━━━━━━━━━━━━━━\n"
-            leaderboard_text += "💡 Bạn muốn lên top? Share link ngay!\n"
-            leaderboard_text += "/referral để xem link của bạn"
-            
-            keyboard = [
-                [InlineKeyboardButton("🔗 Xem link giới thiệu", callback_data="referral_menu")],
-                [InlineKeyboardButton("🌟 Đặc quyền Super VIP", callback_data="super_vip_benefits")],
-                [InlineKeyboardButton("🏠 Dashboard", callback_data="start")]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await query.edit_message_text(
-                leaderboard_text,
-                parse_mode="Markdown",
-                reply_markup=reply_markup
-            )
-        finally:
-            session.close()
+            leaderboard_text += f"{medal} **{name}** {badge}\n"
+            leaderboard_text += f"     {refs} lượt giới thiệu\n\n"
+        
+        leaderboard_text += "━━━━━━━━━━━━━━━━━━━━━\n"
+        leaderboard_text += "💡 Bạn muốn lên top? Share link ngay!\n"
+        leaderboard_text += "/referral để xem link của bạn"
+        
+        keyboard = [
+            [InlineKeyboardButton("🔗 Xem link giới thiệu", callback_data="referral_menu")],
+            [InlineKeyboardButton("🌟 Đặc quyền Super VIP", callback_data="super_vip_benefits")],
+            [InlineKeyboardButton("🏠 Dashboard", callback_data="start")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await query.edit_message_text(
+            leaderboard_text,
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
     
     elif callback_data == "super_vip_gifts":
         # Show Super VIP exclusive gifts

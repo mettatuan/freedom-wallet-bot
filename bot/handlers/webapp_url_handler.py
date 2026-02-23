@@ -4,58 +4,78 @@ Allow users to save and retrieve their Freedom Wallet Web App URL
 """
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ConversationHandler
-from bot.utils.database import get_db, User
+from bot.utils.database import get_db, User, SessionLocal, run_sync
 from loguru import logger
 
 # Conversation states
 WAITING_FOR_URL = 1
 
+
+def _get_webapp_url_sync(user_id: int):
+    """Returns {'web_app_url': ...} if user exists, else None."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return None
+        return {"web_app_url": user.web_app_url}
+    finally:
+        db.close()
+
+
+def _save_webapp_url_sync(user_id: int, url: str) -> bool:
+    """Saves web_app_url. Returns True if user found and saved, False otherwise."""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return False
+        user.web_app_url = url
+        db.commit()
+        return True
+    finally:
+        db.close()
+
 async def cmd_mywebapp(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show saved Web App URL or prompt to save one"""
     user_id = update.effective_user.id
-    db = next(get_db())
+    user_data = await run_sync(_get_webapp_url_sync, user_id)
     
-    try:
-        user = db.query(User).filter(User.id == user_id).first()
-        
-        if not user:
-            await update.message.reply_text("❌ User not found. Please /start first.")
-            return
-        
-        if user.web_app_url:
-            # User has saved URL
-            keyboard = [
-                [InlineKeyboardButton("🌐 Mở Web App", url=user.web_app_url)],
-                [InlineKeyboardButton("✏️ Cập nhật link", callback_data="update_webapp_url")]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await update.message.reply_text(
-                f"📱 **Web App của bạn:**\n\n"
-                f"`{user.web_app_url}`\n\n"
-                f"💡 Nhấn nút bên dưới để mở hoặc cập nhật link!",
-                parse_mode="Markdown",
-                reply_markup=reply_markup
-            )
-        else:
-            # No URL saved yet
-            keyboard = [[InlineKeyboardButton("💾 Lưu link Web App", callback_data="save_webapp_url")]]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await update.message.reply_text(
-                f"📱 **Lưu link Web App**\n\n"
-                f"Bạn chưa lưu link Web App của Freedom Wallet.\n\n"
-                f"💡 Lưu link để:\n"
-                f"• Truy cập nhanh khi cần ghi chép\n"
-                f"• Không phải tìm lại link mỗi lần\n"
-                f"• Bot sẽ gửi link cho bạn khi cần\n\n"
-                f"Nhấn nút bên dưới để lưu!",
-                parse_mode="Markdown",
-                reply_markup=reply_markup
-            )
+    if user_data is None:
+        await update.message.reply_text("❌ User not found. Please /start first.")
+        return
     
-    finally:
-        db.close()
+    if user_data['web_app_url']:
+        # User has saved URL
+        keyboard = [
+            [InlineKeyboardButton("🌐 Mở Web App", url=user_data['web_app_url'])],
+            [InlineKeyboardButton("✏️ Cập nhật link", callback_data="update_webapp_url")]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(
+            f"📱 **Web App của bạn:**\n\n"
+            f"`{user_data['web_app_url']}`\n\n"
+            f"💡 Nhấn nút bên dưới để mở hoặc cập nhật link!",
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
+    else:
+        # No URL saved yet
+        keyboard = [[InlineKeyboardButton("💾 Lưu link Web App", callback_data="save_webapp_url")]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        await update.message.reply_text(
+            f"📱 **Lưu link Web App**\n\n"
+            f"Bạn chưa lưu link Web App của Freedom Wallet.\n\n"
+            f"💡 Lưu link để:\n"
+            f"• Truy cập nhanh khi cần ghi chép\n"
+            f"• Không phải tìm lại link mỗi lần\n"
+            f"• Bot sẽ gửi link cho bạn khi cần\n\n"
+            f"Nhấn nút bên dưới để lưu!",
+            parse_mode="Markdown",
+            reply_markup=reply_markup
+        )
 
 async def callback_save_webapp_url(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Prompt user to send Web App URL"""
@@ -101,22 +121,16 @@ async def handle_webapp_url_input(update: Update, context: ContextTypes.DEFAULT_
         )
         return WAITING_FOR_URL
     
-    db = next(get_db())
+    saved = await run_sync(_save_webapp_url_sync, user_id, url)
+    
+    if not saved:
+        await update.message.reply_text("❌ User not found.")
+        return ConversationHandler.END
+    
+    keyboard = [[InlineKeyboardButton("🌐 Mở Web App", url=url)]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     
     try:
-        user = db.query(User).filter(User.id == user_id).first()
-        
-        if not user:
-            await update.message.reply_text("❌ User not found.")
-            return ConversationHandler.END
-        
-        # Save URL
-        user.web_app_url = url
-        db.commit()
-        
-        keyboard = [[InlineKeyboardButton("🌐 Mở Web App", url=url)]]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        
         await update.message.reply_text(
             f"✅ **Đã lưu link Web App!**\n\n"
             f"`{url}`\n\n"
@@ -126,13 +140,9 @@ async def handle_webapp_url_input(update: Update, context: ContextTypes.DEFAULT_
         )
         
         logger.info(f"✅ User {user_id} saved Web App URL")
-        
     except Exception as e:
-        logger.error(f"❌ Error saving Web App URL: {e}")
+        logger.error(f"❌ Error sending save confirmation: {e}")
         await update.message.reply_text("❌ Có lỗi xảy ra. Vui lòng thử lại sau.")
-    
-    finally:
-        db.close()
     
     return ConversationHandler.END
 
