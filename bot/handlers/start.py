@@ -29,6 +29,13 @@ from bot.utils.sheets import sync_web_registration
 from config.settings import settings
 
 
+def _esc(text: str) -> str:
+    """Escape Markdown v1 special characters in user-supplied strings."""
+    for ch in ('_', '*', '[', '`'):
+        text = text.replace(ch, f'\\{ch}')
+    return text
+
+
 # ---------------------------------------------------------------------------
 # Screen helpers
 # ---------------------------------------------------------------------------
@@ -75,8 +82,9 @@ async def _show_setup_screen(update: Update, context: ContextTypes.DEFAULT_TYPE,
         or user.first_name
         or "bạn"
     )
+    user_name_safe = _esc(user_name)
     text = (
-        f"🎉 *Chào mừng {user_name} đến với Freedom Wallet!*\n\n"
+        f"🎉 *Chào mừng {user_name_safe} đến với Freedom Wallet!*\n\n"
         f"Tài khoản của bạn đã sẵn sàng. Bước tiếp theo là *thiết lập Web App* của riêng bạn.\n\n"
         f"━━━━━━━━━━━━━━━━━━━━━\n\n"
         f"*Bạn sẽ có:*\n"
@@ -119,7 +127,7 @@ async def _show_active_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     sheets_url = getattr(db_user, "google_sheets_url", None)
 
     text = (
-        f"👋 Chào mừng trở lại, *{user_name}*!\n\n"
+        f"👋 Chào mừng trở lại, *{_esc(user_name)}*!\n\n"
         f"Chọn thao tác bên dưới hoặc dùng menu phím bên dưới màn hình."
     )
 
