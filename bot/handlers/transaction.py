@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from loguru import logger
 import aiohttp
 
+import asyncio
 from bot.core.nlp import parse_natural_language_transaction, format_vnd
 from bot.core.categories import get_all_categories
 from bot.core.keyboard import (
@@ -813,12 +814,17 @@ async def handle_report_callback(update: Update, context: ContextTypes.DEFAULT_T
         await query.edit_message_text("🔄 Đang lấy dữ liệu từ Sheets...")
         _KEY = "fwb_bot_production_2026"
         try:
-            timeout = aiohttp.ClientTimeout(total=15)
+            timeout = aiohttp.ClientTimeout(total=20)
             async with aiohttp.ClientSession(timeout=timeout) as session:
-                bal_resp = await session.post(web_app_url, json={"action": "getBalance", "api_key": _KEY})
-                bal_data = await bal_resp.json(content_type=None)
-                tx_resp  = await session.post(web_app_url, json={"action": "getTransactions", "data": {"limit": 20}, "api_key": _KEY})
-                tx_data  = await tx_resp.json(content_type=None)
+                async def _fetch_balance():
+                    r = await session.post(web_app_url, json={"action": "getBalance", "api_key": _KEY})
+                    return await r.json(content_type=None)
+
+                async def _fetch_transactions():
+                    r = await session.post(web_app_url, json={"action": "getTransactions", "data": {"limit": 20}, "api_key": _KEY})
+                    return await r.json(content_type=None)
+
+                bal_data, tx_data = await asyncio.gather(_fetch_balance(), _fetch_transactions())
 
             lines = [f"<b>📊 {type_label} — {period_label.capitalize()}</b>\n"]
 
