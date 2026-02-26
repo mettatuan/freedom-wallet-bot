@@ -353,6 +353,7 @@ def main() -> None:
     # Start bot
     logger.info(f"[OK] Bot started in {settings.ENV} mode")
     logger.info(f"[INFO] Log level: {settings.LOG_LEVEL}")
+    logger.info(f"[INFO] ADMIN_USER_ID: {settings.ADMIN_USER_ID} {'✅' if settings.ADMIN_USER_ID == 6588506476 else '⚠️ WRONG ID!'}")
     
     # Start polling (connect_timeout=60 handles slow Telegram API at startup)
     application.run_polling(allowed_updates=Update.ALL_TYPES)
