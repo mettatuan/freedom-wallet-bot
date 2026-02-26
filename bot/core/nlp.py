@@ -49,6 +49,27 @@ def extract_amount(text: str) -> Optional[int]:
     # ── VND amounts ────────────────────────────────────────────────────────────
     # Keep original text for fallback detection (before cleaning)
     text_orig = text
+
+    # ── Decimal VND FIRST (before stripping dots/commas) ────────────────────
+    # "6.5tr" / "6,5tr" → 6_500_000   "2.5k" / "2,5k" → 2_500
+    # Must run BEFORE replace(",","").replace(".","") which turns "6.5" → "65"
+    _dec_vnd = re.search(
+        r'(\d+)[.,](\d+)\s*(k|tr|triệu|tỷ|ty)(?:\s|$)',
+        text_orig, re.IGNORECASE
+    )
+    if _dec_vnd:
+        _int_part  = int(_dec_vnd.group(1))
+        _frac_str  = _dec_vnd.group(2)
+        _frac_val  = int(_frac_str) / (10 ** len(_frac_str))
+        _value     = _int_part + _frac_val
+        _unit      = _dec_vnd.group(3).lower()
+        if _unit == 'k':
+            return int(_value * 1_000)
+        elif _unit in ('tr', 'triệu'):
+            return int(_value * 1_000_000)
+        elif _unit in ('tỷ', 'ty'):
+            return int(_value * 1_000_000_000)
+
     # Remove commas and dots from numbers
     text = text.replace(",", "").replace(".", "")
     
