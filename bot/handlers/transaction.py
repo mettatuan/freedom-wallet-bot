@@ -83,7 +83,7 @@ def _resolve_account_id(display_or_id: str) -> str:
     return _ACCOUNT_DISPLAY_TO_ID.get(display_or_id, display_or_id)
 
 
-def _make_preview(pending: dict) -> tuple:
+def _make_preview(pending: dict, cached_accounts: list | None = None) -> tuple:
     amount_display = format_vnd(abs(pending["amount"]))
     tx_type  = pending["type"]
     category = pending["category"]
@@ -132,12 +132,26 @@ def _make_preview(pending: dict) -> tuple:
             InlineKeyboardButton(toggle_label,       callback_data="txn_toggle_type"),
             InlineKeyboardButton("📁 Danh mục",      callback_data="txn_cat_menu"),
         ],
-        [
-            InlineKeyboardButton("🪣 Hũ tiền",       callback_data="txn_jar_menu"),
-            InlineKeyboardButton("🏦 Tài khoản",     callback_data="txn_acct_menu"),
-        ],
-        [InlineKeyboardButton("❌ Huỷ", callback_data="txn_cancel")],
+        [InlineKeyboardButton("🪣 Hũ tiền",          callback_data="txn_jar_menu")],
     ]
+    # Inline account buttons from cache — 1-tap selection
+    funded = [a for a in (cached_accounts or []) if int(a.get("balance") or 0) > 0]
+    if not funded and cached_accounts:
+        funded = cached_accounts  # safety: all-zero, still show them
+    if funded:
+        for i in range(0, min(len(funded), 6), 3):
+            row = []
+            for acc in funded[i:i + 3]:
+                acc_id   = acc.get("id") or acc.get("name", "?")
+                acc_name = acc.get("name") or acc_id
+                label    = f"✓ {acc_name}" if str(acc_id) == str(account) else acc_name
+                row.append(InlineKeyboardButton(label, callback_data=f"txn_acct_{acc_id}"))
+            keyboard.append(row)
+        if len(funded) > 6:
+            keyboard.append([InlineKeyboardButton("🏦 Xem thêm...", callback_data="txn_acct_menu")])
+    else:
+        keyboard[-1].append(InlineKeyboardButton("🏦 Tài khoản", callback_data="txn_acct_menu"))
+    keyboard.append([InlineKeyboardButton("❌ Huỷ", callback_data="txn_cancel")])
     return text, InlineKeyboardMarkup(keyboard)
 
 
@@ -165,10 +179,11 @@ async def handle_quick_transaction(update: Update, context: ContextTypes.DEFAULT
         raise ApplicationHandlerStop
 
     parsed["jar"]     = CATEGORY_TO_JAR.get(parsed["category"], "Thiết yếu")
-    parsed["account"] = "Cash"  # default account ID
+    parsed["account"] = context.user_data.get("last_account", "Cash")  # remember last account
     context.user_data["pending_tx"] = parsed
+    cached_accounts = context.user_data.get("cached_accounts")
 
-    text, keyboard = _make_preview(parsed)
+    text, keyboard = _make_preview(parsed, cached_accounts)
     await update.message.reply_text(text, parse_mode="HTML", reply_markup=keyboard)
     raise ApplicationHandlerStop
 
@@ -382,7 +397,7 @@ async def handle_txn_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         pending["category"] = detect_category(pending["description"], pending["type"])
         pending["jar"] = CATEGORY_TO_JAR.get(pending["category"], "")
         context.user_data["pending_tx"] = pending
-        text, keyboard = _make_preview(pending)
+        text, keyboard = _make_preview(pending, context.user_data.get("cached_accounts"))
         await query.edit_message_text(text, parse_mode="HTML", reply_markup=keyboard)
         return
 
@@ -405,7 +420,7 @@ async def handle_txn_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         pending["category"] = cat
         pending["jar"] = CATEGORY_TO_JAR.get(cat, "Thiết yếu")
         context.user_data["pending_tx"] = pending
-        text, keyboard = _make_preview(pending)
+        text, keyboard = _make_preview(pending, context.user_data.get("cached_accounts"))
         await query.edit_message_text(text, parse_mode="HTML", reply_markup=keyboard)
         return
 
@@ -436,12 +451,14 @@ async def handle_txn_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         jar = data[len("txn_jar_"):]
         pending["jar"] = jar
         context.user_data["pending_tx"] = pending
-        text, keyboard = _make_preview(pending)
+        text, keyboard = _make_preview(pending, context.user_data.get("cached_accounts"))
         await query.edit_message_text(text, parse_mode="HTML", reply_markup=keyboard)
         return
 
     if data == "txn_acct_menu":
         accounts_data = await _fetch_accounts_with_balance(user_id)
+        if accounts_data:
+            context.user_data["cached_accounts"] = accounts_data  # cache for inline buttons
         if accounts_data:
             # Only show accounts that have money (balance > 0)
             funded = [a for a in accounts_data if int(a.get("balance") or 0) > 0]
@@ -478,12 +495,13 @@ async def handle_txn_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         acct = data[len("txn_acct_"):]
         pending["account"] = _resolve_account_id(acct)  # store GAS account ID
         context.user_data["pending_tx"] = pending
-        text, keyboard = _make_preview(pending)
+        context.user_data["last_account"] = pending["account"]  # remember for next transaction
+        text, keyboard = _make_preview(pending, context.user_data.get("cached_accounts"))
         await query.edit_message_text(text, parse_mode="HTML", reply_markup=keyboard)
         return
 
     if data == "txn_back":
-        text, keyboard = _make_preview(pending)
+        text, keyboard = _make_preview(pending, context.user_data.get("cached_accounts"))
         await query.edit_message_text(text, parse_mode="HTML", reply_markup=keyboard)
         return
 
