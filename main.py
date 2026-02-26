@@ -58,63 +58,82 @@ logger = logging.getLogger(__name__)
 
 
 async def error_handler(update: Update, context) -> None:
-    """SCALE#102 — Log + alert admin + reply to user on unhandled exceptions."""
-    logger.error("Unhandled exception", exc_info=context.error)
+    """Log + smart alert via ErrorTracker + reply to user."""
+    from bot.core.error_tracker import get_tracker
+    error = context.error
 
-    # ── 1. Reply to user (best-effort) ──────────────────────────────────────
+    # ── 1. Track lỗi (bỏ qua nếu ignorable, check ngưỡng alert) ──────────
+    tracker = get_tracker()
+    result = tracker.record(error)
+
+    if result["ignorable"]:
+        logger.debug(f"Ignorable error (suppressed): {type(error).__name__}: {error}")
+        return
+
+    logger.error("Unhandled exception", exc_info=error)
+
+    # ── 2. Reply to user (best-effort) ───────────────────────────────────────
     try:
         if update and update.effective_message:
+            hint = result.get("recovery_hint")
+            extra = f"\n🔧 {hint}" if hint else ""
             await update.effective_message.reply_text(
-                "😓 Xin lỗi, bot gặp lỗi không xử lý được.\n"
-                "Vui lòng thử lại sau hoặc liên hệ admin: @tuanai_mentor"
+                f"😓 Xin lỗi, bot gặp lỗi không xử lý được.{extra}\n"
+                "Vui lòng thử lại sau hoặc liên hệ admin: @tuanai_mentor\n"
+                "Dùng /feedback để báo chi tiết."
             )
     except Exception:
         pass
 
-    # ── 2. Alert admin on Telegram (SCALE#102) ───────────────────────────────
     if not settings.ADMIN_USER_ID:
+        return
+
+    # ── 3. Smart alert: chỉ gửi khi vượt ngưỡng HOẶC lỗi lần đầu ──────────
+    is_first_occurrence = result.get("total", 0) == 1
+    if not result["alert_needed"] and not is_first_occurrence:
         return
 
     try:
         tb = "".join(
-            traceback.format_exception(
-                type(context.error), context.error, context.error.__traceback__
-            )
+            traceback.format_exception(type(error), error, error.__traceback__)
         )
-
-        # Build context info for the alert
         user_info = ""
         if update and update.effective_user:
             u = update.effective_user
             user_info = (
-                f"\n👤 User: <code>{html.escape(u.full_name)}</code> "
+                f"\n👤 User: <code>{html.escape(u.full_name or '')}</code> "
                 f"(<code>{u.id}</code>)"
             )
-
         chat_info = ""
         if update and update.effective_chat:
             chat_info = f"\n💬 Chat: <code>{update.effective_chat.id}</code>"
 
-        # Truncate traceback to fit Telegram 4096 char limit
-        tb_escaped = html.escape(tb[-2800:])
-
+        count = result.get('count_in_window', 1)
+        badge = f" [{count}x]" if count > 1 else " [mới]"
+        tb_escaped = html.escape(tb[-2000:])
         alert = (
-            f"🚨 <b>Bot Exception</b>{user_info}{chat_info}\n\n"
+            f"🚨 <b>Bot Exception{badge}</b>{user_info}{chat_info}\n\n"
             f"<pre>{tb_escaped}</pre>"
         )
-
         await context.bot.send_message(
-            chat_id=settings.ADMIN_USER_ID,
-            text=alert,
-            parse_mode="HTML",
+            chat_id=settings.ADMIN_USER_ID, text=alert, parse_mode="HTML"
         )
     except Exception as alert_err:
-        logger.warning(f"[SCALE#102] Failed to send error alert to admin: {alert_err}")
+        logger.warning(f"Failed to send error alert: {alert_err}")
+
+    # ── 4. Smart digest alert nếu lỗi lặp vượt ngưỡng ──────────────────────
+    if result["alert_needed"]:
+        await tracker.send_alert(error, f"{user_info}{chat_info}", result)
 
 
 async def post_init(application: Application) -> None:
     """Initialize bot after startup."""
     logger.info("[BOT] Freedom Wallet Bot is starting...")
+    # Wire up ErrorTracker with bot instance for alerts
+    from bot.core.error_tracker import get_tracker
+    from config.settings import settings as _settings
+    if _settings.ADMIN_USER_ID:
+        get_tracker().setup(application.bot, _settings.ADMIN_USER_ID)
 
 
 async def post_shutdown(application: Application) -> None:
@@ -310,6 +329,17 @@ def main() -> None:
     # Setup daily background jobs (Week 4)
     from bot.jobs import setup_daily_jobs
     setup_daily_jobs(application)
+
+    # Health monitor — runs every 5 mins
+    from bot.jobs.health_monitor import health_check_job, register_health_handlers
+    application.job_queue.run_repeating(health_check_job, interval=300, first=60, name="health_monitor")
+    register_health_handlers(application)
+    logger.info("✅ Health monitor job registered (every 5min)")
+
+    # User feedback handler
+    from bot.handlers.feedback import register_feedback_handler
+    register_feedback_handler(application)
+    logger.info("✅ Feedback handler registered")
     
     # Start bot
     logger.info(f"[OK] Bot started in {settings.ENV} mode")
