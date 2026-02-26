@@ -75,34 +75,9 @@ async def _show_visitor_screen(update: Update, user):
 
 
 async def _show_setup_screen(update: Update, context: ContextTypes.DEFAULT_TYPE, user, db_user):
-    """STATE 2: registered but hasn't set up Web App yet → guide to setup."""
-    user_name = (
-        getattr(db_user, "full_name", None)
-        or getattr(db_user, "first_name", None)
-        or user.first_name
-        or "bạn"
-    )
-    user_name_safe = _esc(user_name)
-    text = (
-        f"🎉 *Chào mừng {user_name_safe} đến với Freedom Wallet!*\n\n"
-        f"Tài khoản của bạn đã sẵn sàng. Bước tiếp theo là *thiết lập Web App* của riêng bạn.\n\n"
-        f"━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"*Bạn sẽ có:*\n"
-        f"📊 Google Sheet riêng – dữ liệu 100% trên Drive của bạn\n"
-        f"🌐 Web App riêng – giao diện đẹp, nhanh, tiện\n"
-        f"🤖 Bot Telegram 24/7 – ghi giao dịch, xem báo cáo\n"
-        f"🔗 Link affiliate riêng – giới thiệu bạn bè\n\n"
-        f"━━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"⏱ *Thiết lập chỉ mất ~15 phút.* Mình sẽ hướng dẫn từng bước!"
-    )
-    keyboard = [
-        [InlineKeyboardButton("🚀 Bắt đầu thiết lập Web App", callback_data="webapp_step_0")],
-    ]
-    await update.message.reply_text(
-        text,
-        parse_mode="Markdown",
-        reply_markup=InlineKeyboardMarkup(keyboard),
-    )
+    """STATE 2: registered but hasn't set up Web App yet → launch guide step-by-step directly."""
+    from bot.handlers.webapp_setup import send_webapp_setup_step
+    await send_webapp_setup_step(update, context, step=0)
 
 
 async def _show_active_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, user, db_user):
