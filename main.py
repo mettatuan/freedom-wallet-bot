@@ -65,8 +65,8 @@ async def error_handler(update: Update, context) -> None:
     try:
         if update and update.effective_message:
             await update.effective_message.reply_text(
-                "😓 Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau!\n"
-                "Nếu vấn đề tiếp diễn, dùng /support để liên hệ."
+                "😓 Xin lỗi, bot gặp lỗi không xử lý được.\n"
+                "Vui lòng thử lại sau hoặc liên hệ admin: @tuanai_mentor"
             )
     except Exception:
         pass
