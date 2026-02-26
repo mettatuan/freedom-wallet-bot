@@ -94,8 +94,10 @@ def _make_preview(pending: dict) -> tuple:
     type_label = "💰 Thu" if tx_type == "income" else "💸 Chi"
 
     # Determine jar display
-    if category in AUTO_DISTRIBUTE_CATEGORIES and not jar:
+    if jar == "__auto__" or (category in AUTO_DISTRIBUTE_CATEGORIES and not jar):
         jar_line = "\n🪣 Hũ tiền: <b>Tự động phân bổ 6 hũ</b> ✨"
+    elif jar == "__none__":
+        jar_line = "\n🪣 Hũ tiền: <i>Không chọn hũ</i>"
     elif jar:
         jar_line = f"\n🪣 Hũ tiền: <b>{jar}</b>"
     else:
@@ -173,6 +175,33 @@ async def handle_quick_transaction(update: Update, context: ContextTypes.DEFAULT
 
 _GAS_API_KEY = "fwb_bot_production_2026"
 
+
+async def _fetch_accounts_with_balance(user_id: int) -> list | None:
+    """
+    Fetch accounts with balance from user's GAS webapp.
+    Returns list of {"id", "name", "balance"} dicts, or None on failure.
+    """
+    from bot.utils.database import SessionLocal, User as _User
+    _db = SessionLocal()
+    try:
+        _u = _db.query(_User).filter(_User.id == user_id).first()
+        web_app_url = str(_u.web_app_url) if _u and _u.web_app_url else None
+    finally:
+        _db.close()
+    if not web_app_url:
+        return None
+    payload = {"action": "getBalance", "api_key": _GAS_API_KEY}
+    try:
+        timeout = aiohttp.ClientTimeout(total=5)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            resp = await session.post(web_app_url, json=payload)
+            result = await resp.json(content_type=None)
+        if result.get("success") and result.get("accounts"):
+            return result["accounts"]
+    except Exception as e:
+        logger.debug(f"Account balance fetch failed: {e}")
+    return None
+
 # Map jar name → jar ID for GAS
 _JAR_NAME_TO_ID = {
     "Thiết yếu":  "NEC",
@@ -224,7 +253,9 @@ async def _sync_to_gas(transaction_id: int, user_id: int, pending: dict, web_app
     category = pending.get("category", "")
     # Auto-distribute income → send empty jarId so GAS distributes across all 6 jars
     # (GAS treats Thu transaction with empty jarId as auto-allocation)
-    if not jar_name and category in AUTO_DISTRIBUTE_CATEGORIES:
+    if jar_name in ("__auto__", "__none__"):
+        jar_id = ""
+    elif not jar_name and category in AUTO_DISTRIBUTE_CATEGORIES:
         jar_id = ""
     else:
         jar_id = _JAR_NAME_TO_ID.get(jar_name, jar_name) if jar_name else "NEC"
@@ -304,8 +335,10 @@ async def handle_txn_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         emoji = "💰" if pending["type"] == "income" else "💸"
         cat = pending.get("category", "")
         jar_val = pending.get("jar", "")
-        if cat in AUTO_DISTRIBUTE_CATEGORIES and not jar_val:
+        if jar_val == "__auto__" or (cat in AUTO_DISTRIBUTE_CATEGORIES and not jar_val):
             jar_line = "\n🪣 Tự động phân bổ 6 hũ ✨"
+        elif jar_val == "__none__":
+            jar_line = "\n🪣 Không chọn hũ"
         elif jar_val:
             jar_line = f"\n🪣 Hũ: {jar_val}"
         else:
@@ -368,7 +401,14 @@ async def handle_txn_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     if data == "txn_jar_menu":
+        tx_type = pending.get("type", "expense")
         rows = [[InlineKeyboardButton(j, callback_data=f"txn_jar_{j}")] for j in JARS]
+        # Extra options row
+        extra_row = []
+        if tx_type == "income":
+            extra_row.append(InlineKeyboardButton("✨ Phân bổ 6 hũ", callback_data="txn_jar___auto__"))
+        extra_row.append(InlineKeyboardButton("⬜ Không chọn hũ", callback_data="txn_jar___none__"))
+        rows.append(extra_row)
         rows.append([InlineKeyboardButton("« Quay lại", callback_data="txn_back")])
         await query.edit_message_text(
             "🪣 <b>Chọn hũ tiền:</b>\n\n"
@@ -392,13 +432,33 @@ async def handle_txn_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     if data == "txn_acct_menu":
-        rows = [[InlineKeyboardButton(a, callback_data=f"txn_acct_{a}")] for a in ACCOUNTS]
-        rows.append([InlineKeyboardButton("« Quay lại", callback_data="txn_back")])
-        await query.edit_message_text(
-            "🏦 <b>Chọn tài khoản:</b>",
-            parse_mode="HTML",
-            reply_markup=InlineKeyboardMarkup(rows)
-        )
+        accounts_data = await _fetch_accounts_with_balance(user_id)
+        if accounts_data:
+            rows = []
+            for acc in accounts_data:
+                acc_id   = acc.get("id") or acc.get("name", "?")
+                acc_name = acc.get("name") or acc_id
+                balance  = int(acc.get("balance") or 0)
+                bal_disp = format_vnd(balance)
+                icon = "💰" if balance > 0 else "⚪"
+                rows.append([InlineKeyboardButton(
+                    f"{icon} {acc_name}  {bal_disp}",
+                    callback_data=f"txn_acct_{acc_id}"
+                )])
+            rows.append([InlineKeyboardButton("« Quay lại", callback_data="txn_back")])
+            await query.edit_message_text(
+                "🏦 <b>Chọn tài khoản thanh toán:</b>\n💰 có tiền  ⚪ trống",
+                parse_mode="HTML",
+                reply_markup=InlineKeyboardMarkup(rows)
+            )
+        else:
+            rows = [[InlineKeyboardButton(a, callback_data=f"txn_acct_{a}")] for a in ACCOUNTS]
+            rows.append([InlineKeyboardButton("« Quay lại", callback_data="txn_back")])
+            await query.edit_message_text(
+                "🏦 <b>Chọn tài khoản:</b>",
+                parse_mode="HTML",
+                reply_markup=InlineKeyboardMarkup(rows)
+            )
         return
 
     if data.startswith("txn_acct_"):

@@ -40,6 +40,11 @@ EXPENSE_CATEGORIES = {
         "quà", "gift", "sinh nhật", "birthday", "tặng", "present", "đám cưới",
         "wedding", "lì xì", "red envelope"
     ],
+    "Đầu tư": [
+        "đầu tư", "investment", "forex", "xau", "xauusd", "gold",
+        "crypto", "btc", "eth", "coin", "chứng khoán", "stock",
+        "trading", "trade"
+    ],
     "Khác": [
         "khác", "other", "linh tinh", "misc"
     ]
