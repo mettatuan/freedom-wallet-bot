@@ -172,7 +172,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if code.startswith("WEB_"):
             # ── from freedomwallet.app ──────────────────────────────────
             # Respond immediately so user sees feedback right away
-            loading_msg = await update.message.reply_text("⏳ Đang kết nối tài khoản...")
+            loading_msg = await update.message.reply_text("⏳ Đang xác nhận đăng ký...")
             email_hash = code[4:]
             logger.info(f"  WEB_ deep link: hash={email_hash}, user_id={user.id}")
             web_data = await sync_web_registration(user.id, user.username or "", email_hash)
