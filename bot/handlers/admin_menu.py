@@ -109,6 +109,18 @@ def _sub_keyboard(back_key: str) -> InlineKeyboardMarkup:
     ])
 
 
+async def handle_myid(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/myid — Xem Telegram user ID của mình"""
+    user = update.effective_user
+    admin_id = settings.ADMIN_USER_ID
+    is_admin = _is_admin(user.id)
+    status = "✅ <b>Đây là Admin ID</b>" if is_admin else f"❌ Không phải admin (admin ID: <code>{admin_id}</code>)"
+    await update.message.reply_text(
+        f"👤 Your Telegram ID: <code>{user.id}</code>\n{status}",
+        parse_mode="HTML",
+    )
+
+
 # ─── Handlers ─────────────────────────────────────────────────────────────────
 async def handle_admin_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Entry point: /admin"""
@@ -165,7 +177,11 @@ def register_admin_menu_handlers(application):
     """Đăng ký admin menu. Gọi TRƯỚC ConversationHandlers để có priority cao."""
     application.add_handler(
         CommandHandler("admin", handle_admin_menu),
-        group=-10,  # Priority cao hơn mọi handler khác
+        group=-10,
+    )
+    application.add_handler(
+        CommandHandler("myid", handle_myid),  # Ai cũng dùng được — tự check ID
+        group=-10,
     )
     application.add_handler(
         CallbackQueryHandler(handle_admin_callback, pattern=r"^adm:"),
