@@ -152,7 +152,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     user = update.effective_user
     logger.info(f"/start: user {user.id} (@{user.username})")
-    loading_msg = None  # may be set during WEB_ deep link processing
 
     # 1. Ensure user row exists
     db_user = await save_user_to_db(user)
@@ -171,14 +170,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if code.startswith("WEB_"):
             # ── from freedomwallet.app ──────────────────────────────────
-            # Respond immediately so user sees feedback right away
-            loading_msg = await update.message.reply_text("⏳ Đang xác nhận đăng ký...")
+            # Mark registered instantly using Telegram profile (no sheet lookup needed)
             email_hash = code[4:]
             logger.info(f"  WEB_ deep link: hash={email_hash}, user_id={user.id}")
-
-            # ── FAST PATH: mark registered immediately from Telegram profile ──
-            # Sheet lookups are slow (2-5s each). We don't need them to route
-            # the user — just mark them registered and show STATE 2 right away.
             await update_user_registration(
                 user_id=user.id,
                 email="",
@@ -187,56 +181,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 source="WEB",
                 referral_count=0,
             )
-            logger.info(f"  WEB_ user {user.id} marked registered (fast path)")
+            logger.info(f"  WEB_ user {user.id} marked registered instantly")
 
-            # ── BACKGROUND: enrich data from sheets (non-blocking) ───────────
-            async def _bg_web_enrich(uid, uname, eh, tg_user, db_u):
-                try:
-                    web_data = await sync_web_registration(uid, uname, eh)
-                    if not web_data:
-                        from bot.utils.sheets_registration import find_user_in_sheet_by_referral_code
-                        web_data = await find_user_in_sheet_by_referral_code(eh)
-                        if web_data:
-                            web_data['source'] = 'WEB'
-                            web_data['is_registered'] = True
-                    if not web_data:
-                        web_data = {'email': '', 'phone': '', 'full_name': db_u.first_name or '', 'source': 'WEB', 'is_registered': True, 'referral_count': 0}
-
-                    if web_data.get("email"):  # only update if sheet had real data
-                        await update_user_registration(
-                            user_id=uid,
-                            email=web_data.get("email"),
-                            phone=web_data.get("phone"),
-                            full_name=web_data.get("full_name"),
-                            source="WEB",
-                            referral_count=web_data.get("referral_count", 0),
-                        )
-                        logger.info(f"  WEB_ enriched user {uid}: {web_data.get('email')}")
-
-                    await run_sync(_credit_referral_on_web_registration, uid, web_data)
-
-                    from bot.utils.database import generate_referral_code
-                    from bot.utils.sheets_registration import save_user_to_registration_sheet
-                    from telegram.ext import Application
-                    referral_code = generate_referral_code(uid)
-                    bot_username = tg_user.username or "FreedomWalletbot"
-                    referral_link = f"https://t.me/FreedomWalletbot?start=REF{referral_code}"
-                    await save_user_to_registration_sheet(
-                        user_id=uid, username=uname,
-                        full_name=web_data.get("full_name", ""),
-                        email=web_data.get("email", ""),
-                        phone=web_data.get("phone", ""),
-                        plan="FREE", referral_link=referral_link,
-                        referral_count=web_data.get("referral_count", 0),
-                        source="Landing Page", status="Đã đăng ký",
-                        referred_by=web_data.get("referred_by"),
-                        web_code=eh,
-                    )
-                    logger.info(f"✅ WEB_ background enrich done for user {uid}")
-                except Exception as e:
-                    logger.error(f"WEB_ background enrich error: {e}")
-
-            asyncio.create_task(_bg_web_enrich(user.id, user.username or "", email_hash, user, db_user))
+            # Show congratulations then go straight to setup guide
+            user_name = user.first_name or "bạn"
+            await update.message.reply_text(
+                f"🎉 <b>Chúc mừng {user_name} đã đăng ký thành công!</b>\n\n"
+                f"Bước tiếp theo: tạo Web App cá nhân của bạn.\n"
+                f"Mình sẽ hướng dẫn từng bước, rất đơn giản 👇",
+                parse_mode="HTML",
+            )
+            from bot.handlers.webapp_setup import send_webapp_setup_step
+            await send_webapp_setup_step(update, context, step=0)
+            return
         else:
             # ── referral link (REFxxx) ──────────────────────────────────
             referred = await handle_referral_start(update, context, code)
@@ -245,13 +202,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 4. Reload fresh state from DB
     db_user = await get_user_by_id(user.id) or db_user
-
-    # Delete loading message if shown (WEB_ deep link)
-    try:
-        if loading_msg:
-            await loading_msg.delete()
-    except Exception:
-        pass
 
     # 5. Enable reminders for registered users
     if db_user and db_user.is_registered:
