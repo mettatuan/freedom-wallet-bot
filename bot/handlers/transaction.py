@@ -180,7 +180,9 @@ async def _fetch_accounts_with_balance(user_id: int) -> list | None:
     """
     Fetch accounts with balance from user's GAS webapp.
     Returns list of {"id", "name", "balance"} dicts, or None on failure.
+    Uses same HTTP pattern as _sync_to_gas (proven working).
     """
+    import json as _json
     from bot.utils.database import SessionLocal, User as _User
     _db = SessionLocal()
     try:
@@ -189,17 +191,24 @@ async def _fetch_accounts_with_balance(user_id: int) -> list | None:
     finally:
         _db.close()
     if not web_app_url:
+        logger.info(f"[accounts] user {user_id} has no web_app_url — using static list")
         return None
     payload = {"action": "getBalance", "api_key": _GAS_API_KEY}
     try:
-        timeout = aiohttp.ClientTimeout(total=5)
+        timeout = aiohttp.ClientTimeout(total=15)
         async with aiohttp.ClientSession(timeout=timeout) as session:
             resp = await session.post(web_app_url, json=payload)
-            result = await resp.json(content_type=None)
+            raw = await resp.text()
+        logger.info(f"[accounts] GAS getBalance HTTP {resp.status}, raw[:200]={raw[:200]}")
+        result = _json.loads(raw)
         if result.get("success") and result.get("accounts"):
-            return result["accounts"]
+            accounts = result["accounts"]
+            logger.info(f"[accounts] got {len(accounts)} accounts from GAS")
+            return accounts
+        else:
+            logger.info(f"[accounts] GAS response not usable: success={result.get('success')}, keys={list(result.keys())}")
     except Exception as e:
-        logger.debug(f"Account balance fetch failed: {e}")
+        logger.warning(f"[accounts] GAS fetch failed [{type(e).__name__}]: {e}")
     return None
 
 # Map jar name → jar ID for GAS
