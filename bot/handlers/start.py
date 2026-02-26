@@ -140,18 +140,71 @@ async def _show_active_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     )
 
 
+def _update_registration_sync(user_id: int, first_name: str):
+    """Sync helper: mark user as registered (runs in thread pool)."""
+    from bot.utils.database import SessionLocal, User as UserModel
+    db = SessionLocal()
+    try:
+        u = db.query(UserModel).filter(UserModel.id == user_id).first()
+        if u:
+            u.is_registered = True
+            u.source = "WEB"
+            if not u.full_name:
+                u.full_name = first_name
+        else:
+            from bot.utils.database import generate_referral_code
+            u = UserModel(
+                id=user_id,
+                first_name=first_name,
+                is_registered=True,
+                source="WEB",
+                referral_code=generate_referral_code(user_id),
+                subscription_tier="TRIAL",
+            )
+            db.add(u)
+        db.commit()
+        logger.info(f"WEB_ DB registered user {user_id}")
+    except Exception as e:
+        logger.error(f"WEB_ DB register error: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
 # ---------------------------------------------------------------------------
 # Main /start handler
 # ---------------------------------------------------------------------------
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /start — unified entry point for all channels.
-
-    Identification: Telegram user.id (primary key in DB).
-    Routing based purely on DB state — no day-based scheduling.
-    """
+    """Handle /start — unified entry point for all channels."""
     user = update.effective_user
     logger.info(f"/start: user {user.id} (@{user.username})")
+
+    # ── FAST PATH for WEB_ deep links ──────────────────────────────────────
+    # Respond to user BEFORE any DB or sheet operations (which can be slow).
+    if context.args and context.args[0].startswith("WEB_"):
+        email_hash = context.args[0][4:]
+        logger.info(f"  WEB_ fast path: hash={email_hash}, user_id={user.id}")
+        user_name = user.first_name or "bạn"
+        await update.message.reply_text(
+            f"🎉 <b>Chúc mừng {user_name} đã đăng ký thành công!</b>\n\n"
+            f"Bước tiếp theo: tạo Web App cá nhân của bạn.\n"
+            f"Mình sẽ hướng dẫn từng bước, rất đơn giản 👇",
+            parse_mode="HTML",
+        )
+        from bot.handlers.webapp_setup import send_webapp_setup_step
+        await send_webapp_setup_step(update, context, step=0)
+
+        # DB update runs in background — does NOT block the user
+        async def _bg_register(tg_user):
+            try:
+                import asyncio as _asyncio
+                await _asyncio.to_thread(_update_registration_sync, tg_user.id, tg_user.first_name or "")
+            except Exception as e:
+                logger.error(f"WEB_ background DB error: {e}")
+        asyncio.create_task(_bg_register(user))
+        return
+    # ── END FAST PATH ───────────────────────────────────────────────────────
 
     # 1. Ensure user row exists
     db_user = await save_user_to_db(user)
@@ -168,33 +221,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         code = context.args[0]
         logger.info(f"  start code: {code}")
 
-        if code.startswith("WEB_"):
-            # ── from freedomwallet.app ──────────────────────────────────
-            # Mark registered instantly using Telegram profile (no sheet lookup needed)
-            email_hash = code[4:]
-            logger.info(f"  WEB_ deep link: hash={email_hash}, user_id={user.id}")
-            await update_user_registration(
-                user_id=user.id,
-                email="",
-                phone="",
-                full_name=db_user.first_name or user.first_name or "",
-                source="WEB",
-                referral_count=0,
-            )
-            logger.info(f"  WEB_ user {user.id} marked registered instantly")
-
-            # Show congratulations then go straight to setup guide
-            user_name = user.first_name or "bạn"
-            await update.message.reply_text(
-                f"🎉 <b>Chúc mừng {user_name} đã đăng ký thành công!</b>\n\n"
-                f"Bước tiếp theo: tạo Web App cá nhân của bạn.\n"
-                f"Mình sẽ hướng dẫn từng bước, rất đơn giản 👇",
-                parse_mode="HTML",
-            )
-            from bot.handlers.webapp_setup import send_webapp_setup_step
-            await send_webapp_setup_step(update, context, step=0)
-            return
-        else:
+        if not code.startswith("WEB_"):
             # ── referral link (REFxxx) ──────────────────────────────────
             referred = await handle_referral_start(update, context, code)
             if referred:
