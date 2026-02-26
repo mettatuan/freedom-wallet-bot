@@ -152,6 +152,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     user = update.effective_user
     logger.info(f"/start: user {user.id} (@{user.username})")
+    loading_msg = None  # may be set during WEB_ deep link processing
 
     # 1. Ensure user row exists
     db_user = await save_user_to_db(user)
@@ -169,8 +170,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.info(f"  start code: {code}")
 
         if code.startswith("WEB_"):
-            # ── from freedomwallet.app ──────────────────────────────────
-            email_hash = code[4:]
+            # ── from freedomwallet.app ──────────────────────────────────            # Respond immediately so user sees feedback right away
+            loading_msg = await update.message.reply_text("⏳ Đang kết nối tài khoản...")            email_hash = code[4:]
             logger.info(f"  WEB_ deep link: hash={email_hash}, user_id={user.id}")
             web_data = await sync_web_registration(user.id, user.username or "", email_hash)
             logger.info(f"  sync_web_registration result: {web_data is not None}")
@@ -222,23 +223,29 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     referral_code = generate_referral_code(user.id)
                     bot_username = (await context.bot.get_me()).username
                     referral_link = f"https://t.me/{bot_username}?start=REF{referral_code}"
-                    await save_user_to_registration_sheet(
-                        user_id=user.id,
-                        username=user.username or "",
-                        full_name=web_data.get("full_name", ""),
-                        email=web_data.get("email", ""),
-                        phone=web_data.get("phone", ""),
-                        plan="FREE",
-                        referral_link=referral_link,
-                        referral_count=web_data.get("referral_count", 0),
-                        source="Landing Page",
-                        status="Đã đăng ký",
-                        referred_by=web_data.get("referred_by"),
-                        web_code=email_hash,  # Pass 3 fallback: match by WEB code in column H
-                    )
-                    logger.info(f"✅ WEB user {user.id} synced to Registrations sheet")
+                    # Fire-and-forget: sheet sync is non-critical, don't block user
+                    async def _bg_sheet_sync():
+                        try:
+                            await save_user_to_registration_sheet(
+                                user_id=user.id,
+                                username=user.username or "",
+                                full_name=web_data.get("full_name", ""),
+                                email=web_data.get("email", ""),
+                                phone=web_data.get("phone", ""),
+                                plan="FREE",
+                                referral_link=referral_link,
+                                referral_count=web_data.get("referral_count", 0),
+                                source="Landing Page",
+                                status="Đã đăng ký",
+                                referred_by=web_data.get("referred_by"),
+                                web_code=email_hash,
+                            )
+                            logger.info(f"✅ WEB user {user.id} synced to Registrations sheet")
+                        except Exception as e:
+                            logger.error(f"Sheet sync WEB: {e}")
+                    asyncio.create_task(_bg_sheet_sync())
                 except Exception as e:
-                    logger.error(f"Sheet sync WEB: {e}")
+                    logger.error(f"Sheet sync WEB setup: {e}")
             else:
                 logger.warning(f"WEB_ lookup failed for {email_hash}")
         else:
@@ -249,6 +256,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # 4. Reload fresh state from DB
     db_user = await get_user_by_id(user.id) or db_user
+
+    # Delete loading message if shown (WEB_ deep link)
+    try:
+        if loading_msg:
+            await loading_msg.delete()
+    except Exception:
+        pass
 
     # 5. Enable reminders for registered users
     if db_user and db_user.is_registered:
