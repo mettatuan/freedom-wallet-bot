@@ -16,6 +16,7 @@ from telegram.ext import (
     CommandHandler,
     MessageHandler,
     CallbackQueryHandler,
+    PicklePersistence,
     filters,
 )
 
@@ -125,9 +126,13 @@ async def post_shutdown(application: Application) -> None:
 def main() -> None:
     """Start the bot."""
     # Create application
+    # Persist user_data to disk so pending_tx survives bot restarts
+    persistence = PicklePersistence(filepath="data/bot_persistence.pkl")
+
     builder = (
         Application.builder()
         .token(settings.TELEGRAM_BOT_TOKEN)
+        .persistence(persistence)
         .concurrent_updates(32)
         .connect_timeout(60)
         .read_timeout(30)
