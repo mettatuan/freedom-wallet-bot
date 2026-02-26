@@ -170,8 +170,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.info(f"  start code: {code}")
 
         if code.startswith("WEB_"):
-            # ── from freedomwallet.app ──────────────────────────────────            # Respond immediately so user sees feedback right away
-            loading_msg = await update.message.reply_text("⏳ Đang kết nối tài khoản...")            email_hash = code[4:]
+            # ── from freedomwallet.app ──────────────────────────────────
+            # Respond immediately so user sees feedback right away
+            loading_msg = await update.message.reply_text("⏳ Đang kết nối tài khoản...")
+            email_hash = code[4:]
             logger.info(f"  WEB_ deep link: hash={email_hash}, user_id={user.id}")
             web_data = await sync_web_registration(user.id, user.username or "", email_hash)
             logger.info(f"  sync_web_registration result: {web_data is not None}")
