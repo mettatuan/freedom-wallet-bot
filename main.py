@@ -340,6 +340,11 @@ def main() -> None:
     from bot.handlers.feedback import register_feedback_handler
     register_feedback_handler(application)
     logger.info("✅ Feedback handler registered")
+
+    # Admin broadcast handler
+    from bot.handlers.admin_broadcast import register_broadcast_handlers
+    register_broadcast_handlers(application)
+    logger.info("✅ Broadcast handlers registered")
     
     # Start bot
     logger.info(f"[OK] Bot started in {settings.ENV} mode")
