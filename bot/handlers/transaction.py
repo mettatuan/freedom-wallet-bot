@@ -443,20 +443,24 @@ async def handle_txn_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
     if data == "txn_acct_menu":
         accounts_data = await _fetch_accounts_with_balance(user_id)
         if accounts_data:
+            # Only show accounts that have money (balance > 0)
+            funded = [a for a in accounts_data if int(a.get("balance") or 0) > 0]
+            # Safety: if every account is 0, show all so user isn't stuck
+            display_list = funded if funded else accounts_data
             rows = []
-            for acc in accounts_data:
+            for acc in display_list:
                 acc_id   = acc.get("id") or acc.get("name", "?")
                 acc_name = acc.get("name") or acc_id
                 balance  = int(acc.get("balance") or 0)
                 bal_disp = format_vnd(balance)
-                icon = "💰" if balance > 0 else "⚪"
                 rows.append([InlineKeyboardButton(
-                    f"{icon} {acc_name}  {bal_disp}",
+                    f"💰 {acc_name}  {bal_disp}",
                     callback_data=f"txn_acct_{acc_id}"
                 )])
+            note = "" if funded else "\n<i>⚠️ Tất cả tài khoản đều trống</i>"
             rows.append([InlineKeyboardButton("« Quay lại", callback_data="txn_back")])
             await query.edit_message_text(
-                "🏦 <b>Chọn tài khoản thanh toán:</b>\n💰 có tiền  ⚪ trống",
+                f"🏦 <b>Chọn tài khoản thanh toán:</b>{note}",
                 parse_mode="HTML",
                 reply_markup=InlineKeyboardMarkup(rows)
             )
