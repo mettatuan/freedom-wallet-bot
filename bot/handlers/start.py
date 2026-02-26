@@ -175,81 +175,68 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             loading_msg = await update.message.reply_text("⏳ Đang xác nhận đăng ký...")
             email_hash = code[4:]
             logger.info(f"  WEB_ deep link: hash={email_hash}, user_id={user.id}")
-            web_data = await sync_web_registration(user.id, user.username or "", email_hash)
-            logger.info(f"  sync_web_registration result: {web_data is not None}")
 
-            # Fallback 1: sync_web_registration uses settings.REGISTRATION_SHEET_ID which may
-            # differ from the hardcoded sheet in sheets_registration.py. Try direct lookup.
-            if not web_data:
+            # ── FAST PATH: mark registered immediately from Telegram profile ──
+            # Sheet lookups are slow (2-5s each). We don't need them to route
+            # the user — just mark them registered and show STATE 2 right away.
+            await update_user_registration(
+                user_id=user.id,
+                email="",
+                phone="",
+                full_name=db_user.first_name or user.first_name or "",
+                source="WEB",
+                referral_count=0,
+            )
+            logger.info(f"  WEB_ user {user.id} marked registered (fast path)")
+
+            # ── BACKGROUND: enrich data from sheets (non-blocking) ───────────
+            async def _bg_web_enrich(uid, uname, eh, tg_user, db_u):
                 try:
-                    from bot.utils.sheets_registration import find_user_in_sheet_by_referral_code
-                    web_data = await find_user_in_sheet_by_referral_code(email_hash)
-                    if web_data:
-                        web_data['source'] = 'WEB'
-                        web_data['is_registered'] = True
-                        logger.info(f"✅ WEB fallback lookup succeeded for code {email_hash}: {web_data.get('email')}")
-                    else:
-                        logger.warning(f"  WEB fallback also failed for code {email_hash}")
-                except Exception as e:
-                    logger.error(f"WEB fallback lookup error: {e}", exc_info=True)
+                    web_data = await sync_web_registration(uid, uname, eh)
+                    if not web_data:
+                        from bot.utils.sheets_registration import find_user_in_sheet_by_referral_code
+                        web_data = await find_user_in_sheet_by_referral_code(eh)
+                        if web_data:
+                            web_data['source'] = 'WEB'
+                            web_data['is_registered'] = True
+                    if not web_data:
+                        web_data = {'email': '', 'phone': '', 'full_name': db_u.first_name or '', 'source': 'WEB', 'is_registered': True, 'referral_count': 0}
 
-            # Fallback 2: Sheet credentials missing — still mark user as registered
-            # so they don't get stuck in VISITOR loop. They can verify email later.
-            if not web_data and len(email_hash) >= 4:
-                logger.warning(f"  WEB_ sheet lookup failed (credentials?). Marking user {user.id} as registered via WEB code.")
-                web_data = {
-                    'email': '',
-                    'phone': '',
-                    'full_name': db_user.first_name or '',
-                    'source': 'WEB',
-                    'is_registered': True,
-                    'referral_count': 0,
-                }
+                    if web_data.get("email"):  # only update if sheet had real data
+                        await update_user_registration(
+                            user_id=uid,
+                            email=web_data.get("email"),
+                            phone=web_data.get("phone"),
+                            full_name=web_data.get("full_name"),
+                            source="WEB",
+                            referral_count=web_data.get("referral_count", 0),
+                        )
+                        logger.info(f"  WEB_ enriched user {uid}: {web_data.get('email')}")
 
-            if web_data:
-                await update_user_registration(
-                    user_id=user.id,
-                    email=web_data.get("email"),
-                    phone=web_data.get("phone"),
-                    full_name=web_data.get("full_name"),
-                    source="WEB",
-                    referral_count=web_data.get("referral_count", 0),
-                )
-                # Credit referral PENDING → VERIFIED if referred_by present
-                await run_sync(_credit_referral_on_web_registration, user.id, web_data)
+                    await run_sync(_credit_referral_on_web_registration, uid, web_data)
 
-                # Sync row to FreedomWallet_Registrations sheet
-                try:
                     from bot.utils.database import generate_referral_code
                     from bot.utils.sheets_registration import save_user_to_registration_sheet
-                    referral_code = generate_referral_code(user.id)
-                    bot_username = (await context.bot.get_me()).username
-                    referral_link = f"https://t.me/{bot_username}?start=REF{referral_code}"
-                    # Fire-and-forget: sheet sync is non-critical, don't block user
-                    async def _bg_sheet_sync():
-                        try:
-                            await save_user_to_registration_sheet(
-                                user_id=user.id,
-                                username=user.username or "",
-                                full_name=web_data.get("full_name", ""),
-                                email=web_data.get("email", ""),
-                                phone=web_data.get("phone", ""),
-                                plan="FREE",
-                                referral_link=referral_link,
-                                referral_count=web_data.get("referral_count", 0),
-                                source="Landing Page",
-                                status="Đã đăng ký",
-                                referred_by=web_data.get("referred_by"),
-                                web_code=email_hash,
-                            )
-                            logger.info(f"✅ WEB user {user.id} synced to Registrations sheet")
-                        except Exception as e:
-                            logger.error(f"Sheet sync WEB: {e}")
-                    asyncio.create_task(_bg_sheet_sync())
+                    from telegram.ext import Application
+                    referral_code = generate_referral_code(uid)
+                    bot_username = tg_user.username or "FreedomWalletbot"
+                    referral_link = f"https://t.me/FreedomWalletbot?start=REF{referral_code}"
+                    await save_user_to_registration_sheet(
+                        user_id=uid, username=uname,
+                        full_name=web_data.get("full_name", ""),
+                        email=web_data.get("email", ""),
+                        phone=web_data.get("phone", ""),
+                        plan="FREE", referral_link=referral_link,
+                        referral_count=web_data.get("referral_count", 0),
+                        source="Landing Page", status="Đã đăng ký",
+                        referred_by=web_data.get("referred_by"),
+                        web_code=eh,
+                    )
+                    logger.info(f"✅ WEB_ background enrich done for user {uid}")
                 except Exception as e:
-                    logger.error(f"Sheet sync WEB setup: {e}")
-            else:
-                logger.warning(f"WEB_ lookup failed for {email_hash}")
+                    logger.error(f"WEB_ background enrich error: {e}")
+
+            asyncio.create_task(_bg_web_enrich(user.id, user.username or "", email_hash, user, db_user))
         else:
             # ── referral link (REFxxx) ──────────────────────────────────
             referred = await handle_referral_start(update, context, code)
