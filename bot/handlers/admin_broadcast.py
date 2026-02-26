@@ -250,8 +250,8 @@ async def handle_broadcast_all(update: Update, context: ContextTypes.DEFAULT_TYP
     )
 
 
-def register_broadcast_handlers(application):
-    application.add_handler(CommandHandler("broadcast_setup", handle_broadcast_setup))
-    application.add_handler(CommandHandler("broadcast_all", handle_broadcast_all))
-    application.add_handler(CommandHandler("broadcast_status", handle_broadcast_status))
-    logger.info("✅ Broadcast handlers registered")
+def register_broadcast_handlers(application, group: int = 0):
+    application.add_handler(CommandHandler("broadcast_setup", handle_broadcast_setup), group=group)
+    application.add_handler(CommandHandler("broadcast_all", handle_broadcast_all), group=group)
+    application.add_handler(CommandHandler("broadcast_status", handle_broadcast_status), group=group)
+    logger.info(f"✅ Broadcast handlers registered (group={group})")

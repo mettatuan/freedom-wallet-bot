@@ -174,8 +174,8 @@ async def handle_admin_errors_command(update, context: ContextTypes.DEFAULT_TYPE
     await update.message.reply_text(msg, parse_mode="HTML")
 
 
-def register_health_handlers(application):
+def register_health_handlers(application, group: int = 0):
     from telegram.ext import CommandHandler
-    application.add_handler(CommandHandler("healthcheck", handle_healthcheck_command))
-    application.add_handler(CommandHandler("admin_errors", handle_admin_errors_command))
-    logger.info("✅ Health monitor handlers registered")
+    application.add_handler(CommandHandler("healthcheck", handle_healthcheck_command), group=group)
+    application.add_handler(CommandHandler("admin_errors", handle_admin_errors_command), group=group)
+    logger.info(f"✅ Health monitor handlers registered (group={group})")

@@ -206,6 +206,10 @@ def main() -> None:
         name="registration_conversation"  # Add name for debugging
     )
     
+    # ── Admin menu (group=-10: intercepts commands even inside ConversationHandlers) ──
+    from bot.handlers.admin_menu import register_admin_menu_handlers
+    register_admin_menu_handlers(application)
+
     # Register handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(registration_handler)
@@ -273,7 +277,7 @@ def main() -> None:
     register_quick_record_handlers(application)
     register_sheets_premium_commands(application)
     
-    # Week 5: Admin fraud review commands
+    # Week 5: Admin fraud review commands (group=-10: work even inside conversations)
     from bot.handlers.admin_fraud import (
         fraud_queue_command,
         fraud_review_command,
@@ -281,11 +285,11 @@ def main() -> None:
         fraud_reject_command,
         fraud_stats_command
     )
-    application.add_handler(CommandHandler("fraud_queue", fraud_queue_command))
-    application.add_handler(CommandHandler("fraud_review", fraud_review_command))
-    application.add_handler(CommandHandler("fraud_approve", fraud_approve_command))
-    application.add_handler(CommandHandler("fraud_reject", fraud_reject_command))
-    application.add_handler(CommandHandler("fraud_stats", fraud_stats_command))
+    application.add_handler(CommandHandler("fraud_queue", fraud_queue_command), group=-10)
+    application.add_handler(CommandHandler("fraud_review", fraud_review_command), group=-10)
+    application.add_handler(CommandHandler("fraud_approve", fraud_approve_command), group=-10)
+    application.add_handler(CommandHandler("fraud_reject", fraud_reject_command), group=-10)
+    application.add_handler(CommandHandler("fraud_stats", fraud_stats_command), group=-10)
     
     # Admin payment commands
     from bot.handlers.admin_payment import (
@@ -294,10 +298,10 @@ def main() -> None:
         payment_reject_command,
         payment_stats_command
     )
-    application.add_handler(CommandHandler("payment_pending", payment_pending_command))
-    application.add_handler(CommandHandler("payment_approve", payment_approve_command))
-    application.add_handler(CommandHandler("payment_reject", payment_reject_command))
-    application.add_handler(CommandHandler("payment_stats", payment_stats_command))
+    application.add_handler(CommandHandler("payment_pending", payment_pending_command), group=-10)
+    application.add_handler(CommandHandler("payment_approve", payment_approve_command), group=-10)
+    application.add_handler(CommandHandler("payment_reject", payment_reject_command), group=-10)
+    application.add_handler(CommandHandler("payment_stats", payment_stats_command), group=-10)
     
     # Phase 2: Admin metrics dashboard (Feb 2026)
     try:
@@ -333,7 +337,7 @@ def main() -> None:
     # Health monitor — runs every 5 mins
     from bot.jobs.health_monitor import health_check_job, register_health_handlers
     application.job_queue.run_repeating(health_check_job, interval=300, first=60, name="health_monitor")
-    register_health_handlers(application)
+    register_health_handlers(application, group=-10)
     logger.info("✅ Health monitor job registered (every 5min)")
 
     # User feedback handler
@@ -341,10 +345,10 @@ def main() -> None:
     register_feedback_handler(application)
     logger.info("✅ Feedback handler registered")
 
-    # Admin broadcast handler
+    # Admin broadcast handler (group=-10: commands work even inside conversations)
     from bot.handlers.admin_broadcast import register_broadcast_handlers
-    register_broadcast_handlers(application)
-    logger.info("✅ Broadcast handlers registered")
+    register_broadcast_handlers(application, group=-10)
+    logger.info("✅ Broadcast handlers registered (group=-10)")
     
     # Start bot
     logger.info(f"[OK] Bot started in {settings.ENV} mode")
