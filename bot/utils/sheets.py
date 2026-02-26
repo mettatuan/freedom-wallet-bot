@@ -2,11 +2,14 @@
 Google Sheets Integration
 Sync user registration data to Google Sheets
 """
+import logging
 import gspread
 from google.oauth2.service_account import Credentials
 from config.settings import settings
 from datetime import datetime
 from typing import Optional, Dict
+
+logger = logging.getLogger(__name__)
 
 
 # Google Sheets scope
@@ -57,9 +60,7 @@ def get_sheets_client():
         )
         return gspread.authorize(creds)
     except Exception as e:
-        print(f"Error initializing sheets client: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Error initializing sheets client: {e}", exc_info=True)
         return None
 
 
@@ -71,13 +72,13 @@ async def sync_user_to_sheet(user_id: int, email: str, phone: str = None, full_n
     try:
         client = get_sheets_client()
         if not client:
-            print("Sheets client not initialized. Skipping sync.")
+            logger.warning("Sheets client not initialized. Skipping sync.")
             return False
         
         # Open the spreadsheet (use SUPPORT_SHEET_ID or specific registration sheet)
         sheet_id = settings.SUPPORT_SHEET_ID
         if not sheet_id:
-            print("No sheet ID configured")
+            logger.warning("No sheet ID configured")
             return False
         
         spreadsheet = client.open_by_key(sheet_id)
@@ -115,11 +116,11 @@ async def sync_user_to_sheet(user_id: int, email: str, phone: str = None, full_n
             # Append new row
             worksheet.append_row(row_data)
         
-        print(f"✅ Synced user {user_id} to Google Sheets")
+        logger.info(f"Synced user {user_id} to Google Sheets")
         return True
         
     except Exception as e:
-        print(f"❌ Error syncing to sheets: {e}")
+        logger.error(f"Error syncing to sheets: {e}")
         return False
 
 
@@ -130,7 +131,7 @@ async def send_welcome_email(email: str, full_name: str, template_link: str):
     """
     # TODO: Implement email sending
     # For now, just log
-    print(f"📧 Would send email to {email} with template: {template_link}")
+    logger.info(f"Would send email to {email} with template: {template_link}")
     pass
 
 
@@ -144,42 +145,28 @@ async def find_user_in_sheet_by_email_hash(email_hash: str) -> Optional[Dict]:
     try:
         client = get_sheets_client()
         if not client:
-            print("❌ Sheets client not initialized")
-            print("   Check: GOOGLE_SHEETS_CREDENTIALS in .env")
+            logger.error("Sheets client not initialized. Check GOOGLE_SHEETS_CREDENTIALS in .env")
             return None
         
         sheet_id = settings.REGISTRATION_SHEET_ID or settings.SUPPORT_SHEET_ID
         if not sheet_id:
-            print("\u274c No registration sheet ID configured")
-            print("   Fix: Set ADMIN_SUPPORT_SHEET_ID in .env file")
+            logger.error("No registration sheet ID configured. Set ADMIN_SUPPORT_SHEET_ID in .env")
             return None
         
         # Validate Sheet ID format
         if len(sheet_id) < 20 or ' ' in sheet_id:
-            print(f"\u274c Invalid Sheet ID format: {sheet_id}")
-            print("   Sheet ID should be ~40 characters long")
-            print("   Example: 1-fruHaSlCKIOpIfU5Qrkns0ze3bx3E-mKUgQ5fUF-Hg")
-            print("   Current: Check ADMIN_SUPPORT_SHEET_ID in .env")
+            logger.error(f"Invalid Sheet ID format: {sheet_id} (should be ~40 chars)")
             return None
         
-        print(f"📄 Opening sheet: {sheet_id}")
+        logger.info(f"Opening sheet: {sheet_id[:20]}...")
         
         try:
             spreadsheet = client.open_by_key(sheet_id)
         except PermissionError:
-            print(f"❌ PERMISSION DENIED for sheet: {sheet_id}")
-            print(f"   ")
-            print(f"   🔧 FIX: Share this Google Sheet with service account:")
-            print(f"   📧 Email: eliroxbot-calendar@eliroxbot-calendar.iam.gserviceaccount.com")
-            print(f"   🔗 Sheet URL: https://docs.google.com/spreadsheets/d/{sheet_id}")
-            print(f"   ")
-            print(f"   Steps:")
-            print(f"   1. Open the sheet URL above")
-            print(f"   2. Click 'Share' button")
-            print(f"   3. Add the service account email")
-            print(f"   4. Set permission to 'Editor'")
-            print(f"   5. Uncheck 'Notify people'")
-            print(f"   6. Click 'Send'")
+            logger.error(
+                f"PERMISSION DENIED for sheet {sheet_id}. "
+                f"Share it with: eliroxbot-calendar@eliroxbot-calendar.iam.gserviceaccount.com"
+            )
             return None
         
         # Check multiple possible worksheet names
@@ -189,45 +176,36 @@ async def find_user_in_sheet_by_email_hash(email_hash: str) -> Optional[Dict]:
         for name in worksheet_names:
             try:
                 worksheet = spreadsheet.worksheet(name)
-                print(f"✅ Found worksheet: {name}")
+                logger.info(f"Found worksheet: {name}")
                 break
             except:
                 continue
         
         if not worksheet:
-            print("❌ No registration worksheet found")
+            logger.error("No registration worksheet found")
             return None
         
         # Get all records
         records = worksheet.get_all_records()
-        print(f"📊 Found {len(records)} records in worksheet")
+        logger.info(f"Found {len(records)} records in worksheet")
         
-        # Debug: Show all column names from first record
         if records:
-            print(f"🔑 Column names: {list(records[0].keys())}")
+            logger.debug(f"Column names: {list(records[0].keys())}")
         
-        # Search for user by referral code (stored in "🔗 Link giới thiệu" column)
-        print(f"🔍 Looking for referral code: {email_hash}")
-        for idx, record in enumerate(records, 1):
-            # Get referral code from sheet (this is what landing page generates from email)
+        # Search for user by referral code
+        logger.info(f"Looking for referral code: {email_hash}")
+        for record in records:
             referral_code = record.get('🔗 Link giới thiệu', record.get('Link giới thiệu', record.get('Referral Code', record.get('🔗 Link giới thiệu ', ''))))
-            
             email = record.get('📧 Email', record.get('Email', ''))
             
-            print(f"  [{idx}] Email: {email} → Referral Code: {referral_code}")
-            
-            # Match by referral code (not by email hash!)
             if referral_code == email_hash:
-                print(f"✅ MATCH! Found user by referral code: {email}")
+                logger.info(f"Match found by referral code: {email}")
                 
-                # Get referral count from sheet
                 referral_count_str = str(record.get('👥 Số người đã giới thiệu', record.get('Số người đã giới thiệu', '0')))
                 try:
                     referral_count = int(referral_count_str) if referral_count_str.strip() else 0
                 except (ValueError, AttributeError):
                     referral_count = 0
-                
-                print(f"📊 Referral count from sheet: {referral_count}")
                 
                 return {
                     'full_name': record.get('Họ & Tên', record.get('Họ tên', record.get('Full Name', record.get('fullName', '')))),
@@ -238,13 +216,11 @@ async def find_user_in_sheet_by_email_hash(email_hash: str) -> Optional[Dict]:
                     'referral_count': referral_count,
                 }
         
-        print(f"❌ No user found with referral code: {email_hash}")
+        logger.warning(f"No user found with referral code: {email_hash}")
         return None
         
     except Exception as e:
-        print(f"❌ Error finding user in sheets: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Error finding user in sheets: {e}", exc_info=True)
         return None
 
 
@@ -262,7 +238,7 @@ async def sync_web_registration(telegram_id: int, telegram_username: str, email_
         user_data = await find_user_in_sheet_by_email_hash(email_hash)
         
         if not user_data:
-            print(f"❌ No web registration found for email hash: {email_hash}")
+            logger.warning(f"No web registration found for email hash: {email_hash}")
             return None
         
         # Add telegram info
@@ -271,11 +247,9 @@ async def sync_web_registration(telegram_id: int, telegram_username: str, email_
         user_data['source'] = 'WEB'
         user_data['is_registered'] = True
         
-        print(f"✅ Synced web registration for Telegram ID {telegram_id}: {user_data['email']}")
+        logger.info(f"Synced web registration for Telegram ID {telegram_id}: {user_data['email']}")
         return user_data
         
     except Exception as e:
-        print(f"❌ Error syncing web registration: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Error syncing web registration: {e}", exc_info=True)
         return None
