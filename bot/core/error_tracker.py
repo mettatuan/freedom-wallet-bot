@@ -60,6 +60,7 @@ class ErrorTracker:
         self._last_alert: dict[str, float] = {}
         # {error_key: total count all time}
         self._total: dict[str, int] = defaultdict(int)
+        self._ignorable_count: int = 0
         # Admin bot ref (set sau khi application khởi động)
         self._bot = None
         self._admin_id: Optional[int] = None
@@ -101,6 +102,7 @@ class ErrorTracker:
           - count_in_window: int
         """
         if self._is_ignorable(error):
+            self._ignorable_count += 1
             return {"ignorable": True, "recovery_hint": None, "alert_needed": False, "count_in_window": 0}
 
         key = self._make_key(error)
@@ -159,6 +161,36 @@ class ErrorTracker:
             )
         except Exception as e:
             logger.warning(f"ErrorTracker: failed to send alert: {e}")
+
+    @property
+    def total_errors(self) -> int:
+        return sum(self._total.values())
+
+    @property
+    def ignorable_count(self) -> int:
+        return self._ignorable_count
+
+    def get_recent_errors(self, minutes: int = 60) -> int:
+        """Tổng số lỗi thực tế (không tính ignorable) trong N phút gần nhất."""
+        now = time.time()
+        window_start = now - minutes * 60
+        total = 0
+        for timestamps in self._counts.values():
+            total += sum(1 for t in timestamps if t > window_start)
+        return total
+
+    def get_report(self) -> str:
+        """Tạo report text để hiển thị trong admin panel."""
+        summary = self.get_summary()
+        if not summary:
+            return "✅ Không có lỗi nào trong cửa sổ thời gian hiện tại."
+        lines = []
+        for item in summary[:10]:  # top 10
+            lines.append(
+                f"• <b>{item['count_window']}x</b> lúc {item['last_seen']} (tổng: {item['total']}x)\n"
+                f"  <code>{item['key'][:100]}</code>"
+            )
+        return "\n\n".join(lines)
 
     def get_summary(self) -> list[dict]:
         """Trả về danh sách lỗi đang có trong cửa sổ thời gian, sắp xếp theo count."""

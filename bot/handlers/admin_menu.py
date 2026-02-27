@@ -1,8 +1,8 @@
 """
-Admin Menu — Menu tập trung cho admin.
+Admin Menu — Interactive dashboard cho admin.
 
-Command:
-  /admin — Hiện toàn bộ lệnh admin dưới dạng menu đẹp
+/admin → Hiện live stats + action buttons trực tiếp.
+Bấm nút là có kết quả, không cần nhớ lệnh.
 """
 
 import logging
@@ -12,177 +12,251 @@ from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
-# ─── Kiểm tra admin ────────────────────────────────────────────────────────────
+# ─── Auth ──────────────────────────────────────────────────────────────────────
 def _is_admin(user_id: int) -> bool:
-    return settings.ADMIN_USER_ID and user_id == int(settings.ADMIN_USER_ID)
+    return bool(settings.ADMIN_USER_ID and user_id == int(settings.ADMIN_USER_ID))
 
 
-# ─── Menu chính ─────────────────────────────────────────────────────────────────
-ADMIN_MENU_TEXT = (
-    "🛡️ <b>FREEDOM WALLET — ADMIN PANEL</b>\n"
-    "━━━━━━━━━━━━━━━━━━━━\n\n"
-    "Chọn nhóm lệnh bên dưới:"
-)
+# ─── Live stats từ DB ────────────────────────────────────────────────────────
+def _get_stats() -> dict:
+    try:
+        from bot.utils.database import SessionLocal, User
+        db = SessionLocal()
+        total = db.query(User).count()
+        registered = db.query(User).filter(User.is_registered == True).count()  # noqa
+        with_webapp = (
+            db.query(User)
+            .filter(User.is_registered == True)  # noqa
+            .filter(User.web_app_url != None)  # noqa
+            .filter(User.web_app_url != "")
+            .filter(User.web_app_url != "pending")
+            .count()
+        )
+        db.close()
+        return {"total": total, "registered": registered,
+                "with_webapp": with_webapp, "without_webapp": registered - with_webapp}
+    except Exception as e:
+        logger.error(f"Stats error: {e}")
+        return {"total": 0, "registered": 0, "with_webapp": 0, "without_webapp": 0}
 
-def _main_keyboard() -> InlineKeyboardMarkup:
+
+# ─── Dashboard text + keyboard ────────────────────────────────────────────────
+def _dashboard_text(s: dict) -> str:
+    pct = round(s["with_webapp"] / s["registered"] * 100) if s["registered"] else 0
+    bar = "█" * round(pct / 10) + "░" * (10 - round(pct / 10))
+    return (
+        "🛡️ <b>FREEDOM WALLET — ADMIN PANEL</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"👥 Tổng users:   <b>{s['total']}</b>\n"
+        f"✅ Đã đăng ký:  <b>{s['registered']}</b>\n"
+        f"🌐 Có Web App:  <b>{s['with_webapp']}</b>  •  ⚠️ Chưa setup: <b>{s['without_webapp']}</b>\n\n"
+        f"<code>[{bar}] {pct}%</code> đã setup Web App\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "Chọn hành động:"
+    )
+
+
+def _dashboard_keyboard(s: dict) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
+        [InlineKeyboardButton(
+            f"📤 Gửi video setup  ({s['without_webapp']} chưa setup)",
+            callback_data="adm:broadcast_preview"
+        )],
+        [InlineKeyboardButton(
+            f"📢 Broadcast tất cả  ({s['registered']} users)",
+            callback_data="adm:broadcast_all_preview"
+        )],
         [
-            InlineKeyboardButton("📊 Thống kê", callback_data="adm:stats"),
-            InlineKeyboardButton("📤 Broadcast", callback_data="adm:broadcast"),
+            InlineKeyboardButton("🏥 Health check", callback_data="adm:healthcheck"),
+            InlineKeyboardButton("⚠️ Xem lỗi", callback_data="adm:errors"),
         ],
         [
-            InlineKeyboardButton("💰 Thanh toán", callback_data="adm:payment"),
-            InlineKeyboardButton("🔍 Gian lận", callback_data="adm:fraud"),
-        ],
-        [
-            InlineKeyboardButton("🏥 Health", callback_data="adm:health"),
+            InlineKeyboardButton("🔄 Refresh", callback_data="adm:refresh"),
             InlineKeyboardButton("❌ Đóng", callback_data="adm:close"),
         ],
     ])
 
 
-# ─── Sub-menu texts ───────────────────────────────────────────────────────────
-MENUS = {
-    "adm:stats": {
-        "text": (
-            "📊 <b>THỐNG KÊ & GIÁM SÁT</b>\n"
-            "━━━━━━━━━━━━━━━━━━━━\n\n"
-            "• /broadcast_status — Số user đã đăng ký vs chưa setup\n"
-            "• /admin_errors — Lỗi bot trong 24h qua\n"
-            "• /healthcheck — Tình trạng bot ngay bây giờ\n"
-            "• /fraud_stats — Thống kê gian lận\n"
-            "• /payment_stats — Thống kê thanh toán"
-        ),
-        "back": "adm:main",
-    },
-    "adm:broadcast": {
-        "text": (
-            "📤 <b>BROADCAST — GỬI THÔNG BÁO</b>\n"
-            "━━━━━━━━━━━━━━━━━━━━\n\n"
-            "• /broadcast_status — Xem số user từng nhóm\n"
-            "• /broadcast_setup — Preview tin nhắn setup Web App\n"
-            "• /broadcast_setup confirm — <b>Gửi thật</b> tới user chưa setup\n"
-            "• /broadcast_all confirm [tin] — Gửi tới TẤT CẢ user đã đăng ký\n\n"
-            "⚠️ <i>broadcast_all dùng cẩn thận — không thể thu hồi</i>"
-        ),
-        "back": "adm:main",
-    },
-    "adm:payment": {
-        "text": (
-            "💰 <b>QUẢN LÝ THANH TOÁN</b>\n"
-            "━━━━━━━━━━━━━━━━━━━━\n\n"
-            "• /payment_pending — Danh sách chờ duyệt\n"
-            "• /payment_approve [id] — Duyệt thanh toán\n"
-            "• /payment_reject [id] [lý do] — Từ chối\n"
-            "• /payment_stats — Báo cáo tổng hợp"
-        ),
-        "back": "adm:main",
-    },
-    "adm:fraud": {
-        "text": (
-            "🔍 <b>PHÁT HIỆN GIAN LẬN</b>\n"
-            "━━━━━━━━━━━━━━━━━━━━\n\n"
-            "• /fraud_queue — Hàng đợi cần review\n"
-            "• /fraud_review [id] — Xem chi tiết case\n"
-            "• /fraud_approve [id] — Bỏ qua (hợp lệ)\n"
-            "• /fraud_reject [id] — Đánh dấu gian lận\n"
-            "• /fraud_stats — Thống kê tổng hợp"
-        ),
-        "back": "adm:main",
-    },
-    "adm:health": {
-        "text": (
-            "🏥 <b>HEALTH MONITOR</b>\n"
-            "━━━━━━━━━━━━━━━━━━━━\n\n"
-            "• /healthcheck — Kiểm tra ngay trạng thái bot\n"
-            "• /admin_errors — Lỗi được ghi nhận gần đây\n\n"
-            "ℹ️ <i>Bot tự kiểm tra mỗi 5 phút. Nếu có ≥10 lỗi\n"
-            "trong 10 phút, admin nhận cảnh báo tự động.</i>"
-        ),
-        "back": "adm:main",
-    },
-}
+# ─── Broadcast setup preview ──────────────────────────────────────────────────
+SETUP_MESSAGE_PREVIEW = (
+    "📤 <b>PREVIEW — Tin gửi tới user chưa setup Web App</b>\n"
+    "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+    "👋 <b>Bạn đã đăng ký Freedom Wallet rồi!</b>\n\n"
+    "Bước tiếp theo là tạo <b>Web App cá nhân</b> để:\n"
+    "✅ Lưu 100% dữ liệu trong Google Drive của bạn\n"
+    "✅ Ghi thu chi bằng giọng nói và text siêu nhanh\n"
+    "✅ Xem báo cáo tài chính trực quan\n\n"
+    "🎬 <b>Video hướng dẫn từng bước (5 phút):</b>\n"
+    "https://youtu.be/xVoASsuWfto\n\n"
+    "Chỉ mất 5 phút — làm ngay hôm nay nhé! 🚀\n\n"
+    "━━━━━━━━━━━━━━━━━━━━━━\n"
+    "⚠️ Bấm <b>✅ Gửi ngay</b> để gửi tới tất cả user chưa setup."
+)
 
-def _sub_keyboard(back_key: str) -> InlineKeyboardMarkup:
+
+def _broadcast_preview_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("◀️ Quay lại", callback_data=back_key)],
+        [InlineKeyboardButton("✅ Gửi ngay", callback_data="adm:broadcast_confirm")],
+        [InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")],
     ])
-
-
-async def handle_myid(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/myid — Xem Telegram user ID của mình"""
-    user = update.effective_user
-    admin_id = settings.ADMIN_USER_ID
-    is_admin = _is_admin(user.id)
-    status = "✅ <b>Đây là Admin ID</b>" if is_admin else f"❌ Không phải admin (admin ID: <code>{admin_id}</code>)"
-    await update.message.reply_text(
-        f"👤 Your Telegram ID: <code>{user.id}</code>\n{status}",
-        parse_mode="HTML",
-    )
 
 
 # ─── Handlers ─────────────────────────────────────────────────────────────────
 async def handle_admin_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Entry point: /admin"""
+    """/admin — Dashboard với live stats"""
     user = update.effective_user
     if not user or not _is_admin(user.id):
         await update.message.reply_text("⛔ Chỉ admin mới dùng được lệnh này.")
         return
-
+    s = _get_stats()
     await update.message.reply_text(
-        ADMIN_MENU_TEXT,
-        parse_mode="HTML",
-        reply_markup=_main_keyboard(),
+        _dashboard_text(s), parse_mode="HTML", reply_markup=_dashboard_keyboard(s)
+    )
+
+
+async def handle_myid(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/myid — Xem Telegram user ID"""
+    user = update.effective_user
+    is_admin = _is_admin(user.id)
+    status = "✅ <b>Đây là Admin ID</b>" if is_admin else f"❌ Không phải admin (admin ID: <code>{settings.ADMIN_USER_ID}</code>)"
+    await update.message.reply_text(
+        f"👤 Your Telegram ID: <code>{user.id}</code>\n{status}", parse_mode="HTML"
     )
 
 
 async def handle_admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xử lý các nút trong admin menu."""
+    """Xử lý tất cả nút inline trong admin panel."""
     query = update.callback_query
-    user = query.from_user
-
-    if not _is_admin(user.id):
+    if not _is_admin(query.from_user.id):
         await query.answer("⛔ Không có quyền.", show_alert=True)
         return
-
     await query.answer()
     data = query.data
 
     if data == "adm:close":
         await query.edit_message_text("✅ Admin panel đã đóng.")
-        return
 
-    if data == "adm:main":
+    elif data in ("adm:refresh", "adm:main"):
+        s = _get_stats()
         await query.edit_message_text(
-            ADMIN_MENU_TEXT,
-            parse_mode="HTML",
-            reply_markup=_main_keyboard(),
+            _dashboard_text(s), parse_mode="HTML", reply_markup=_dashboard_keyboard(s)
         )
-        return
 
-    menu = MENUS.get(data)
-    if menu:
+    elif data == "adm:broadcast_preview":
         await query.edit_message_text(
-            menu["text"],
-            parse_mode="HTML",
-            reply_markup=_sub_keyboard(menu["back"]),
+            SETUP_MESSAGE_PREVIEW, parse_mode="HTML",
+            reply_markup=_broadcast_preview_keyboard()
         )
-        return
 
-    await query.answer("Không rõ lệnh.", show_alert=True)
+    elif data == "adm:broadcast_all_preview":
+        s = _get_stats()
+        await query.edit_message_text(
+            f"📢 <b>BROADCAST ALL</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"Sẽ gửi tới <b>{s['registered']} users</b> đã đăng ký.\n\n"
+            f"Dùng lệnh để gửi với nội dung tùy chỉnh:\n"
+            f"<code>/broadcast_all confirm [nội dung]</code>",
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")
+            ]])
+        )
+
+    elif data == "adm:broadcast_confirm":
+        await query.edit_message_text(
+            "⏳ <b>Đang gửi...</b> Vui lòng chờ.", parse_mode="HTML"
+        )
+        context.application.create_task(_run_broadcast(query, context))
+
+    elif data == "adm:healthcheck":
+        text = await _get_health_text()
+        await query.edit_message_text(
+            text, parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("🔄 Refresh", callback_data="adm:healthcheck"),
+                InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh"),
+            ]])
+        )
+
+    elif data == "adm:errors":
+        text = _get_errors_text()
+        await query.edit_message_text(
+            text[:4000], parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")
+            ]])
+        )
+
+    else:
+        await query.answer("Không rõ lệnh.", show_alert=True)
+
+
+# ─── Helper tasks ─────────────────────────────────────────────────────────────
+async def _run_broadcast(query, context):
+    try:
+        from bot.handlers.admin_broadcast import (
+            _get_users_without_webapp, _send_broadcast, SETUP_MESSAGE
+        )
+        users = _get_users_without_webapp()
+        if not users:
+            await query.edit_message_text(
+                "✅ Không có user nào cần gửi (tất cả đã setup Web App).",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")
+                ]])
+            )
+            return
+        result = await _send_broadcast(context.bot, users, SETUP_MESSAGE)
+        await query.edit_message_text(
+            f"✅ <b>Broadcast hoàn tất!</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📤 Đã gửi:  <b>{result['sent']}</b>\n"
+            f"🚫 Bị chặn: {result['blocked']}\n"
+            f"❌ Lỗi:     {result['failed']}\n"
+            f"📊 Tổng:   {result['total']}",
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("◀️ Về Dashboard", callback_data="adm:refresh")
+            ]])
+        )
+    except Exception as e:
+        logger.error(f"Broadcast error: {e}", exc_info=True)
+        await query.edit_message_text(
+            f"❌ Lỗi: {e}",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")
+            ]])
+        )
+
+
+async def _get_health_text() -> str:
+    try:
+        from bot.core.error_tracker import get_tracker
+        t = get_tracker()
+        recent = t.get_recent_errors(minutes=60)
+        real = t.total_errors - t.ignorable_count
+        status = "🟢 Ổn định" if real < 5 else ("🟡 Cần theo dõi" if real < 15 else "🔴 Cần kiểm tra!")
+        return (
+            f"🏥 <b>HEALTH CHECK</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"✅ Bot đang chạy bình thường\n"
+            f"Lỗi 1h qua: <b>{recent}</b>  •  Tổng: {t.total_errors}\n"
+            f"Trạng thái: {status}"
+        )
+    except Exception as e:
+        return f"🏥 Bot đang chạy\n⚠️ Không đọc được error tracker: {e}"
+
+
+def _get_errors_text() -> str:
+    try:
+        from bot.core.error_tracker import get_tracker
+        return f"⚠️ <b>LỖI GẦN ĐÂY</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n{get_tracker().get_report()}"
+    except Exception as e:
+        return f"Không đọc được error log: {e}"
 
 
 # ─── Register ─────────────────────────────────────────────────────────────────
 def register_admin_menu_handlers(application):
-    """Đăng ký admin menu. Gọi TRƯỚC ConversationHandlers để có priority cao."""
-    application.add_handler(
-        CommandHandler("admin", handle_admin_menu),
-        group=-10,
-    )
-    application.add_handler(
-        CommandHandler("myid", handle_myid),  # Ai cũng dùng được — tự check ID
-        group=-10,
-    )
+    application.add_handler(CommandHandler("admin", handle_admin_menu), group=-10)
+    application.add_handler(CommandHandler("myid", handle_myid), group=-10)
     application.add_handler(
         CallbackQueryHandler(handle_admin_callback, pattern=r"^adm:"),
         group=-10,
