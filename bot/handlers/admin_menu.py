@@ -9,6 +9,7 @@ import asyncio
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler
+from telegram.error import BadRequest
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -142,10 +143,18 @@ async def handle_admin_callback(update: Update, context: ContextTypes.DEFAULT_TY
         await query.edit_message_text("✅ Admin panel đã đóng.")
 
     elif data in ("adm:refresh", "adm:main"):
-        s = _get_stats()
-        await query.edit_message_text(
-            _dashboard_text(s), parse_mode="HTML", reply_markup=_dashboard_keyboard(s)
-        )
+        try:
+            s = _get_stats()
+            await query.edit_message_text(
+                _dashboard_text(s), parse_mode="HTML", reply_markup=_dashboard_keyboard(s)
+            )
+        except BadRequest as e:
+            # "Message is not modified" — stats haven't changed, just show toast
+            if "not modified" in str(e).lower() or "Message is not modified" in str(e):
+                await query.answer("✅ Dữ liệu không thay đổi.", show_alert=False)
+            else:
+                logger.error(f"BadRequest in refresh: {e}")
+                await query.answer(f"❌ Lỗi: {e}", show_alert=True)
 
     elif data == "adm:email_preview":
         await _handle_email_preview(query)
@@ -185,14 +194,21 @@ async def handle_admin_callback(update: Update, context: ContextTypes.DEFAULT_TY
         context.application.create_task(_run_broadcast(query, context))
 
     elif data == "adm:healthcheck":
-        text = await _get_health_text()
-        await query.edit_message_text(
-            text, parse_mode="HTML",
-            reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("🔄 Refresh", callback_data="adm:healthcheck"),
-                InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh"),
-            ]])
-        )
+        try:
+            text = await _get_health_text()
+            await query.edit_message_text(
+                text, parse_mode="HTML",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("🔄 Refresh", callback_data="adm:healthcheck"),
+                    InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh"),
+                ]])
+            )
+        except BadRequest as e:
+            if "not modified" in str(e).lower():
+                await query.answer("✅ Dữ liệu không thay đổi.", show_alert=False)
+            else:
+                logger.error(f"Error in healthcheck: {e}")
+                await query.answer(f"❌ Lỗi: {e}", show_alert=True)
 
     elif data == "adm:errors":
         text = _get_errors_text()
