@@ -79,6 +79,17 @@ class Settings(BaseSettings):
     PAYMENT_ACCOUNT_NUMBER: str = os.getenv("PAYMENT_ACCOUNT_NUMBER", "0937833239")
     PREMIUM_PRICE_VND: int = int(os.getenv("PREMIUM_PRICE_VND", "999000"))
     PAYMENT_QR_API: str = os.getenv("PAYMENT_QR_API", "https://img.vietqr.io/image/{bank_code}-{account_number}-{template}.jpg")
+
+    # Email / SMTP (for sending emails to users)
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USER: Optional[str] = os.getenv("SMTP_USER")        # Gmail address
+    SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD") # Gmail App Password
+    EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME", "Freedom Wallet")
+
+    @property
+    def email_enabled(self) -> bool:
+        return bool(self.SMTP_USER and self.SMTP_PASSWORD)
     
     class Config:
         # No longer need env_file here as we load it manually

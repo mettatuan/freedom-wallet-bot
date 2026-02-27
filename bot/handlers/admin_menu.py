@@ -5,6 +5,7 @@ Admin Menu — Interactive dashboard cho admin.
 Bấm nút là có kết quả, không cần nhớ lệnh.
 """
 
+import asyncio
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler
@@ -63,7 +64,11 @@ def _dashboard_keyboard(s: dict) -> InlineKeyboardMarkup:
             callback_data="adm:broadcast_preview"
         )],
         [InlineKeyboardButton(
-            f"📢 Broadcast tất cả  ({s['registered']} users)",
+            f"� Gửi email  ({s['without_webapp']} chưa setup)",
+            callback_data="adm:email_preview"
+        )],
+        [InlineKeyboardButton(
+            f"�📢 Broadcast tất cả  ({s['registered']} users)",
             callback_data="adm:broadcast_all_preview"
         )],
         [
@@ -141,6 +146,18 @@ async def handle_admin_callback(update: Update, context: ContextTypes.DEFAULT_TY
         await query.edit_message_text(
             _dashboard_text(s), parse_mode="HTML", reply_markup=_dashboard_keyboard(s)
         )
+
+    elif data == "adm:email_preview":
+        await _handle_email_preview(query)
+
+    elif data == "adm:email_confirm":
+        await query.edit_message_text(
+            "⏳ <b>Đang gửi email...</b> Vui lòng chờ.", parse_mode="HTML"
+        )
+        context.application.create_task(_run_email_broadcast(query, context))
+
+    elif data == "adm:email_test":
+        await _handle_email_test(query)
 
     elif data == "adm:broadcast_preview":
         await query.edit_message_text(
@@ -251,6 +268,134 @@ def _get_errors_text() -> str:
         return f"⚠️ <b>LỖI GẦN ĐÂY</b>\n━━━━━━━━━━━━━━━━━━━━━━\n\n{get_tracker().get_report()}"
     except Exception as e:
         return f"Không đọc được error log: {e}"
+
+
+async def _handle_email_preview(query):
+    """Hiện preview email + trạng thái SMTP."""
+    from config.settings import settings
+    from bot.utils.email_sender import test_smtp_connection
+
+    smtp_ok, smtp_msg = await asyncio.to_thread(test_smtp_connection)
+    status_line = f"✅ SMTP: {settings.SMTP_USER}" if smtp_ok else f"⚠️ SMTP chưa cấu hình\n{smtp_msg}"
+
+    s = _get_stats()
+    # Count users có email
+    try:
+        from bot.utils.database import SessionLocal, User
+        db = SessionLocal()
+        users_with_email = (
+            db.query(User)
+            .filter(User.is_registered == True)  # noqa
+            .filter(
+                (User.web_app_url == None) |  # noqa
+                (User.web_app_url == "") |
+                (User.web_app_url == "pending")
+            )
+            .filter(User.email != None)  # noqa
+            .filter(User.email != "")
+            .count()
+        )
+        db.close()
+    except Exception:
+        users_with_email = 0
+
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton(
+            f"✅ Gửi email ngay ({users_with_email} users có email)",
+            callback_data="adm:email_confirm"
+        )],
+        [InlineKeyboardButton("🔌 Test kết nối SMTP", callback_data="adm:email_test")],
+        [InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")],
+    ])
+
+    await query.edit_message_text(
+        f"📧 <b>PREVIEW — Email hướng dẫn setup Web App</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"{status_line}\n\n"
+        f"📊 Sẽ gửi tới: <b>{users_with_email} users</b> (đã đăng ký, chưa setup, có email)\n"
+        f"⚠️ Users không có email: {s['without_webapp'] - users_with_email} (bỏ qua)\n\n"
+        f"<b>Chủ đề:</b> 🚀 Hoàn tất setup Freedom Wallet của bạn (5 phút)\n\n"
+        f"<b>Nội dung:</b>\n"
+        f"• Lời chào cá nhân hóa theo tên\n"
+        f"• Giải thích lợi ích Web App\n"
+        f"• Nút bấm xem video: https://youtu.be/xVoASsuWfto\n"
+        f"• Link quay lại bot",
+        parse_mode="HTML",
+        reply_markup=keyboard,
+    )
+
+
+async def _handle_email_test(query):
+    """Test kết nối SMTP."""
+    import asyncio
+    from bot.utils.email_sender import test_smtp_connection
+    ok, msg = await asyncio.to_thread(test_smtp_connection)
+    icon = "✅" if ok else "❌"
+    await query.edit_message_text(
+        f"{icon} <b>Kết quả test SMTP</b>\n\n{msg}\n\n"
+        f"Nếu chưa cấu hình, thêm vào <code>.env</code> trên VPS:\n"
+        f"<code>SMTP_USER=your@gmail.com\nSMTP_PASSWORD=xxxx xxxx xxxx xxxx</code>\n\n"
+        f"📖 Tạo App Password: myaccount.google.com/apppasswords",
+        parse_mode="HTML",
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton("◀️ Quay lại", callback_data="adm:email_preview")
+        ]])
+    )
+
+
+async def _run_email_broadcast(query, context):
+    """Chạy email broadcast trong background."""
+    import asyncio
+    try:
+        from bot.utils.database import SessionLocal, User
+        from bot.utils.email_sender import send_setup_emails_to_list
+
+        db = SessionLocal()
+        users_q = (
+            db.query(User)
+            .filter(User.is_registered == True)  # noqa
+            .filter(
+                (User.web_app_url == None) |  # noqa
+                (User.web_app_url == "") |
+                (User.web_app_url == "pending")
+            )
+            .filter(User.email != None)  # noqa
+            .filter(User.email != "")
+            .all()
+        )
+        users = [{"id": u.id, "first_name": u.first_name or "", "email": u.email} for u in users_q]
+        db.close()
+
+        if not users:
+            await query.edit_message_text(
+                "✅ Không có user nào cần gửi email (không có email hoặc đã setup).",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")
+                ]])
+            )
+            return
+
+        result = await send_setup_emails_to_list(users)
+        await query.edit_message_text(
+            f"✅ <b>Gửi email hoàn tất!</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📧 Đã gửi:          <b>{result['sent']}</b>\n"
+            f"⚠️ Không có email: {result['skipped_no_email']}\n"
+            f"❌ Lỗi:             {result['failed']}\n"
+            f"📊 Tổng:           {result['total']}",
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("◀️ Về Dashboard", callback_data="adm:refresh")
+            ]])
+        )
+    except Exception as e:
+        logger.error(f"Email broadcast error: {e}", exc_info=True)
+        await query.edit_message_text(
+            f"❌ Lỗi gửi email: {e}",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")
+            ]])
+        )
 
 
 # ─── Register ─────────────────────────────────────────────────────────────────
