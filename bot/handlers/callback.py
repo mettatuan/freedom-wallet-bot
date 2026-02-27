@@ -61,6 +61,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def _handle_callback_internal(update: Update, context: ContextTypes.DEFAULT_TYPE, query, callback_data: str):
     
+    # Skip admin menu callbacks (handled by admin_menu.py group=-10)
+    if callback_data and callback_data.startswith("adm:"):
+        logger.debug(f"Skipping admin callback: {callback_data} (handled by admin_menu handlers)")
+        return
+
     # Skip sheets-related callbacks (handled by ConversationHandler)
     if callback_data and callback_data.startswith("sheets_"):
         logger.debug(f"Skipping sheets callback: {callback_data} (handled by ConversationHandler)")
