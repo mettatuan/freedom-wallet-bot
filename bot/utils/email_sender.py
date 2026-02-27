@@ -92,10 +92,11 @@ def _send_email_sync(to_email: str, to_name: str, subject: str, html_body: str, 
         msg.attach(MIMEText(text_body, "plain", "utf-8"))
         msg.attach(MIMEText(html_body, "html", "utf-8"))
 
+        password = settings.SMTP_PASSWORD.replace(" ", "")  # App Password: bỏ spaces nếu có
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
             server.ehlo()
             server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.login(settings.SMTP_USER, password)
             server.sendmail(settings.SMTP_USER, to_email, msg.as_string())
 
         return True
@@ -152,10 +153,11 @@ def test_smtp_connection() -> tuple[bool, str]:
     if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
         return False, "Chưa cấu hình SMTP_USER / SMTP_PASSWORD trong .env"
     try:
+        password = settings.SMTP_PASSWORD.replace(" ", "")  # App Password: bỏ spaces nếu có
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as s:
             s.ehlo()
             s.starttls()
-            s.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            s.login(settings.SMTP_USER, password)
         return True, f"✅ Kết nối thành công: {settings.SMTP_USER}"
     except Exception as e:
         return False, f"❌ Lỗi: {e}"
