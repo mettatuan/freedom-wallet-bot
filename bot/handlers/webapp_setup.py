@@ -688,9 +688,14 @@ def get_webapp_setup_keyboard(current_step: int) -> InlineKeyboardMarkup:
 
 async def send_webapp_setup_step(update: Update, context: ContextTypes.DEFAULT_TYPE, step: int):
     """Send a specific webapp setup step"""
+    user_id = update.effective_user.id
     try:
         if step not in WEBAPP_SETUP_STEPS:
-            await update.callback_query.answer("❌ Bước không hợp lệ!")
+            logger.error(f"Invalid step {step} for user {user_id}")
+            if update.callback_query:
+                await update.callback_query.answer("❌ Bước không hợp lệ!")
+            else:
+                await update.message.reply_text("❌ Bước không hợp lệ!")
             return
         
         step_data = WEBAPP_SETUP_STEPS[step]
@@ -698,31 +703,54 @@ async def send_webapp_setup_step(update: Update, context: ContextTypes.DEFAULT_T
         
         message_text = f"{step_data['title']}\n\n{step_data['content']}"
         
+        # Check if image exists before trying to open it
+        image_path = step_data.get('image')
+        image_exists = image_path and os.path.isfile(image_path)
+        
         # Handle image + text combination
-        if step_data.get('image'):
-            # If there's an image, we need to delete old message and send new photo message
-            if update.callback_query:
-                # Delete the old message
-                await update.callback_query.message.delete()
-                
-                # Send new photo message
-                with open(step_data['image'], 'rb') as photo:
-                    await context.bot.send_photo(
-                        chat_id=update.effective_chat.id,
-                        photo=photo,
-                        caption=message_text,
+        if image_exists:
+            try:
+                # If there's an image, we need to delete old message and send new photo message
+                if update.callback_query:
+                    # Delete the old message
+                    await update.callback_query.message.delete()
+                    
+                    # Send new photo message
+                    with open(image_path, 'rb') as photo:
+                        await context.bot.send_photo(
+                            chat_id=update.effective_chat.id,
+                            photo=photo,
+                            caption=message_text,
+                            parse_mode="HTML",
+                            reply_markup=keyboard
+                        )
+                    await update.callback_query.answer()
+                else:
+                    # Command: send photo directly
+                    with open(image_path, 'rb') as photo:
+                        await update.message.reply_photo(
+                            photo=photo,
+                            caption=message_text,
+                            parse_mode="HTML",
+                            reply_markup=keyboard
+                        )
+            except FileNotFoundError:
+                logger.warning(f"Image file not found: {image_path}. Falling back to text-only.")
+                # Fallback to text-only if image fails
+                if update.callback_query:
+                    await update.callback_query.edit_message_text(
+                        text=message_text,
                         parse_mode="HTML",
-                        reply_markup=keyboard
+                        reply_markup=keyboard,
+                        disable_web_page_preview=True
                     )
-                await update.callback_query.answer()
-            else:
-                # Command: send photo directly
-                with open(step_data['image'], 'rb') as photo:
-                    await update.message.reply_photo(
-                        photo=photo,
-                        caption=message_text,
+                    await update.callback_query.answer()
+                else:
+                    await update.message.reply_text(
+                        text=message_text,
                         parse_mode="HTML",
-                        reply_markup=keyboard
+                        reply_markup=keyboard,
+                        disable_web_page_preview=True
                     )
         else:
             # No image, just text
@@ -756,12 +784,20 @@ async def send_webapp_setup_step(update: Update, context: ContextTypes.DEFAULT_T
                     disable_web_page_preview=True
                 )
         
-        logger.info(f"Sent webapp setup step {step} to user {update.effective_user.id}")
+        logger.info(f"✅ Sent webapp setup step {step} to user {user_id}")
         
     except Exception as e:
-        logger.error(f"Error sending webapp setup step {step}: {e}")
-        if update.callback_query:
-            await update.callback_query.answer("❌ Có lỗi xảy ra!")
+        logger.error(f"❌ Error sending webapp setup step {step} to user {user_id}: {e}", exc_info=True)
+        try:
+            # Try to send error message back to user
+            if update.callback_query:
+                await update.callback_query.answer("❌ Có lỗi xảy ra! Vui lòng thử lại.", show_alert=True)
+            else:
+                await update.message.reply_text(
+                    "❌ Có lỗi xảy ra khi tải hướng dẫn. Vui lòng thử lại sau hoặc nhắn /help để cần trợ giúp."
+                )
+        except Exception as send_err:
+            logger.error(f"Failed to send error message: {send_err}")
 
 
 async def taoweb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
