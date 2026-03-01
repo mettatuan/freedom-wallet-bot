@@ -35,6 +35,35 @@ SETUP_MESSAGE = (
     "Sau khi tạo xong, gửi link Web App vào đây để kích hoạt bot nhé! 👇"
 )
 
+# Event message template for Zoom training
+EVENT_MESSAGE = (
+    "🔔 <b>TỐI NAY – 19H00 - Tuấn trực tiếp</b>\n"
+    "<b>HƯỚNG DẪN TẠO WEB APP & SỬ DỤNG FREEDOM WALLET TỪ A → Z</b>\n\n"
+    "Tối nay lúc 19H00, tôi sẽ trực tiếp Zoom hướng dẫn anh chị:\n\n"
+    "🎯 <b>Nội dung buổi hướng dẫn:</b>\n\n"
+    "1️⃣ Từng bước tạo Web App quản lý tài chính cá nhân\n"
+    "2️⃣ Cập nhật & kết nối Telegram Bot với Web App\n"
+    "3️⃣ Hướng dẫn sử dụng Web App đúng cách\n"
+    "4️⃣ Hướng dẫn dùng @FreedomWalletbot để ghi thu chi nhanh\n"
+    "5️⃣ Giải đáp trực tiếp các vướng mắc khi cài đặt\n\n"
+    "🧰 <b>CẦN CHUẨN BỊ:</b>\n\n"
+    "✔️ Laptop (để cài đặt lần đầu)\n"
+    "→ Sau khi cài xong, từ những lần sau anh chị có thể thao tác đơn giản bằng điện thoại\n\n"
+    "✔️ Tham gia vào một trong hai nhóm để nhận link Zoom:\n\n"
+    "📌 Zalo: https://zalo.me/g/ivdfur126\n"
+    "📌 Telegram: https://t.me/freedomwalletapp\n\n"
+    "Link Zoom sẽ được gửi trong nhóm trước giờ bắt đầu.\n\n"
+    "🚀 <b>ĐĂNG KÝ & BẮT ĐẦU NGAY:</b>\n\n"
+    "👉 @FreedomWalletbot\n\n"
+    "Nếu anh chị đang muốn:\n"
+    "• Nhìn rõ toàn bộ tài chính của mình\n"
+    "• Ghi thu chi nhanh gọn trong vài giây\n"
+    "• Xây dựng hệ thống tài chính bài bản\n\n"
+    "Thì tối nay là bước khởi động rất quan trọng.\n\n"
+    "Hẹn gặp anh chị lúc 19H00.\n"
+    "Cài đặt xong tối nay – hành trình tài chính của anh chị sẽ khác đi từ ngày mai."
+)
+
 
 def _is_admin(user_id: int) -> bool:
     return settings.ADMIN_USER_ID and user_id == settings.ADMIN_USER_ID
@@ -100,16 +129,19 @@ def _get_user_stats() -> dict:
         db.close()
 
 
-async def _send_broadcast(bot, users: list[dict], message: str, delay: float = 0.05) -> dict:
+async def _send_broadcast(bot, users: list[dict], message: str, delay: float = 0.05, keyboard=None) -> dict:
     """
     Gửi message tới danh sách user với rate limiting.
     Trả về dict: {sent, blocked, failed, total}
     """
     sent = blocked = failed = 0
-    keyboard = InlineKeyboardMarkup([[
-        InlineKeyboardButton("🎬 Xem video hướng dẫn", url=VIDEO_SETUP_URL),
-        InlineKeyboardButton("📋 Hướng dẫn từng bước", callback_data="webapp_setup_step_0"),
-    ]])
+    
+    # Default keyboard nếu không có
+    if keyboard is None:
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton("🎬 Xem video hướng dẫn", url=VIDEO_SETUP_URL),
+            InlineKeyboardButton("📋 Hướng dẫn từng bước", callback_data="webapp_setup_step_0"),
+        ]])
 
     for i, user in enumerate(users):
         try:
@@ -250,8 +282,62 @@ async def handle_broadcast_all(update: Update, context: ContextTypes.DEFAULT_TYP
     )
 
 
+async def handle_broadcast_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Gửi thông báo event Zoom training tới TẤT CẢ user đã đăng ký."""
+    if not _is_admin(update.effective_user.id):
+        return
+
+    args = context.args
+    if not args or args[0] != "confirm":
+        import asyncio as _asyncio
+        stats = await _asyncio.to_thread(_get_user_stats)
+        await update.message.reply_text(
+            f"📢 <b>Event Broadcast Preview</b>\n\n"
+            f"Sẽ gửi thông báo Zoom training tới <b>{stats['registered']} user</b> đã đăng ký.\n\n"
+            f"📝 <b>Nội dung:</b>\n{EVENT_MESSAGE}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Để xác nhận gửi, dùng:\n<code>/broadcast_event confirm</code>",
+            parse_mode="HTML",
+        )
+        return
+
+    import asyncio as _asyncio
+    users = await _asyncio.to_thread(_get_all_registered_users)
+
+    # Keyboard cho event
+    event_keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("📱 Tham gia nhóm Zalo", url="https://zalo.me/g/ivdfur126"),
+        ],
+        [
+            InlineKeyboardButton("💬 Tham gia nhóm Telegram", url="https://t.me/freedomwalletapp"),
+        ],
+        [
+            InlineKeyboardButton("🤖 Bắt đầu với Bot", url="https://t.me/FreedomWalletbot"),
+        ],
+    ])
+
+    progress_msg = await update.message.reply_text(
+        f"⏳ Đang gửi event broadcast tới {len(users)} user..."
+    )
+
+    result = await _send_broadcast(context.bot, users, EVENT_MESSAGE, delay=0.05, keyboard=event_keyboard)
+
+    await progress_msg.edit_text(
+        f"✅ <b>Event Broadcast hoàn thành!</b>\n\n"
+        f"📤 Đã gửi: <b>{result['sent']}</b>\n"
+        f"🚫 Bị block: <b>{result['blocked']}</b>\n"
+        f"❌ Lỗi khác: <b>{result['failed']}</b>\n\n"
+        f"🎯 Tổng: <b>{result['total']}</b> user",
+        parse_mode="HTML",
+    )
+
+    logger.info(f"[BROADCAST_EVENT] complete: {result}")
+
+
 def register_broadcast_handlers(application, group: int = 0):
     application.add_handler(CommandHandler("broadcast_setup", handle_broadcast_setup), group=group)
     application.add_handler(CommandHandler("broadcast_all", handle_broadcast_all), group=group)
+    application.add_handler(CommandHandler("broadcast_event", handle_broadcast_event), group=group)
     application.add_handler(CommandHandler("broadcast_status", handle_broadcast_status), group=group)
     logger.info(f"✅ Broadcast handlers registered (group={group})")
