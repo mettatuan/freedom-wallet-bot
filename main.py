@@ -58,11 +58,30 @@ logger = logging.getLogger(__name__)
 
 
 async def error_handler(update: Update, context) -> None:
-    """Log + smart alert via ErrorTracker + reply to user."""
+    """Log + smart alert via ErrorTracker + auto-fix attempts + reply to user."""
     from bot.core.error_tracker import get_tracker
+    from bot.core.auto_fix_handlers import try_auto_fix
     error = context.error
 
-    # ── 1. Track lỗi (bỏ qua nếu ignorable, check ngưỡng alert) ──────────
+    # ── 1. Try auto-fix FIRST (trước khi track) ────────────────────────────
+    auto_fix_result = None
+    try:
+        fix_context = {
+            "update": update,
+            "user_id": update.effective_user.id if update and update.effective_user else None,
+            "chat_id": update.effective_chat.id if update and update.effective_chat else None,
+        }
+        auto_fix_result = await try_auto_fix(error, fix_context)
+        
+        if auto_fix_result and auto_fix_result.success:
+            logger.info(f"✅ Auto-fix SUCCESS: {auto_fix_result.action_taken}")
+            # Nếu fix thành công và should_retry → không cần alert user
+            if auto_fix_result.should_retry:
+                return  # Silent recovery
+    except Exception as fix_error:
+        logger.error(f"Auto-fix attempt crashed: {fix_error}", exc_info=True)
+
+    # ── 2. Track lỗi (bỏ qua nếu ignorable, check ngưỡng alert) ──────────
     tracker = get_tracker()
     result = tracker.record(error)
 
@@ -72,11 +91,18 @@ async def error_handler(update: Update, context) -> None:
 
     logger.error("Unhandled exception", exc_info=error)
 
-    # ── 2. Reply to user (best-effort) ───────────────────────────────────────
+    # ── 3. Reply to user (best-effort) ───────────────────────────────────────
     try:
         if update and update.effective_message:
-            hint = result.get("recovery_hint")
-            extra = f"\n🔧 {hint}" if hint else ""
+            # Nếu có auto-fix result, show action taken
+            if auto_fix_result:
+                extra = f"\n🔧 {auto_fix_result.action_taken}"
+                if auto_fix_result.should_retry:
+                    extra += f"\n♻️ Đang thử lại sau {auto_fix_result.retry_delay}s..."
+            else:
+                hint = result.get("recovery_hint")
+                extra = f"\n🔧 {hint}" if hint else ""
+            
             await update.effective_message.reply_text(
                 f"😓 Xin lỗi, bot gặp lỗi không xử lý được.{extra}\n"
                 "Vui lòng thử lại sau hoặc liên hệ admin: @tuanai_mentor\n"
@@ -111,8 +137,19 @@ async def error_handler(update: Update, context) -> None:
         count = result.get('count_in_window', 1)
         badge = f" [{count}x]" if count > 1 else " [mới]"
         tb_escaped = html.escape(tb[-2000:])
+        
+        # Auto-fix status badge
+        autofix_badge = ""
+        if auto_fix_result:
+            if auto_fix_result.success:
+                autofix_badge = f"\n🔧 <b>Auto-fix:</b> ✅ {html.escape(auto_fix_result.action_taken)}"
+                if auto_fix_result.should_retry:
+                    autofix_badge += " (retrying)"
+            else:
+                autofix_badge = f"\n🔧 <b>Auto-fix:</b> ❌ {html.escape(auto_fix_result.action_taken)}"
+        
         alert = (
-            f"🚨 <b>Bot Exception{badge}</b>{user_info}{chat_info}\n\n"
+            f"🚨 <b>Bot Exception{badge}</b>{user_info}{chat_info}{autofix_badge}\n\n"
             f"<pre>{tb_escaped}</pre>"
         )
         await context.bot.send_message(
