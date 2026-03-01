@@ -61,6 +61,10 @@ def _dashboard_text(s: dict) -> str:
 def _dashboard_keyboard(s: dict) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
         [InlineKeyboardButton(
+            f"🎯 GỬI EVENT ZOOM 19H ({s['registered']} users)",
+            callback_data="adm:event_preview"
+        )],
+        [InlineKeyboardButton(
             f"📤 Gửi video setup  ({s['without_webapp']} chưa setup)",
             callback_data="adm:broadcast_preview"
         )],
@@ -97,6 +101,42 @@ SETUP_MESSAGE_PREVIEW = (
     "Chỉ mất 5 phút — làm ngay hôm nay nhé! 🚀\n\n"
     "━━━━━━━━━━━━━━━━━━━━━━\n"
     "⚠️ Bấm <b>✅ Gửi ngay</b> để gửi tới tất cả user chưa setup."
+)
+
+EVENT_MESSAGE_PREVIEW = (
+    "📢 <b>PREVIEW — ZOOM TRAINING EVENT TỐI NAY</b>\n"
+    "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+    "🔔 <b>TỐI NAY – 19H00 - Tuấn trực tiếp</b>\n"
+    "<b>HƯỚNG DẪN TẠO WEB APP & SỬ DỤNG FREEDOM WALLET TỪ A → Z</b>\n\n"
+    "📍 <b>NỘI DUNG:</b>\n"
+    "   1️⃣ Tạo Web App - Từng bước chi tiết\n"
+    "   2️⃣ Kết nối Bot Telegram\n"
+    "   3️⃣ Hướng dẫn sử dụng Web App\n"
+    "   4️⃣ Ghi giao dịch A→Z\n"
+    "   5️⃣ Q&A giải đáp mọi thắc mắc\n\n"
+    "✅ <b>YÊU CẦU:</b>\n"
+    "   🖥️ Laptop để làm theo\n"
+    "   👥 Tham gia nhóm nhận link Zoom\n\n"
+    "━━━━━━━━━━━━━━━━━━━━━━\n"
+    "⚠️ Bấm <b>✅ Gửi ngay</b> để gửi tới tất cả {registered} users."
+)
+
+EVENT_MESSAGE_PREVIEW = (
+    "📢 <b>PREVIEW — ZOOM TRAINING EVENT TỐI NAY</b>\n"
+    "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+    "🔔 <b>TỐI NAY – 19H00 - Tuấn trực tiếp</b>\n"
+    "<b>HƯỚNG DẪN TẠO WEB APP & SỬ DỤNG FREEDOM WALLET TỪ A → Z</b>\n\n"
+    "📌 <b>NỘI DUNG:</b>\n"
+    "   1️⃣ Tạo Web App - Từng bước chi tiết\n"
+    "   2️⃣ Kết nối Bot Telegram\n"
+    "   3️⃣ Hướng dẫn sử dụng Web App\n"
+    "   4️⃣ Ghi giao dịch A→Z\n"
+    "   5️⃣ Q&A giải đáp mọi thắc mắc\n\n"
+    "✅ <b>YÊU CẦU:</b>\n"
+    "   🖥️ Laptop để làm theo\n"
+    "   👥 Tham gia nhóm nhận link Zoom\n\n"
+    "━━━━━━━━━━━━━━━━━━━━━━\n"
+    "⚠️ Bấm <b>✅ Gửi ngay</b> để gửi tới tất cả {registered} users."
 )
 
 
@@ -159,6 +199,23 @@ async def handle_admin_callback(update: Update, context: ContextTypes.DEFAULT_TY
     elif data == "adm:email_preview":
         await _handle_email_preview(query)
 
+    elif data == "adm:event_preview":
+        s = _get_stats()
+        await query.edit_message_text(
+            EVENT_MESSAGE_PREVIEW.format(registered=s['registered']),
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("✅ Gửi ngay", callback_data="adm:event_confirm")],
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")],
+            ])
+        )
+
+    elif data == "adm:event_confirm":
+        await query.edit_message_text(
+            "⏳ <b>Đang gửi event tới tất cả users...</b> Vui lòng chờ.", parse_mode="HTML"
+        )
+        context.application.create_task(_run_event_broadcast(query, context))
+
     elif data == "adm:email_confirm":
         await query.edit_message_text(
             "⏳ <b>Đang gửi email...</b> Vui lòng chờ.", parse_mode="HTML"
@@ -167,6 +224,23 @@ async def handle_admin_callback(update: Update, context: ContextTypes.DEFAULT_TY
 
     elif data == "adm:email_test":
         await _handle_email_test(query)
+
+    elif data == "adm:event_preview":
+        s = _get_stats()
+        await query.edit_message_text(
+            EVENT_MESSAGE_PREVIEW.format(registered=s['registered']),
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("✅ Gửi ngay", callback_data="adm:event_confirm")],
+                [InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")],
+            ])
+        )
+
+    elif data == "adm:event_confirm":
+        await query.edit_message_text(
+            "⏳ <b>Đang gửi event tới tất cả users...</b> Vui lòng chờ.", parse_mode="HTML"
+        )
+        context.application.create_task(_run_event_broadcast(query, context))
 
     elif data == "adm:broadcast_preview":
         await query.edit_message_text(
@@ -224,6 +298,55 @@ async def handle_admin_callback(update: Update, context: ContextTypes.DEFAULT_TY
 
 
 # ─── Helper tasks ─────────────────────────────────────────────────────────────
+async def _run_event_broadcast(query, context):
+    """Gửi event Zoom training tới tất cả registered users"""
+    try:
+        from bot.handlers.admin_broadcast import (
+            _get_all_registered_users, _send_broadcast, EVENT_MESSAGE
+        )
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        
+        users = _get_all_registered_users()
+        if not users:
+            await query.edit_message_text(
+                "⚠️ Không có user nào đã đăng ký.",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")
+                ]])
+            )
+            return
+        
+        # Keyboard cho event
+        event_keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("📱 Tham gia nhóm Zalo", url="https://zalo.me/g/ivdfur126")],
+            [InlineKeyboardButton("💬 Tham gia nhóm Telegram", url="https://t.me/freedomwalletapp")],
+            [InlineKeyboardButton("🤖 Bắt đầu với Bot", url="https://t.me/FreedomWalletbot")],
+        ])
+        
+        result = await _send_broadcast(context.bot, users, EVENT_MESSAGE, delay=0.05, keyboard=event_keyboard)
+        
+        await query.edit_message_text(
+            f"✅ <b>Event Broadcast hoàn tất!</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📤 Đã gửi:  <b>{result['sent']}</b>\n"
+            f"🚫 Bị chặn: {result['blocked']}\n"
+            f"❌ Lỗi:     {result['failed']}\n"
+            f"🎯 Tổng:   <b>{result['total']}</b> users",
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("◀️ Về Dashboard", callback_data="adm:refresh")
+            ]])
+        )
+    except Exception as e:
+        logger.error(f"Event broadcast error: {e}", exc_info=True)
+        await query.edit_message_text(
+            f"❌ Lỗi khi gửi event: {e}",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")
+            ]])
+        )
+
+
 async def _run_broadcast(query, context):
     try:
         from bot.handlers.admin_broadcast import (
