@@ -128,6 +128,10 @@ async def _show_active_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, 
 
     inline_rows.append([InlineKeyboardButton("💝 Đóng góp tùy tâm", callback_data="payment_info")])
 
+    # Admin shortcut row — only shown to admin
+    if settings.ADMIN_USER_ID and user.id == int(settings.ADMIN_USER_ID):
+        inline_rows.append([InlineKeyboardButton("🛡️ Admin Panel", callback_data="adm:refresh")])
+
     await update.message.reply_text(
         text,
         parse_mode="Markdown",
