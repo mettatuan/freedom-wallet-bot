@@ -51,8 +51,8 @@ async def sync_landing_page_users_to_db():
                 # Skip if not a landing page registration or if already has Telegram user_id
                 if source != "Landing Page":
                     continue
-                if user_id_str and user_id_str.isdigit():
-                    # Already synced with bot (has Telegram ID)
+                if user_id_str and user_id_str.isdigit() and int(user_id_str) > 100000:
+                    # Already synced with bot (has real Telegram ID > 100k)
                     skipped += 1
                     continue
 
