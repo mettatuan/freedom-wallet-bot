@@ -48,23 +48,21 @@ async def sync_landing_page_users_to_db():
                 source = row[9].strip() if len(row) > 9 else "Landing Page"
                 status = row[10].strip() if len(row) > 10 else ""
 
-                # Skip if not a landing page registration or if already has Telegram user_id
+                # Skip if not a landing page registration
                 if source != "Landing Page":
                     continue
-                if user_id_str and user_id_str.isdigit() and int(user_id_str) > 100000:
-                    # Already synced with bot (has real Telegram ID > 100k)
-                    skipped += 1
+                
+                # Skip if no valid email
+                if not email:
                     continue
-
-                # Check if we already created a shadow user for this email
-                existing = db.query(User).filter(
-                    User.email == email,
-                    User.activation_source == "LANDING_PAGE"
-                ).first()
-
-                if existing:
-                    skipped += 1
-                    continue
+                
+                # Check if this user ID already exists in database
+                if user_id_str and user_id_str.isdigit():
+                    tg_id = int(user_id_str)
+                    existing_user = db.query(User).filter(User.id == tg_id).first()
+                    if existing_user:
+                        skipped += 1
+                        continue
 
                 # Parse registration date (format: 22/02/2026 18:04:25)
                 first_seen = None
@@ -77,30 +75,29 @@ async def sync_landing_page_users_to_db():
                     except ValueError:
                         pass
 
-                # Create shadow user (fake Telegram ID using email hash)
-                # Use negative ID to avoid collision with real Telegram IDs
-                shadow_id = -(abs(hash(email)) % 1_000_000_000)  # Negative ID = landing page user
+                # Use real Telegram ID from sheet (landing page users have Telegram accounts)
+                tg_id = int(user_id_str) if user_id_str and user_id_str.isdigit() else -(abs(hash(email)) % 1_000_000_000)
 
                 new_user = User(
-                    id=shadow_id,
+                    id=tg_id,
                     username=username or None,
-                    first_name=full_name or email.split("@")[0],
+                    first_name=full_name.split()[0] if full_name else None,
+                    last_name=" ".join(full_name.split()[1:]) if full_name and len(full_name.split()) > 1 else None,
                     email=email,
                     phone=phone or None,
                     referral_code=referral_code or None,
                     activation_source="LANDING_PAGE",
-                    user_status="PENDING",
-                    is_registered=False,  # Not yet registered in bot
-                    first_seen_at=first_seen or datetime.now(timezone.utc),
+                    user_state="VISITOR",
+                    is_registered=True,  # Registered via landing page
+                    created_at=first_seen or datetime.now(timezone.utc),
                     last_active=first_seen or datetime.now(timezone.utc),
-                    admin_tag=f"LP: {status}" if status else "Landing Page",
                 )
 
                 db.add(new_user)
                 try:
                     db.commit()
                     synced += 1
-                    logger.info(f"✅ Synced landing page user: {email} (shadow ID {shadow_id})")
+                    logger.info(f"✅ Synced landing page user: {email} (Telegram ID {tg_id})")
                 except IntegrityError:
                     db.rollback()
                     skipped += 1
