@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     BOT_USERNAME: str = os.getenv("BOT_USERNAME", "FreedomWalletBot")
     ADMIN_USER_ID: Optional[int] = int(os.getenv("ADMIN_USER_ID", 0)) if os.getenv("ADMIN_USER_ID") else None  # Week 5: Fraud review admin
     
+    # Test/admin accounts to exclude from user stats (comma-separated IDs in env)
+    ADMIN_TEST_USER_IDS: str = os.getenv("ADMIN_TEST_USER_IDS", "14267626,37833239")  # mettatuan, otisbtc = TUAN ADMIN
+    
     # OpenAI
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4-turbo-preview")
