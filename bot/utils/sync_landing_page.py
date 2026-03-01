@@ -56,12 +56,20 @@ async def sync_landing_page_users_to_db():
                 if not email:
                     continue
                 
+                # Check if email already exists (avoid duplicates)
+                existing_by_email = db.query(User).filter(User.email == email).first()
+                if existing_by_email:
+                    skipped += 1
+                    logger.debug(f"⏭️ Skipped existing email: {email} (already has ID {existing_by_email.id})")
+                    continue
+                
                 # Check if this user ID already exists in database
                 if user_id_str and user_id_str.isdigit():
                     tg_id = int(user_id_str)
                     existing_user = db.query(User).filter(User.id == tg_id).first()
                     if existing_user:
                         skipped += 1
+                        logger.debug(f"⏭️ Skipped existing user ID: {tg_id}")
                         continue
 
                 # Parse registration date (format: 22/02/2026 18:04:25)
