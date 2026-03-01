@@ -6,9 +6,43 @@ A Telegram bot providing 24/7 customer support for Freedom Wallet app
 import asyncio
 import html
 import logging
+import os
 import sys
 import traceback
 from pathlib import Path
+
+# ── Single-instance lock (PID file) ────────────────────────────────────────
+_PID_FILE = Path(__file__).parent / "bot.pid"
+
+def _acquire_lock() -> bool:
+    """Return True if we acquired the lock; False if another instance is running."""
+    if _PID_FILE.exists():
+        try:
+            old_pid = int(_PID_FILE.read_text().strip())
+            # Check if that PID is still alive
+            try:
+                os.kill(old_pid, 0)  # signal 0 = just check existence
+                print(f"[LOCK] Another instance is running (PID {old_pid}). Exiting.", flush=True)
+                return False
+            except (OSError, ProcessLookupError):
+                pass  # PID is stale — safe to overwrite
+        except (ValueError, OSError):
+            pass
+    _PID_FILE.write_text(str(os.getpid()))
+    return True
+
+def _release_lock():
+    try:
+        _PID_FILE.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+if not _acquire_lock():
+    sys.exit(1)
+
+import atexit
+atexit.register(_release_lock)
+# ───────────────────────────────────────────────────────────────────────────
 
 from telegram import Update
 from telegram.ext import (
