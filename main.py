@@ -246,6 +246,10 @@ def main() -> None:
     # ── Admin menu (group=-10: intercepts commands even inside ConversationHandlers) ──
     from bot.handlers.admin_menu import register_admin_menu_handlers
     register_admin_menu_handlers(application)
+    
+    # ── Admin user management commands ──
+    from bot.handlers.admin_users import register_admin_user_handlers
+    register_admin_user_handlers(application)
 
     # Register handlers
     application.add_handler(CommandHandler("start", start))

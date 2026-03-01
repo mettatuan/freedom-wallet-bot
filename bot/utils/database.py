@@ -140,6 +140,21 @@ class User(Base):
     last_checkin = Column(DateTime, nullable=True)  # Last check-in message sent
     last_insight_sent = Column(DateTime, nullable=True)  # Last weekly insight sent (Phase 2 - Reflection Engine)
     
+    # ADMIN MANAGEMENT & TRACKING (March 2026)
+    admin_tag = Column(Text, nullable=True)  # Admin's personal note/tag for user care
+    user_status = Column(String(50), default="PENDING")  # PENDING, WEBAPP_SETUP, ACTIVE, INACTIVE, CHURNED
+    
+    # ENHANCED INTERACTION TRACKING
+    total_interactions = Column(Integer, default=0)  # Total bot interactions (commands + messages + callbacks)
+    last_command = Column(String(100), nullable=True)  # Last command executed
+    last_command_at = Column(DateTime, nullable=True)  # When last command was executed
+    daily_active_days = Column(Integer, default=0)  # Count of days user was active
+    last_daily_reset = Column(DateTime, nullable=True)  # Last time daily stats were reset
+    
+    # ENGAGEMENT METRICS
+    first_seen_at = Column(DateTime, nullable=True)  # First interaction with bot
+    activation_source = Column(String(50), default="BOT")  # BOT, LANDING_PAGE, REFERRAL
+    
     def __repr__(self):
         return f"<User {self.id} ({self.username}) state={self.user_state} streak={self.streak_count}>"
 

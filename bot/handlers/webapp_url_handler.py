@@ -31,6 +31,13 @@ def _save_webapp_url_sync(user_id: int, url: str) -> bool:
         if not user:
             return False
         user.web_app_url = url
+        
+        # Auto-update user_status when web app is set
+        if url and url not in ["", "pending"]:
+            user.user_status = "ACTIVE"
+        elif user.is_registered:
+            user.user_status = "WEBAPP_SETUP"
+        
         db.commit()
         return True
     finally:

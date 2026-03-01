@@ -34,25 +34,53 @@ def _get_stats() -> dict:
             .filter(User.web_app_url != "pending")
             .count()
         )
+        
+        # Status breakdown
+        status_counts = {}
+        for status in ["PENDING", "WEBAPP_SETUP", "ACTIVE", "INACTIVE", "CHURNED"]:
+            count = db.query(User).filter(User.user_status == status).count()
+            status_counts[status] = count
+        
+        # Tagged users
+        tagged = db.query(User).filter(User.admin_tag != None).filter(User.admin_tag != "").count()
+        
         db.close()
-        return {"total": total, "registered": registered,
-                "with_webapp": with_webapp, "without_webapp": registered - with_webapp}
+        return {
+            "total": total, 
+            "registered": registered,
+            "with_webapp": with_webapp, 
+            "without_webapp": registered - with_webapp,
+            "status": status_counts,
+            "tagged": tagged
+        }
     except Exception as e:
         logger.error(f"Stats error: {e}")
-        return {"total": 0, "registered": 0, "with_webapp": 0, "without_webapp": 0}
+        return {
+            "total": 0, "registered": 0, "with_webapp": 0, "without_webapp": 0,
+            "status": {}, "tagged": 0
+        }
 
 
 # ─── Dashboard text + keyboard ────────────────────────────────────────────────
 def _dashboard_text(s: dict) -> str:
     pct = round(s["with_webapp"] / s["registered"] * 100) if s["registered"] else 0
     bar = "█" * round(pct / 10) + "░" * (10 - round(pct / 10))
+    
+    # Status breakdown
+    status = s.get("status", {})
+    status_text = f"""📊 <b>THEO TRẠNG THÁI:</b>
+⏳ Pending: {status.get('PENDING', 0)} • ⚙️ Setup: {status.get('WEBAPP_SETUP', 0)}
+✅ Active: {status.get('ACTIVE', 0)} • 😴 Inactive: {status.get('INACTIVE', 0)} • ❌ Churned: {status.get('CHURNED', 0)}
+🏷️ Có tag: {s.get('tagged', 0)} users"""
+    
     return (
         "🛡️ <b>FREEDOM WALLET — ADMIN PANEL</b>\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n\n"
         f"👥 Tổng users:   <b>{s['total']}</b>\n"
         f"✅ Đã đăng ký:  <b>{s['registered']}</b>\n"
         f"🌐 Có Web App:  <b>{s['with_webapp']}</b>  •  ⚠️ Chưa setup: <b>{s['without_webapp']}</b>\n\n"
-        f"<code>[{bar}] {pct}%</code> đã setup Web App\n"
+        f"<code>[{bar}] {pct}%</code> đã setup Web App\n\n"
+        f"{status_text}\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
         "Chọn hành động:"
     )
@@ -64,6 +92,26 @@ def _dashboard_keyboard(s: dict) -> InlineKeyboardMarkup:
             f"🎯 GỬI EVENT ZOOM 19H ({s['registered']} users)",
             callback_data="adm:event_preview"
         )],
+        [
+            InlineKeyboardButton(
+                f"👥 All Users ({s['total']})", 
+                callback_data="adm:list_all"
+            ),
+            InlineKeyboardButton(
+                f"⚙️ Setup ({s.get('status', {}).get('WEBAPP_SETUP', 0)})", 
+                callback_data="adm:list_setup"
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                f"✅ Active ({s.get('status', {}).get('ACTIVE', 0)})", 
+                callback_data="adm:list_active"
+            ),
+            InlineKeyboardButton(
+                f"😴 Inactive ({s.get('status', {}).get('INACTIVE', 0)})", 
+                callback_data="adm:list_inactive"
+            ),
+        ],
         [InlineKeyboardButton(
             f"📤 Gửi video setup  ({s['without_webapp']} chưa setup)",
             callback_data="adm:broadcast_preview"
@@ -242,6 +290,18 @@ async def handle_admin_callback(update: Update, context: ContextTypes.DEFAULT_TY
         )
         context.application.create_task(_run_event_broadcast(query, context))
 
+    elif data == "adm:list_all":
+        await _show_user_list(query, "all")
+    
+    elif data == "adm:list_setup":
+        await _show_user_list(query, "webapp_setup")
+    
+    elif data == "adm:list_active":
+        await _show_user_list(query, "active")
+    
+    elif data == "adm:list_inactive":
+        await _show_user_list(query, "inactive")
+
     elif data == "adm:broadcast_preview":
         await query.edit_message_text(
             SETUP_MESSAGE_PREVIEW, parse_mode="HTML",
@@ -298,6 +358,103 @@ async def handle_admin_callback(update: Update, context: ContextTypes.DEFAULT_TY
 
 
 # ─── Helper tasks ─────────────────────────────────────────────────────────────
+async def _show_user_list(query, filter_type: str):
+    """Show user list with filter"""
+    from bot.utils.database import SessionLocal, User
+    from datetime import datetime, timedelta
+    
+    db = SessionLocal()
+    try:
+        users_query = db.query(User)
+        
+        # Apply filters
+        if filter_type == "webapp_setup":
+            users_query = users_query.filter(User.user_status == "WEBAPP_SETUP")
+        elif filter_type == "active":
+            users_query = users_query.filter(User.user_status == "ACTIVE")
+        elif filter_type == "inactive":
+            users_query = users_query.filter(User.user_status == "INACTIVE")
+        
+        users = users_query.order_by(User.last_active.desc()).limit(20).all()
+        
+        if not users:
+            await query.edit_message_text(
+                f"📊 Không có users với filter: <b>{filter_type}</b>",
+                parse_mode="HTML",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")
+                ]])
+            )
+            return
+        
+        # Build report
+        lines = [
+            f"📊 <b>DANH SÁCH USERS ({filter_type.upper()})</b>",
+            f"━━━━━━━━━━━━━━━━━━━━━━",
+            f"Tổng: <b>{len(users)}</b> users (20 gần nhất)\n"
+        ]
+        
+        for u in users:
+            status_emoji = {
+                "PENDING": "⏳",
+                "WEBAPP_SETUP": "⚙️",
+                "ACTIVE": "✅",
+                "INACTIVE": "😴",
+                "CHURNED": "❌"
+            }.get(u.user_status, "❓")
+            
+            # Format last active
+            if u.last_active:
+                delta = datetime.utcnow() - u.last_active
+                if delta.days > 30:
+                    last_active = f"{delta.days}d"
+                elif delta.days > 0:
+                    last_active = f"{delta.days}d"
+                elif delta.seconds > 3600:
+                    last_active = f"{delta.seconds // 3600}h"
+                else:
+                    last_active = "now"
+            else:
+                last_active = "never"
+            
+            # User line
+            name = u.first_name or u.username or "Unknown"
+            tag_str = f" 🏷️<i>{u.admin_tag[:20]}</i>" if u.admin_tag else ""
+            webapp_icon = "🌐" if u.web_app_url and u.web_app_url not in ["", "pending"] else ""
+            
+            lines.append(
+                f"{status_emoji} <code>{u.id}</code> {webapp_icon} {name}"
+                f"{tag_str}"
+                f"\n   ⏱️ {last_active} • 💬 {u.total_interactions or 0}x"
+            )
+        
+        lines.append(f"\n━━━━━━━━━━━━━━━━━━━━━━")
+        lines.append(f"Dùng /admin_users {filter_type} để xem đầy đủ")
+        
+        text = "\n".join(lines)
+        
+        if len(text) > 4000:
+            text = text[:3900] + "\n\n⚠️ Danh sách quá dài"
+        
+        await query.edit_message_text(
+            text,
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")
+            ]])
+        )
+    except Exception as e:
+        logger.error(f"Error in _show_user_list: {e}", exc_info=True)
+        await query.edit_message_text(
+            f"❌ Lỗi: {e}",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("◀️ Quay lại", callback_data="adm:refresh")
+            ]])
+        )
+    finally:
+        db.close()
+
+
 async def _run_event_broadcast(query, context):
     """Gửi event Zoom training tới tất cả registered users"""
     try:
