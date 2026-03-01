@@ -409,6 +409,19 @@ def main() -> None:
     from bot.jobs import setup_daily_jobs
     setup_daily_jobs(application)
 
+    # Landing page sync — runs every 30 mins to pull Google Sheet registrations into bot DB
+    async def sync_landing_page_wrapper(context):
+        from bot.utils.sync_landing_page import sync_landing_page_users_to_db
+        await sync_landing_page_users_to_db()
+    
+    application.job_queue.run_repeating(
+        sync_landing_page_wrapper, 
+        interval=1800,  # 30 minutes
+        first=120,      # Start after 2 mins (give time for bot to init)
+        name="landing_page_sync"
+    )
+    logger.info("✅ Landing page sync job registered (every 30min)")
+
     # Health monitor — runs every 5 mins
     from bot.jobs.health_monitor import health_check_job, register_health_handlers
     application.job_queue.run_repeating(health_check_job, interval=300, first=60, name="health_monitor")

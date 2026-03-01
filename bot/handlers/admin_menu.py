@@ -90,14 +90,16 @@ def _get_stats() -> dict:
 
 # ─── Dashboard UI ─────────────────────────────────────────────────────────────
 def _dashboard_text(s: dict) -> str:
+    from datetime import timezone, timedelta
     pct = round(s["with_webapp"] / s["registered"] * 100) if s["registered"] else 0
     bar = "█" * round(pct / 10) + "░" * (10 - round(pct / 10))
     sc  = s.get("status", {})
-    now = datetime.utcnow().strftime("%H:%M")
+    # Timezone VN = UTC+7
+    now_vn = datetime.now(timezone(timedelta(hours=7))).strftime("%H:%M")
     return (
-        f"🛡️ <b>ADMIN PANEL</b>   <i>cập nhật {now} UTC</i>\n"
+        f"🛡️ <b>ADMIN PANEL</b>   <i>cập nhật {now_vn} VN</i>\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"👥 Users (thực): <b>{s['total']}</b>   📋 Đăng ký: <b>{s['registered']}</b>\n"
+        f"👥 Users (Bot): <b>{s['total']}</b>   📋 Đăng ký: <b>{s['registered']}</b>\n"
         f"🌐 Có Web App: <b>{s['with_webapp']}</b>   ⚠️ Chưa setup: <b>{s['without_webapp']}</b>\n"
         f"<code>[{bar}]</code> {pct}%\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -110,22 +112,23 @@ def _dashboard_keyboard(s: dict) -> InlineKeyboardMarkup:
     sc = s.get("status", {})
     return InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("🎯 Event Zoom 19H", callback_data="adm:event_preview"),
-            InlineKeyboardButton(f"📤 Setup ({s['without_webapp']})", callback_data="adm:broadcast_preview"),
-        ],
-        [
-            InlineKeyboardButton(f"📢 Broadcast all ({s['registered']})", callback_data="adm:broadcast_all_preview"),
-            InlineKeyboardButton(f"📧 Email ({s['without_webapp']})", callback_data="adm:email_preview"),
-        ],
-        [
-            InlineKeyboardButton(f"⚙️ Cần setup ({sc.get('WEBAPP_SETUP', 0)})", callback_data="adm:users_setup"),
+            InlineKeyboardButton("📊 Users", callback_data="adm:users_all"),
+            InlineKeyboardButton(f"⚙️ Setup ({sc.get('WEBAPP_SETUP', 0)})", callback_data="adm:users_setup"),
             InlineKeyboardButton(f"😴 Inactive ({sc.get('INACTIVE', 0) + sc.get('CHURNED', 0)})", callback_data="adm:users_inactive"),
         ],
         [
+            InlineKeyboardButton(f"📢 Broadcast ({s['registered']})", callback_data="adm:broadcast_all_preview"),
+            InlineKeyboardButton(f"📤 Setup msg ({s['without_webapp']})", callback_data="adm:broadcast_preview"),
+        ],
+        [
+            InlineKeyboardButton("🎯 Event Zoom 19H", callback_data="adm:event_preview"),
+            InlineKeyboardButton(f"📧 Email", callback_data="adm:email_preview"),
+        ],
+        [
             InlineKeyboardButton("🏥 Health", callback_data="adm:healthcheck"),
-            InlineKeyboardButton("⚠️ Lỗi", callback_data="adm:errors"),
-            InlineKeyboardButton("🔄", callback_data="adm:refresh"),
-            InlineKeyboardButton("✖️", callback_data="adm:close"),
+            InlineKeyboardButton("⚠️ Errors", callback_data="adm:errors"),
+            InlineKeyboardButton("🔄 Refresh", callback_data="adm:refresh"),
+            InlineKeyboardButton("✖️ Close", callback_data="adm:close"),
         ],
     ])
 
@@ -149,6 +152,7 @@ def _quick_user_text(filter_type: str, limit: int = 15) -> str:
             q = q.filter(User.user_status == "ACTIVE")
         elif filter_type == "pending":
             q = q.filter(User.user_status == "PENDING")
+        # elif filter_type == "all": pass (no filter — show all)
 
         total = q.count()
         users = q.order_by(User.last_active.desc()).limit(limit).all()
@@ -157,7 +161,13 @@ def _quick_user_text(filter_type: str, limit: int = 15) -> str:
             return f"<i>Không có users (filter: {filter_type})</i>"
 
         em_map = {"PENDING": "⏳", "WEBAPP_SETUP": "⚙️", "ACTIVE": "✅", "INACTIVE": "😴", "CHURNED": "❌"}
-        label_map = {"setup": "CHƯA SETUP WEB APP", "inactive": "INACTIVE / CHURNED", "active": "ACTIVE", "pending": "PENDING"}
+        label_map = {
+            "setup": "CHƯA SETUP WEB APP", 
+            "inactive": "INACTIVE / CHURNED", 
+            "active": "ACTIVE", 
+            "pending": "PENDING",
+            "all": "TẤT CẢ USERS"
+        }
         lines = [f"<b>{label_map.get(filter_type, filter_type.upper())}</b> — {total} users\n"]
 
         for u in users:
@@ -239,6 +249,10 @@ async def handle_admin_callback(update: Update, context: ContextTypes.DEFAULT_TY
 
     elif data == "adm:users_inactive":
         text = _quick_user_text("inactive")
+        await query.edit_message_text(text, parse_mode="HTML", reply_markup=_back_btn)
+
+    elif data == "adm:users_all":
+        text = _quick_user_text("all")
         await query.edit_message_text(text, parse_mode="HTML", reply_markup=_back_btn)
 
     # ── Event Broadcast ──────────────────────────────────────────────────────
