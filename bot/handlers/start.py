@@ -175,95 +175,136 @@ def _update_registration_sync(user_id: int, first_name: str):
 # Main /start handler
 # ---------------------------------------------------------------------------
 
+async def _show_error_help_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, error: Exception = None):
+    """Show help menu when /start fails at any point."""
+    user = update.effective_user
+    logger.error(f"❌ /start error for user {user.id}: {error}", exc_info=True)
+    
+    error_msg = (
+        "⚠️ <b>Có lỗi xảy ra!</b>\n\n"
+        "Đừng lo, mình sẽ giúp bạn. Chọn một trong các option dưới đây:"
+    )
+    if error:
+        error_msg += f"\n\n<i>Chi tiết lỗi: {str(error)[:100]}</i>"
+    
+    keyboard = [
+        [InlineKeyboardButton("📖 Tạo Web App", callback_data="help_create_webapp")],
+        [InlineKeyboardButton("🔗 Cập nhật link Web App", callback_data="help_update_webapp")],
+        [InlineKeyboardButton("📚 Hướng dẫn sử dụng", callback_data="help_usage")],
+        [InlineKeyboardButton("💬 Liên hệ Admin", url="https://t.me/tuanai_mentor")],
+    ]
+    
+    try:
+        await update.message.reply_text(
+            error_msg,
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    except Exception as send_err:
+        logger.error(f"Failed to send error help menu: {send_err}")
+        try:
+            await update.message.reply_text(
+                "⚠️ Có lỗi xảy ra. Vui lòng liên hệ admin @tuanai_mentor"
+            )
+        except:
+            pass
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /start — unified entry point for all channels."""
     user = update.effective_user
     logger.info(f"/start: user {user.id} (@{user.username})")
 
-    # ── FAST PATH for WEB_ deep links ──────────────────────────────────────
-    # Respond to user BEFORE any DB or sheet operations (which can be slow).
-    if context.args and context.args[0].startswith("WEB_"):
-        email_hash = context.args[0][4:]
-        logger.info(f"  WEB_ fast path: hash={email_hash}, user_id={user.id}")
-        user_name = user.first_name or "bạn"
-        await update.message.reply_text(
-            f"🎉 <b>Chúc mừng {user_name} đã đăng ký thành công!</b>\n\n"
-            f"Bước tiếp theo: tạo Web App cá nhân của bạn.\n"
-            f"Mình sẽ hướng dẫn từng bước, rất đơn giản 👇",
-            parse_mode="HTML",
-        )
-        from bot.handlers.webapp_setup import send_webapp_setup_step
-        await send_webapp_setup_step(update, context, step=0)
-
-        # DB update runs in background — does NOT block the user
-        async def _bg_register(tg_user):
-            try:
-                import asyncio as _asyncio
-                await _asyncio.to_thread(_update_registration_sync, tg_user.id, tg_user.first_name or "")
-            except Exception as e:
-                logger.error(f"WEB_ background DB error: {e}")
-        asyncio.create_task(_bg_register(user))
-        return
-    # ── END FAST PATH ───────────────────────────────────────────────────────
-
-    # 1. Ensure user row exists
-    db_user = await save_user_to_db(user)
-
-    # 2. VIP activity ping
     try:
-        with StateManager() as sm:
-            sm.update_super_vip_activity(user.id)
-    except Exception:
-        pass
+        # ── FAST PATH for WEB_ deep links ──────────────────────────────────────
+        # Respond to user BEFORE any DB or sheet operations (which can be slow).
+        if context.args and context.args[0].startswith("WEB_"):
+            email_hash = context.args[0][4:]
+            logger.info(f"  WEB_ fast path: hash={email_hash}, user_id={user.id}")
+            user_name = user.first_name or "bạn"
+            await update.message.reply_text(
+                f"🎉 <b>Chúc mừng {user_name} đã đăng ký thành công!</b>\n\n"
+                f"Bước tiếp theo: tạo Web App cá nhân của bạn.\n"
+                f"Mình sẽ hướng dẫn từng bước, rất đơn giản 👇",
+                parse_mode="HTML",
+            )
+            from bot.handlers.webapp_setup import send_webapp_setup_step
+            await send_webapp_setup_step(update, context, step=0)
 
-    # 3. Entry-point pre-processing (no messages here, only DB updates)
-    if context.args:
-        code = context.args[0]
-        logger.info(f"  start code: {code}")
-
-        if not code.startswith("WEB_"):
-            # ── referral link (REFxxx) ──────────────────────────────────
-            referred = await handle_referral_start(update, context, code)
-            if referred:
-                await asyncio.sleep(1)
-
-    # 4. Reload fresh state from DB
-    db_user = await get_user_by_id(user.id) or db_user
-
-    # 5. Enable reminders for registered users
-    if db_user and db_user.is_registered:
-        try:
-            def _enable_reminders_sync(uid: int):
-                _db = SessionLocal()
+            # DB update runs in background — does NOT block the user
+            async def _bg_register(tg_user):
                 try:
-                    _u = _db.query(User).filter(User.id == uid).first()
-                    if _u:
-                        _u.reminder_enabled = True
-                        _db.commit()
-                finally:
-                    _db.close()
-            await run_sync(_enable_reminders_sync, db_user.id)
-        except Exception as e:
-            logger.error(f"Enable reminders: {e}")
+                    import asyncio as _asyncio
+                    await _asyncio.to_thread(_update_registration_sync, tg_user.id, tg_user.first_name or "")
+                except Exception as e:
+                    logger.error(f"WEB_ background DB error: {e}")
+            asyncio.create_task(_bg_register(user))
+            return
+        # ── END FAST PATH ───────────────────────────────────────────────────────
 
-    # 6. ── 3-STATE ROUTING ──────────────────────────────────────────────
-    is_registered = bool(db_user and db_user.is_registered)
-    has_web_app   = bool(db_user and getattr(db_user, "web_app_url", None))
+        # 1. Ensure user row exists
+        db_user = await save_user_to_db(user)
 
-    if not is_registered:
-        # STATE 1: VISITOR
-        logger.info(f"  → VISITOR screen for {user.id}")
-        await _show_visitor_screen(update, user)
+        # 2. VIP activity ping
+        try:
+            with StateManager() as sm:
+                sm.update_super_vip_activity(user.id)
+        except Exception:
+            pass
 
-    elif not has_web_app:
-        # STATE 2: SETUP (registered, no web app yet)
-        logger.info(f"  → SETUP screen for {user.id}")
-        await _show_setup_screen(update, context, user, db_user)
+        # 3. Entry-point pre-processing (no messages here, only DB updates)
+        if context.args:
+            code = context.args[0]
+            logger.info(f"  start code: {code}")
 
-    else:
-        # STATE 3: ACTIVE (registered + web app set)
-        logger.info(f"  → ACTIVE menu for {user.id}")
-        await _show_active_menu(update, context, user, db_user)
+            if not code.startswith("WEB_"):
+                # ── referral link (REFxxx) ──────────────────────────────────
+                referred = await handle_referral_start(update, context, code)
+                if referred:
+                    await asyncio.sleep(1)
+
+        # 4. Reload fresh state from DB
+        db_user = await get_user_by_id(user.id) or db_user
+
+        # 5. Enable reminders for registered users
+        if db_user and db_user.is_registered:
+            try:
+                def _enable_reminders_sync(uid: int):
+                    _db = SessionLocal()
+                    try:
+                        _u = _db.query(User).filter(User.id == uid).first()
+                        if _u:
+                            _u.reminder_enabled = True
+                            _db.commit()
+                    finally:
+                        _db.close()
+                await run_sync(_enable_reminders_sync, db_user.id)
+            except Exception as e:
+                logger.error(f"Enable reminders: {e}")
+
+        # 6. ── 3-STATE ROUTING ──────────────────────────────────────────────
+        is_registered = bool(db_user and db_user.is_registered)
+        has_web_app   = bool(db_user and getattr(db_user, "web_app_url", None))
+
+        if not is_registered:
+            # STATE 1: VISITOR
+            logger.info(f"  → VISITOR screen for {user.id}")
+            await _show_visitor_screen(update, user)
+
+        elif not has_web_app:
+            # STATE 2: SETUP (registered, no web app yet)
+            logger.info(f"  → SETUP screen for {user.id}")
+            await _show_setup_screen(update, context, user, db_user)
+
+        else:
+            # STATE 3: ACTIVE (registered + web app set)
+            logger.info(f"  → ACTIVE menu for {user.id}")
+            await _show_active_menu(update, context, user, db_user)
+    
+    except Exception as e:
+        # Catch all errors and show help menu
+        logger.error(f"❌ /start crashed: {e}", exc_info=True)
+        await _show_error_help_menu(update, context, e)
 
 
 def _credit_referral_on_web_registration(user_id: int, web_data: dict):
@@ -313,3 +354,64 @@ async def help_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         help_text, parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
+
+
+async def handle_help_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle help menu callbacks from /start error handler."""
+    query = update.callback_query
+    callback_data = query.data
+    
+    await query.answer()
+    
+    if callback_data == "help_create_webapp":
+        # Show step 0 of webapp setup
+        from bot.handlers.webapp_setup import send_webapp_setup_step
+        await send_webapp_setup_step(update, context, step=0)
+    
+    elif callback_data == "help_update_webapp":
+        # Show instruction to update web app URL
+        text = (
+            "🔗 <b>CẬP NHẬT LINK WEB APP</b>\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "Nếu bạn đã tạo Web App nhưng chưa cập nhật link:\n\n"
+            "1️⃣ Mở Web App bạn vừa tạo trong Chrome/Firefox\n"
+            "2️⃣ Copy link URL từ address bar (bắt đầu bằng `https://`)\n"
+            "3️⃣ Gửi link đó cho mình qua bot này\n\n"
+            "Ví dụ: `https://script.google.com/macros/...`\n\n"
+            "Bạn đã có link rồi chứ? Hãy gửi nó đi! 👇"
+        )
+        keyboard = [[InlineKeyboardButton("◀️ Quay lại", callback_data="help_main_menu")]]
+        await query.edit_message_text(
+            text,
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    
+    elif callback_data == "help_usage":
+        # Show usage guide
+        text = (
+            "📚 <b>HƯỚNG DẪN SỬ DỤNG WEB APP</b>\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "✅ <b>Bước 1: Đăng nhập</b>\n"
+            "• Tên: <code>Admin</code>\n"
+            "• Mật khẩu: <code>2369</code>\n\n"
+            "✅ <b>Bước 2: Xóa dữ liệu mẫu</b>\n"
+            "• Vào tab Cài đặt → Xóa toàn bộ dữ liệu mẫu\n\n"
+            "✅ <b>Bước 3: Bắt đầu ghi giao dịch</b>\n"
+            "• Vào tab Transactions → Thêm giao dịch mới\n"
+            "• Hoặc ghi trực tiếp từ bot này\n\n"
+            "💡 <b>Mẹo:</b> Dùng 6 hũ tiền để phân loại chi tiêu của bạn!"
+        )
+        keyboard = [
+            [InlineKeyboardButton("📹 Xem video hướng dẫn", url="https://youtu.be/xVoASsuWfto")],
+            [InlineKeyboardButton("◀️ Quay lại", callback_data="help_main_menu")]
+        ]
+        await query.edit_message_text(
+            text,
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    
+    elif callback_data == "help_main_menu":
+        # Back to main help menu
+        await _show_error_help_menu(update, context)

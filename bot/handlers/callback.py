@@ -124,6 +124,12 @@ async def _handle_callback_internal(update: Update, context: ContextTypes.DEFAUL
         await handle_premium_usage_guide(update, context)
         return
     
+    # Help menu callbacks from /start error handler
+    elif callback_data and callback_data.startswith("help_"):
+        from bot.handlers.start import handle_help_callback
+        await handle_help_callback(update, context)
+        return
+    
     # Web App completion menu callbacks
     elif callback_data == "webapp_record_guide":
         await handle_webapp_record_guide(update, context)
