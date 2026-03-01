@@ -300,15 +300,36 @@ async def try_auto_fix(error: Exception, context: Optional[Dict[str, Any]] = Non
         context = {}
     
     for handler in AUTO_FIX_HANDLERS:
+        start_time = time.time()
         try:
             result = await handler(error, context)
             if result:
+                duration = time.time() - start_time
+                
+                # Record metrics
+                try:
+                    from bot.core.autofix_metrics import get_metrics
+                    metrics = get_metrics()
+                    metrics.record_attempt(handler.__name__, result.success, duration)
+                except Exception as metrics_error:
+                    logger.warning(f"Failed to record metrics: {metrics_error}")
+                
                 logger.info(
                     f"✅ Auto-fix applied by {handler.__name__}: {result.action_taken} "
-                    f"(success={result.success}, retry={result.should_retry})"
+                    f"(success={result.success}, retry={result.should_retry}, duration={duration:.2f}s)"
                 )
                 return result
         except Exception as handler_error:
+            duration = time.time() - start_time
+            
+            # Record failed attempt
+            try:
+                from bot.core.autofix_metrics import get_metrics
+                metrics = get_metrics()
+                metrics.record_attempt(handler.__name__, False, duration)
+            except:
+                pass
+            
             logger.error(
                 f"❌ Auto-fix handler {handler.__name__} crashed: {handler_error}",
                 exc_info=True,

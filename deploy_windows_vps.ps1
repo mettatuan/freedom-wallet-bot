@@ -130,8 +130,11 @@ if (Test-Path 'data\bot.db') {
 # Stop bot if running
 Write-Host ''
 Write-Host 'STEP 2: Stopping bot...' -ForegroundColor Yellow
-Get-Process -Name python -ErrorAction SilentlyContinue | Where-Object { `$_.CommandLine -like '*main.py*' } | Stop-Process -Force
-Start-Sleep -Seconds 2
+Get-CimInstance Win32_Process -Filter "Name='python.exe' AND CommandLine LIKE '%main.py%'" | ForEach-Object {
+    Stop-Process -Id `$_.ProcessId -Force -ErrorAction SilentlyContinue
+    Write-Host "  ⛔ Killed old bot process (PID: `$(`$_.ProcessId))" -ForegroundColor Yellow
+}
+Start-Sleep -Seconds 3
 Write-Host '  ✅ Bot stopped' -ForegroundColor Green
 
 # Pull latest code

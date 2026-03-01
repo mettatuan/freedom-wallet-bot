@@ -387,6 +387,41 @@ def main() -> None:
     register_broadcast_handlers(application, group=-10)
     logger.info("✅ Broadcast handlers registered (group=-10)")
     
+    # Auto-fix metrics admin handlers (group=-10)
+    try:
+        from bot.handlers.admin_autofix import register_autofix_admin_handlers
+        register_autofix_admin_handlers(application, group=-10)
+        logger.info("✅ Auto-fix admin handlers registered (group=-10)")
+    except Exception as e:
+        logger.error(f"❌ Failed to register auto-fix admin handlers: {e}")
+    
+    # Rollback admin handlers (group=-10)
+    try:
+        from bot.handlers.admin_rollback import register_rollback_admin_handlers
+        register_rollback_admin_handlers(application, group=-10)
+        logger.info("✅ Rollback admin handlers registered (group=-10)")
+    except Exception as e:
+        logger.error(f"❌ Failed to register rollback admin handlers: {e}")
+    
+    # Rollback monitoring job — runs every 2 mins
+    try:
+        from bot.core.rollback_system import get_rollback_system
+        
+        async def rollback_monitor_job(context):
+            """Periodic rollback monitoring."""
+            rollback_system = get_rollback_system()
+            await rollback_system.monitor_and_rollback_if_needed()
+        
+        application.job_queue.run_repeating(
+            rollback_monitor_job,
+            interval=120,  # 2 minutes
+            first=180,  # Start after 3 minutes (let bot warm up)
+            name="rollback_monitor"
+        )
+        logger.info("✅ Rollback monitoring job registered (every 2min)")
+    except Exception as e:
+        logger.error(f"❌ Failed to register rollback monitor: {e}")
+    
     # Start bot
     logger.info(f"[OK] Bot started in {settings.ENV} mode")
     logger.info(f"[INFO] Log level: {settings.LOG_LEVEL}")

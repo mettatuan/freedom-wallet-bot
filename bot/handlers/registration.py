@@ -160,10 +160,18 @@ async def receive_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         context.user_data['full_name'] = name
     
-    # Show confirmation
-    email = context.user_data['email']
+    # Show confirmation — use .get() with defaults in case context was lost
+    email = context.user_data.get('email')
+    if not email:
+        # Conversation was interrupted, restart
+        await update.message.reply_text(
+            "⚠️ Thông tin bị lỗi. Vui lòng bắt đầu lại từ /register",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        return ConversationHandler.END
+    
     phone = context.user_data.get('phone', 'Không cung cấp')
-    full_name = context.user_data['full_name']
+    full_name = context.user_data.get('full_name', update.effective_user.first_name or 'Người dùng')
     
     # Use InlineKeyboardButton instead of ReplyKeyboardMarkup
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -210,9 +218,19 @@ async def confirm_registration(update: Update, context: ContextTypes.DEFAULT_TYP
         return CONFIRM
     
     user = update.effective_user
-    email = context.user_data['email']
+    # Defensive checks — use .get() with defaults in case context was lost
+    email = context.user_data.get('email')
     phone = context.user_data.get('phone')
-    full_name = context.user_data['full_name']
+    full_name = context.user_data.get('full_name')
+    
+    # If any required field is missing, restart the registration
+    if not email or not full_name:
+        await query.answer()
+        await query.message.reply_text(
+            "⚠️ Thông tin bị lỗi. Vui lòng bắt đầu lại từ /register",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        return ConversationHandler.END
     
     # Save to database
     session = SessionLocal()
