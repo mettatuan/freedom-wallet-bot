@@ -37,8 +37,8 @@ def _get_excluded_ids() -> list:
 # ─── Stats từ DB (loại test accounts) ────────────────────────────────────────
 def _get_stats() -> dict:
     try:
-        from bot.utils.database import SessionLocal, User
-        from sqlalchemy import not_
+        from bot.utils.database import SessionLocal, User, PaymentVerification
+        from sqlalchemy import not_, func
         db = SessionLocal()
         excluded = _get_excluded_ids()
 
@@ -70,6 +70,32 @@ def _get_stats() -> dict:
         active_today = base_q().filter(User.last_active >= today).count()
         active_7d    = base_q().filter(User.last_active >= week_ago).count()
 
+        # Source breakdown (BOT vs LANDING_PAGE)
+        bot_users = base_q().filter(User.activation_source == "BOT").count()
+        landing_users = base_q().filter(User.activation_source == "LANDING_PAGE").count()
+
+        # User segments (Đăng ký / Kết nối / Giao dịch)
+        dang_ky = base_q().filter(
+            (User.spreadsheet_id.is_(None)) & 
+            ((User.total_transactions.is_(None)) | (User.total_transactions == 0))
+        ).count()
+        ket_noi = base_q().filter(
+            User.spreadsheet_id.isnot(None),
+            (User.total_transactions.is_(None)) | (User.total_transactions == 0)
+        ).count()
+        giao_dich = base_q().filter(
+            User.total_transactions.isnot(None),
+            User.total_transactions > 0
+        ).count()
+
+        # Payment stats
+        pending_payments = db.query(PaymentVerification).filter(
+            PaymentVerification.status == "PENDING"
+        ).count()
+        revenue = db.query(func.sum(PaymentVerification.amount)).filter(
+            PaymentVerification.status == "APPROVED"
+        ).scalar() or 0
+
         db.close()
         return {
             "total": total,
@@ -79,12 +105,22 @@ def _get_stats() -> dict:
             "status": sc,
             "active_today": active_today,
             "active_7d": active_7d,
+            "bot_users": bot_users,
+            "landing_users": landing_users,
+            "dang_ky": dang_ky,
+            "ket_noi": ket_noi,
+            "giao_dich": giao_dich,
+            "pending_payments": pending_payments,
+            "revenue": revenue,
         }
     except Exception as e:
         logger.error(f"Stats error: {e}")
         return {
             "total": 0, "registered": 0, "with_webapp": 0, "without_webapp": 0,
             "status": {}, "active_today": 0, "active_7d": 0,
+            "bot_users": 0, "landing_users": 0,
+            "dang_ky": 0, "ket_noi": 0, "giao_dich": 0,
+            "pending_payments": 0, "revenue": 0,
         }
 
 
@@ -96,37 +132,53 @@ def _dashboard_text(s: dict) -> str:
     sc  = s.get("status", {})
     # Timezone VN = UTC+7
     now_vn = datetime.now(timezone(timedelta(hours=7))).strftime("%H:%M")
+    
+    # Format revenue
+    revenue_str = f"{s['revenue']/1000000:.1f}M" if s['revenue'] >= 1000000 else f"{s['revenue']/1000:.0f}K" if s['revenue'] >= 1000 else str(int(s['revenue']))
+    
     return (
         f"🛡️ <b>ADMIN PANEL</b>   <i>cập nhật {now_vn} VN</i>\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"👥 Users (Bot): <b>{s['total']}</b>   📋 Đăng ký: <b>{s['registered']}</b>\n"
-        f"🌐 Có Web App: <b>{s['with_webapp']}</b>   ⚠️ Chưa setup: <b>{s['without_webapp']}</b>\n"
+        f"👥 Total: <b>{s['total']}</b>   📋 Đăng ký: <b>{s['registered']}</b>   💳 Pending: <b>{s['pending_payments']}</b>\n"
+        f"🤖 BOT: <b>{s['bot_users']}</b>   🌐 Landing: <b>{s['landing_users']}</b>\n"
+        f"🔗 Kết nối: <b>{s['with_webapp']}</b> ({pct}%)   📝 Giao dịch: <b>{s['giao_dich']}</b>\n"
         f"<code>[{bar}]</code> {pct}%\n"
         f"━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"⏳{sc.get('PENDING',0)} ⚙️{sc.get('WEBAPP_SETUP',0)} ✅{sc.get('ACTIVE',0)} 😴{sc.get('INACTIVE',0)} ❌{sc.get('CHURNED',0)}\n"
-        f"📅 Hôm nay: <b>{s['active_today']}</b>   7 ngày: <b>{s['active_7d']}</b>"
+        f"Đăng ký: <b>{s['dang_ky']}</b> | Kết nối: <b>{s['ket_noi']}</b> | Giao dịch: <b>{s['giao_dich']}</b>\n"
+        f"📅 Hôm nay: <b>{s['active_today']}</b>   7 ngày: <b>{s['active_7d']}</b>\n"
+        f"💰 Doanh thu: <b>{revenue_str} VNĐ</b>"
     )
 
 
 def _dashboard_keyboard(s: dict) -> InlineKeyboardMarkup:
     sc = s.get("status", {})
     return InlineKeyboardMarkup([
+        # Row 1: User Management
         [
-            InlineKeyboardButton("📊 Users", callback_data="adm:users_all"),
-            InlineKeyboardButton(f"⚙️ Setup ({sc.get('WEBAPP_SETUP', 0)})", callback_data="adm:users_setup"),
-            InlineKeyboardButton(f"😴 Inactive ({sc.get('INACTIVE', 0) + sc.get('CHURNED', 0)})", callback_data="adm:users_inactive"),
+            InlineKeyboardButton("👥 Users", callback_data="adm:users_all"),
+            InlineKeyboardButton("📊 Segments", callback_data="adm:segments"),
+            InlineKeyboardButton("📈 Analytics", callback_data="adm:analytics"),
         ],
+        # Row 2: Actions
         [
-            InlineKeyboardButton(f"📢 Broadcast ({s['registered']})", callback_data="adm:broadcast_all_preview"),
-            InlineKeyboardButton(f"📤 Setup msg ({s['without_webapp']})", callback_data="adm:broadcast_preview"),
+            InlineKeyboardButton("📣 Broadcast", callback_data="adm:broadcast_menu"),
+            InlineKeyboardButton(f"💳 Payments ({s['pending_payments']})", callback_data="adm:payments"),
+            InlineKeyboardButton("🔍 Search", callback_data="adm:search"),
         ],
+        # Row 3: Data Sync
         [
-            InlineKeyboardButton("🎯 Event Zoom 19H", callback_data="adm:event_preview"),
-            InlineKeyboardButton(f"📧 Email", callback_data="adm:email_preview"),
+            InlineKeyboardButton("🔄 Sync Jobs", callback_data="adm:sync_jobs"),
+            InlineKeyboardButton("📊 Sheet", callback_data="adm:open_sheet"),
+            InlineKeyboardButton("📧 Email", callback_data="adm:email_preview"),
         ],
+        # Row 4: System
         [
             InlineKeyboardButton("🏥 Health", callback_data="adm:healthcheck"),
             InlineKeyboardButton("⚠️ Errors", callback_data="adm:errors"),
+            InlineKeyboardButton("🔧 Tools", callback_data="adm:tools"),
+        ],
+        # Row 5: Navigation
+        [
             InlineKeyboardButton("🔄 Refresh", callback_data="adm:refresh"),
             InlineKeyboardButton("✖️ Close", callback_data="adm:close"),
         ],
@@ -255,7 +307,163 @@ async def handle_admin_callback(update: Update, context: ContextTypes.DEFAULT_TY
         text = _quick_user_text("all")
         await query.edit_message_text(text, parse_mode="HTML", reply_markup=_back_btn)
 
-    # ── Event Broadcast ──────────────────────────────────────────────────────
+    # ── NEW: Segments View ────────────────────────────────────────────────────
+    elif data == "adm:segments":
+        s = _get_stats()
+        await query.edit_message_text(
+            f"📊 <b>USER SEGMENTS</b>\n\n"
+            f"📍 <b>Đăng ký</b>: {s['dang_ky']} users ({s['dang_ky']/s['total']*100:.1f}%)\n"
+            f"   Chỉ mới đăng ký, chưa kết nối spreadsheet\n\n"
+            f"📍 <b>Đã kết nối Bot</b>: {s['ket_noi']} users ({s['ket_noi']/s['total']*100:.1f}%)\n"
+            f"   Có spreadsheet nhưng chưa ghi giao dịch\n\n"
+            f"📍 <b>Ghi giao dịch</b>: {s['giao_dich']} users ({s['giao_dich']/s['total']*100:.1f}%)\n"
+            f"   Đã có giao dịch trong hệ thống\n",
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton(f"📤 Broadcast Đăng ký ({s['dang_ky']})", callback_data="adm:broadcast_dang_ky")],
+                [InlineKeyboardButton(f"📤 Broadcast Giao dịch ({s['giao_dich']})", callback_data="adm:broadcast_giao_dich")],
+                [InlineKeyboardButton("◀️ Dashboard", callback_data="adm:refresh")],
+            ])
+        )
+
+    # ── NEW: Analytics ─────────────────────────────────────────────────────────
+    elif data == "adm:analytics":
+        s = _get_stats()
+        conversion_rate = (s['with_webapp'] / s['total'] * 100) if s['total'] > 0 else 0
+        active_rate = (s['giao_dich'] / s['total'] * 100) if s['total'] > 0 else 0
+        await query.edit_message_text(
+            f"📈 <b>ANALYTICS</b>\n\n"
+            f"<b>Conversion Funnel:</b>\n"
+            f"Total Users → {s['total']}\n"
+            f"├─ Đăng ký → {s['dang_ky']} ({s['dang_ky']/s['total']*100:.1f}%)\n"
+            f"├─ Kết nối → {s['ket_noi']} ({s['ket_noi']/s['total']*100:.1f}%)\n"
+            f"└─ Giao dịch → {s['giao_dich']} ({s['giao_dich']/s['total']*100:.1f}%)\n\n"
+            f"<b>Activation Rate:</b> {conversion_rate:.1f}%\n"
+            f"<b>Active Rate:</b> {active_rate:.1f}%\n\n"
+            f"<b>By Source:</b>\n"
+            f"🤖 BOT: {s['bot_users']} users\n"
+            f"🌐 Landing Page: {s['landing_users']} users\n\n"
+            f"<b>Payment:</b>\n"
+            f"💰 Revenue: {s['revenue']/1000:.0f}K VNĐ\n"
+            f"💳 Pending: {s['pending_payments']} verifications",
+            parse_mode="HTML",
+            reply_markup=_back_btn
+        )
+
+    # ── NEW: Broadcast Menu ────────────────────────────────────────────────────
+    elif data == "adm:broadcast_menu":
+        s = _get_stats()
+        await query.edit_message_text(
+            f"📣 <b>BROADCAST MENU</b>\n\n"
+            f"Chọn segment để gửi:\n\n"
+            f"📤 <b>Đăng ký</b>: {s['dang_ky']} users\n"
+            f"   → Onboarding message\n\n"
+            f"📤 <b>Đã kết nối</b>: {s['ket_noi']} users\n"
+            f"   → Khuyến khích giao dịch đầu tiên\n\n"
+            f"📤 <b>Giao dịch</b>: {s['giao_dich']} users\n"
+            f"   → Feedback & Premium offer\n\n"
+            f"📤 <b>Setup Chưa xong</b>: {s['without_webapp']} users\n"
+            f"   → Setup guide",
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton(f"Đăng ký ({s['dang_ky']})", callback_data="adm:broadcast_dang_ky")],
+                [InlineKeyboardButton(f"Đã kết nối ({s['ket_noi']})", callback_data="adm:broadcast_ket_noi")],
+                [InlineKeyboardButton(f"Giao dịch ({s['giao_dich']})", callback_data="adm:broadcast_giao_dich")],
+                [InlineKeyboardButton(f"Setup msg ({s['without_webapp']})", callback_data="adm:broadcast_preview")],
+                [InlineKeyboardButton("◀️ Back", callback_data="adm:refresh")],
+            ])
+        )
+
+    elif data == "adm:broadcast_dang_ky":
+        await query.answer("⚠️ Feature coming soon! Use broadcast_segments.py script", show_alert=True)
+
+    elif data == "adm:broadcast_ket_noi":
+        await query.answer("⚠️ Feature coming soon! Use broadcast_segments.py script", show_alert=True)
+
+    elif data == "adm:broadcast_giao_dich":
+        await query.answer("⚠️ Feature coming soon! Use broadcast_segments.py script", show_alert=True)
+
+    # ── NEW: Payments ──────────────────────────────────────────────────────────
+    elif data == "adm:payments":
+        s = _get_stats()
+        await query.edit_message_text(
+            f"💳 <b>PAYMENT VERIFICATIONS</b>\n\n"
+            f"Pending: <b>{s['pending_payments']}</b> verifications\n"
+            f"Revenue: <b>{s['revenue']/1000:.0f}K VNĐ</b>\n\n"
+            f"Use commands:\n"
+            f"/payment_list - View pending\n"
+            f"/payment_stats - Statistics",
+            parse_mode="HTML",
+            reply_markup=_back_btn
+        )
+
+    # ── NEW: Search ────────────────────────────────────────────────────────────
+    elif data == "adm:search":
+        await query.edit_message_text(
+            f"🔍 <b>SEARCH USER</b>\n\n"
+            f"Send:\n"
+            f"<code>/admin_find [user_id or email]</code>\n\n"
+            f"Example:\n"
+            f"<code>/admin_find 6588506476</code>\n"
+            f"<code>/admin_find mettatuan@gmail.com</code>",
+            parse_mode="HTML",
+            reply_markup=_back_btn
+        )
+
+    # ── NEW: Sync Jobs ─────────────────────────────────────────────────────────
+    elif data == "adm:sync_jobs":
+        await query.edit_message_text(
+            f"🔄 <b>SYNC JOBS</b>\n\n"
+            f"<b>Auto Sync Schedule:</b>\n"
+            f"• Landing Page → DB: Every 30 min\n"
+            f"• DB → Sheet: Manual only\n\n"
+            f"<b>Manual Triggers:</b>\n"
+            f"Use VPS PowerShell:\n"
+            f"<code>cd C:\\FreedomWalletBot</code>\n"
+            f"<code>python bot/utils/sync_landing_page.py</code>\n"
+            f"<code>python bot/utils/sync_db_to_sheet.py</code>",
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("📊 Open Google Sheet", callback_data="adm:open_sheet")],
+                [InlineKeyboardButton("◀️ Back", callback_data="adm:refresh")],
+            ])
+        )
+
+    # ── NEW: Open Sheet ────────────────────────────────────────────────────────
+    elif data == "adm:open_sheet":
+        sheet_url = "https://docs.google.com/spreadsheets/d/1-fruHaSlCKIOpIfU5Qrkns0ze3bx3E-mKUgQ5fUF-Hg/edit"
+        await query.edit_message_text(
+            f"📊 <b>GOOGLE SHEET</b>\n\n"
+            f"Click button below to open:\n"
+            f"• 32 users synced\n"
+            f"• Auto-updates every 30 min\n"
+            f"• Includes status & source",
+            parse_mode="HTML",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("📊 Open Sheet", url=sheet_url)],
+                [InlineKeyboardButton("◀️ Back", callback_data="adm:refresh")],
+            ])
+        )
+
+    # ── NEW: Tools Menu ────────────────────────────────────────────────────────
+    elif data == "adm:tools":
+        await query.edit_message_text(
+            f"🔧 <b>ADMIN TOOLS</b>\n\n"
+            f"<b>Available Commands:</b>\n"
+            f"/broadcast_all [msg] - Send to all\n"
+            f"/admin_users [filter] - List users\n"
+            f"/admin_find [id/email] - Search user\n"
+            f"/payment_list - Pending payments\n"
+            f"/health - System status\n\n"
+            f"<b>VPS Scripts:</b>\n"
+            f"• broadcast_segments.py - Segment broadcast\n"
+            f"• check_bot_status.ps1 - Bot status\n"
+            f"• C:\\nssm\\nssm.exe restart FreedomWalletBot",
+            parse_mode="HTML",
+            reply_markup=_back_btn
+        )
+
+    # ── Event Broadcast (Keep existing) ───────────────────────────────────────
     elif data == "adm:event_preview":
         s = _get_stats()
         await query.edit_message_text(
